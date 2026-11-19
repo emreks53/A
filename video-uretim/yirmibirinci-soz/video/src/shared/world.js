@@ -5,7 +5,7 @@
 //   W.layout  W.man  W.wall  W.cam(t)  W.toScreen(x, y, t, parallax)  W.withPlane(ctx, t, parallax, fn)
 //   W.state(t)                         every shared state as numbers (ring strength, sun state, mound lit …)
 //   W.draw(ctx, t, { pose, slots })    the whole shared picture for absolute time t, slots called in place
-//                                      (slots: back*, sky, far, mid, hands, front, top — * = optional extension)
+//                                      (slots: back*, sky, far, mid, ground*, hands, front, top — * = optional extension)
 //
 // Everything is a pure function of ABSOLUTE video time. All numbers come from layout.js (storyboard.json);
 // the state timeline is storyboard §5 "State timeline of every shared asset, 0–24 s" (layout.T).
@@ -37,9 +37,15 @@ export async function makeWorld(E) {
   };
 
   // ------------------------------------------------------------------ camera
+  // W.camShift (seconds, default 0) is ADDED to the time at which the CAMERA — and nothing else — is evaluated:
+  // W.cam(t), W.toScreen, W.withPlane and every camera use inside W.draw see the camera of t + W.camShift, while all
+  // states, poses, events and slots stay at t. It is the lead's hook for camera motion blur (render the same t several
+  // times with small shifts and average). With camShift = 0 every pixel is what it was without the hook.
+  const W = { camShift: 0 };                             // the world object (filled at the end of makeWorld)
   let camT = NaN, camV = null;
   const cam = (t) => {
-    if (t !== camT) { camT = t; camV = L.cam(t); }
+    const tc = t + (W.camShift || 0);
+    if (tc !== camT) { camT = tc; camV = L.cam(tc); }
     return camV;
   };
   const toScreen = (x, y, t, parallax = 1) => E.worldToFrame(cam(t), parallax, x, y);
@@ -494,7 +500,8 @@ export async function makeWorld(E) {
 
   // ------------------------------------------------------------------ hedge (plane 1.0, in FRONT of the man)
   const CW = L.gloss.calmWorld;
-  const hedgeBox = [R1[0] - 12, L.lipY - 46, R1[2] + 12, R1[3] + 8];
+  const RISE_MAX = 34;                                   // the tallest dab cluster that rises above the lip (px above the lip line)
+  const hedgeBox = [R1[0] - 12, L.lipY - 46 - RISE_MAX, R1[2] + 12, R1[3] + 8];
   // IN FRONT OF HIS FEET (x 478–626: shoes at rest 488–592, the half-step puts the right one at 582–614)
   // the lip is a low fringe of GRASS: small prints instead of the big ones of the lip elsewhere, so that its
   // height is under control. Its tufts begin between y 1188 and 1195 (uneven, never a ruled line), the
@@ -507,7 +514,19 @@ export async function makeWorld(E) {
   const FEET = [L.man.shoe_x[0] - 27, L.man.shoe_x[1] + 51];          // 478 … 626
   const FEET_TOP = L.man.foot_y - 2, FEET_SOLID = L.man.foot_y + 4;
   const tuft = (x) => ss(FEET[0] - 34, FEET[0] + 2, x) * ss(FEET[1] + 34, FEET[1] - 2, x);
-  const lipF = (x) => lerp(L.lip(x), L.man.foot_y + 0.5, tuft(x));     // the hedge's own top line
+  // LAST FIX ROUND — the horizon is not a ruled line any more. Outside the mound (x < 262 and x > 818: never in front of
+  // the man or the mound's flowers) the hedge's top line carries TUFTS of uneven height (runs of 0-10 px), and LEFT of
+  // the mound three DAB CLUSTERS rise 13-23 px above the lip at uneven intervals (HUMPS: x, height, half-width; with bud
+  // e1 and its rosette at x 228 that makes four breaks of the line, 80 / 102 / 68 px apart); the one at x 58 carries a
+  // leaf rosette that stands 39 px above the lip (see flora). Right of the mound stands act 2's knoll with its rug: no cluster there (the
+  // lead's rule: never in front of the knoll or the rug) — tufts only, up to 10 px.
+  const HUMPS = [[-22, 17, 40], [58, 13, 50], [160, 23, 36]];
+  const HUMP_ROSETTES = [[58, 24, 5]];                   // x, reach, leaves — a leaf rosette on the hump at x (flora): 13 + 26 px above the lip
+  const offMound = (x) => ss(262, 236, x) + ss(818, 846, x);
+  const humpAt = (x) => { let h = 0; for (const [cx, hh, w] of HUMPS) { const u = Math.abs(x - cx) / w; if (u < 1) h = Math.max(h, hh * (0.5 + 0.5 * Math.cos(Math.PI * u)) * (0.86 + 0.28 * E.fbm2(x / 15, 2.2, 4433, 2))); } return h; };
+  const tuftsAt = (x) => 10 * ss(0.42, 0.72, E.fbm2(x / 52, 7.7, 4437, 2)) + 2.5 * E.fbm2(x / 11, 1.3, 4439, 2);
+  const riseAt = (x) => Math.min(RISE_MAX, Math.max(humpAt(x), tuftsAt(x))) * offMound(x);
+  const lipF = (x) => lerp(L.lip(x) - riseAt(x), L.man.foot_y + 0.5, tuft(x));     // the hedge's own top line
   const grassTop = (x) => FEET_TOP + 4.5 - 6.5 * ss(0.46, 0.7, E.fbm2(x / 13, 3.1, 4411, 2));    // tufts of uneven height: 1196 … 1202.5
   const solidTop = (x) => lerp(lipF(x) + 9, Math.min(FEET_SOLID, grassTop(x) + 4.5), tuft(x));   // opaque from here down
   const below = (x, y) => y - lipF(x);                   // px below the lip line
@@ -528,12 +547,34 @@ export async function makeWorld(E) {
     }
   }
   LIGHT_FLOOR = Math.floor(LIGHT_FLOOR - 1);
-  DECO0 = Math.ceil(DECO0 + 3);
-  TEXT0 = Math.floor(TEXT0 - 12); TEXT1 = Math.ceil(TEXT1 + 12);
-  const CALM1 = DECO0;                                   // (was calmWorld.y1 + 46: the frieze now begins right under the field)
-  const lightOK = (size) => (x, y) => (y + size * 0.7 <= LIGHT_FLOOR ? 1 : 0);   // a print of this size ends above the floor
-  const deco = (y) => ss(CALM1, CALM1 + 70, y);          // the strip under the gloss field: decoration allowed
-  const frieze = (size = 0) => (x, y) => ss(DECO0 + size * 0.7, DECO0 + size * 0.7 + 46, y);   // … and LIGHT prints of this size
+  // LAST FIX ROUND (D3 revised) — while a gloss is up only the rows of the gloss INK must stay calm and dark: SCREEN
+  // y 1330-1505, x 120-960 (nothing lighter than hedge_mid there); the rest of the hedge may carry lighter prints. In
+  // WORLD px, per column of 8 px: inkTop(x) / inkBot(x) = the highest / lowest world row that lies in those screen
+  // rows on any frame of any gloss window (camera, drift and the «sahipsin» glide included; 3 px of margin). YARIN
+  // (zoom 1.15) puts the top at about world y 1296 for x 320-1135, HOME / ACT2 at about 1322 elsewhere; the bottom is
+  // about 1511 everywhere. Columns that no window covers take the value of the nearest covered one (no step at x 120).
+  // (LIGHT_FLOOR above is still what W.lightFloor hands to the acts: their own lights keep the old, stricter rule.)
+  const INK_SCREEN = { x0: 120, x1: 960, y0: 1330, y1: 1505 };
+  const BIN = 8, binOf = (x) => Math.floor((x - hedgeBox[0]) / BIN), NB = binOf(hedgeBox[2]) + 2;
+  const inkT = new Float64Array(NB).fill(Infinity), inkB = new Float64Array(NB).fill(-Infinity);
+  for (const w of L.gloss.windows) {
+    for (let f = L.fr(w.t0); f <= L.fr(w.t1); f++) {
+      const c = L.cam(f / L.fps);
+      const [wx0, wy0] = L.toWorld(c, INK_SCREEN.x0, INK_SCREEN.y0), [wx1, wy1] = L.toWorld(c, INK_SCREEN.x1, INK_SCREEN.y1);
+      for (let b = Math.max(0, binOf(wx0 - 16)); b <= Math.min(NB - 1, binOf(wx1 + 16)); b++) { inkT[b] = Math.min(inkT[b], wy0); inkB[b] = Math.max(inkB[b], wy1); }
+    }
+  }
+  { let b0 = 0; while (inkT[b0] === Infinity) b0++; let b1 = NB - 1; while (inkT[b1] === Infinity) b1--;
+    for (let b = 0; b < b0; b++) { inkT[b] = inkT[b0]; inkB[b] = inkB[b0]; }
+    for (let b = NB - 1; b > b1; b--) { inkT[b] = inkT[b1]; inkB[b] = inkB[b1]; } }
+  const inkTop = (x) => inkT[clamp(binOf(x), 0, NB - 1)] - 3, inkBot = (x) => inkB[clamp(binOf(x), 0, NB - 1)] + 3;
+  TEXT0 = Math.floor(Math.min(...inkT) - 3); TEXT1 = Math.ceil(Math.max(...inkB) + 3);      // the ink rows of the world, all columns
+  DECO0 = TEXT1;
+  const CALM1 = DECO0;                                   // the frieze begins right under the ink rows
+  const lightOK = (size) => (x, y) => (y + size * 0.7 <= inkTop(x) ? 1 : 0);     // a light print of this size ends above the ink rows
+  const underOK = (size) => (x, y) => (y - size * 0.7 >= inkBot(x) ? 1 : 0);     // … or begins below them
+  const deco = (y) => ss(CALM1, CALM1 + 70, y);          // the strip under the ink rows: decoration allowed
+  const frieze = (size = 0) => (x, y) => underOK(size)(x, y) * ss(DECO0 + size * 0.5, DECO0 + size * 0.5 + 64, y);   // … and LIGHT prints of this size, their density fading toward the ink
   const hedgeBottom = R1[3];
   // DEPTH of the hedge, inside the tones the gloss field allows (everything below hedge_mid):
   //   * a slow value fall-off: 0 under the lip … 1 at the lower edge, earlier toward the far left and right
@@ -558,14 +599,23 @@ export async function makeWorld(E) {
     // apart (deep #1F5C3A coat · mid #2C7048 as discrete prints on a jittered grid, gathered in 200–300 px clusters ·
     // lighter greens as small prints inside the clusters) with shadow pockets between and pinholes where the sponge left
     // the wall. What the gloss needs (D3) decides how light a row may get:
-    //   above LIGHT_FLOOR      the lip: every light (as before);
-    //   LIGHT_FLOOR … TEXT0    the strip under the lip: life in greens up to hedge_mid one step down (GM), most of it
-    //                          right under the lip, thinning out toward the gloss ink;
-    //   TEXT0 … TEXT1          behind the gloss ink: the calmest rows — the large clusters only, one tone step;
-    //   TEXT1 … DECO0          life again, up to GM;
-    //   below DECO0            the FRIEZE: hedge_mid, yellow-green and primer pinholes, light stencil leaves.
+    // LAST FIX ROUND (D3 revised: only the gloss INK rows stay calm and dark — world y inkTop(x) … inkBot(x), about
+    // 1296 / 1322 … 1511):
+    //   lip … inkTop           the LIT BAND: the second coat hangs down from the lip in clusters of uneven depth
+    //                          (45-110 px: a broken lower edge, never a stripe) — mid green, yellow-green dab clusters,
+    //                          small light stencil leaves, primer pinholes — its density fading toward the ink rows;
+    //   inkTop … inkBot        behind the gloss ink: the calmest rows — the large clusters only, nothing lighter than
+    //                          hedge_mid one step down, tone-on-tone leaves;
+    //   below inkBot           the FRIEZE, begun right under the ink rows and fading in over 64 px: hedge_mid,
+    //                          yellow-green and primer pinholes, light stencil leaves, the foreground thicket.
     const txt = (y) => ss(TEXT0 - 34, TEXT0, y) * ss(TEXT1 + 34, TEXT1, y);        // 1 behind the gloss ink
-    const life = (y) => Math.max(ss(TEXT0 + 4, LIGHT_FLOOR + 14, y), 0.8 * ss(TEXT1 - 4, DECO0 - 24, y));
+    const life = (y) => Math.max(ss(TEXT0 + 4, TEXT0 - 60, y), 0.8 * ss(TEXT1 - 4, TEXT1 + 40, y));
+    // the lit band: its depth at x (how far the lights hang down from the lip) and the masks made of it
+    const hangD = (x) => Math.min(inkTop(x) - lipF(x) - 10, 46 + 88 * ss(0.32, 0.7, E.fbm2(x / 125, 9.3, 4431, 2)) - 26 * tuft(x));
+    const hang = (soft = 24, size = 0) => (x, y) => { const b = below(x, y), d = hangD(x) - size * 0.6; return ss(-8, 4, b) * ss(d, d - soft, b) * lightOK(size)(x, y); };
+    const upper = (x, y) => clamp(1 - below(x, y) / Math.max(30, hangD(x)));       // 1 at the lip … 0 at the band's lower edge
+    const HG = { scale: 150, amount: 0.3, sharp: 0.4, seed: 3531 };       // the mid green of the band: big clusters with shadow gaps
+    const YG = { scale: 104, amount: 0.46, sharp: 0.42, seed: 3533 };     // its yellow-green lights: smaller clusters inside them
     const GD = P('hedge_dark'), GP = P('hedge_deep'), GM = tone(P('hedge_mid'), -0.11);
     const FL = { scale: 170, amount: 0.4, sharp: 0.4, seed: 3521 };       // the lights of the frieze gather in clumps
     const LIT = { scale: 190, amount: 0.5, sharp: 0.35, seed: 77 };
@@ -602,10 +652,25 @@ export async function makeWorld(E) {
       { color: '#7FB54E', coverage: 0.38, size: 26, stamps: 'body', pores: 0.3, maskFn: frieze(26), patch: { ...FL, amount: 0.52 } },
       { color: P('hedge_lip_light'), coverage: 0.3, size: 17, stamps: 'open', maskFn: frieze(17), patch: { ...FL, amount: 0.6 } },
       { color: '#C8E07E', coverage: 0.07, size: 10, stamps: 'soft', maskFn: frieze(10), patch: { ...FL, amount: 0.7 } },
-      { color: P('primer'), coverage: 0.034, size: 24, stamps: 'speck', tints: 1, maskFn: frieze(24), patch: { scale: 120, amount: 0.3, seed: 3523 } },
+      { color: P('primer'), coverage: 0.034, size: 12, stamps: 'speck', tints: 1, maskFn: frieze(12), patch: { scale: 80, amount: 0.16, seed: 3523 } },
       { colors: [P('tomorrow_dashes'), '#E3C65A'], coverage: 0.03, size: 13, stamps: 'soft', maskFn: frieze(13), patch: { scale: 130, amount: 0.6 } },
       { color: '#143F2A', coverage: 0.8, size: 72, stamps: 'body', tint: 0.02, pores: 0.5, maskFn: (x, y) => ss(hedgeBottom - 110, hedgeBottom - 30, y) },
       { color: '#438F4A', coverage: 0.22, size: 20, stamps: 'open', maskFn: nearCrest(8, 26), patch: { ...CREST, amount: 0.6 } },
+      // (U) LAST FIX ROUND — the LIT BAND above the gloss ink: the second coat hangs down from the lip in clusters
+      // (broken lower edge), darker pockets between them; yellow-green dab clusters inside, most of them near the lip;
+      // a pale touch, a little warmth, the wall's primer in pinholes
+      { color: tone(P('hedge_mid'), -0.1), coverage: 0.74, size: 34, stamps: 'body', tint: 0.03, pores: 0.5, maskFn: (x, y) => ss(-8, 4, below(x, y)) * ss(Math.min(52, hangD(x)), Math.min(26, hangD(x) - 20), below(x, y)) * noBig(x, y) },
+      { color: tone(P('hedge_mid'), -0.1), coverage: 0.84, size: 46, sizeJitter: 0.22, stamps: 'body', tint: 0.03, pores: 0.5, maskFn: (x, y) => hang(26, 46)(x, y) * noBig(x, y), patch: { ...HG, amount: 0.24 } },
+      { color: P('hedge_mid'), coverage: 0.7, size: 30, stamps: 'body', tint: 0.03, pores: 0.4, maskFn: (x, y) => hang(24, 30)(x, y) * noBig(x, y), patch: { ...HG, amount: 0.34 } },
+      { color: '#1D5636', coverage: 0.34, size: 40, stamps: 'open', tint: 0.02, pores: 0.3, maskFn: (x, y) => hang(30, 0)(x, y) * ss(10, 30, below(x, y)) * noBig(x, y), patch: { ...HG, invert: true, amount: 0.42 } },
+      { color: '#7FB54E', coverage: 0.68, size: 25, stamps: 'body', pores: 0.3, maskFn: (x, y) => hang(30, 25)(x, y) * lerp(0.4, 1, upper(x, y)) * noBig(x, y), patch: { ...YG, amount: 0.38 } },
+      { color: P('hedge_lip_light'), coverage: 0.56, size: 17, stamps: 'open', maskFn: (x, y) => hang(30, 17)(x, y) * lerp(0.25, 1, upper(x, y)) * noBig(x, y), patch: { ...YG, amount: 0.48 } },
+      { color: '#B9D96E', coverage: 0.3, size: 11, stamps: 'open', maskFn: (x, y) => hang(30, 11)(x, y) * upper(x, y) * noBig(x, y), patch: { ...YG, amount: 0.62 } },
+      { color: '#DDEB9C', coverage: 0.1, size: 8, stamps: 'soft', maskFn: (x, y) => hang(30, 8)(x, y) * upper(x, y) * noBig(x, y), patch: { ...YG, amount: 0.7 } },
+      { colors: ['#C9785A', P('tomorrow_dashes'), '#E3C65A'], coverage: 0.03, size: 13, stamps: 'soft', maskFn: (x, y) => hang(20, 13)(x, y) * noBig(x, y), patch: { scale: 110, amount: 0.6 } },
+      // fine primer pores in the coats — everywhere except the gloss ink rows (and the grass in front of his feet)
+      // (small sprays of fine dots: pinholes, not flakes; under the ink rows the frieze has its own, see (7))
+      { color: P('primer'), coverage: 0.034, size: 12, stamps: 'speck', tints: 1, maskFn: (x, y) => ss(6, 26, below(x, y)) * lightOK(12)(x, y) * noBig(x, y), patch: { scale: 80, amount: 0.16, seed: 3537 } },
       // (8) the LIP: a third green under the line, the mid green in long runs of small prints (never a row of single
       // blobs), then small lights of several tones in clumps, a little warmth, the wall breathing through — all of it
       // above the calm field
@@ -617,7 +682,7 @@ export async function makeWorld(E) {
       { color: tone(P('hedge_mid'), -0.2), coverage: 0.8, size: 13, stamps: 'body', tint: 0.015, pores: 0.3, maskFn: (x, y) => grass(x, y) * ss(FEET_SOLID + 14, FEET_SOLID + 4, y) * (1 - lightOK(13)(x, y)), patch: { ...LIPM, scale: 50, amount: 0.26 } },
       { color: P('hedge_mid'), coverage: 0.5, size: 18, stamps: 'open', tint: 0.03, maskFn: lipBand(-13, 2, 18), patch: { ...LIPM, amount: 0.54 } },
       { color: P('hedge_mid'), coverage: 0.5, size: 11, stamps: 'body', tint: 0.03, pores: 0, maskFn: (x, y) => grass(x, y) * lightOK(11)(x, y), patch: { ...LIPM, scale: 50, amount: 0.44 } },
-      { color: P('hedge_mid'), coverage: 0.7, size: 30, stamps: 'body', tint: 0.03, pores: 0.4, maskFn: (x, y) => lipBand(-13, 4, 0)(x, y) * ss(LIGHT_FLOOR + 4, LIGHT_FLOOR - 12, y + 14) * noBig(x, y), patch: { scale: 130, amount: 0.24, sharp: 0.3 } },
+      { color: P('hedge_mid'), coverage: 0.7, size: 30, stamps: 'body', tint: 0.03, pores: 0.4, maskFn: (x, y) => lipBand(-13, 4, 30)(x, y) * noBig(x, y), patch: { scale: 130, amount: 0.24, sharp: 0.3 } },
       { color: '#7FB54E', coverage: 0.5, size: 22, stamps: 'body', pores: 0.3, maskFn: (x, y) => lipBand(-14, 1, 22)(x, y) * noBig(x, y), patch: { scale: 120, amount: 0.34, sharp: 0.3 } },
       { color: P('hedge_mid'), coverage: 0.6, size: 13, stamps: 'body', tint: 0.03, pores: 0.3, maskFn: (x, y) => grass(x, y) * lightOK(13)(x, y), patch: { scale: 46, amount: 0.4, seed: 82 } },
       { color: P('hedge_lip_light'), coverage: 0.56, size: 16, stamps: 'body', pores: 0.3, maskFn: lipBand(-15, -1, 16), patch: TINY },
@@ -672,8 +737,9 @@ export async function makeWorld(E) {
         leafAt(x + fan * l * 0.36 + rng.sym(5), y + Math.abs(fan) * l * 0.3 + rng.sym(5), l, l * rng.range(0.4, 0.5), -Math.PI / 2 + lean + fan * 1.9 + rng.sym(0.16), set);
       }
     };
-    // tone on tone: loose, staggered groups — 3 + 2 + 1, never a row — that grow from 40 px under the lip to 100 px low down
-    for (let y = L.lipY + 64; y < hedgeBottom + 60;) {
+    // tone on tone: loose, staggered groups — 3 + 2 + 1, never a row — that grow from 50 px at the gloss ink rows to 100 px
+    // low down (last fix round: none in the lit band under the lip any more — the light stencil leaves live there)
+    for (let y = TEXT0 - 4; y < hedgeBottom + 60;) {
       const d = clamp((y - L.lipY - 64) / 520), size = lerp(38, 92, d);
       let x = hedgeBox[0] + rng.range(0, 160);
       while (x < hedgeBox[2] + 60) {
@@ -741,8 +807,32 @@ export async function makeWorld(E) {
     };
     const LL0 = DECO0 + 8;
     let li = 0;
+    // (last fix round) … a first, smaller row of them right under the ink rows (the frieze begins there now) …
+    for (let x = hedgeBox[0] + rng.range(20, 150); x < hedgeBox[2]; x += rng.range(140, 250)) {
+      const y = rng.range(DECO0 + 78, DECO0 + 140), n = rng.int(2, 3), lean = rng.sym(0.55), dark = rng.chance(0.5);
+      for (let k = 0; k < n; k++) {
+        const fan = n > 1 ? k / (n - 1) - 0.5 : 0, rot = -Math.PI / 2 + lean + fan * rng.range(1.2, 1.7) + rng.sym(0.12), up = Math.max(0.3, -Math.sin(rot));
+        let l = rng.range(56, 84);
+        if (y - up * l < LL0) l = (y - LL0) / up;
+        if (l < 44) continue;
+        (dark ? E.makeLeaf({ len: l, wid: l * rng.range(0.4, 0.48), bend: rng.sym(l * 0.07), seed: 4100 + (li++), sliver: k % 2 === 0 }) : lightLeaf(l, l * rng.range(0.4, 0.48), rng.sym(l * 0.07), 4100 + (li++)))
+          .draw(sctx, x + fan * l * 0.3, y + Math.abs(fan) * l * 0.18, { rot });
+      }
+    }
+    // … and small ones in the LIT BAND under the lip, between its dab clusters: sprigs of two or three that point up and
+    // aside; none in front of his feet, none that would reach down into the ink rows
+    for (let x = hedgeBox[0] + rng.range(20, 120); x < hedgeBox[2]; x += rng.range(104, 200)) {
+      const d = hangD(x), n = rng.int(2, 3), lean = rng.sym(0.7), y = lipF(x) + rng.range(26, Math.max(30, 0.72 * d));
+      if (x > FEET[0] - 34 && x < FEET[1] + 34) continue;
+      for (let k = 0; k < n; k++) {
+        const fan = n > 1 ? k / (n - 1) - 0.5 : 0, rot = -Math.PI / 2 + lean + fan * rng.range(1.5, 2.1) + rng.sym(0.14);
+        const l = rng.range(34, 54), lx = x + fan * l * 0.3, ly = y + Math.abs(fan) * l * 0.2;
+        // dark stencil leaves with a lit sliver, like the rosettes' (on the light band they read; a light leaf does not)
+        E.makeLeaf({ len: l, wid: l * rng.range(0.4, 0.5), bend: rng.sym(l * 0.07), seed: 4300 + (li++), sliver: k % 2 === 0 }).draw(sctx, lx, ly, { rot });
+      }
+    }
     for (let x = hedgeBox[0] + rng.range(30, 120); x < hedgeBox[2]; x += rng.range(150, 250)) {
-      const y = rng.range(DECO0 + 150, hedgeBottom - 70), n = rng.int(2, 3), lean = rng.sym(0.5);
+      const y = rng.range(DECO0 + 190, hedgeBottom - 70), n = rng.int(2, 3), lean = rng.sym(0.5);
       for (let k = 0; k < n; k++) {
         const fan = n > 1 ? k / (n - 1) - 0.5 : 0, rot = -Math.PI / 2 + lean + fan * rng.range(1.1, 1.6) + rng.sym(0.12), up = Math.max(0.3, -Math.sin(rot));
         let l = rng.range(78, 124);
@@ -788,11 +878,13 @@ export async function makeWorld(E) {
     L.flowers.forEach((f, i) => rosette(f.x, f.y, f.r + 14, 7, 400 + i, isBehind(f)));
     const e1 = L.buds[0];
     rosette(e1.x, L.lipY - 4, 34, 4, 420);
+    // (last fix round) the leaf rosettes of the dab clusters that rise above the lip left of the mound
+    HUMP_ROSETTES.forEach(([x, reach, n], i) => rosette(x, lipF(x) - 2, reach, n, 451 + i));
     const stem = E.bakeStencil({
       shape: E.shape.ribbon([[e1.x, L.lipY], [e1.x + 2, (L.lipY + e1.y) / 2], [e1.x, e1.y + 12]], [6, 4]), base: '#2A6A43', seed: 421, bleed: false,
       anchor: [0, 0], pad: 3, layers: [{ color: '#17492E', coverage: 0.4, size: 18, stamps: 'open' }, { color: '#3C8442', coverage: 0.36, size: 14, stamps: 'open' }],
     });
-    const bounds = [e1.x - 60, M.topY - 30, M.x1 + 40, FLOOR + 2];
+    const bounds = [Math.min(e1.x - 60, ...HUMP_ROSETTES.map(([x, reach]) => x - reach * 1.4 - 12)), M.topY - 30, M.x1 + 40, FLOOR + 2];
     const sprite = (list, seed, extra) => E.bakeSprite({
       bounds, anchor: [0, 0], seed,
       draw: (c) => {
@@ -942,10 +1034,8 @@ export async function makeWorld(E) {
         { color: P('primer'), coverage: 0.08, size: 14, stamps: 'soft' },
       ],
     });
-    const out = painted.masked({ order: 'random', steps: T.ring.crumble.length, dab: 44 });
-    const tOut = L.ft(T.ring.crumble[0]), dur = L.ft(T.ring.crumble[T.ring.crumble.length - 1]) - tOut;
-    const life = (L.ft(T.ring.specksGone) - tOut - dur) * 0.98;
-    const burst = E.makeBurst(painted, { seed: 532, count: 18, duration: dur, order: { order: 'random' }, wind: [10, 150], spread: 10, life: [life * 0.7, life], size: [6, 11] });
+    // (last fix round: the ghost ring leaves with the mist's turn-over steps — no re-inking, no crumble specks)
+    const out = painted.masked({ order: 'random', steps: T.mist.out.length, dab: 44 });
     // draw-on wedge: clockwise from 12 o'clock, ending in the middle of the gap after dash n
     const gapHalf = ((period - dash - RG.stroke) / 2 + RG.stroke / 2) / RG.r;
     const wedge = (ctx, n) => {
@@ -955,7 +1045,7 @@ export async function makeWorld(E) {
       ctx.closePath();
       ctx.clip();
     };
-    return { painted, out, burst, wedge, tOut };
+    return { painted, out, wedge };
   });
 
   // ------------------------------------------------------------------ ambient specks (parallax 1.2)
@@ -1006,6 +1096,19 @@ export async function makeWorld(E) {
     };
   });
 
+  // ------------------------------------------------------------------ the rise answers «bil» (T.mound.answer, 11.53)
+  // The six flowers bob once with the bloom of light that act 1 dabs on the mound (slots.ground): scale 1 -> 1.1 -> 1,
+  // the pair next to him first, then the middle pair, then the outer pair — on frames 346 / 348 / 350, two frames up
+  // (ease-out), five down. A pure function of t; 0 at every other time. ANSWER_BOB = 0 switches it off.
+  const ANSWER_BOB = 0.1;
+  const answerBob = (f, t) => {
+    const rank = Math.round((Math.abs(f.x - L.man.x) - 84) / 60);                       // 0, 1, 2 from where he stands outward
+    const tau = (t - L.ft(T.mound.answer)) * L.fps - 2 * rank;                           // frames since this flower's turn
+    if (tau < -1e-6 || tau >= 7) return 0;
+    const u = Math.max(0, tau);
+    return ANSWER_BOB * (u < 2 ? 1 - (1 - u / 2) ** 2 : 1 - ss(0, 1, (u - 2) / 5));
+  };
+
   // ------------------------------------------------------------------ state timeline (storyboard §5)
   function state(t) {
     const on = (e) => L.on(t, e), cnt = (list) => L.count(t, list);
@@ -1015,8 +1118,7 @@ export async function makeWorld(E) {
     for (let i = 0, n = cnt(T.ring.on); i < n; i++) dashes += T.ring.counts[i];
     let strength = 1;
     for (const [te, v] of T.ring.veil) if (on(te)) strength = v;
-    if (on(T.ring.reink[0])) strength = T.ring.reink[1];
-    const crumble = cnt(T.ring.crumble), nCr = T.ring.crumble.length;
+    const crumble = mistOut, nCr = T.mist.out.length;      // the veiled ring goes with the mist (field names kept: crumble = steps gone)
     const NS = T.sun.settle.length;
     const HP = S.halo.blaze_passes;
     const haloR = !halo ? 0 : sunRecede ? S.halo.receded : settle >= 3 ? S.halo.under_hours_ring
@@ -1045,7 +1147,7 @@ export async function makeWorld(E) {
       },
       column: { on: cnt(T.column.on) / T.column.on.length, p: settle ? 1 - settle / NS : cnt(T.column.on) / T.column.on.length, leaving: settle > 0 },
       mound: { lit: on(T.mound.lit) },
-      flowers: L.flowers.map((f) => ({ id: f.id, open: on(f.opens), tau: t - L.ft(f.opens) })),
+      flowers: L.flowers.map((f) => ({ id: f.id, open: on(f.opens), tau: t - L.ft(f.opens), bob: answerBob(f, t) })),
     };
   }
 
@@ -1117,7 +1219,6 @@ export async function makeWorld(E) {
         (r.crumble ? ring.out : ring.painted).draw(ctx, RG.x, RG.y, { p: r.p });
         ctx.restore();
       }
-      if (t >= ring.tOut && t < L.ft(T.ring.specksGone) + 0.2) ring.burst.draw(ctx, RG.x, RG.y, t - ring.tOut, { alpha: T.ring.reink[1] });
       const col = st.column;
       if (col.p > 0) (col.leaving ? column.out : column.painted).draw(ctx, column.box[0], column.box[1], { p: col.p });
     });
@@ -1145,13 +1246,14 @@ export async function makeWorld(E) {
       slot('mid');
       (st.coat2 ? mound.full : mound.base).draw(ctx);
       if (st.mound.lit) mound.lit.draw(ctx);
+      slot('ground');                                    // extension (last fix round): ON the rise, behind its rosettes, the flowers, the man and the hedge
       const drawFlower = (f) => {
         const fs = st.flowers[f.i - 1];
         const sc = fs.open ? E.spring(fs.tau + 1 / L.fps, POP) : 0;        // the opening frame already shows it
         if (sc < 0.72) f.bud.draw(ctx, f.x, f.y + 14, sc > 0 ? { scale: 1 - sc * 0.6 } : undefined);
         if (sc > 0) {
           const sw = L.motion.flowerSway(f.i, t);
-          f.flower.draw(ctx, f.x + sw.dx, f.y, { scale: sc, rot: sw.rot + E.popTwist(fs.tau, Math.PI / 2) });
+          f.flower.draw(ctx, f.x + sw.dx, f.y, { scale: fs.bob ? sc * (1 + fs.bob) : sc, rot: sw.rot + E.popTwist(fs.tau, Math.PI / 2) });
         }
       };
       if (st.coat2) {
@@ -1187,7 +1289,7 @@ export async function makeWorld(E) {
     slot('top');
   }
 
-  return {
+  return Object.assign(W, {
     layout: L, man, wall, cam, toScreen, withPlane, state, draw,
     planes: PLANE,
     /** world y: while a gloss is up nothing lighter than hedge_mid may reach below this row (YARIN sets it) */
@@ -1196,5 +1298,5 @@ export async function makeWorld(E) {
     boxes: { sky: skyBox, dusk: duskBox, predawn: dawnBox, mist: mistBox, ridge: ridgeBox, mound: moundBox, hedge: hedgeBox, visible1: R1 },
     /** the baked shared sprites (read-only: for inspection and tests) */
     sprites: { sky, cloud, dusk, wash, mist, ridge, mound, hedge, flora, sun, column, ring, specks },
-  };
+  });
 }

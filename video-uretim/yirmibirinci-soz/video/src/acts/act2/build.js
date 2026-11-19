@@ -87,7 +87,7 @@ export function makeBuilding(E, W, U) {
     const strap = (x, seed) => E.bakeStencil({
       shape: shape.rect(x - 10, B0.y0, 20, B0.y1 - B0.y0), base: P('chest_straps'), anchor: [0, 0], seed, bleed: false,
       layers: [{ color: '#33221B', coverage: 0.4, size: 22, stamps: 'open' }, { color: '#6A4B3A', coverage: 0.3, size: 16, stamps: 'body', maskFn: (px) => ss(x - 4, x + 8, px) },
-        { color: P('primer'), coverage: 0.05, size: 7, stamps: 'soft', opacity: 0.6 }],
+        { color: '#7C5D4B', coverage: 0.07, size: 7, stamps: 'soft' }],                 // pores: a lighter tone of the strap's own brown (D2, revised: never cream on a dark fill)
       details: { print: 'solid', draw: (c) => { c.fillStyle = '#8A6A4A'; for (const y of [B0.y0 + 13, B0.y1 - 13]) { c.beginPath(); c.arc(x, y, 3, 0, 7); c.fill(); } } },
     });
     const straps = [strap(cx - 68, 2103), strap(cx + 68, 2104)];
@@ -158,7 +158,7 @@ export function makeBuilding(E, W, U) {
     // the lid's handle: a small dark iron knob (the gold one is the foot of the dome's finial and arrives with it)
     const knobShape = shape.union(shape.ellipse(0, 0, 9, 8.5), shape.ellipse(0, 8, 12.5, 4));
     a.knobIron = E.bakeStencil({ shape: knobShape, anchor: [0, 0], seed: 2122, base: P('chest_straps'), bleed: false,
-      layers: [{ color: '#33221B', coverage: 0.4, size: 12, stamps: 'open' }, { color: '#7A5A46', coverage: 0.4, size: 9, stamps: 'body', maskFn: (x, y) => ss(-2, 4, x - y) }, { color: P('primer'), coverage: 0.05, size: 6, stamps: 'soft', opacity: 0.6 }] });
+      layers: [{ color: '#33221B', coverage: 0.4, size: 12, stamps: 'open' }, { color: '#7A5A46', coverage: 0.4, size: 9, stamps: 'body', maskFn: (x, y) => ss(-2, 4, x - y) }, { color: '#8A6A56', coverage: 0.05, size: 6, stamps: 'soft' }] });
     a.knob = E.bakeStencil({ shape: shape.union(shape.ellipse(0, 0, 10.5, 10), shape.ellipse(0, 9, 14, 4.5)), anchor: [0, 0], seed: 2121, ...gold({ lit: (x, y) => ss(-3, 4, x - y), edge: 2.6 }) });
 
     // --- dome texture (lead-blue; ribs through slits, laid out for the finished dome)
@@ -186,8 +186,8 @@ export function makeBuilding(E, W, U) {
         { color: dm[3], coverage: 0.8, size: 34, stamps: 'body', pores: 0.3, poreScale: 0.7, maskFn: lit(0.865, 0.91) },
         { color: DM_MID, coverage: 0.14, size: 44, stamps: 'speck', maskFn: (x, y) => lit(0.46, 0.54)(x, y) * lit(0.64, 0.56)(x, y) },
         { color: dm[2], coverage: 0.14, size: 44, stamps: 'speck', maskFn: (x, y) => lit(0.62, 0.7)(x, y) * lit(0.8, 0.73)(x, y) },
-        // pores of the shadow side: the cream primer at 60 %, small and dense — never white flecks (D2)
-        { color: P('primer'), coverage: 0.09, size: 10, stamps: 'soft', opacity: 0.6, maskFn: lit(0.5, 0.24), patch: { scale: 60, amount: 0.5, sharp: 0.4 } },
+        // pores of the shadow side: a lighter tone of the dome's own blue, small and dense — never cream or white (D2, revised)
+        { color: DM_MID, coverage: 0.09, size: 10, stamps: 'soft', maskFn: lit(0.5, 0.24), patch: { scale: 60, amount: 0.5, sharp: 0.4 } },
       ],
       slits: { shape: shape.union(...ribs), width: 2.4, color: DM_RIB, opacity: 0.86 },
     });
@@ -290,7 +290,7 @@ export function makeBuilding(E, W, U) {
         { color: dm[1], coverage: 0.7, size: 26, pores: 0.3, maskFn: (x) => ss(mx - 8, mx + 2, x) },
         { color: dm[2], coverage: 0.8, size: 20, pores: 0.3, maskFn: (x) => ss(mx + 1, mx + 7, x) },
         { color: dm[3], coverage: 0.5, size: 12, stamps: 'body', maskFn: (x, y) => ss(mx + 5, mx + 10, x) * ss(mn.cap_base_y - 40, mn.cap_base_y - 8, y) },
-        { color: P('primer'), coverage: 0.06, size: 7, stamps: 'soft', opacity: 0.6, maskFn: (x) => ss(mx + 2, mx - 8, x) },
+        { color: dm[2], coverage: 0.06, size: 7, stamps: 'soft', maskFn: (x) => ss(mx + 2, mx - 8, x) },                          // (D2, revised: the pores of the dark side in the cap's own lighter blue)
       ],
     });
     a.minaret = E.bakeSprite({ bounds: [mn.x0 - 8, mn.cap_tip_y - 8, mn.x1 + 8, mn.base_y + 10], anchor: [0, 0], seed: 2162, draw: (c) => { shaft.draw(c, 0, 0); cap.draw(c, 0, 0); } });

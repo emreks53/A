@@ -182,6 +182,22 @@ after the whole figure.
   `sf` shade fringe, `li` light, `cs` / `cf` cast tone) for `upper fore hand`. Colours: `COL` in man.js (palette of the
   storyboard: #B4553A / #4A342A / #2E1F1B / #E0A47C / #3B2620, warm #CF6E48 / #63473A).
 
+## Last fix round (round 3), as built
+
+* **Shoes.** One clean rounded cap per shoe, printed IN FRONT of the trouser hem (they used to lie behind the leg and stood
+  out on both sides of the hem — two lobes with a notch: a cloven hoof). Front view: the toe cap, a low dome 48 x 20 px
+  (70 x 29 on screen at CLOSE) on a flat sole line, a little longer on the outer side; back view: the same shoe from
+  behind, the heel, 42 px wide. Warm leather brown `#6E472F` (warm state `#8A5B3A`): a step lighter and warmer than the
+  trousers (`#4A342A` / `#63473A`). The hedge's grass still overlaps the sole only.
+* **Pores of dark fills (D2 revised).** Hair, trousers and shoes: the pores and flecks are a lighter tone of the SAME hue
+  (the fill's colour x (1 + primer): hair `#3B2620` → `#5A3A31`), small and dense (`poreScale` 0.6) — never cream.
+  The paint option is still called `primer`.
+* **Front hair.** The side hair ends at the top of the ears (y −30 round the head pivot) in a blunt rounded corner; no
+  downward points at the temples.
+* **Head pitch, back view.** Up to 10 degrees as before. Beyond that a real NOD: the crown drops 0.9 px per further
+  degree and the hair mass is seen shorter (down to 0.74 of its height at 22 degrees). Act 1's «bil»: pitch 12 → 22,
+  `head.y` 3 → 7, `shy` 2 → 7 = 15 px of hair-top travel (frames 346–350), held to 352, level on 358.
+
 ## Example for an act
 
 ```js

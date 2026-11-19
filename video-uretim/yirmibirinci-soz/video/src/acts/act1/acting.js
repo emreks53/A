@@ -44,9 +44,10 @@ export function makeActing(E, W) {
     k(222, B({ sh: 2 })), k(238, B(), e.sine.inOut),
     // 10.70–11.00 he lowers his gaze to the ground he stands on: the shoulders ease down with the head
     k(321, B()), k(330, B({ shy: 2 }), e.sine.inOut),
-    // 11.53 «bil» - the ONE hit of the line: the shoulders dip with the nod (6 px below level, 3 frames) and come
-    // back up as he straightens (4 frames, a breath of overshoot); settled 11.77
-    k(346, B({ shy: 2 })), k(349, B({ shy: 6 }), e.sine.inOut), k(353, B(), arrive(0.06, 0.75)),
+    // 11.53 «bil» - the ONE hit of the line (last fix round: phone-size). The shoulders go with the nod: 5 px further
+    // down in 4 frames (ease-out: most of it in the first two), held 2 frames, back up over 6 (a breath of overshoot);
+    // level again on frame 358 (11.93)
+    k(346, B({ shy: 2 })), k(350, B({ shy: 7 }), e.cubic.out), k(352, B({ shy: 7 })), k(358, B(), arrive(0.05, 0.8)),
   ]);
 
   const H = (pitch = 0, tilt = 0, turn = 0, x = 0, y = 0) => M.pose({ view: 1, armL: REST, armR: REST, head: { pitch, tilt, turn, x, y } });
@@ -77,12 +78,14 @@ export function makeActing(E, W) {
     k(240, H(0, 0, 0), e.sine.inOut),                                                      // 7.40–7.97 the head returns level
     // 9.27–9.50 he lifts his head a little to today's sun (5 degrees) — arms stay down
     k(278, H(0, 0, 0)), k(285, H(-5), e.sine.inOut),
-    // 10.70–11.00 he lowers his gaze to the lit ground he stands on (10 degrees, the head 2 px down with it)
-    k(321, H(-5)), k(330, H(10, 0, 0, 0, 2), e.sine.inOut),
-    // 11.53 «bil»: a firm NOD - the bowed head tips on (18 degrees: the crown drops, the nape shows; 3 frames, the
-    // word starts at 11.61 on its lowest point) and comes up level as he straightens (4 frames, a breath of
-    // overshoot); settled 11.77
-    k(346, H(10, 0, 0, 0, 2)), k(349, H(18, 0, 0, 0, 3), e.sine.inOut), k(353, H(0), arrive(0.06, 0.75)),
+    // 10.70–11.00 he lowers his gaze to the lit ground he stands on (12 degrees, the head 3 px down with it: his hair
+    // top comes down 9 px from where it was while he looked up at the sun)
+    k(321, H(-5)), k(330, H(12, 0, 0, 0, 3), e.sine.inOut),
+    // 11.53 «bil»: a firm NOD, phone-size (last fix round) - the bowed head tips clearly forward (22 degrees: the crown
+    // drops, the hair mass is seen shorter, the head sinks 4 px more between the shoulders, which go down with it): the
+    // hair top travels 15 px in 4 frames with ease-out (9 px on the first frame, lowest from frame 349 - the word starts
+    // at 11.61), is held 2 frames, and comes up level over 6 frames (a breath of overshoot); level on frame 358 (11.93)
+    k(346, H(12, 0, 0, 0, 3)), k(350, H(22, 0, 0, 0, 7), e.cubic.out), k(352, H(22, 0, 0, 0, 7)), k(358, H(0), arrive(0.05, 0.8)),
   ]);
 
   // ---------------------------------------------------------------- arms
@@ -158,7 +161,7 @@ export function makeActing(E, W) {
 
   // ---------------------------------------------------------------- the pose
   const turn = L.T.man.turn;                             // 1.47 / 1.53 / 1.60: the cross-dab on twos (man.js does the look)
-  const tEnd = 356 / FPS;                                // from 11.87 he is exactly back_neutral: the hand-off pose
+  const tEnd = 358 / FPS;                                // from 11.93 he is exactly back_neutral: the hand-off pose (was 11.87; the nod's way up is 6 frames now)
   function pose(t) {
     if (t >= tEnd - 1e-9) return P.back_neutral;
     const step = L.count(t, turn);

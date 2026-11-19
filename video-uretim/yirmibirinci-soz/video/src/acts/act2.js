@@ -1,4 +1,4 @@
-// act2.js — ACT 2, "one hour, saved" (12.20–23.80). Owner: act-2 team. Replaces the world builder's stub.
+// act2.js — ACT 2, "one hour, saved" (12.20–24.30). Owner: act-2 team. Replaces the world builder's stub.
 //
 // «Lâekall günün bir saatini, ihtiyat akçesi gibi hakiki istikbal için teşkil olunan bir sandukça-i uhreviye
 //  olan bir mescide veya bir seccadeye at.»
@@ -15,9 +15,9 @@
 //                   rug.js     rolled rug, the unrolling seccade, its glowing niche
 //   hands   1.0     dial.js    the hour floating down / on his palm / in his half-closed hand / shown in his finger tips
 //                              and swung: BEHIND his hand as long as he holds it (thumb and fingers in front of the rim)
-//   front   1.0     dial.js    the coin in flight, sinking into the niche; the minting's glint
-//                   rug.js     LINK 1: the niche's bloom
-//   top     frame   light.js   the cream cover 23.40–23.80 (frame 714 = the bare primer plate, drawn by the scene)
+//   front   1.0     rug.js     LINK 1: the niche's bloom (under the coin)
+//                   dial.js    the coin in flight, sinking into the niche's glow; the minting's glint
+//   top     frame   light.js   the cream cover 23.90–24.30 (frame 729 = the bare primer plate, drawn by the scene)
 //
 // The man's acting: act2/acting.js. Event times: act2/util.js (TL). Notes: out/act2/NOTES.md.
 
@@ -63,9 +63,9 @@ export default {
     },
     hands(ctx, t) { this.dial.drawHeld(ctx, t, 'hands'); },
     front(ctx, t) {
+      this.rug.drawBloom(ctx, t);                 // LINK 1 lies UNDER the coin: it is seen shrinking into the glow (22.90 / 22.93)
       this.dial.drawHeld(ctx, t, 'front');
       this.dial.drawGlint(ctx, t);
-      this.rug.drawBloom(ctx, t);
     },
     top(ctx, t) { this.light.drawCover(ctx, t); },
   },

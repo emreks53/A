@@ -7,7 +7,7 @@
 //   17.07 ->                it only breathes (2 % over 3 s); a few specks rise in it
 //   17.80 … 18.20           five light-beads step down to the plateau (on threes)
 //   23.23                   LINK 3: the light swells by one pass and stays swelled
-//   23.40 … 23.70           the cover: four coats of sponge prints growing out of the core (frame 714 = the bare primer plate)
+//   23.90 … 24.20           the cover: four coats of sponge prints growing out of the core (frame 729 = the bare primer plate)
 //
 // The light is a tall, soft POINTED ARCH (it rhymes with lock plate, doorway and mihrab): no disc, no rays, no
 // hard edge. A matte wall has no glow, so it is painted against a sky that is first deepened round it.
@@ -25,14 +25,15 @@ export function makeLight(E, W, U) {
   const RAD = 2 * HW, SPRING = APEX + Math.sqrt(RAD * RAD - (RAD - HW) ** 2); // equilateral pointed arch: springs at y ~406
   // (the body narrows a little toward its foot: a flame / almond rather than a door-shaped slab)
   const halfW = (y) => (y <= APEX ? 0 : y < SPRING ? Math.sqrt(RAD * RAD - (SPRING - y) ** 2) - (RAD - HW) : HW * (1 - 0.1 * ss(SPRING + 60, 1000, y)));
-  // the outline wobbles, and not the same way on both sides: the left shoulder bulges low, the right one is
-  // dented high and bulges further down — a cluster of sponge prints, never a drawn arch
+  // the outline wobbles, and not the same way on both sides: the left flank bulges low (y 570: well below the dial,
+  // whose ring comes within 60 px of the light at y 330), the right shoulder is dented high and bulges further down —
+  // a cluster of sponge prints, never a drawn arch
   const wob = (x, y) => 13 * Math.sin(y / 71 + 1.3) + 7 * Math.sin(y / 29 + x / 90) + 9 * Math.sin(y / 173 + (x > CX ? 2.2 : 0.4))
-    + (x < CX ? -20 * Math.exp(-(((y - 340) / 80) ** 2)) + 12 * Math.exp(-(((y - 200) / 50) ** 2)) : 18 * Math.exp(-(((y - 235) / 60) ** 2)) - 22 * Math.exp(-(((y - 455) / 90) ** 2)));
+    + (x < CX ? -20 * Math.exp(-(((y - 570) / 90) ** 2)) + 12 * Math.exp(-(((y - 200) / 50) ** 2)) : 18 * Math.exp(-(((y - 235) / 60) ** 2)) - 22 * Math.exp(-(((y - 455) / 90) ** 2)));
   /** signed distance to the arch's edge (px, < 0 inside) — horizontal below the apex, radial above it */
   const sd = (x, y) => (y >= APEX ? Math.abs(x - CX) - halfW(y) : Math.hypot(x - CX, APEX - y)) + wob(x, y);
   // a few prints ESCAPE the shoulders into the deep sky ([dx from the axis, y, r]): the contour is broken, no doorway
-  const ESC = [[-200, 212, 25], [-246, 322, 19], [-130, 112, 20], [204, 196, 23], [250, 318, 20], [122, 100, 17], [-262, 486, 18], [258, 560, 21], [-18, 16, 16]];
+  const ESC = [[-200, 212, 25], [-214, 468, 19], [-130, 112, 20], [204, 196, 23], [250, 318, 20], [122, 100, 17], [-262, 584, 18], [258, 560, 21], [-18, 16, 16]];
   const sdE = (x, y) => { let d = sd(x, y); for (const [ex, ey, er] of ESC) { const v = Math.hypot(x - CX - ex, y - ey) - er; if (v < d) d = v; } return d; };
   // the white core: a pointed ALMOND round (965, 300), y 180–420 — pointed above, rounded below, its edge pure speckle
   const C0 = F.in_ACT2_screen.core_y[0] - 4, C1 = F.in_ACT2_screen.core_y[1], CHW = (F.in_ACT2_screen.core_x[1] - F.in_ACT2_screen.core_x[0]) / 2;
@@ -44,18 +45,26 @@ export function makeLight(E, W, U) {
     };
   };
 
+  // THE DIAL'S MARGIN (review 2, N7): seen from this plane the dial's cobalt ring ends 60 px from the light's flank.
+  // Nothing of the light — deep sky, aura, rim, escaping prints — comes nearer to the ring than 44 px: a notch
+  // concentric with the dial is kept free in the surround's left edge, plain day sky between the two emblems.
+  const dialIn = (t) => { const s = W.toScreen(L.hours.centre[0], L.hours.centre[1], t, 1); return L.toWorld(L.cam(t), s[0], s[1], PAR); };
+  const DIAL = (() => { const a = dialIn(ft(17.5)), b = dialIn(ft(23.8)); return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; })();   // ~(462, 331): it drifts 6 px
+  const KEEP0 = L.sun.annulus.r_out - 12 + 46, KEEP1 = KEEP0 + 34;           // the ring is trimmed to r 238 on this side (dial.js)
+  const clear = (x, y) => ss(KEEP0, KEEP1, Math.hypot(x - DIAL[0], y - DIAL[1]));
+
   const rFar = L.visibleRect(PAR, 30, ['ACT2', 'ACT2_TAIL']);
   const SBOX = [S.x0 - 30, Math.min(S.y0, rFar[1]) - 10, Math.max(S.x1, rFar[2]) + 10, BASE + 14];
   const LBOX = [B.x0 - 70, APEX - 60, B.x1 + 70, BASE + 14];
   const tf = P('true_future'), sur = P('true_future_surround');
   const LB = L.lightBeads.from_glow_to_chest;
-  const LBR = [18, 19, 20, 21, 22], LBY = [430, 494, 566, 648, 736];        // storyboard: r 13–18, y 440 … 740 in even steps
+  const LBR = [20, 20.5, 21, 21.5, 22], LBY = [468, 538, 608, 676, 742];    // white core r; storyboard: y 440 … 740 (bead 1 hangs BELOW the light's dense white core, bead 2 ends 25 px above the chest's knob)
 
   const A = once('all', () => {
     const a = {};
     // --- the deepened sky: lavender far out, violet-blue near the light, a rim of indigo right at its edge,
     //     cobalt prints at the outside so that it melts into the day sky
-    const sDepth = (x, y) => clamp(Math.min(1 - sd(x, y) / 250, (x - S.x0 + 20 + 16 * Math.sin(y / 97)) / 110, (BASE + 30 - y) / 60));
+    const sDepth = (x, y) => clamp(Math.min(1 - sd(x, y) / 250, (x - S.x0 + 20 + 16 * Math.sin(y / 97)) / 110, (BASE + 30 - y) / 60, clear(x, y)));
     a.surround = field({ box: SBOX, depth: sDepth, seed: 2301, edge: 0.62, k: 1,
       reveal: { steps: 2, mode: 'mask', order: 'sweep', angle: -Math.PI / 2, jitter: 0.18, dab: 170 },
       layers: [
@@ -74,7 +83,7 @@ export function makeLight(E, W, U) {
     const d1 = (x, y) => clamp((-sdE(x, y) + 26) / 104);
     const inner = (a, b) => (x, y) => ss(a, b, sd(x, y));
     const wy = (x, y) => y + 58 * Math.sin((x - CX) / 66 + 0.9) + 26 * Math.sin((x - CX) / 27 + 2.4);   // no tone ever ends on a level line
-    a.aura = field({ box: [LBOX[0] - 50, LBOX[1] - 50, LBOX[2] + 50, LBOX[3]], depth: (x, y) => clamp(1 - Math.abs(sdE(x, y) - 12) / 62) * ss(BASE, BASE - 160, y), seed: 2309, edge: 0.9, reveal: { steps: 1 }, layers: [
+    a.aura = field({ box: [LBOX[0] - 50, LBOX[1] - 50, LBOX[2] + 50, LBOX[3]], depth: (x, y) => clamp(1 - Math.abs(sdE(x, y) - 12) / 62) * ss(BASE, BASE - 160, y) * clear(x, y), seed: 2309, edge: 0.9, reveal: { steps: 1 }, layers: [
       { color: tf.rim_pink, coverage: 0.2, size: 44, stamps: 'open', patch: { scale: 130, amount: 0.46 } },
       { color: tf.peach, coverage: 0.2, size: 34, stamps: 'soft', patch: { scale: 110, amount: 0.4 } },
       { color: '#F7C6D2', coverage: 0.08, size: 40, stamps: 'speck' },
@@ -115,7 +124,7 @@ export function makeLight(E, W, U) {
     ] });
     // --- with it, the brightest: a pink rim along the arch's edge and a breath of pale light round the core
     const band = (x, y) => clamp(1 - Math.abs(sdE(x, y) + 14) / 48);
-    a.rim = field({ box: LBOX, depth: (x, y) => band(x, y) * ss(BASE, BASE - 120, y), seed: 2305, edge: 0.9, reveal: { steps: 1 }, layers: [
+    a.rim = field({ box: LBOX, depth: (x, y) => band(x, y) * ss(BASE, BASE - 120, y) * clear(x, y), seed: 2305, edge: 0.9, reveal: { steps: 1 }, layers: [
       { color: tf.rim_pink, coverage: 0.5, size: 62, stamps: 'open', patch: { scale: 150, amount: 0.3 } },
       { color: '#F7C6D2', coverage: 0.34, size: 40, stamps: 'soft', patch: { scale: 120, amount: 0.36 } },
       { color: '#FBE3C4', coverage: 0.2, size: 30, stamps: 'soft', patch: { scale: 100, amount: 0.5 } },
@@ -136,28 +145,21 @@ export function makeLight(E, W, U) {
     a.specks = E.makeSpecks({ seed: 2308, count: 9, bounds: [CX - 150, APEX + 30, 300, 620], colors: [tf.core, '#FBEDB4', '#F7C6D2', tf.core],
       size: [6, 10], speed: [9, 17], angle: -Math.PI / 2, spread: 0.22, wobble: 9, twinkle: 0.3, edgeFade: 90 });
 
-    // --- light-beads: printed like the hour-beads of the dial (review, L6) — a warm-white stencil disc with a
-    //     speckled inside, a sponge-printed peach / brick shadow INSIDE its lower-left edge (no outline ring) and
-    //     white lights upper right; each lies on a slightly larger, loose brick-peach under-dab, so the light has
-    //     its dark on peach, gold and white alike. Bigger than the storyboard's (r 18–22): a path of light on a phone.
-    a.beads = LBR.map((r, i) => {
-      const bl = E.sphereLight(0, 0, r, r);
-      const disc = E.bakeStencil({ shape: E.shape.ellipse(0, 0, r), base: P('light_bead'), anchor: [0, 0], seed: 2320 + i, density: 2, bleed: false,
-        layers: [
-          { color: '#F3C9A6', coverage: 0.72, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.5, 0.32, bl(x, y)) },
-          { color: '#E3A07C', coverage: 0.5, size: 12, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.34, 0.18, bl(x, y)) },
-          { color: '#FFFFFF', coverage: 0.6, size: 14, stamps: 'body', tints: 1, maskFn: (x, y) => ss(0.66, 0.84, bl(x, y)) },
-          { color: '#FBEDB4', coverage: 0.07, size: 9, stamps: 'soft' },
-        ],
-        edge: { color: P('light_bead_rim'), width: 4.4, opacity: 0.5 } });
-      const under = E.makeCluster({ points: [{ x: -1.5, y: 2, r: r + 8 }], anchor: [0, 0], seed: 2310 + i, edgeSoftness: 0.5, reveal: { steps: 1 },
-        layers: [
-          { color: '#D98C6C', coverage: 0.8, size: 20, stamps: 'body', pores: 0.4 },
-          { color: P('light_bead_rim'), coverage: 0.4, size: 14, stamps: 'open', offset: [-2, 3] },
-          { color: '#EDB092', coverage: 0.3, size: 12, stamps: 'open' },
-        ] });
-      return { disc, under };
-    });
+    // --- light-beads, in the CALL-RING's language (review 2, N5): a soft sponge dab of light — a broad white core
+    //     (r 20–24) in pale gold, with a warm-yellow porous fringe of deeper gold prints round it. No disc, no rim, no
+    //     shadow: on the white of the core the gold fringe draws them, on gold and peach the white does.
+    a.beads = LBR.map((r, i) => E.makeCluster({
+      // (a second, smaller puff off-centre: the fringe is an uneven print, never a drawn ring)
+      points: [{ x: 0, y: 0, r: r / 0.76 }, { x: [-7, 6, -5, 7, -6][i], y: [5, 6, -6, 5, 6][i], r: r * 0.86 }], seed: 2320 + i, edgeSoftness: 0.45, anchor: [0, 0], reveal: { steps: 1 },
+      layers: [
+        { color: '#EDB442', coverage: 0.6, size: 16, stamps: 'open', pores: 0.3, tint: 0.03 },
+        { color: '#F3C95A', coverage: 0.72, size: 15, band: [0.04, 1], stamps: 'body', pores: 0.3 },
+        { color: tf.gold, coverage: 0.92, size: 16, band: [0.1, 1], stamps: 'dense', tint: 0.02, pores: 0 },
+        { color: '#FBEDB4', coverage: 0.92, size: 15, band: [0.17, 1], stamps: 'body', pores: 0 },
+        { color: P('light_bead'), coverage: 0.95, size: 14, band: [0.24, 1], stamps: 'body', tints: 1, pores: 0 },
+        { color: '#FFFFFF', coverage: 0.7, size: 11, band: [0.45, 1], stamps: 'body', tints: 1, pores: 0 },
+      ],
+    }));
     return a;
   });
 
@@ -186,7 +188,7 @@ export function makeLight(E, W, U) {
 
   // ------------------------------------------------------------------ light-beads (mid slot, world px)
   // five, stepping DOWN from the foot of the white core to the plateau in a falling rhythm: each one lands a
-  // little lower than the gap before it promised (the gaps grow 64 -> 88 px), drops the last 12 px into its place
+  // little lower than the gap before it promised (70 / 70 / 68 / 66 px apart), drops the last 12 px into its place
   // and pops; the two that stay above the chest keep a breath of life
   const mAt = (t) => ({ body: on(t, T.chest.body[0]), dome: on(t, T.morph.m1[0]) });
   function drawBeads(ctx, t) {
@@ -208,14 +210,14 @@ export function makeLight(E, W, U) {
         sc *= 1 - 0.8 * k; dy = (i ? 30 : 46) * k * k;
       }
       const bob = 1.6 * Math.sin(t * 1.9 + i * 1.3);
-      A.beads[i].under.draw(ctx, LB.x, y + dy + bob, { scale: sc });
-      A.beads[i].disc.draw(ctx, LB.x, y + dy + bob, { scale: sc });
+      A.beads[i].draw(ctx, LB.x, y + dy + bob, { scale: sc });
     });
   }
 
   // ------------------------------------------------------------------ the cream cover (top slot, FRAME px)
   // Cream sponge paint that grows out of the light's core (screen 802, 256) in the storyboard's five stepped
-  // passes: the swell of 23.23 simply keeps going. It is PAINT, not a wipe (review, L3):
+  // passes: the swell of 23.23 simply keeps going. It is PAINT, not a wipe (review, L3), and it LANDS ON THE PLATE
+  // (review 2, N1): the body of every coat is the primer plate's OWN pixels (W.wall) seen through its sponge prints.
   //   * every pass is a coat of real overlapping sponge prints (a soft cluster, ~65 % covered, full of gaps and
   //     pores) laid in a ring that reaches further out than the last one: the picture shows through the gaps of
   //     pass n until pass n + 1 closes them with the solid primer wall (seen through an ordered mask of prints);
@@ -223,10 +225,12 @@ export function makeLight(E, W, U) {
   //     never straight, never a circle. Distances count 0.8 downward, so the first coat veils the WHOLE mescid at
   //     once and the second takes it whole (never half a mosque); a bay is held back round the man, who is reached
   //     last (veiled in pass 3, gone in pass 4); the lower-left corner closes with the plate;
-  //   * the white of the light belongs to pass 1 only (a warm-white heart over the light's own core); from pass 2
-  //     the heart is primer with a paler cream mottle that thins away pass by pass — no white on primer;
-  //   * the old coats stay where they were printed (two close cream tones over the wall), so the covered part
-  //     looks dabbed until pass 5 = the bare primer plate, exactly (frame 714; the scene draws it itself).
+  //   * the white of the light belongs to pass 1 only (a warm-white heart over the light's own core); in passes 2
+  //     and 3 the heart is primer with a paler cream mottle that thins away — no white on primer;
+  //   * fresh paint is a shade lighter and crisply mottled (cream prints over the plate's pixels): full in pass 1,
+  //     62 % in pass 2, 30 % in pass 3, GONE in pass 4 — the coats dry into the wall. On frames 726–728 every
+  //     covered pixel already IS the plate (W.wall + finish): pass 5 (frame 729, drawn by the scene) only closes
+  //     the last pores of the outermost ring and the lower-left corner — no tone step, no change of texture.
   const O = L.sb.endcard.cover.origin_screen;                                // [802, 256]
   const FW = L.W, FH = L.H;
   const lobes = (th) => 1 + 0.12 * Math.sin(3 * th + 0.9) + 0.07 * Math.sin(5 * th + 2.3) + 0.045 * Math.sin(8 * th + 0.4);
@@ -254,7 +258,9 @@ export function makeLight(E, W, U) {
   const manX = scr(L.man.x ?? 540, 0)[0];
   const inMan = (x, y) => clamp(1 + Math.min(x - (manX - 82), manX + 118 - x, y - 590, 1216 - y) / 50);
   const REACH = [0.26, 0.53, 0.78, 0.945];                                  // share of the frame inside the front of passes 1..4
-  const CLOSE_LAG = 0.14;                                                    // pass k closes everything up to pass-time k - 1 - lag
+  // pass k closes (solid plate) everything up to pass-time k - 1 - lag; the LAST coat closes further than its own
+  // inner edge (to 3.3), so that the plate has only a thin porous ring and the corner left to close
+  const CLOSE_TO = [0, 1 - 0.14, 2 - 0.14, 3.3];
   const cov = once('coverField', () => {
     // the field's distribution over the frame (12 px grid): quantiles give the fronts, the CDF gives the mask order
     const st = 12, v0 = [];
@@ -277,16 +283,16 @@ export function makeLight(E, W, U) {
       for (let y = st / 2; y < FH; y += st) for (let x = st / 2; x < FW; x += st) { if (v[i++] < lim) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
       return [Math.max(0, x0 - 90), Math.max(0, y0 - 90), Math.min(FW, x1 + 90), Math.min(FH, y1 + 90)];
     };
-    return { G, T, cdf, gOfT, boxOf, closedP: [1, 2, 3, 4].map((k) => (k === 1 ? 0 : cdf(gOfT(k - 1 - CLOSE_LAG)))) };
+    return { G, T, cdf, gOfT, boxOf, closedP: CLOSE_TO.map((tt) => (tt > 0 ? cdf(gOfT(tt)) : 0)) };
   });
   const passTime = (x, y) => cov.T(x, y);
   const COVER_STEPS = 240, COVER_DAB = 150;
-  const CREAM = '#F4E9D4';                                                    // the wall's own cream (E.makeWall), before the grain finish
-  // (baked on its first frame, not with the act: four frame-sized coats are only needed for the last 12 frames)
+  const CREAM = '#F4E9D4';                                                    // fresh cream: a shade lighter than the dry wall
+  // (baked on its first frame, not with the act: the frame-sized coats are only needed for the last 12 frames)
   const getCover = () => once('cover', () => {
     const c = {};
     // the solid wall, closing pass by pass behind the newest coat
-    c.wall = E.Painted.fromSurface(W.wall, { ax: 0, ay: 0, seed: 2390, steps: COVER_STEPS, dabSize: COVER_DAB,
+    const wall = E.Painted.fromSurface(W.wall, { ax: 0, ay: 0, seed: 2390, steps: COVER_STEPS, dabSize: COVER_DAB,
       reveal: { order: (x, y, rng) => clamp(cov.cdf(cov.G(x, y)) * 0.985 + rng.next() * 0.012) } });
     // the coat of pass k: sponge prints in the ring k - 1 … k (it overlaps the coat before it), densest inside,
     // breaking up into single prints and a spray toward its front
@@ -301,7 +307,28 @@ export function makeLight(E, W, U) {
         { color: CREAM, coverage: 0.09, size: 96, stamps: 'speck', tints: 2, band: [0, 0.34] },
       ] });
     };
-    c.coat = [1, 2, 3, 4].map(coat);
+    c.coat = [1, 2, 3].map(coat);                                             // the fresh, lighter mottle of passes 1–3
+    const coat4 = coat(4);
+    // THE BODY of pass k: the plate's own pixels wherever the wall is closed or a coat 1..k is printed (same prints,
+    // same pores and gaps as the cream coats) — what is covered is already the picture of frame 729
+    c.plate = [1, 2, 3, 4].map((k) => {
+      const s = E.surface(FW, FH), g = s.ctx;
+      if (cov.closedP[k - 1] > 0) {
+        // (the ordered mask leaves a few hundred pinholes of 2–5 px far inside the closed wall: stamp the mask over
+        //  itself, 2.5 px off in eight directions, so that nothing is left to pop on the plate's frame)
+        const m = E.surface(FW, FH);
+        wall.draw(m.ctx, 0, 0, { p: cov.closedP[k - 1] });
+        E.blit(g, m, 0, 0);
+        for (const [dx, dy] of [[2.5, 0], [-2.5, 0], [0, 2.5], [0, -2.5], [1.8, 1.8], [-1.8, 1.8], [1.8, -1.8], [-1.8, -1.8]]) E.blit(g, m, dx, dy);
+      }
+      for (let j = 0; j < k; j++) (j < 3 ? c.coat[j] : coat4).draw(g);     // the coats keep every pore and gap of their prints
+      g.save();
+      g.globalCompositeOperation = 'source-in';
+      E.blit(g, W.wall, 0, 0);
+      g.restore();
+      return s;
+    });
+    wall.release?.();
     // pass 1: the light's own warm white, blooming over its core and thinning to the cream of the first coat
     const hb = cov.boxOf(cov.gOfT(0.8));
     c.heart = field({ box: hb, depth: (x, y) => clamp((0.66 - cov.T(x, y)) / 0.4), seed: 2397, edge: 0.8, reveal: { steps: 1 }, layers: [
@@ -309,23 +336,25 @@ export function makeLight(E, W, U) {
       { color: tf.core, coverage: 0.93, size: 100, tints: 2, tint: 0.01, pores: 0.3, band: [0.25, 1] },
       { color: '#FBF3E3', coverage: 0.1, size: 80, stamps: 'speck', band: [0, 0.3] },
     ] });
-    // passes 2-4: where the heart was, the primer is a shade paler and warmer — a mottle that thins away
+    // passes 2-3: where the heart was, the primer is a shade paler and warmer — a mottle that thins away
     c.warm = field({ box: cov.boxOf(cov.gOfT(1.1)), depth: (x, y) => clamp((1.0 - cov.T(x, y)) / 0.7), seed: 2398, edge: 0.85, reveal: { steps: 1 }, layers: [
       { color: '#FAF2E0', coverage: 0.6, size: 110, stamps: 'body', pores: 0.5, tints: 2, tint: 0.008 },
       { color: '#FDF8EC', coverage: 0.4, size: 84, stamps: 'open', tints: 2, tint: 0.008, band: [0.4, 1], patch: { scale: 200, amount: 0.3 } },
     ] });
     return c;
   });
-  const WARM_A = [0, 0.95, 0.62, 0.3];
+  const FRESH_A = [1, 0.62, 0.3, 0];                                          // the fresh cream mottle of the coats, per pass
+  const WARM_A = [0, 0.8, 0.36, 0];                                           // the paler heart, per pass
   const coverStage = (t) => L.count(t, T.cover);                              // 0 … 4 inside act 2 (5 = the plate)
   function drawCover(ctx, t) {
     const k = coverStage(t);
     if (!k) return;
-    if (k > 4) { E.blit(ctx, W.wall, 0, 0); return; }                        // 23.80: the bare plate (the scene draws it itself)
-    const cover = getCover(), p = cov.closedP[k - 1];
-    if (p > 0) cover.wall.draw(ctx, 0, 0, { p });
-    if (k >= 2) cover.warm.draw(ctx, { alpha: WARM_A[k - 1] });
-    for (let j = 0; j < k; j++) cover.coat[j].draw(ctx);
+    if (k > 4) { E.blit(ctx, W.wall, 0, 0); return; }                        // 24.30: the bare plate (the scene draws it itself)
+    const cover = getCover();
+    E.blit(ctx, cover.plate[k - 1], 0, 0);
+    const fa = FRESH_A[k - 1];
+    if (fa > 0) for (let j = 0; j < Math.min(k, 3); j++) cover.coat[j].draw(ctx, { alpha: fa });
+    if (WARM_A[k - 1] > 0) cover.warm.draw(ctx, { alpha: WARM_A[k - 1] });
     if (k === 1) cover.heart.draw(ctx);
   }
 

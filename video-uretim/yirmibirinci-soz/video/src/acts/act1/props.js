@@ -6,7 +6,7 @@
 //   sun        yesterday's sun: stencil disc r 100 in three passes (deep orange / orange / peach-gold lights) + halo
 //   afterglow  the last light on the ridge (pink / peach round an ivory-gold core) and the sponge specks it breaks into
 //   dots       the course dots: FLAT two-tone mid-ochre stencils r 10, in the tone of the sky third they cross
-//   crown      one soft pass of light on the crown of the mound (the lit rise answers «bil»)
+//   bloom      the bloom of warm light dabs on the lit rise, round its six flowers and along its crown (the rise answers «bil»)
 //   deed       the ghost title-deed: primer sheet, dashed maroon edge, folded corner, dashed lines, ochre seal
 //
 // Painting rule (ENGINE.md §6): opaque matte prints with holes, three tones + a pale core, tight
@@ -222,25 +222,69 @@ export function makeProps(E, W) {
     return out;
   });
 
-  // ------------------------------------------------------------------ the crown of the mound answers («bil», 11.53)
-  // One soft pass of light dabs ALONG THE TOP EDGE of the lit rise, in two parts: `inner` (behind his shins) and
-  // `outer` (the two shoulders of the mound). Painted in world px, drawn at (0, 0) in slots.mid - behind the mound,
-  // the man and the flowers, so only what stands above the crown line shows: a rim of yellow-green and pale gold.
-  const crown = once('crown', () => {
-    const M = L.mound, top = (x) => M.top(x);
-    const part = (xs, seed) => E.makeCluster({
-      points: xs.map(([x, lift, rx, ry]) => ({ x, y: top(x) - lift, rx, ry })), seed, edgeSoftness: 0.3, anchor: [540, 1090],
+  // ------------------------------------------------------------------ the lit rise answers («bil», 11.53): a BLOOM of light
+  // Last fix round — the answer must be SEEN on a phone. Warm light dabs in two layers, each in three parts from where
+  // he stands outward (0: the two flowers next to him, 1: the middle pair, 2: the outer pair):
+  //   `ground` (slots.ground: ON the rise, behind its rosettes, the flowers, the man and the hedge) — heaps of warm
+  //            gold along the whole crown line, from one shoulder of the rise to the other (world x 270-810), half on
+  //            the rise and half standing 30-40 px above it, and a glow under each flower;
+  //   `front`  (slots.front) — small dabs of pale gold ROUND each of the six flowers, printed on the dark rosette
+  //            leaves between and beside the petals (the strongest contrast of the picture): never on a neighbour's
+  //            petals, never on his legs or shoes (x 486-594 stays clear), never below the hedge lip.
+  // Painted in world px, drawn at `at`.
+  const bloom = once('bloom', () => {
+    const M = L.mound, top = (x) => M.top(x), rng = E.makeRng('act1/bloom');
+    const FL = L.flowers, F = Object.fromEntries(FL.map((f) => [f.id, f]));
+    const halo = (id, grow, dy = -8) => { const f = F[id]; return { x: f.x, y: f.y + dy, rx: f.r + grow, ry: f.r + grow - 6 }; };
+    const heap = (x, lift, rx, ry) => ({ x, y: top(x) - lift, rx, ry });
+    const GOLD = '#EFD467', LIGHT = '#F8E995', PALE = P('mound_lit', 1), SPARK = '#FFF9E0';
+    const ground = (points, seed) => E.makeCluster({
+      points, seed, edgeSoftness: 0.4, anchor: [540, 1090],
       layers: [
-        { color: P('mound_lit', 0), coverage: 0.84, size: 26, stamps: 'body', pores: 0.3 },
-        { color: '#D6EC92', coverage: 0.6, size: 18, band: [0.16, 1], stamps: 'open' },
-        { color: P('mound_lit', 1), coverage: 0.5, size: 15, band: [0.3, 1], stamps: 'body', patch: { scale: 60, amount: 0.3, seed } },
+        // a warm gold at the rim (it carries the bloom on the pale sky and on the lit green alike), the light, its pale core
+        { color: GOLD, coverage: 0.7, size: 30, stamps: 'body', pores: 0.4 },
+        { color: LIGHT, coverage: 0.8, size: 27, band: [0.16, 1], stamps: 'body', pores: 0.35 },
+        { color: PALE, coverage: 0.62, size: 20, band: [0.32, 1], stamps: 'open', patch: { scale: 64, amount: 0.26, seed } },
+        { color: SPARK, coverage: 0.3, size: 13, band: [0.45, 1], stamps: 'soft', patch: { scale: 50, amount: 0.46, seed: seed + 1 } },
       ],
-      reveal: { steps: 2, mode: 'mask', order: 'random', dab: 26 },
+      reveal: { steps: 3, mode: 'mask', order: 'random', dab: 30 },
     });
-    // [x, lift above the crown line, rx, ry]: uneven little heaps, never a ribbon
-    const inner = part([[452, 5, 26, 15], [486, 9, 24, 17], [522, 6, 22, 14], [560, 8, 24, 16], [596, 10, 25, 17], [630, 5, 24, 14]], 6701);
-    const outer = part([[318, 3, 20, 12], [352, 6, 24, 15], [388, 9, 26, 16], [420, 6, 22, 14], [662, 7, 24, 15], [696, 9, 26, 16], [730, 5, 23, 14], [762, 3, 19, 12]], 6702);
-    return { inner, outer, at: [540, 1090] };
+    // the dabs round a flower: eight places on a ring 11 px outside its petals, the ones that would land on another
+    // flower, on him or on the hedge left out
+    const round = (ids) => {
+      const pts = [];
+      for (const id of ids) {
+        const f = F[id];
+        for (let k = 0; k < 8; k++) {
+          const a = (Math.PI * 2 * (k + 0.5)) / 8 + rng.sym(0.22), rad = f.r + 11 + rng.sym(4), r = rng.range(10.5, 15);
+          const x = f.x + Math.cos(a) * rad, y = f.y + Math.sin(a) * rad;
+          if (y > L.lip(x) - 12 || (x > 486 - r && x < 594 + r)) continue;
+          if (FL.some((g) => g !== f && Math.hypot(x - g.x, y - g.y) < g.r + 3)) continue;
+          pts.push({ x, y, r });
+        }
+      }
+      return pts;
+    };
+    const front = (ids, seed) => E.makeCluster({
+      points: round(ids), seed, edgeSoftness: 0.34, anchor: [540, 1090],
+      layers: [
+        { color: GOLD, coverage: 0.6, size: 17, stamps: 'body', pores: 0.3 },
+        { color: LIGHT, coverage: 0.84, size: 15, band: [0.12, 1], stamps: 'body', pores: 0.3 },
+        { color: PALE, coverage: 0.6, size: 11, band: [0.3, 1], stamps: 'open' },
+        { color: SPARK, coverage: 0.3, size: 8, band: [0.45, 1], stamps: 'soft' },
+      ],
+      reveal: { steps: 3, mode: 'mask', order: 'random', dab: 16 },
+    });
+    return {
+      at: [540, 1090],
+      // (heap: x, lift of its centre above the crown line, rx, ry — the light stands 30-40 px above the rise)
+      ground: [
+        ground([halo('f1', 28), halo('f2', 28), heap(466, 6, 42, 33), heap(614, 6, 42, 33), heap(500, 9, 30, 28), heap(580, 9, 30, 28)], 6711),
+        ground([halo('f3', 28), halo('f4', 28), heap(420, 5, 42, 32), heap(660, 5, 42, 32), heap(372, 3, 38, 29), heap(708, 3, 38, 29)], 6712),
+        ground([halo('f5', 26, -6), halo('f6', 26, -6), heap(330, 0, 36, 27), heap(752, 0, 36, 27), heap(298, -4, 28, 22), heap(784, -4, 28, 22)], 6713),
+      ],
+      front: [front(['f1', 'f2'], 6721), front(['f3', 'f4'], 6722), front(['f5', 'f6'], 6723)],
+    };
   });
 
   // ------------------------------------------------------------------ the deed (senet)
@@ -330,5 +374,5 @@ export function makeProps(E, W) {
     return { drawParts, whole, burst, seal: [SX, SY], bounds };
   });
 
-  return { veil, callDabs, sun, afterglow, dots, crown, deed };
+  return { veil, callDabs, sun, afterglow, dots, bloom, deed };
 }

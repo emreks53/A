@@ -18,7 +18,18 @@ W.draw(ctx, t, { pose, slots = {} })         // the whole shared picture; call i
 W.planes                                     // { sky 0.15, cloud 0.3, far 0.7, ridge 0.5, mist 0.7, specks 1.2 }
 W.boxes  W.sprites                           // baked layer rectangles / sprites (inspection, tests)
 W.lightFloor                                 // world y: nothing lighter than hedge_mid may reach below it while a gloss is up
+W.camShift = 0                               // seconds ADDED to the time at which the CAMERA (and nothing else) is evaluated — see below
 ```
+
+**`W.camShift`** (last fix round; the lead's hook for camera motion blur). A writable number, default 0. `W.cam(t)`,
+`W.toScreen(…, t, …)`, `W.withPlane(ctx, t, …)` and every camera use inside `W.draw` take the camera of
+`t + W.camShift`; all states, poses, events, slots, the breathing, the drift of the mist … stay at `t`. Render the same `t`
+several times with small shifts and average the pictures: only the camera moves between them. With `camShift = 0` every
+pixel is what it was without the hook (checked: 30 times of the film pixel-identical). USE: call `prepareFrame(t)` with
+`W.camShift = 0` and set the shift only round `renderFrame(t)`. Reason: a part that is initialised by `prepareFrame` may read
+the camera at fixed times for a bake — act 2 does (`act2/light.js`: the dial's place on the far plane at 17.50 / 23.80, the
+cover's held boxes at 23.90) — and a shift at that moment would be baked in (a fraction of a pixel: the camera is nearly
+at rest at those times, but the bake would then depend on which sub-frame happened to initialise the part).
 
 ## Layer stack and slots (what is already on screen when your slot runs)
 
@@ -28,9 +39,9 @@ W.lightFloor                                 // world y: nothing lighter than he
 | 2 | 1.0 | zone tints: dusk passes (left third), pre-dawn wash (right third) — banks of cloud with lobed inner edges, never slabs | |
 | 3 | 0.3 | small cloud c1 — baked but NOT shown since polish round 1 (see the notes) | **`slots.back`** (1.0) — *extension*: behind today's sun |
 | 4 | 1.0 | today's sun from 8.77: warm sky pass, cobalt annulus, halo passes, disc; from 16.83 / 16.93 its receded variant (paler disc + calm pale halo, dabbed over in two steps; the annulus' outer rim taken back into the sky) | **`slots.sky`** (1.0) |
-| 5 | 1.0 | tomorrow's dashed ring (+ its crumble specks), light column | **`slots.far`** (0.7) |
+| 5 | 1.0 | tomorrow's dashed ring (it leaves with the mist: 16.63 / 16.73 / 16.83 — no re-inking, no crumble specks since the last fix round), light column | **`slots.far`** (0.7) |
 | 6 | 0.5 / 0.7 | far ridge (opaque below its crest); mist bank | **`slots.mid`** (1.0) |
-| 7 | 1.0 | the mound (lit from 10.07); the rosette leaves that pass behind his legs and flower f2 with its rosette (his stepping shoe is planted in front of it); the man — **`slots.hands`** inside `man.draw` (the world eases his turn frame by frame, frames 43–48, and cross-dabs the two turn drawings on frame 45 with `E.drawThrough`); hedge (its grass overlaps only the SOLES of his shoes); the other rosette leaves, buds / flowers | **`slots.front`** (1.0) |
+| 7 | 1.0 | the mound (lit from 10.07) — then **`slots.ground`** (1.0) — *extension, last fix round*: ON the rise, behind its rosettes, the flowers, the man and the hedge (act 1's bloom of light at «bil»); the rosette leaves that pass behind his legs and flower f2 with its rosette (his stepping shoe is planted in front of it); the man — **`slots.hands`** inside `man.draw` (the world eases his turn frame by frame, frames 43–48, and cross-dabs the two turn drawings on frame 45 with `E.drawThrough`); hedge (its grass overlaps only the SOLES of his shoes); the other rosette leaves, buds / flowers | **`slots.front`** (1.0) |
 | 8 | 1.2 / screen | ambient specks (only where screen y < 1190) | **`slots.top`** (frame px) |
 
 main.js then applies `E.finish(ctx)`; the engine draws the glosses.
@@ -67,16 +78,16 @@ main.js then applies `E.finish(ctx)`; the engine draws the glosses.
   cloud: { visible, x, y },    // layer px (parallax 0.3); visible is always false since polish round 1
   dusk:  { sunset0, sunset1, dusk1, dusk2, recede },          // booleans; recede 0..2
   mist:  { build 0..2, thick 0..3 (1 after 16.47; the passes land at 6.93 / 7.00 / 7.07 — was 7.00 / 7.07 / 7.17), recede 0..2, thinned, out 0..3, p (1 → 0 while it cross-dabs out), dx },
-  ring:  { dashes 0..14, strength 0..1 (1 / .8 / .55 / .35 after 6.93 / 7.00 / 7.07, .7 at 16.47, 0), crumble 0..3, p, visible },
+  ring:  { dashes 0..14, strength 0..1 (1 / .8 / .55 / .35 after 6.93 / 7.00 / 7.07, then .35 to the end), crumble 0..3 (= mist.out: it leaves WITH THE MIST), p, visible },
   sun:   { visible (8.77), bare (9.17), blaze (9.57), halo 0..3, settle 0..4, recede 0..2,
            haloR (0 | 190 | 250 | 300 | 170 | 150), annulus 0..1, breath (halo scale now),
            core, mid, rim, peach, white, warmSky },           // which halo prints are on
   column:{ on 0..1, p, leaving },
   mound: { lit },              // 10.07
-  flowers: [{ id, open, tau }] // f1..f6; tau = seconds since it opened
+  flowers: [{ id, open, tau, bob }] // f1..f6; tau = seconds since it opened; bob = 0 … 0.1: the answer to «bil» (frames 346 / 348 / 350, inside to outside)
 }
 ```
-Typical uses: `W.state(t).ring.strength` (what crumbles at 16.57), `.sun.visible` (unveil), `.sun.recede`
+Typical uses: `W.state(t).ring.strength`, `.sun.visible` (unveil), `.sun.recede`
 (dim your beads), `.mist.p` (cross-dab your knoll in while it is < 1), `.mound.lit`, `.man.warm`.
 
 ## `W.layout` (L) — numbers and helpers
@@ -105,7 +116,8 @@ Typical uses: `W.state(t).ring.strength` (what crumbles at 16.57), `.sun.visible
   pose for every t of your range; for the turn give `pose.view` 1/3, 2/3 at 1.47 / 1.53 (see the stub).
 * Mist: one rigid bank, `x = bbox + 4 px/s · (t − 7.07)`; it leaves from the ground up at 16.63 / 16.73 /
   16.83 together with the pre-dawn wash (`state.mist.p` = 2/3, 1/3, 0).
-* Ring: perfectly still; its crumble specks are drawn by the world (gone by 16.83).
+* Ring: perfectly still. Last fix round: it is not re-inked at 16.47 and does not crumble any more (neither could be seen
+  inside the camera move) — the veiled ghost ring (35 %) leaves with the mist's turn-over steps 16.63 / 16.73 / 16.83.
 * Sun: disc rigid, halo breathes with `L.motion.haloBreath`. Not drawn before 8.77 (the veil cloud of act 1
   must cover (540, 340) r 110 until its dab-out 8.77–9.17; from 8.77 the calm disc is underneath).
 * Paint rule of the engine (ENGINE.md §6): opaque prints with holes — no `opacity` on paint layers; the
@@ -174,6 +186,32 @@ Typical uses: `W.state(t).ring.strength` (what crumbles at 16.57), `.sun.visible
 * Checks (from `video/`): `node out/world/check.mjs coverage | gloss | determinism | holds | scan | perf | state`,
   `node out/world/check.mjs stills <scene> <scale> <t1,t2,…> <outdir>` (many stills from one browser),
   `out/world/gloss_crops.sh` (the five gloss-band crops, y 1200–1600).
+
+## Last fix round (round 3), as built
+
+* **`W.camShift`** — see the interface above.
+* **Hedge (D3 revised).** While a gloss is up only the rows of the gloss INK must stay calm and dark: SCREEN y 1330–1505,
+  x 120–960. In world px (`inkTop(x)` / `inkBot(x)` in world.js, computed from every frame of the four gloss windows,
+  camera drift and the «sahipsin» glide included, 3 px margin): rows 1296 (x 320–1135, set by YARIN) or 1322 (elsewhere)
+  down to 1511. Nothing lighter than `hedge_mid` is printed there; everything else of the hedge is foliage in light:
+  * *the lit band* — the second coat hangs down from the lip in clusters of uneven depth (45–110 px; a broken lower edge):
+    mid green, yellow-green dab clusters, a pale touch, dark stencil leaves with a lit sliver between them, fine primer
+    pinholes; its density fades toward the ink rows;
+  * *the frieze* begins right under the ink rows (world y 1511 instead of 1600) and fades in over 64 px: a first row of
+    small stencil leaves (dark and light), the larger light leaves and the foreground thicket below as before;
+  * *the horizon* is not a ruled line: outside the mound (x < 262, x > 818) the top line carries tufts of uneven height
+    (0–10 px), and left of the mound three dab clusters rise 13–23 px above the lip (`HUMPS`: x −22, 58, 160), the one
+    at x 58 with a leaf rosette that stands 39 px above the lip (`HUMP_ROSETTES`). With bud e1 (x 228) that is four
+    breaks, 80 / 102 / 68 px apart. NONE right of the mound: there stands act 2's knoll with the rug (lead's rule: never
+    in front of the man, the mound's flowers, the knoll or the rug). To add one there: one entry in `HUMPS`.
+  * `W.lightFloor` is unchanged (the acts' own lights keep the old rule: nothing lighter than hedge_mid below y ≈ 1203).
+  Check: `out/world/integ_r3.mjs ink` (every frame of the four windows, glosses off).
+* **Tomorrow's ring** leaves with the mist (see the notes above): `T.ring.reink / crumble / specksGone` are gone from
+  `layout.js`; `W.state(t).ring.crumble` now counts the mist's turn-over steps.
+* **The rise answers «bil»** (`T.mound.answer` 11.53): `W.state(t).flowers[i].bob` — the six flowers bob once, scale
+  1 → 1.1 → 1, the pair next to him first (frame 346), then the middle pair (348), then the outer pair (350); two frames
+  up, five down. `ANSWER_BOB = 0` in world.js switches it off. The bloom of light itself is act 1's (`slots.ground` +
+  `slots.front`, frames 346–355).
 
 ## Example act module
 

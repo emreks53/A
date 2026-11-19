@@ -135,9 +135,13 @@ function headPitch(pitch, back) {
     // from behind: a bow lifts the nape hairline (a longer neck: +0.8 px per degree) and drops the crown; a lift sinks the
     // head onto the collar (the neck all but disappears at -8 deg). The ears keep their place while the hair mass
     // changes round them (they sit about on the axis of the nod) and only drift 1 px with it.
-    const dTop = pitch >= 0 ? 0.45 * pitch : -0.3 * pitch;
+    // LAST FIX ROUND — a NOD (pitch beyond 10 deg) tips the head clearly forward: the crown drops 0.9 px per further
+    // degree (15 px at 22 deg) and the hair mass is seen shorter (the head tips away from us: down to 0.74 of its
+    // height at 22 deg). Up to 10 deg nothing has changed.
+    const deep = Math.max(0, pitch - 10);
+    const dTop = pitch >= 0 ? 0.45 * Math.min(pitch, 10) + 0.9 * deep : -0.3 * pitch;
     const dBot = pitch >= 0 ? -0.8 * pitch : -0.9 * pitch;
-    const sy = clamp(1 + (dBot - dTop) / 71.5, 0.84, 1.1);
+    const sy = clamp(1 + (dBot - dTop) / 71.5, 0.84 - 0.1 * clamp(deep / 12), 1.1);
     return { sy, ty: dTop + 70 * (sy - 1), face: 0, hair: 1, dTop, ear: clamp(pitch >= 0 ? 0.12 * pitch : 0.2 * pitch, -1.6, 1.6) };
   }
   // from the front: the face slides down under a hair cap that shows more crown; the chin covers more neck
@@ -257,9 +261,11 @@ const FACE = [[0, -68.4], [11, -67], [20.5, -61.5], [26.6, -52.5], [29.6, -42], 
 // FRONT hair: a short, neat cut with real mass — 7 px of volume over the skull, the hairline low on the forehead (the dark
 // shape is 26 px high in the middle), a soft side volume down to the ear line. One closed outline, clockwise from the top;
 // the fringe sits a touch lower on screen-left (a side-swept cut, not a cap).
-const HAIR_FRONT = [[0, -75.5], [11, -74.4], [21.5, -69.2], [29, -60.4], [32.8, -49.5], [33.6, -39.5], [32.8, -31.5], [31.2, -26.6], [29.2, -25.4],
-  [27.2, -29.6], [26.4, -37], [24.2, -43.4], [18.6, -47.6], [9.6, -49.2], [0, -48.2], [-10, -46.6], [-19, -44.4], [-24.6, -40.8], [-26.6, -35.5], [-27.2, -29.6],
-  [-29.2, -25.4], [-31.2, -26.6], [-32.8, -31.5], [-33.6, -39.5], [-32.8, -49.5], [-29, -60.4], [-21.5, -69.2], [-11, -74.4]];
+// (last fix round: the side hair ends at the TOP OF THE EARS, y -30, in a blunt rounded corner 6-7 px wide — it used to
+// run on to y -25 in two downward points, which gave the cap a helmet look)
+const HAIR_FRONT = [[0, -75.5], [11, -74.4], [21.5, -69.2], [29, -60.4], [32.8, -49.5], [33.7, -40.5], [33.5, -34.6], [32.3, -31.2], [29.8, -30.2],
+  [27.6, -31.6], [26.5, -35], [25.6, -39.6], [23.6, -44], [18.6, -47.6], [9.6, -49.2], [0, -48.2], [-10, -46.6], [-19, -44.4], [-24, -41.2], [-25.9, -37.6], [-26.8, -34.2],
+  [-27.9, -31.4], [-30, -30.2], [-32.4, -31.2], [-33.5, -34.6], [-33.7, -40.5], [-32.8, -49.5], [-29, -60.4], [-21.5, -69.2], [-11, -74.4]];
 const EAR_FRONT = [31.4, -22, 4.4, 7.6];                 // small skin bumps under the side hair (x, y, rx, ry)
 // BACK hair: the skull's mass, ending in a curved NAPE hairline that is narrower than the head — below it the neck
 const HAIR_BACK = [[0, -72], [12, -70.6], [22.2, -64.6], [29, -55.4], [32.2, -44.5], [32.8, -35], [31.6, -25.6], [28.4, -17], [23, -10.2], [15.5, -5.4], [7.5, -2.8], [0, -2]];
@@ -308,8 +314,8 @@ export async function makeMan(E, opts = {}) {
   const { shape: SH, tone } = E;
   const K = BAKE;
   const COL = [
-    { top: '#B4553A', trousers: '#4A342A', shoes: '#2E1F1B', skin: '#E0A47C', hair: '#3B2620', band: '#963F2B', skinShade: '#C5855F', cast: '#8C3A28' },
-    { top: '#CF6E48', trousers: '#63473A', shoes: '#3B2923', skin: '#E9B088', hair: '#47302A', band: '#AD5334', skinShade: '#CF9068', cast: '#A24A30' },
+    { top: '#B4553A', trousers: '#4A342A', shoes: '#6E472F', skin: '#E0A47C', hair: '#3B2620', band: '#963F2B', skinShade: '#C5855F', cast: '#8C3A28' },
+    { top: '#CF6E48', trousers: '#63473A', shoes: '#8A5B3A', skin: '#E9B088', hair: '#47302A', band: '#AD5334', skinShade: '#CF9068', cast: '#A24A30' },
   ];
   const place = (s) => SH.place(s, { scale: K });
   const scaleLayer = (l) => ({
@@ -338,7 +344,10 @@ export async function makeMan(E, opts = {}) {
   //   * `primer` = the cream primer of the wall in the pores of a DARK shape: a small, dense stipple at 50-70 %, never
   //     white flecks;
   //   * `shadeCol` / `litCol` = the colours of the shade / light passes when they are not simply tones of `col`.
-  const PRIMER = '#EFE4CF';
+  // LAST FIX ROUND (D2 revised): the pores and flecks of a DARK fill (hair, trousers, shoes) are a LIGHTER TONE OF THE SAME
+  // HUE — the fill's own colour times (1 + primer), e.g. hair #3B2620 -> #5A3A31 —, small and dense (poreScale 0.6): never
+  // cream or white (cream flecks on the hair read as lint). The option keeps its name `primer`.
+  const sameHue = (hex, k) => { const n = parseInt(hex.slice(1), 16); return '#' + [16, 8, 0].map((sh) => Math.min(255, Math.round(((n >> sh) & 255) * (1 + k))).toString(16).padStart(2, '0')).join('').toUpperCase(); };
   const paint = (col, stage, { lit = null, shade = null, warm = 0, dab = 13, big = 28, deep = 0.15, pores = 0.42, cov = 0.92, litAmt = 0.15, shadeAmt = 0.13,
     under = null, underDeep = null, second = 0, primer = 0, shadeCol = null, litCol = null, hiCol = null } = {}) => {
     const ground = under ?? col, gd = underDeep ?? deep;
@@ -349,17 +358,17 @@ export async function makeMan(E, opts = {}) {
       // a DARK shape: what its pores show is the wall's primer (at `primer` = 50-70 % over the dark ground) — real pores
       // of the coat, small and dense; the dark ground comes back as a loose print over the coat
       layers = [
-        { color: col, coverage: 0.99, size: dab * 1.5, stamps: 'body', tint: 0.02, pores: 0.72, opacity: 1, even: true },
+        { color: col, coverage: 0.99, size: dab * 1.5, stamps: 'body', tint: 0.02, pores: 0.72, poreScale: 0.6, opacity: 1, even: true },
         { color: base, coverage: 0.46, size: dab * 1.5, stamps: 'open', pores: 0.3, opacity: [0.7, 0.95], tint: 0.02, patch: { scale: 30, amount: 0.3, sharp: 0.3, seed: 92 } },
       ];
-      base = mixHex(base, PRIMER, primer);
+      base = sameHue(col, primer);
     } else {
       layers = [
         { color: col, coverage: cov, size: dab * 1.5, stamps: 'body', tint: 0.02, pores, opacity: [0.9, 1], even: true },
         { color: tone(col, 0.07), coverage: 0.3, size: dab, stamps: 'open', pores: 0, opacity: [0.45, 0.75], tint: 0.015 },
       ];
     }
-    if (second) layers.push({ color: tone(col, second), coverage: 0.4, size: dab * 1.9, stamps: 'body', pores: 0.35, opacity: [0.85, 1], tint: 0.02, patch: { scale: 30, amount: 0.4, sharp: 0.4, seed: 91 } });
+    if (second) layers.push({ color: primer ? sameHue(col, second * 2.2) : tone(col, second), coverage: 0.4, size: dab * 1.9, stamps: 'body', pores: 0.35, opacity: [0.85, 1], tint: 0.02, patch: { scale: 30, amount: 0.4, sharp: 0.4, seed: 91 } });
     if (stage >= 3) {
       if (shade) layers.push({ color: shadeCol ?? tone(col, -shadeAmt), coverage: 0.7, size: big, stamps: 'open', pores: 0.3, opacity: [0.7, 0.95], tint: 0.02, maskFn: shade });
       if (lit) layers.push({ color: litCol ?? tone(col, litAmt), coverage: 0.74, size: big * 0.8, stamps: 'open', pores: 0.3, opacity: [0.75, 1], tint: 0.02, maskFn: lit });
@@ -436,16 +445,19 @@ export async function makeMan(E, opts = {}) {
     },
     shoe(key, w, st) {
       const C = COL[w], [view, sgn] = key.split(':'), s = +sgn;
-      // A real shoe, its upper in sight under the trouser hem (19 px above the sole; the hedge's grass overlaps only the
-      // sole): from the FRONT the toe cap, a low dome 43 px wide on a flat sole, turned out a little (longer on the outer
-      // side); from BEHIND the heel, narrower (37 px), with the outer side of the shoe showing beyond it (toed out).
+      // LAST FIX ROUND — ONE CLEAN ROUNDED CAP per shoe, printed IN FRONT of the trouser hem (it used to lie behind the leg
+      // and stood out on both sides of the hem: two lobes with the hem as a notch between them — a cloven hoof). From the
+      // FRONT the toe cap: a low dome 48 px wide and 20 high on a flat sole line, a little longer on the outer side
+      // (toed out); from BEHIND the same shoe: the heel, 42 px wide, a flatter dome. Both overlap the hem by 3 px, so no
+      // background shows between hem and shoe. Warm leather brown, a step lighter and warmer than the trousers; a calm
+      // print (one light pass on the side of the sun, same-hue pores), the grass covers the sole.
       const SHOE = {
-        front: [[-13, -20.5], [-16.4, -12], [-18, -5], [-17.2, 0.4], [-13, 3.2], [-3, 3.6], [9, 3.6], [18, 3.4], [23, 1.2], [25, -3.2], [24, -8.6], [19.6, -14], [13.4, -19], [1, -22]],
-        back: [[-12.4, -20.5], [-15, -12], [-16, -5], [-15, 0.6], [-11, 3.2], [-2, 3.6], [8, 3.6], [15, 3.4], [19.6, 1.4], [21.4, -3], [20.4, -8.6], [16.6, -14], [12.4, -19], [0.5, -22]],
+        front: [[-13.6, -17.8], [-18.6, -13.2], [-20.8, -6.6], [-21.2, -0.6], [-19, 3], [-9, 3.6], [5, 3.6], [19, 3.6], [25.4, 3], [27.8, -0.6], [27, -6.4], [22.6, -12.4], [14.6, -17.2], [2, -19.4]],
+        back: [[-13.2, -17.4], [-17.4, -13.2], [-18.8, -6.6], [-19, -0.6], [-16.8, 3], [-8, 3.6], [4, 3.6], [15.4, 3.6], [20.8, 3], [23, -0.6], [22.6, -6.4], [20, -12.8], [14.6, -17.2], [1, -18.8]],
       };
       const pts = SHOE[view].map(([x, y]) => [s * x, y]);
-      const lit = (x, y) => sm(-6, 8, x) * sm(-3, -12, y);
-      return bake(SH.smooth(s > 0 ? pts : pts.reverse(), 0.5), { ...paint(C.shoes, st, { lit, big: 13, deep: 0.25, second: 0.12, primer: 0.55, litAmt: 0.2 }), edge: edges(C.shoes, st, { sw: 3, lw: 2.5, lo: 0.34 }), seed: 16 });
+      const lit = (x, y) => sm(-4, 10, x) * sm(-4, -13, y);
+      return bake(SH.smooth(s > 0 ? pts : pts.reverse(), 0.5), { ...paint(C.shoes, st, { lit, big: 15, deep: 0.2, second: 0.07, primer: 0.3, litAmt: 0.17 }), edge: edges(C.shoes, st, { sw: 3, lw: 2.5, so: 0.42, lo: 0.3 }), seed: 16 });
     },
     neck(view, w, st) {                                                 // view: 'front' | 'back' (the nape)
       const C = COL[w], nape = view === 'back';
@@ -693,8 +705,8 @@ export async function makeMan(E, opts = {}) {
       sk = skeleton(Q, view, breath);
     }
     body(() => {
-      for (const L of sk.legs) put(c, part('shoe', `${skin}:${L.s}`, w, st), L.foot[0], L.foot[1]);
       for (const L of sk.legs) put(c, part('leg', L.s, w, st), L.hip[0], L.hip[1], -(L.rot - restLeg(L.s)), 1, L.len);
+      for (const L of sk.legs) put(c, part('shoe', `${skin}:${L.s}`, w, st), L.foot[0], L.foot[1]);          // the cap lies in front of the hem
       put(c, part('pelvis', '-', w, st), sk.hip[0], sk.hip[1]);
     });
     const H = sk.head;

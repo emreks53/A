@@ -3,15 +3,15 @@
 // Everything the storyboard gives to act 1 that the shared world does not paint:
 //   the man's acting (act1/acting.js) · the «Ey nefis!» call-ring · the veil cloud over today's sun ·
 //   yesterday's sun on his palm, slipping, setting; its halo and afterglow · the 27 course dots ·
-//   the ghost title-deed with its seal, crumbling into specks · the crown of the mound answering «bil».
+//   the ghost title-deed with its seal, crumbling into specks · the bloom of light on the rise answering «bil».
 // The painted things are baked in act1/props.js. Every frame is a pure function of absolute time t.
 //
 // Slots (see src/shared/WORLD.md):
 //   back   course dots (behind today's sun and its halo)
-//   mid    the one pass of light on the crown of the mound at «bil» (behind the mound, the man and the flowers)
+//   ground the bloom of warm light on the lit rise at «bil» (on the mound; behind its rosettes, the flowers, the man, the hedge)
 //   sky    yesterday's halo + sun, afterglow (all behind the far ridge and the man), then the veil cloud
 //   hands  call-ring, the dabs gathered under his hand, the deed (in front of his body, behind his arms)
-//   front  the deed's crumble specks
+//   front  the deed's crumble specks; the dabs of light round the six flowers at «bil»
 //
 // Stepped events sit on the storyboard's frames (table S below, in storyboard seconds; L.ft snaps them to
 // the 30 fps grid); travel is smooth and eased. Shared states are never drawn here (W.state knows them).
@@ -30,7 +30,8 @@ const S = {
   deed: [5.67, 5.77, 5.87, 6.00], tremble: 6.30, crumble: [6.37, 6.43, 6.50],
   veilOut: [8.77, 8.90, 9.03, 9.17],
   dotsOut: [10.73, 10.80, 10.87, 10.93, 11.00, 11.07, 11.13, 11.20],       // both legs from the feet upward
-  crown: [11.53, 11.60, 11.67, 11.73],                                     // «bil»: inner dabs · all · outer only · gone
+  // «bil»: the bloom swells from where he stands outward (inner + middle · + outer · peak), fades (2/3 · 1/3) and is gone: frames 346 … 356
+  bloom: [11.53, 11.60, 11.67, 11.73, 11.80, 11.87],
   // dots that the YARIN framing would cut at the left frame edge leave / return while the frame is travelling
   edgeOut: 4.73, edgeIn: 8.27,
 };
@@ -184,6 +185,13 @@ export default {
     return { x, y: y - lift, rot: -0.55 * (s / L.yesterday.r), stage, s };
   },
 
+  /** «bil»: which parts of the bloom are on at t, each with its draw options -> [[part 0..2, { p, scale } | undefined], …] */
+  bloomAt(t, L) {
+    const n = L.count(t, S.bloom);                      // 1 … 5 on frames 346 / 348 / 350 / 352 / 354
+    const o = n === 3 ? { scale: 1.05 } : n === 4 ? { p: 2 / 3 } : n === 5 ? { p: 1 / 3 } : undefined;
+    return (n === 1 ? [0, 1] : [0, 1, 2]).map((i) => [i, o]);
+  },
+
   slots: {
     // ------------------------------------------------------------ behind today's sun: yesterday's glow, then the course dots
     back(ctx, t, W) {
@@ -229,17 +237,17 @@ export default {
       }
     },
 
-    // ------------------------------------------------------------ behind the mound: the lit rise answers «bil» once
-    mid(ctx, t, W) {
-      const T = this.T, L = W.layout, C = this.props.crown, e = 1e-6;
-      if (t < T.crown[0] - e || t >= T.crown[3] - e) return;
-      // a ripple of light along the crown, from where he stands outward, on twos: the inner dabs are printed with the
-      // dip of his nod (one frame pressed larger), then all of them, then only the outer ones, half out; gone at 11.73
-      const n = L.count(t, S.crown), [ax, ay] = C.at;
-      const press = t < T.crown[0] + 1 / 30 - e ? 1.06 : 1;
-      if (n <= 2) C.inner.draw(ctx, ax, ay, n === 1 && press > 1 ? { scale: press } : undefined);
-      if (n === 2) C.outer.draw(ctx, ax, ay);
-      if (n === 3) C.outer.draw(ctx, ax, ay, { p: 0.5 });
+    // ------------------------------------------------------------ on the rise: its light answers «bil» once
+    ground(ctx, t, W) {
+      const T = this.T, L = W.layout, B = this.props.bloom, e = 1e-6;
+      if (t < T.bloom[0] - e || t >= T.bloom[5] - e) return;
+      // ONE swell, on twos, with his nod (11.53: the head goes down, the light comes up): the light round the four
+      // flowers next to him and along the crown between them (frame 346), then the outer pair with it - the whole rise
+      // from shoulder to shoulder (348) -, then all of it pressed 5 % larger (350: the peak); it dabs out in two steps
+      // (352: 2/3, 354: 1/3) while he straightens and is gone on frame 356 (11.87). The world bobs the flowers from the
+      // inside outward on the same frames (W.state(t).flowers[i].bob).
+      const [ax, ay] = B.at;
+      for (const [i, o] of this.bloomAt(t, L)) B.ground[i].draw(ctx, ax, ay, o);
     },
 
     // ------------------------------------------------------------ sky stage
@@ -340,6 +348,11 @@ export default {
     // ------------------------------------------------------------ in front of everything painted
     front(ctx, t, W) {
       const T = this.T, L = W.layout, PR = this.props;
+      // «bil»: the dabs of light round the flowers, in step with the bloom on the rise (slots.ground)
+      if (t >= T.bloom[0] - 1e-6 && t < T.bloom[5] - 1e-6) {
+        const B = PR.bloom;
+        for (const [i, o] of this.bloomAt(t, L)) B.front[i].draw(ctx, B.at[0], B.at[1], o);
+      }
       // the deed's specks drift toward the dashed ring and are gone by 6.90
       if (t >= T.crumble[0] - 1e-6 && t < T.crumble[0] + 0.6) {
         const [px, py] = L.deed.right_palm;

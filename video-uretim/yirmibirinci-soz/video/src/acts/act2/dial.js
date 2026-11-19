@@ -10,7 +10,7 @@
 //   15.40–15.53     a matte glint: five white-gold dabs, stepped on and off
 //   … 22.00         held; shown in the open hand (22.00–22.17), the long hand ticks one notch (22.17)
 //   22.43–22.87     the cast: a low arc, face to us the whole way; 22.87–22.97 it sinks into the niche's glow
-//   16.83 / 16.93   hand and beads take the world's recede over-dab (one value step down)
+//   16.83 / 16.90   hand and beads take the world's recede: an over-dab through the sponge (pores keep the original)
 //
 // The hour is ONE object from the ring to the niche: the same gold face with the same two hands.
 
@@ -28,52 +28,73 @@ export function makeDial(E, W, U, acting) {
   const OUT = [Math.sin(A0 * DEG), -Math.cos(A0 * DEG)];                    // the hand's direction at rest (to 5 o'clock)
   const CHOSEN = H.chosen_bead.centre, POPPED = H.chosen_bead.popped_to;    // (645, 522) -> (665, 557)
   const RB = H.bead_r, R30 = C.bead_r_when_it_leaves_the_ring, R42 = C.r;   // 22, 30, 42
+  const HAND_LONG = 21.5, HAND_SHORT = 12.5;                                 // the coin's two clock-hands (hub to the centre of the tip's cap)
 
   const A = once('all', () => {
     const a = {};
-    // --- the clock-hand (drawn pointing along +x, anchored at the hub): a CLOCK hand — a solid round hub (r 13) on the
-    //     disc's centre, a blade that swells from 15 to 18 px at one third and tapers to a neck, a lozenge tip, and a
-    //     short rounded counterweight (30 px) on the other side of the hub. No ring, no pin: one dark stencil shape.
+    // --- the clock-hand (drawn pointing along +x, anchored at the hub): ONE PLAIN LANCET (review 2, N6) — a round hub
+    //     disc (r 14) on the sun's centre, a blade that is widest (17 px) at one fifth of its length and tapers STRAIGHT
+    //     to a point at the bead ring, and a short counter-tail (18 % of the length). No knobs, no leaf tip.
     const HL = HD.length;                                                   // 186
-    const hand = shape.union(
-      shape.polygon([[-2, -7.5], [30, -8.3], [62, -9], [100, -7.5], [HL - 48, -4.3], [HL - 48, 4.3], [100, 7.5], [62, 9], [30, 8.3], [-2, 7.5]]),
-      shape.polygon([[HL - 54, -3.6], [HL - 42, -7.6], [HL - 32, -9.4], [HL - 24, -8.6], [HL - 12, -4.6], [HL - 4, -1.5], [HL, 0],
-        [HL - 4, 1.5], [HL - 12, 4.6], [HL - 24, 8.6], [HL - 32, 9.4], [HL - 42, 7.6], [HL - 54, 3.6]]),
-      shape.polygon([[-22, -6.6], [2, -6.4], [2, 6.4], [-22, 6.6]]),          // (all members wind the same way: opposite windings cut a hole where they overlap — the old "ferrule")
-      shape.ellipse(-22.5, 0, 7.5),
-      shape.ellipse(0, 0, 13),
+    const TAIL = 0.18 * HL;
+    const hand = shape.union(                                               // (all members wind the same way: opposite windings cut a hole where they overlap)
+      shape.polygon([[0, -7], [0.2 * HL, -8.6], [HL - 1, -0.7], [HL, 0], [HL - 1, 0.7], [0.2 * HL, 8.6], [0, 7]]),
+      shape.polygon([[-TAIL, -3.7], [0, -6.4], [0, 6.4], [-TAIL, 3.7]]),
+      shape.ellipse(-TAIL, 0, 3.7),
+      shape.ellipse(0, 0, 14),
     );
-    // receded states (16.83 / 16.93): the hand goes toward the sky in two value steps — a greyer, lighter maroon; its
-    // silhouette stays whole. Paint (all three states): two maroon tones dabbed over the base, and fine pores of the
-    // cream primer at 50–70 % (small and dense — never white flecks, which read as chipped paint)
-    const HBASE = [P('clock_hand'), '#6A4A52', '#896C73'], HDARK = ['#33151A', '#553439', '#75585F'], HLIT = ['#6B3A34', '#8A6263', '#A28285'];
-    const HPORE = ['#AD978C', '#BAA69D', '#C6B4AA'];                       // the cream primer (#EFE4CF) at 60 % in the pores of each state
+    // Paint: two maroon tones dabbed over the base; its pores and flecks are a LIGHTER MAROON, small and dense (lead's
+    // rule D2: never cream on a dark fill — cream flecks read as chipped paint).
+    // The recede (16.83 / 16.90) is PAINT too (N7): a dusty, lighter mauve is dabbed over the hand through the sponge —
+    // about half of it, then five sixths; the rest keeps the original dark maroon. The silhouette stays whole.
+    const HBASE = P('clock_hand'), HDARK = '#33151A', HLIT = '#6B3A34', HPORE = '#7C4A4C';
+    const OVER = ['#806069', '#9A7F88'], OVER_LIT = ['#977980', '#AE959B'];
     const mkHand = (n) => E.bakeStencil({
-      shape: hand, base: HPORE[n], anchor: [0, 0], seed: 2501, bleed: false, density: 2,
+      shape: hand, base: HPORE, anchor: [0, 0], seed: 2501, bleed: false, density: 2,
       layers: [
-        { color: HBASE[n], coverage: 0.99, size: 20, stamps: 'dense', pores: 0.5, poreScale: 0.5, tint: 0.02 },
-        { color: HDARK[n], coverage: 0.4, size: 24, stamps: 'open', pores: 0.3, poreScale: 0.5, patch: { scale: 60, amount: 0.4 } },
-        { color: HLIT[n], coverage: 0.5, size: 18, stamps: 'body', pores: 0.3, poreScale: 0.5, maskFn: (x, y) => ss(2, -4, y), patch: { scale: 50, amount: 0.3 } },
+        { color: HBASE, coverage: 0.99, size: 20, stamps: 'dense', pores: 0.5, poreScale: 0.5, tint: 0.02 },
+        { color: HDARK, coverage: 0.4, size: 24, stamps: 'open', pores: 0.3, poreScale: 0.5, patch: { scale: 60, amount: 0.4 } },
+        { color: HLIT, coverage: 0.5, size: 18, stamps: 'body', pores: 0.3, poreScale: 0.5, maskFn: (x, y) => ss(2, -4, y), patch: { scale: 50, amount: 0.3 } },
+        ...(n ? [
+          { color: OVER[n - 1], coverage: [0.52, 0.86][n - 1], size: 22, stamps: 'body', pores: 0.35, poreScale: 0.6, tint: 0.02 },
+          { color: OVER_LIT[n - 1], coverage: [0.2, 0.36][n - 1], size: 16, stamps: 'open', maskFn: (x, y) => ss(3, -3, y), patch: { scale: 50, amount: 0.3 } },
+        ] : []),
       ],
       reveal: { steps: 2, order: 'sweep', angle: 0, jitter: 0.5, dab: 60 },
     });
     a.hand = [0, 1, 2].map(mkHand);
 
-    // --- hour-beads: white-ivory, lavender shadow inside the lower-left edge; 5 prints, 3 states. Receded (16.83 /
-    //     16.93) they go TWO value steps toward the sky (#B4C3D8 with their lavender shadow: about 1.6 : 1 on the
-    //     over-dabbed ring) — after its recede the dial is a quiet pattern, the eye rests on chest / mescid / rug
+    // --- hour-beads: white-ivory, lavender shadow inside the lower-left edge; 5 prints, 3 states. The recede (16.83 /
+    //     16.90) is an OVER-DAB of sky paint through the sponge (review 2, N7): about two fifths, then seven tenths of
+    //     each bead is printed over with a soft sky blue; the pores between the prints keep the bead's own ivory and its
+    //     lavender shadow. Every bead takes the dabs differently (5 prints) — paint, not a veil
     const bl = E.sphereLight(0, 0, RB, RB);
     const mkBead = (seed, st) => E.bakeStencil({
-      shape: shape.ellipse(0, 0, RB), base: [P('hour_bead'), '#D3DAE6', '#B4C3D8'][st], anchor: [0, 0], seed, density: 2,
+      shape: shape.ellipse(0, 0, RB), base: P('hour_bead'), anchor: [0, 0], seed, density: 2,
       bleed: st ? false : { color: P('hour_bead_shadow'), amount: 0.5 },
       layers: [
-        { color: ['#DCD6EC', '#C3C6DE', '#A7B3D0'][st], coverage: 0.7, size: 20, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.46, 0.3, bl(x, y)) },
-        { color: ['#FFFFFF', '#E0E6EE', '#C2CFE0'][st], coverage: 0.6, size: 16, stamps: 'body', maskFn: (x, y) => ss(0.66, 0.84, bl(x, y)) },
-        ...(st < 2 ? [{ color: P('primer'), coverage: [0.05, 0.03][st], size: 10, stamps: 'soft' }] : []),
+        { color: '#DCD6EC', coverage: 0.7, size: 20, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.46, 0.3, bl(x, y)) },
+        { color: '#FFFFFF', coverage: 0.6, size: 16, stamps: 'body', maskFn: (x, y) => ss(0.66, 0.84, bl(x, y)) },
+        ...(st ? [
+          { color: '#9DC2DD', coverage: [0.46, 0.8][st - 1], size: 12, stamps: 'body', pores: 0.5, poreScale: 0.5, tint: 0.03 },
+          { color: '#86AFD3', coverage: [0.14, 0.3][st - 1], size: 11, stamps: 'open', maskFn: (x, y) => ss(0.56, 0.36, bl(x, y)) },
+          { color: '#B5D2E6', coverage: [0.08, 0.16][st - 1], size: 10, stamps: 'soft', maskFn: (x, y) => ss(0.6, 0.8, bl(x, y)) },
+        ] : [{ color: P('primer'), coverage: 0.05, size: 10, stamps: 'soft' }]),
       ],
-      edge: { color: [P('hour_bead_shadow'), '#A29FCC', '#9A9DC6'][st], width: 4.6, opacity: [0.62, 0.58, 0.55][st] },
+      edge: { color: [P('hour_bead_shadow'), '#9F9CCB', '#98A0CC'][st], width: 4.6, opacity: [0.62, 0.54, 0.48][st] },
     });
     a.beads = [0, 1, 2].map((st) => [2511, 2512, 2513, 2514, 2515].map((s) => mkBead(s, st)));
+    // --- the sun's disc under the hand: the world over-dabs it with its pale variant (16.83 / 16.90); here the same
+    //     sponge leaves about a quarter of it in the ORIGINAL gold — deep-gold prints in the pale coat, clipped to the disc
+    a.sunPores = E.bakeStencil({
+      shape: shape.ellipse(0, 0, S.r - 2), anchor: [0, 0], seed: 2517, bleed: false,
+      layers: [
+        { color: '#EFB449', coverage: 0.27, size: 30, stamps: 'open', pores: 0.3, tint: 0.03, patch: { scale: 110, amount: 0.3 } },
+        { color: P('today_disc'), coverage: 0.07, size: 22, stamps: 'open', patch: { scale: 110, amount: 0.42 } },
+        { color: '#EFB449', coverage: 0.1, size: 20, stamps: 'soft', patch: { scale: 80, amount: 0.4, seed: 5 } },
+      ],
+      reveal: { steps: 1 },
+    });
     // --- the ring they sit on, receded: a porous over-dab of a greyed sky blue on the cobalt band (r 160–250), in the
     //     world's two recede steps — the cobalt stays in its pores, so the ring is still a ring, one step nearer the sky
     const vr = (x, y) => Math.hypot(x - DX, y - DY);
@@ -83,6 +104,19 @@ export function makeDial(E, W, U, acting) {
       layers: [
         { color: '#6FA6CF', coverage: 0.66, size: 56, stamps: 'open', tint: 0.03, pores: 0.3 },
         { color: '#7DB4D6', coverage: 0.3, size: 42, stamps: 'soft', patch: { scale: 120, amount: 0.4 } },
+      ],
+    });
+
+    // --- … and on its right side, toward the far light, its outer rim is taken back into the sky (N7): light-blue prints
+    //     over r 240–284 within 70° of three o'clock, so that the cobalt ends at r 238 there (the beads end at 232) and
+    //     40 px of plain sky lie between the ring and the deepened sky of the light
+    a.rimSky = U.field({
+      box: [DX + 60, DY - 280, DX + 300, DY + 280], seed: 2518, edge: 0.4, reveal: { steps: 2, order: 'random', layerMix: 0 },
+      depth: (x, y) => { const r = vr(x, y), th = Math.atan2(y - DY, x - DX); return clamp(Math.min((r - 240) / 7, (284 - r) / 22)) * ss(1.25, 0.95, Math.abs(th)); },
+      layers: [
+        { color: P('sky_light_blue'), coverage: 0.97, size: 26, tint: 0.03, pores: 0.15 },
+        { color: '#97CEE4', coverage: 0.3, size: 24, stamps: 'soft' },
+        { color: '#74B5D0', coverage: 0.14, size: 22, stamps: 'open', patch: { scale: 90, amount: 0.4 } },
       ],
     });
 
@@ -99,20 +133,23 @@ export function makeDial(E, W, U, acting) {
       ],
       edge: [{ color: P('coin_rim'), width: 2.6, opacity: 0.8, dir: null }, { color: '#8A4E16', width: 4.4, opacity: 0.5 }],
     });
-    const mkHour = (len, seed) => E.bakeStencil({
-      shape: shape.capsule(len - C.clock_hands.stroke / 2, C.clock_hands.stroke / 2), base: HPORE[0], anchor: [0, 0], seed, density: 2, bleed: false,
+    // the emblem (review 2, N2): a clock face read at a glance — two THIN, clearly separate hands at a RIGHT ANGLE
+    // (three o'clock: the long one up, tip at 0.77 of the face; the short one to the right, tip at 0.5) from a small
+    // dark-maroon hub. No pin, no second colour. Their pores are a lighter maroon (D2).
+    const mkHour = (len, r0, r1, seed) => E.bakeStencil({
+      shape: shape.capsule(len, r0, r1), base: '#7C4A4C', anchor: [0, 0], seed, density: 2, bleed: false,
       layers: [
-        { color: P('clock_hand'), coverage: 0.99, size: 18, stamps: 'dense', pores: 0.4, poreScale: 0.4, tint: 0.02 },
+        { color: P('clock_hand'), coverage: 0.99, size: 18, stamps: 'dense', pores: 0.3, poreScale: 0.35, tint: 0.02 },
         { color: '#33151A', coverage: 0.3, size: 18, stamps: 'open', pores: 0.3, poreScale: 0.4 },
-        { color: '#6B3A34', coverage: 0.3, size: 18, stamps: 'body', pores: 0.3, poreScale: 0.4, maskFn: (x, y) => ss(1, -2, y) },
       ],
     });
-    a.long = mkHour(C.clock_hands.long, 2521);
-    a.short = mkHour(C.clock_hands.short, 2522);
-    a.pin = E.bakeStencil({ shape: shape.ellipse(0, 0, 2.6), base: '#F0C050', anchor: [0, 0], seed: 2523, density: 2, bleed: false, layers: [] });
+    a.long = mkHour(HAND_LONG, 2.5, 1.7, 2521);
+    a.short = mkHour(HAND_SHORT, 2.7, 2.1, 2522);
+    a.hub = E.bakeStencil({ shape: shape.ellipse(0, 0, 4.7), base: '#3E1B20', anchor: [0, 0], seed: 2523, density: 2, bleed: false,
+      layers: [{ color: P('clock_hand'), coverage: 0.6, size: 8, stamps: 'body', pores: 0 }] });
     // rim: dark-ochre band, a ring of small gold beads, a milled outer edge
     a.rim = E.bakeStencil({
-      shape: shape.ellipse(0, 0, R42), base: '#CDAD87', anchor: [0, 0], seed: 2524, density: 2, bleed: false,   // base = the cream primer at 60 % (in the pores)
+      shape: shape.ellipse(0, 0, R42), base: '#C6923F', anchor: [0, 0], seed: 2524, density: 2, bleed: false,   // base (in the pores) = a lighter ochre of the rim's own hue (D2)
       layers: [
         { color: P('coin_rim'), coverage: 0.99, size: 20, stamps: 'dense', pores: 0.45, poreScale: 0.45, tint: 0.02 },
         { color: '#7C4614', coverage: 0.4, size: 22, stamps: 'open', pores: 0.3, poreScale: 0.45, maskFn: (x, y) => ss(4, -12, x - y) },
@@ -154,11 +191,11 @@ export function makeDial(E, W, U, acting) {
   const recede = (t) => W.state(t).sun.recede;                              // 0 | 1 | 2 (16.83 / 16.93)
 
   // ------------------------------------------------------------------ the coin's picture
-  const SHORT_A = (A0 - 90) * DEG;                                          // the short hand points to five o'clock
+  const SHORT_A = 0;                                                        // the short hand points to three o'clock (+x)
   /**
    * o: {scale, k (the coin's size in the world, 1 … K2), rot, rim (null | scale of the stamped rim), sx, sy, tick (deg),
    * faceP, hands}. The two clock-hands keep their length with the coin but not their stroke: on the small coin of the
-   * wide framing they are printed 1.2 x as broad (9.4 px), so that the hour still reads as a clock on a phone.
+   * wide framing they are printed 1.3 x as broad (6 px at their root), so that the right angle still reads on a phone.
    */
   function drawCoin(ctx, x, y, o = {}) {
     const kk = o.k ?? 1, sc = (o.scale ?? 1) * kk;
@@ -170,7 +207,7 @@ export function makeDial(E, W, U, acting) {
     if (o.rim) A.rim.draw(ctx, 0, 0, { scale: o.rim });
     A.face.draw(ctx, 0, 0, { p: o.faceP ?? 1 });
     if (o.hands !== false) {
-      const broad = 1 + 0.2 * clamp((1 - kk) / (1 - acting.K2));
+      const broad = 1 + 0.3 * clamp((1 - kk) / (1 - acting.K2));
       for (const [spr, rot] of [[A.short, SHORT_A], [A.long, (-90 + (o.tick ?? 0)) * DEG]]) {
         ctx.save();
         ctx.rotate(rot);
@@ -178,7 +215,7 @@ export function makeDial(E, W, U, acting) {
         spr.draw(ctx, 0, 0);
         ctx.restore();
       }
-      A.pin.draw(ctx, 0, 0, { scale: broad });
+      A.hub.draw(ctx, 0, 0, { scale: 1 + 0.5 * (broad - 1) });
     }
     ctx.restore();
   }
@@ -256,7 +293,8 @@ export function makeDial(E, W, U, acting) {
   function drawSky(ctx, t) {
     if (!on(t, T.hand.print)) return;
     const st = recede(t), f = t * fps;
-    if (st > 0) A.veil.draw(ctx, { p: st / 2 });
+    if (st > 1) A.sunPores.draw(ctx, S.x, S.y);
+    if (st > 0) { A.veil.draw(ctx, { p: st / 2 }); A.rimSky.draw(ctx, { p: st / 2 }); }
     // beads k = 1..24, three per step on twos, behind the hand's tip
     if (f >= BEAD0 - 1e-6) {
       const goldOn = on(t, G.dab[1]);

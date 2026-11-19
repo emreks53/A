@@ -28,14 +28,16 @@ const TIMELINE = {
   ring: {
     on: [4.83, 4.90, 4.97, 5.03], counts: [4, 4, 3, 3],
     veil: [[6.93, 0.8], [7.00, 0.55], [7.07, 0.35]],   // strength after each thickening pass
-    reink: [16.47, 0.7], crumble: [16.57, 16.63, 16.70], specksGone: 16.83,
+    // LAST FIX ROUND: no return to 70 % (16.47) and no crumble with specks (16.57 / 16.63 / 16.70, gone 16.83) any more —
+    // neither could be seen inside the camera move. The veiled ghost ring simply LEAVES WITH THE MIST, in the mist's
+    // turn-over steps (mist.out: 16.63 / 16.73 / 16.83).
   },
   sun: {
     disc: 8.77, bare: 9.17, halo: [9.57, 9.67, 9.77],
     settle: [11.90, 11.97, 12.03, 12.10], recede: [16.83, 16.90],
   },
   column: { on: [9.87, 9.97, 10.07] },          // leaves with sun.settle
-  mound: { lit: 10.07 },
+  mound: { lit: 10.07, answer: 11.53 },         // answer («bil»): the six flowers bob once, inside to outside on twos (act 1 paints the bloom)
   film: { acts: 12.20, cover: 23.90, plate: 24.30, end2d: 24.50 },
 };
 /** Times that the critics round moved on purpose (not in the storyboard's prose timeline): no warning for these. */
@@ -75,7 +77,7 @@ function crossCheck(sb, L, warn) {
   const want = [
     T.coat2, ...T.man.turn, T.man.warm, T.specks.from,
     ...Object.values(T.dusk).flat(), ...Object.values(T.mist).flat(),
-    ...T.ring.on, ...T.ring.veil.map((v) => v[0]), T.ring.reink[0], ...T.ring.crumble,
+    ...T.ring.on, ...T.ring.veil.map((v) => v[0]),
     T.sun.disc, T.sun.bare, ...T.sun.halo, ...T.sun.settle, ...T.sun.recede, ...T.column.on, T.mound.lit,
   ];
   for (const v of want) if (!have.has(v.toFixed(2)) && !RETIMED.has(v.toFixed(2))) warn(`timeline time ${v} is not in storyboard.teams.shared_state_timeline any more`);

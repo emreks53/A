@@ -1,12 +1,13 @@
-// acting.js — the man's ACTING in act 2 (12.20–23.80) and where the coin sits in his hand.
+// acting.js — the man's ACTING in act 2 (12.20–24.30) and where the coin sits in his hand.
 //
 // One pose per frame, a pure function of absolute time, assembled from:
 //   * the RIGHT ARM. Its three big moves are authored as CHANNELS of absolute angles (upper arm, forearm, hand, the two
 //     foreshortenings), each a monotone cubic through frame keys, so that a move has weight: the upper arm leads, the
 //     forearm follows, the hand drags and arrives last, nothing snaps —
 //       14.57–15.23  the forearm RAISE to receive the hour (give, rise with a dragging hand, 5° overshoot, settle)
-//       22.00–23.23  the hand opens — one underhand swing from the shoulder — release — the GIVING LINE (one clean line
-//                    from shoulder to finger tips, palm down-forward) — and the arm sinks, at rest from 23.23
+//       22.00–23.73  the hand opens — one underhand swing from the shoulder — release — the GIVING LINE (one clean line
+//                    from shoulder to finger tips, palm down-forward), HELD while the three links answer — and only
+//                    then (23.27–23.73) the arm sinks; at rest from 23.77, four frames before the cover
 //     while the hour rests on his palm (15.23–15.77) the arm is solved live on the giving palm, and
 //       15.77–16.07  the hand closes over the coin and draws it in: the WRIST runs a short arc (cubic in-out, 3 % settle)
 //   * the body under the swing (dip, half-step, hips, shoulders) — its own channels: the weight follows the hand and
@@ -101,7 +102,7 @@ export function makeActing(E, W, U) {
     return M.reach(P.back_neutral, 'R', palm, { hand: held ? 'hold' : 'cupped', flip: held ? -1 : 1, handAngle: H, elbow: R0.U, fa: lerp(1, absOf(SIDE.armR).fa, clamp(s)) });
   };
 
-  // ------------------------------------------------------------------ 22.00–23.23 show, swing, release, the giving line, the sink
+  // ------------------------------------------------------------------ 22.00–23.73 show, swing, release, the giving line, the sink
   //   660–665  the hand opens where it is and holds the coin out in its finger tips
   //   666–669  dips back (the upper arm turns forward again at 668: it leads the forearm, whose deepest point is 669 = 22.30)
   //   669–673  ONE underhand swing from the shoulder: upper arm 10 → 40° (≤ 12° a frame), forearm 18 → 60° (≤ 19° a frame),
@@ -109,34 +110,75 @@ export function makeActing(E, W, U) {
   //   673–680  it follows the coin and settles into the GIVING LINE: upper arm 60°, forearm 71°, hand 75° — one line from
   //            shoulder to finger tips, pointing at the rug; the hand turns palm down-forward, fingers together (676).
   //            Both segments stay foreshortened (0.57 / 0.55): the finger tips keep sky between them and the knoll
-  //   680–684  held (a moving hold while the coin travels)
-  //   684–697  he lets go: the WRIST drops first as the coin arrives (684–688: the hand hangs from the still-raised arm),
-  //            then the arm sinks — upper arm (at rest 695.5), forearm (696.5), hand (697): AT REST from frame 697 = 23.23,
-  //            the frame of the last link. Under the lead's hold stretch (22.97–23.40 runs slower) the sinking is slow and
-  //            leaves the tableau a quarter of a second of complete rest before the cover
+  //   680–698  THE GIVING LINE IS HELD while the coin arrives (686) and the three links answer (687 / 692 / 697): a moving
+  //            hold — the arm sags a degree and a half, the hand eases three (5 px in 18 frames), never frozen, never
+  //            pulling the eye from the right column (review 2, N3)
+  //   698–712  only then he lets go: the wrist drops first (the hand hangs from the still-raised arm), the upper arm
+  //            leads the forearm down, the hand arrives last and swings 3 px past its rest and back. Eased in and out by
+  //            the PALM'S OWN PATH (peak 19 px a frame, see `sinkAt`); at rest from frame 713, four frames before the cover
   const cast = {
-    U: chan([[660, S.U], [666, S.U], [668, 9], [670, 13.5], [671, 19], [672, 28], [673, 40], [675.5, 53], [679.5, 60], [684, 59.5], [688, 55.5], [690, 48], [692, 36.5], [695.5, R0.U]]),
-    fa: chan([[660, S.fa], [668, 0.86], [673, 0.56], [676, 0.57], [687, 0.57], [691, 0.66], [695.5, 1]]),
-    F: chan([[660, S.F], [665, S.F + 2], [666, S.F + 2], [669, 18], [670, 21], [671, 28], [672, 41], [673, 60], [675.5, 78], [681, 71], [685, 70], [689, 59], [690.5, 51], [692.5, 37.5], [696.5, R0.F]]),
-    fb: chan([[660, S.fb], [665, S.fb + 0.02], [669, 0.44], [673, 0.46], [676, 0.52], [681, 0.55], [688, 0.55], [692, 0.68], [696.5, R0.fb]]),
-    H: chan([[660, S.H], [665, S.H + 4], [666, S.H + 4], [669, 86], [673, 100], [675, 100], [681, 75], [684, 73], [688, 32], [693, 14], [697, R0.H]]),
+    U: chan([[660, S.U], [666, S.U], [668, 9], [670, 13.5], [671, 19], [672, 28], [673, 40], [675.5, 53], [679.5, 60], [698, 58.6]]),
+    fa: chan([[660, S.fa], [668, 0.86], [673, 0.56], [676, 0.57], [698, 0.57]]),
+    F: chan([[660, S.F], [665, S.F + 2], [666, S.F + 2], [669, 18], [670, 21], [671, 28], [672, 41], [673, 60], [675.5, 78], [681, 71], [698, 69.4]]),
+    fb: chan([[660, S.fb], [665, S.fb + 0.02], [669, 0.44], [673, 0.46], [676, 0.52], [681, 0.55], [698, 0.55]]),
+    H: chan([[660, S.H], [665, S.H + 4], [666, S.H + 4], [669, 86], [673, 100], [675, 100], [681, 75], [698, 72]]),
     pin: chan([[673, 1], [678, 0]]),
     // the body: dips with the wind-up, half-step forward with the swing; hips and shoulders arrive AFTER the hand
     rootX: chan([[669, 0], [673, 5.5], [678, FINAL.root.x]]),
     rootY: chan([[666, 0], [669, 4], [673, 0.6], [675.5, 0]]),
     step: chan([[669, 0], [674.5, 1]]),
     lean: chan([[666, 0], [669, -0.8], [675, 0.5], [681, 0]]),
-    sh: chan([[666, SIDE_T.sh], [669, SIDE_T.sh - 1], [675, 1.4], [678, 1], [686, 1], [696, FINAL.sh]]),
+    sh: chan([[666, SIDE_T.sh], [669, SIDE_T.sh - 1], [675, 1.4], [678, 1], [698, 1]]),
     headX: chan([[673, 0], [677.5, 1.6], [682, 0]]),
-    armL: chan([[666, 0], [669, -2.5], [673, 3.5], [677, 2], [687, 1], [696, 0]]),     // the left arm answers the swing a little
+    armL: chan([[666, 0], [669, -2.5], [673, 3.5], [677, 2], [690, 1], [698, 1]]),     // the left arm answers the swing a little
   };
+  // the SINK in its own time τ = 0 … 13 (the shape of the move: who leads, who follows); `sinkAt` maps film frames to τ
+  const HOLD_END = 698, SINK_END = 711.6, REST_FROM = 713;
+  const sink = {
+    U: chan([[0, 58.6], [4, 55.5], [6, 48], [8, 36.5], [11.5, R0.U]]),
+    fa: chan([[0, 0.57], [3, 0.57], [7, 0.66], [11.5, 1]]),
+    F: chan([[0, 69.4], [1, 69.2], [5, 59], [6.5, 51], [8.5, 37.5], [12.5, R0.F]]),
+    fb: chan([[0, 0.55], [4, 0.55], [8, 0.68], [12.5, R0.fb]]),
+    H: chan([[0, 72], [4, 32], [9, 14], [13, R0.H]]),
+    sh: chan([[2, 1], [12, FINAL.sh]]),
+    armL: chan([[3, 1], [12, 0]]),
+  };
+  const sinkPose = (tau, dF = 0, dH = 0) => {
+    const hand = tau < 7.5 ? 'flat' : 'rest';
+    return {
+      ...SIDE_T,
+      root: { x: FINAL.root.x, y: 0 }, step: 1, lean: 0, sh: sink.sh(tau),
+      armL: { ...SIDE_T.armL, a: SIDE_T.armL.a + sink.armL(tau) },
+      armR: armOf(sink.U(tau), sink.fa(tau), sink.F(tau) + dF, sink.fb(tau), sink.H(tau) + dH, hand, hand === 'rest' ? 1 : -1, 0),
+    };
+  };
+  // Timing by ARC LENGTH of the palm: its speed runs up over the first quarter of the move, cruises, and runs out over
+  // the last quarter (ease in-out with a flat top: 192 px in 13.6 frames, never faster than 19 px a frame in the world)
+  const sinkAt = (() => {
+    const N = 260, len = [0];
+    let prev = M.point('palmR', sinkPose(0));
+    for (let i = 1; i <= N; i++) { const q = M.point('palmR', sinkPose((13 * i) / N)); len.push(len[i - 1] + Math.hypot(q[0] - prev[0], q[1] - prev[1])); prev = q; }
+    const speed = (u) => E.smoothstep(0, 0.25, u) * E.smoothstep(1, 0.77, u);
+    const K = 400, P = [0];
+    for (let i = 1; i <= K; i++) P.push(P[i - 1] + speed((i - 0.5) / K));
+    return (f) => {
+      const u = clamp((f - HOLD_END) / (SINK_END - HOLD_END)), x = u * K, i = Math.min(K - 1, Math.floor(x));
+      const want = (lerp(P[i], P[i + 1], x - i) / P[K]) * len[N];
+      let lo = 0, hi = N;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (len[m] <= want) lo = m; else hi = m; }
+      return (13 * (lo + (want - len[lo]) / ((len[hi] - len[lo]) || 1))) / N;
+    };
+  })();
+  // the settle: forearm and hand swing a little past their rest (3 px at the finger tips) and come back by frame 713
+  const bump = (f, a, b) => { const x = clamp((f - a) / (b - a)); return Math.sin(Math.PI * x) ** 2; };
   const castPose = (f) => {
-    const hand = f < 662.5 ? 'hold' : f < 675.5 ? 'open' : f < 691.5 ? 'flat' : 'rest';
+    if (f > HOLD_END) return sinkPose(sinkAt(f), -1.5 * bump(f, 708.4, REST_FROM), -2.2 * bump(f, 709, REST_FROM));
+    const hand = f < 662.5 ? 'hold' : f < 675.5 ? 'open' : 'flat';
     return {
       ...SIDE_T,
       root: { x: cast.rootX(f), y: cast.rootY(f) }, step: cast.step(f), lean: cast.lean(f), sh: cast.sh(f),
       armL: { ...SIDE_T.armL, a: SIDE_T.armL.a + cast.armL(f) },
-      armR: armOf(cast.U(f), cast.fa(f), cast.F(f), cast.fb(f), cast.H(f), hand, hand === 'rest' ? 1 : -1, cast.pin(f)),
+      armR: armOf(cast.U(f), cast.fa(f), cast.F(f), cast.fb(f), cast.H(f), hand, -1, cast.pin(f)),
     };
   };
 
@@ -156,7 +198,7 @@ export function makeActing(E, W, U) {
     k(644, hv(-3.6, 0, 1)), k(658, hv(1.2, 0.5, 1), io),                 // 21.47–21.93 down with the unrolling rug
     k(666, hv(1.2, 0.5, 1)), k(669, hv(2.6, -1, 1), io),                 // the swing: dips with the wind-up …
     k(679, hv(-1.2, 1.5, 1), io),                                        // … and goes with the cast, arriving after the hand
-    k(686, hv(-1.2, 1.5, 1)), k(696, hv(0, 0, 1), io),                   // stays turned toward the mosque
+    k(700, hv(-1.2, 1.5, 1)), k(711, hv(0, 0, 1), io),                   // stays turned toward the mosque; settles with the sinking arm
   ]);
 
   // ------------------------------------------------------------------ the pose
@@ -174,7 +216,7 @@ export function makeActing(E, W, U) {
     }
     if (f < 482) return closePose(f);
     if (f < 660) return side(f / fps);
-    if (f < 697) return castPose(f);
+    if (f < REST_FROM) return castPose(f);
     return FINAL;
   }
   function pose(t) {

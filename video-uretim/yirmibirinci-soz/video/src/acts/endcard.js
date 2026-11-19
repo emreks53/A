@@ -37,7 +37,7 @@ const LOCKUP = 'G';
 // The dissolve (comp.js, `o.dis`): the exposure comes down from DIS.ev to DIS.evMin stops over the first DIS.evEnd
 // of the window (dark wood first, then the shadows on the wall, the books last), the hand-over to the true
 // photograph (wall falloff, the last of the books, the white Qur'an) runs from DIS.mix[0] to DIS.mix[1].
-const DIS = { ev: 4.6, evMin: 0.6, evEnd: 1.0, evPow: 1.3, on: 0.4, mix: [0.4, 1.0], sat: 0.65 };
+const DIS = { ev: 4.6, evMin: 0.6, evEnd: 1.0, evPow: 1.3, on: 0.52, mix: [0.26, 1.0], sat: 0.65 };   // on / mix overlap (lead): the two stages no longer butt at u = 0.4 (a velocity kink on the dark wood)
 
 const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const span = (t, [a, b]) => clamp((t - a) / (b - a));
