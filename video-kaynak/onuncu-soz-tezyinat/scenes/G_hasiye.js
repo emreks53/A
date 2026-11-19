@@ -141,10 +141,93 @@
   const STAR16 = (() => { const o = []; for (let k = 0; k < 16; k++) { const a = k * PI / 8 + (k % 2 ? 0 : 0), rr = k % 2 ? RW : RW * 0.76537; o.push([SCX + Math.cos(a) * rr, SCY + Math.sin(a) * rr]); } return o; })();
   // inner vertices at 0°,45°,… (r .765·RW); outer at 22.5°+k·45° (RW) — matches A.star8 open=1
   const starPath = (inset = 0) => { const p = new Path2D(); STAR16.forEach((q, i) => { const x = SCX + (q[0] - SCX) * (1 - inset), y = SCY + (q[1] - SCY) * (1 - inset); i ? p.lineTo(x, y) : p.moveTo(x, y); }); p.closePath(); return p; };
+  /** the window star with a given inner-vertex ratio (G's own window 0.765 → H's kafes star 0.82 at the hand-off) */
+  const IR0 = 0.76537, IR_H = 0.82;
+  const starVerts = (ir, inset = 0) => { const o = []; for (let k = 0; k < 16; k++) { const a = k * PI / 8, rr = (k % 2 ? RW : RW * ir) * (1 - inset); o.push([SCX + Math.cos(a) * rr, SCY + Math.sin(a) * rr]); } return o; };
+  const starPathIR = (ir, inset = 0) => { const p = new Path2D(); starVerts(ir, inset).forEach((q, i) => (i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1]))); p.closePath(); return p; };
+
+  /* ---------------------------- hand-off to H_numune ----------------------------
+   * H opens (37.60) on a walnut kafes wall with a star window (S.starPath R 500, inner 0.82, centred (540,760))
+   * growing as exp(5.2·(t−37.6)), its shop seen through it, G's six ghosts held on their shelf slots.
+   * G: the page around the window turns into that kafes (thin gold → walnut), the niche dissolves into H's own
+   * shop (H's draw, read back without its kafes layer and ghosts), the camera eases back a little and then
+   * accelerates forward through the window, meeting H's kafes exactly (R = 500·e^(5.2·0.1), same speed) at 37.70;
+   * the ghosts fly onto H's slots as H's own ghost drawings. From 37.70 G simply draws H (gecisler: cut 37.70),
+   * so the G→H seam is identical frames. */
+  const TH = 37.6, TS = 37.7, V_H = 5.2, Z_S = 500 * Math.exp(V_H * (TS - TH)) / RW;
+  const Z_MIN = 1.0, TP0 = 36.98, TL0 = 37.28, FL1 = 37.56;
+  const hScene = () => E.scenes.find((s) => s.id === 'H_numune');
+  /** absolute ln(zoom) of the end move: ease back (anticipation), then accelerate into H's push */
+  function endLogZ(t, lz0) {
+    const L1 = lerp(lz0, lg(Z_MIN), P(t, TP0, TL0, 'inOutSine'));
+    const D = lg(Z_S) - lg(Z_MIN), q = V_H * (TS - TL0) / D, u = clamp((t - TL0) / (TS - TL0));
+    return L1 + D * Math.pow(u, q);
+  }
+  function endK(t) {
+    return {
+      rev: P(t, 37.0, 37.42, 'outCubic'),     // kafes spreads out from the star frame over the page
+      mk: P(t, 37.1, 37.42, 'inOutSine'),     // thin gold girih → walnut kafes (2 → 14 px)
+      nk: P(t, 37.1, 37.36, 'inOutSine'),     // niche → H's shop behind the window
+      bgk: P(t, 37.14, 37.42, 'inOutSine'),   // the page behind the kafes → H's evening street
+      fk: P(t, 37.16, 37.42, 'inOutSine'),    // gold star frame → H's walnut star frame
+      ir: lerp(IR0, IR_H, P(t, 37.28, 37.52, 'inOutSine')),
+      blur: lerp(0.8, 3.5, E.p(t, TH, 37.95, 'inQuad')),   // = H_numune drawLatticeFG
+    };
+  }
+  const FLORD = { naut: 0, pom: 1, tul: 2, bf: 3, pea: 4, snow: 5 };
+  const flightStart = (i) => 37.12 + 0.035 * FLORD[ITEMS[i].k];
+  const H_GHOST_OF = [0, 1, 2, 4, 5, 3];     // H draws its ghosts butterfly, peacock, snowflake, tulip, nautilus, pomegranate
+  const H_INDEX = [0, 1, 2, 6, 7, 5];        // H ITEMS index of each G item (H's ghost flicker phase)
+  const hFlick = (iH, t) => 0.86 + 0.14 * Math.sin(t * 9 + iH * 1.7);
+  function alphaBox(cv) {
+    const w = cv.width, h = cv.height, d = cv.getContext('2d').getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    return { bx: (x0 + x1) / 2, by: (y0 + y1) / 2, bs: Math.max(1, x1 - x0, y1 - y0) };
+  }
+  const hBoxes = new Map();
+  /** H's frame at time tc (H holds 37.60 before its start) without its kafes layer and its ghosts (both drawn by
+   *  G), plus H's ghost sprites with their exact screen placement and alpha — read from H's own draw, so G always
+   *  lands on exactly what H shows. The 37.60 frame is kept; 37.60–37.70 is read live (3 frames). */
+  function captureH(tc) {
+    const live = tc > TH + 1e-6;
+    if (!live && SP.hcap !== undefined) return SP.hcap;
+    if (live && SP.hlive && SP.hlive.tc === tc) return SP.hlive;
+    const hs = hScene();
+    if (!hs || !hs.draw) { if (!live) SP.hcap = null; return null; }
+    const b = live ? (SP.hbufL || (SP.hbufL = E.canvas(W, H))) : E.canvas(W, H), x = b.x, gh = [];
+    if (x.reset) x.reset();
+    x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none'; x.clearRect(0, 0, W, H);
+    let latt = 0;
+    const di = x.drawImage;
+    x.drawImage = function (img, ...a) {
+      if (this.globalCompositeOperation === 'lighter' && a.length === 2 && img && img.width === 360 && img.height === 440) { gh.push({ img, m: this.getTransform(), a: this.globalAlpha, dx: a[0], dy: a[1] }); return; }
+      const bl = /blur\(([\d.]+)px\)/.exec(this.filter || '');
+      if (img && img.width === W / 2 && img.height === H / 2 && a.length === 4 && this.globalAlpha > 0.9 && bl && +bl[1] < 1.2) { latt++; return; }   // the kafes layer
+      return di.apply(this, [img].concat(a));
+    };
+    let res = null;
+    try { x.save(); hs.draw(x, tc, {}); x.restore(); } catch (err) { console.error('G_hasiye: H capture failed', err); } finally { delete x.drawImage; }
+    if (gh.length === 6 && latt === 1) {
+      const g = ITEMS.map((_, i) => {
+        const r = gh[H_GHOST_OF[i]];
+        if (!hBoxes.has(r.img)) hBoxes.set(r.img, alphaBox(r.img));
+        const bb = hBoxes.get(r.img), k = r.m.a;
+        return { img: r.img, m: r.m, dx: r.dx, dy: r.dy, bx: bb.bx, by: bb.by, bs: bb.bs, cx: r.m.e + k * (bb.bx + r.dx), cy: r.m.f + r.m.d * (bb.by + r.dy), S: bb.bs * k, a: r.a, iH: H_INDEX[i] };
+      });
+      res = { bg: b.c, g, tc };
+    } else console.warn('G_hasiye: unexpected H hand-off capture', tc, gh.length, latt);
+    if (live) SP.hlive = res; else SP.hcap = res;
+    return res;
+  }
 
   /* ---------------------------- camera ---------------------------- */
   /** macro log-zoom fraction: eases in at 31.9 (band dark before the gloss), girih resolved by ≈32.6, 40× by 33.4 */
-  function macroM(t) { return ez.inOutSine(Math.pow(clamp((t - 31.9) / 1.5), 0.7)) * (1 - P(t, 34.49, 35.13, 'inOutCubic')); }
+  /** ease with a linear-velocity ramp in/out and a constant middle (peak speed 1/(1−a)× the mean; inOutCubic is 3×) */
+  function trapE(u, a = 0.32) { u = clamp(u); const v = 1 / (1 - a); return u < a ? v * u * u / (2 * a) : u > 1 - a ? 1 - v * (1 - u) * (1 - u) / (2 * a) : v * (a / 2 + u - a); }
+  /** the reverse zoom (34.49–35.13) uses trapE so the macro → gallery layer crossfades last ≈5 frames, not one */
+  function macroM(t) { return ez.inOutSine(Math.pow(clamp((t - 31.9) / 1.5), 0.7)) * (1 - trapE((t - 34.49) / 0.64)); }
+  const RET = 34.49;   // after this the macro layers fade on wider zoom ranges (fast reverse: a dissolve, not a cut)
   function camG(t) {
     const d = camDrift(t);
     const zb = seamZoom(t) * (1 + 0.02 * P(t, 28.93, 29.5)) * (1 + 0.045 * P(t, 30.23, 31.9));
@@ -154,16 +237,16 @@
     const sp = P(t, 35.42, 35.95) * (1 - P(t, 36.2, 36.95));
     fx = lerp(fx, ITEMS[2].x, sp); fy = lerp(fy, ITEMS[2].y, sp); sx = lerp(sx, 540, sp); sy = lerp(sy, 700, sp);
     let z = zb * (1 + 0.75 * sp);
-    // end: one continuous push THROUGH the window (37.2–37.8)
-    const rush = ez.inOutCubic(clamp((t - 37.2) / 0.6));
-    z *= 1 + 2.3 * rush;
     // macro
     const m = macroM(t), mf = sm(clamp(m * 3.2));
     fx = lerp(fx, WB[0], mf); fy = lerp(fy, WB[1], mf); sx = lerp(sx, 540, mf); sy = lerp(sy, 700, mf);
     const slow = lg(1.22) * P(t, 33.35, 34.49, 'inOutSine') * (1 - P(t, 34.49, 34.9));
     z = z * Math.exp(m * lg(40 / zb) + slow);
-    const dd = 1 - mf;
-    return { fx, fy, sx: sx + d.x * dd, sy: sy + d.y * dd, z, rot: d.r * (1 - sp) + 0.12 * m, m, mf };
+    // end: breathe back, then lunge through the window into H's push (exactly R 500 and 5.2/s at 37.60)
+    if (t > TP0) z = Math.exp(endLogZ(t, lg(z)));
+    // the hand-drift settles out so the window centre sits exactly on H's (540,760) at the hand-off
+    const ed = 1 - P(t, 36.95, 37.3, 'inOutSine'), dd = (1 - mf) * ed;
+    return { fx, fy, sx: sx + d.x * dd, sy: sy + d.y * dd, z, rot: d.r * (1 - sp) * ed + 0.12 * m, m, mf };
   }
   function applyCam(ctx, c, p = 1) { const z = 1 + (c.z - 1) * p; ctx.translate(c.sx, c.sy); ctx.rotate(c.rot * p); ctx.scale(z, z); ctx.translate(-c.fx, -c.fy); }
   const toScreen = (c, x, y) => { const dx = (x - c.fx) * c.z, dy = (y - c.fy) * c.z, cs = Math.cos(c.rot), sn = Math.sin(c.rot); return [c.sx + dx * cs - dy * sn, c.sy + dx * sn + dy * cs]; };
@@ -186,19 +269,26 @@
     const it = ITEMS[i], sc = 2, bw = 300, bh = 300, cw = bw * sc, ch = bh * sc;
     const src = E.canvas(cw, ch); src.x.scale(sc, sc); src.x.translate(bw / 2 - it.x, bh / 2 - it.y);
     drawItem(src.x, i, 0, { still: true, flap: 1 });
-    const id = src.x.getImageData(0, 0, cw, ch), d = id.data, L = new Float32Array(cw * ch), Al = new Float32Array(cw * ch);
+    let rd = src.x;
+    if (it.k === 'pea') { // the plume's fine barbs merge into one soft vane first: only vane outline, shafts and eyes edge
+      const sb = E.canvas(cw, ch); sb.x.filter = 'blur(2.5px)'; sb.x.drawImage(src.c, 0, 0); rd = sb.x;
+    }
+    const id = rd.getImageData(0, 0, cw, ch), d = id.data, L = new Float32Array(cw * ch), Al = new Float32Array(cw * ch);
     for (let q = 0, p = 0; q < L.length; q++, p += 4) { const a = d[p + 3] / 255; Al[q] = a; L[q] = a * (0.3 * d[p] + 0.59 * d[p + 1] + 0.11 * d[p + 2]) / 255; }
     const out = src.x.createImageData(cw, ch), o = out.data;
+    // the plume's dense barbs saturate a plain luminance edge into a filled fan: there only the strong edges
+    // (shafts, eye rings) count, so it stays a line drawing like the others
+    const pea = it.k === 'pea', at = pea ? 0.3 : 0.5, ar = pea ? 0.7 : 1.2, lt = pea ? 0.14 : 0.22, lr = pea ? 0.3 : 0.5, lk = 0.85;
     for (let y = 1; y < ch - 1; y++) for (let x = 1; x < cw - 1; x++) {
       const q = y * cw + x;
       const sob = (A2) => { const gx = A2[q - cw + 1] + 2 * A2[q + 1] + A2[q + cw + 1] - A2[q - cw - 1] - 2 * A2[q - 1] - A2[q + cw - 1], gy = A2[q + cw - 1] + 2 * A2[q + cw] + A2[q + cw + 1] - A2[q - cw - 1] - 2 * A2[q - cw] - A2[q - cw + 1]; return Math.hypot(gx, gy); };
-      const e = Math.max(sm((sob(Al) - 0.5) / 1.2), sm((sob(L) - 0.22) / 0.5) * 0.85);
+      const e = Math.max(sm((sob(Al) - at) / ar), sm((sob(L) - lt) / lr) * lk);
       const p = q * 4; o[p] = 255; o[p + 1] = 246; o[p + 2] = 224; o[p + 3] = e * 255;
     }
     const edge = E.canvas(cw, ch); edge.x.putImageData(out, 0, 0);
     const g = E.canvas(cw, ch);
     g.x.filter = 'blur(6px)'; g.x.drawImage(edge.c, 0, 0); g.x.filter = 'none'; g.x.globalAlpha = 0.9; g.x.drawImage(edge.c, 0, 0);
-    return { c: g.c, w: bw, h: bh };
+    return Object.assign({ c: g.c, w: bw, h: bh }, alphaBox(g.c));
   }
   function drawGhost(ctx, i, x, y, s, a) {
     if (a <= 0.003) return;
@@ -251,6 +341,17 @@
       x.fillStyle = E.lin(x, -hw, L * 0.3, hw, L, [[0, '#6FF0FF', 0.32], [0.5, '#6FF0FF', 0.0], [1, '#B48CFF', 0.3]]); x.fillRect(-hw, -L * 0.2, 2 * hw, L * 1.3);
       x.fillStyle = E.rad(x, -hw * 0.3, L - hw * 1.2, 0, hw * 0.9, [[0, '#E8FDFF', 0.22 + 0.15 * h1], [1, '#E8FDFF', 0]]); x.fillRect(-hw, -L * 0.2, 2 * hw, L * 1.3);
       x.restore();
+      if (pw >= 70) {   // a magnified scale shows its longitudinal ridges and faint cross-ribs
+        x.save(); x.clip(shp); const nR = 7, top = -L * 0.2, bot = L;
+        for (let q = 0; q < nR; q++) {
+          const rx = -hw + (q + 0.5) * 2 * hw / nR;
+          x.strokeStyle = 'rgba(6,14,58,0.42)'; x.lineWidth = pw * 0.024; x.beginPath(); x.moveTo(rx, top); x.lineTo(rx, bot); x.stroke();
+          x.strokeStyle = 'rgba(170,236,255,0.38)'; x.lineWidth = pw * 0.01; x.beginPath(); x.moveTo(rx + pw * 0.013, top); x.lineTo(rx + pw * 0.013, bot); x.stroke();
+        }
+        x.strokeStyle = 'rgba(170,236,255,0.12)'; x.lineWidth = pw * 0.006;
+        for (let yy = top; yy < bot; yy += pw * 0.085) { x.beginPath(); x.moveTo(-hw, yy); x.lineTo(hw, yy); x.stroke(); }
+        x.restore();
+      }
       x.strokeStyle = 'rgba(190,240,255,0.55)'; x.lineWidth = Math.max(0.7, pw * 0.02); x.beginPath(); x.arc(0, L - hw, hw * 0.97, PI * 0.08, PI * 0.92); x.stroke();
       x.restore();
     }
@@ -278,46 +379,40 @@
   }
 
   /* ---------------------------- pieces ---------------------------- */
-  function drawFrame(ctx, a, t) {
-    if (a <= 0) return;
-    const p = starPath(0), p2 = starPath(0.034);
+  function drawFrame(ctx, a, t, ir = IR0) {
+    if (a <= 0.002) return;
+    const p = starPathIR(ir), p2 = starPathIR(ir, 0.034), SV = starVerts(ir);
     ctx.save(); ctx.globalAlpha *= a; ctx.lineJoin = 'round';
     ctx.strokeStyle = 'rgba(58,36,8,0.55)'; ctx.lineWidth = 11; ctx.stroke(p);
     ctx.strokeStyle = goldGrad(ctx, SCX - RW, SCY - RW, SCX + RW, SCY + RW); ctx.lineWidth = 6.5; ctx.stroke(p);
     ctx.strokeStyle = 'rgba(255,248,222,0.85)'; ctx.lineWidth = 1.6; ctx.stroke(p);
     ctx.strokeStyle = E.rgba('#D8B26E', 0.75); ctx.lineWidth = 1.4; ctx.stroke(p2);
     // shimmer travelling along the frame
-    const k = (t * 0.22) % 1, q = STAR16[Math.floor(k * 16)];
+    const k = (t * 0.22) % 1, q = SV[Math.floor(k * 16)];
     ctx.restore();
     if (q) S.sparkle(ctx, q[0], q[1], 14, 0.55 * a * Math.pow(Math.sin(k * 16 % 1 * PI), 2), '#FFF6E0', t);
   }
-  /** macro layers on the WHOLE wing (wing-masked, no partial patch): scale shingles (sA), then fine ridges (rA) */
-  function drawScales(ctx, t, c, sA, rA) {
-    // first the scale texture is overlaid ON the wing (its pattern and colour stay), then it takes over
-    const bk = sm((lg(c.z) - lg(4.2)) / (lg(6.5) - lg(4.2)));
-    if (bk < 1 && sA > 0.003) scaleLayer(ctx, t, c, sA * (1 - bk), 0, 'overlay');
-    scaleLayer(ctx, t, c, sA * bk, rA, 'source-over');
+  /** macro scale layer on the WHOLE wing (wing-masked): first only as an overlay (the wing keeps its colour and
+   *  spots), then partly opaque; the shingles are always drawn from the mip tile nearest their screen size */
+  const SCL_K = 8;   // shingle width in world px (≈10 across a forewing)
+  function drawScales(ctx, t, c, sA) {
+    if (sA <= 0.003) return;
+    const bk = sm((lg(c.z) - lg(3.6)) / (lg(6.5) - lg(3.6)));
+    scaleLayer(ctx, t, c, sA, 'overlay');
+    if (bk > 0.01) scaleLayer(ctx, t, c, sA * bk * 0.5, 'source-over');
   }
-  function scaleLayer(ctx, t, c, sA, rA, op) {
-    if (sA <= 0.003 && rA <= 0.003) return;
-    const s = 4.2 * c.z, lv = SP.tiles, lz = lg(c.z);
-    const pick = s < 36 ? [[0, 1]] : s < 46 ? [[0, 1 - (s - 36) / 10], [1, (s - 36) / 10]] : s < 104 ? [[1, 1]] : s < 122 ? [[1, 1 - (s - 104) / 18], [2, (s - 104) / 18]] : [[2, 1]];
+  function scaleLayer(ctx, t, c, sA, op) {
+    const s = SCL_K * c.z, lv = SP.tiles, lz = lg(c.z);
+    let li = lv.length - 1; for (let j = 0; j < lv.length; j++) if (lv[j].pw >= s) { li = j; break; }
+    const f = li > 0 ? sm((s - lv[li - 1].pw) / (lv[li].pw - lv[li - 1].pw)) : 1;
+    const pick = li > 0 ? [[li - 1, 1 - f], [li, f]] : [[0, 1]];
     E.layer(ctx, (l) => {
       fresh(l, false);
-      if (sA > 0.003) for (const [li, w] of pick) {
+      for (const [j, w] of pick) {
         if (w <= 0.01) continue;
-        const tile = lv[li], k = s / tile.pw, pat = l.createPattern(tile.c, 'repeat');
-        pat.setTransform(new DOMMatrix().translate(c.sx, c.sy).rotate((c.rot - 0.5) * 180 / PI).scale(k).translate(-37, -11));
-        l.globalAlpha = w * sA; l.fillStyle = pat; l.fillRect(0, 0, W, H);
-      }
-      if (rA > 0.003) { // longitudinal ridges with cross-ribs: the structure inside one scale
-        const sp = 1.05 * c.z, n = Math.ceil(1500 / sp);
-        l.save(); l.translate(c.sx, c.sy); l.rotate(c.rot - 0.5);
-        l.globalAlpha = rA; l.fillStyle = 'rgba(10,22,70,0.55)'; l.fillRect(-1600, -1600, 3200, 3200);
-        l.beginPath(); for (let k = -n; k <= n; k++) { l.moveTo(k * sp, -1600); l.lineTo(k * sp, 1600); }
-        l.strokeStyle = '#4C8DFF'; l.lineWidth = sp * 0.34; l.stroke();
-        l.strokeStyle = 'rgba(160,240,255,0.7)'; l.lineWidth = Math.max(0.6, sp * 0.1); l.stroke();
-        l.restore();
+        const tile = lv[j], k = s / tile.pw, pat = l.createPattern(tile.c, 'repeat');
+        pat.setTransform(new DOMMatrix().translate(c.sx, c.sy).rotate((c.rot - 0.5) * 180 / PI).scale(k).translate(-0.925 * tile.pw, -0.275 * tile.pw));
+        l.globalAlpha = w; l.fillStyle = pat; l.fillRect(0, 0, W, H);
       }
       l.globalAlpha = 1; l.globalCompositeOperation = 'screen';
       const sx = c.sx + Math.sin(t * 1.3) * 500;
@@ -331,7 +426,7 @@
         if (wm < 1) { b.fillStyle = E.rgba('#000', 1 - wm); b.fillRect(0, 0, W, H); }
         b.save(); applyCam(b, c); drawItem(b, 0, t, { flap: 1, bobK: 1 - c.mf }); b.restore();
       }, { op: 'destination-in' });
-    }, { op });
+    }, { op, alpha: sA });
   }
 
   /* ---------------------------- scene ---------------------------- */
@@ -341,25 +436,38 @@
       SP.parch = makeParchment();
       SP.niche = makeNiche();
       SP.shut = makeShutters();
-      SP.tiles = [makeScaleTile(40), makeScaleTile(110), makeScaleTile(300)];
+      SP.tiles = [16, 27, 46, 78, 132].map(makeScaleTile);   // mip chain: always drawn near native size
       SP.frost = makeFrost();
       SP.ghost = ITEMS.map((_, i) => makeGhost(i));
     },
     post(T) {
-      const t = clamp(T, T0, T1), m = macroM(t);
-      const hw = E.env(t, 34.05, 34.75, 0.12, 0.4), end = P(t, 37.4, 37.8);
-      return { bloom: lerp(0.3 + 0.08 * P(t, 30.2, 30.8), 0.5, sm(m * 2)) + 0.22 * hw + 0.08 * end, vignette: lerp(lerp(0.18, 0.34, sm(m * 2)), 0.3, end), grain: 0.05 };
+      const t = clamp(T, T0, T1), m = macroM(t), hs = hScene();
+      if (t >= TH && hs && hs.post) return typeof hs.post === 'function' ? hs.post(t) : hs.post;   // (G shows H's shop from here)
+      const hw = E.env(t, 34.05, 34.75, 0.12, 0.4);
+      const g = { bloom: lerp(0.3 + 0.08 * P(t, 30.2, 30.8), 0.5, sm(m * 2)) + 0.22 * hw, vignette: lerp(0.18, 0.34, sm(m * 2)), grain: 0.05 };
+      // converge on H's own post values at the hand-off
+      const k = P(t, 37.1, TH, 'inOutSine');
+      if (k > 0) { const hp = Object.assign({ bloom: 0.4, vignette: 0.3, grain: 0.035 }, hs && hs.post ? (typeof hs.post === 'function' ? hs.post(TH) : hs.post) : {}); for (const key of ['bloom', 'vignette', 'grain']) g[key] = lerp(g[key], hp[key], k); }
+      return g;
     },
     draw(ctx, T) {
       const t = clamp(T, T0, T1);
+      // from the hand-off on, G is H (the G→H seam is identical frames)
+      if (t >= TS) { const hs = hScene(); if (hs) { hs.draw(ctx, t, {}); return; } }
+      const cap = t > 37.05 ? captureH(Math.max(t, TH)) : null, ek = endK(t);
       const c = camG(t), Z = c.z, lz = lg(Z);
       const world = (fn) => { ctx.save(); applyCam(ctx, c); fn(ctx); ctx.restore(); };
-      const macroBG = sm((lz - lg(4)) / (lg(9) - lg(4)));
-      const endK = P(t, 37.42, 37.78, 'inOutSine');
-
+      const macroBG = t > RET ? sm((lz - lg(2.6)) / (lg(13) - lg(2.6))) : sm((lz - lg(4)) / (lg(9) - lg(4)));
+      
       /* ---- page ---- */
-      if (macroBG < 1) {
-        drawParchment(ctx, SP.parch, (cx) => applyCam(cx, c), 1, 1 - P(t, 37.0, 37.3));
+      if (!cap) { ek.bgk = 0; ek.nk = 0; }
+      const pa = 1 - ek.bgk;   // at the end the page itself gives way to H's evening street behind the kafes
+      if (cap && (ek.bgk > 0 || ek.nk > 0)) ctx.drawImage(cap.bg, 0, 0, W, H);
+      // (the page never shows inside the window: there the niche dissolves straight into H's shop)
+      const pageClip = !!cap && ek.nk > 0;
+      if (pageClip) { ctx.save(); applyCam(ctx, c); const pcl = new Path2D(); pcl.rect(-3000, -3000, 7000, 8000); pcl.addPath(starPathIR(ek.ir)); ctx.clip(pcl, 'evenodd'); ctx.setTransform(1, 0, 0, 1, 0, 0); }
+      if (macroBG < 1 && pa > 0.002) {
+        drawParchment(ctx, SP.parch, (cx) => applyCam(cx, c), pa, 1 - P(t, 37.0, 37.3));
         // frost creeping in from the left (34.6 →): only the edges and corners, crystals as wisps
         const fk = clamp((t - 34.55) / 2.0);
         if (fk > 0) {
@@ -371,28 +479,29 @@
             l.globalCompositeOperation = 'destination-in';
             const cxm = lerp(1500, 640, e), ri = lerp(1400, 480, e);
             l.save(); l.translate(cxm, 900); l.scale(1, 1.75); l.fillStyle = E.rad(l, 0, 0, ri, ri + 320, [[0, '#000', 0], [1, '#000', 1]]); l.fillRect(-3000, -3000, 6000, 6000); l.restore();
-          }, { alpha: 0.92 });
+          }, { alpha: 0.92 * pa });
         }
-        // evening falls on the page (bazaar palette)
-        const dk = P(t, 37.28, 37.62, 'inOutSine');
-        if (dk > 0) { ctx.save(); ctx.globalAlpha = dk; ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, '#241634'], [0.5, '#4A2A45'], [1, '#6E3B3B']]); ctx.fillRect(0, 0, W, H); ctx.restore(); }
-        // the lower page falls into shadow while the gloss is up (band stays mid-toned)
-        const gs = P(t, 31.62, 31.92, 'inOutSine') * (1 - P(t, 34.4, 34.7, 'inOutSine'));
+        // evening falls on the page (bazaar palette) as the kafes spreads, before the street shows through
+        const dk = 0.6 * P(t, 37.0, 37.32, 'inOutSine');
+        if (dk > 0) { ctx.save(); ctx.globalAlpha = dk * pa; ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, '#241634'], [0.5, '#4A2A45'], [1, '#6E3B3B']]); ctx.fillRect(0, 0, W, H); ctx.restore(); }
+        // the lower page falls into shadow while the gloss is up (band stays mid-toned; gloss out 33.41 + 0.28)
+        const gs = P(t, 31.62, 31.92, 'inOutSine') * (1 - P(t, 33.6, 33.95, 'inOutSine'));
         if (gs > 0) { ctx.fillStyle = E.lin(ctx, 0, 900, 0, H, [[0, '#3A2618', 0], [0.4, '#3A2618', 0.5 * gs], [1, '#2A1A10', 0.62 * gs]]); ctx.fillRect(0, 900, W, H - 900); }
         // footnote rule
         const rk = P(t, 28.93, 29.6, 'outCubic');
-        if (rk > 0) world((h) => { h.strokeStyle = E.rgba('#5A2A2F', 0.4); h.lineWidth = 1.2; h.beginPath(); h.moveTo(540 - 400 * rk, 1180); h.lineTo(540 + 400 * rk, 1180); h.stroke(); });
+        if (rk > 0) world((h) => { h.strokeStyle = E.rgba('#5A2A2F', 0.4 * pa); h.lineWidth = 1.2; h.beginPath(); h.moveTo(540 - 400 * rk, 1180); h.lineTo(540 + 400 * rk, 1180); h.stroke(); });
       }
+      if (pageClip) ctx.restore();
 
       /* ---- window world ---- */
       const openK = clamp((t - 28.82) / 0.95), rS = 60 + (RW - 60) * (ez.inOutCubic(openK) + 0.03 * Math.sin(PI * clamp((openK - 0.65) / 0.35))), oS = P(t, 28.86, 29.55);
       const winK = P(t, 29.36, 29.8, 'inOutSine');        // niche / frame appear (shutters reveal radially)
-      const shutK = clamp((t - 30.18) / 0.6), shutE = ez.inOutCubic(shutK) - 0.012 * Math.sin(PI * clamp((t - 30.1) / 0.1));
-      const vis = 1 - sm((lz - lg(7)) / (lg(12) - lg(7)));   // world visibility during macro
+      const shutK = clamp((t - 30.18) / 0.6), shutE = ez.inOutCubic(shutK);   // (no inward squeeze: the halves never overlap)
+      const vis = 1 - (t > RET ? sm((lz - lg(5)) / (lg(16) - lg(5))) : sm((lz - lg(7)) / (lg(12) - lg(7))));   // world visibility during macro
       if (vis > 0.002) world((h) => {
         h.save(); h.globalAlpha *= vis;
         // light spill on the page once open
-        const spill = P(t, 30.2, 30.9) * (1 - 0.5 * P(t, 36.4, 37.2)) * (1 - P(t, 37.3, 37.55));
+        const spill = P(t, 30.2, 30.9) * (1 - 0.5 * P(t, 36.4, 37.2)) * (1 - P(t, 37.0, 37.3));
         if (spill > 0) {
           h.fillStyle = E.rad(h, SCX, SCY, RW * 0.6, RW * 1.9, [[0, '#FFE2A8', 0.42 * spill], [1, '#FFE2A8', 0]]); h.fillRect(SCX - 900, SCY - 900, 1800, 1800);
           h.save(); h.globalCompositeOperation = 'source-over';
@@ -406,7 +515,7 @@
           // the footnote mark's own halo carries on and eases out while the star opens
           const pulse = 1 + 0.12 * Math.sin(t * 3.1), ha = 1 - P(t, 28.95, 29.75), hr = 60 * 3.6 * pulse + (rS - 60) * 1.3;
           if (ha > 0) { h.save(); h.globalAlpha *= ha; h.fillStyle = E.rad(h, SCX, SCY, 0, hr, [[0, '#FFE7B0', 0.9], [0.35, '#FFDC94', 0.42 + 0.08 * Math.sin(t * 3.1)], [1, '#FFE7B0', 0]]); h.fillRect(SCX - hr, SCY - hr, 2 * hr, 2 * hr); h.restore(); }
-          const lw = lerp(2.7, 3.2, oS), col = E.hexOf(E.mix('#C69A42', '#B08030', oS)), fa = 1 - P(t, 37.25, 37.55);
+          const lw = lerp(2.7, 3.2, oS), col = E.hexOf(E.mix('#C69A42', '#B08030', oS)), fa = 1 - P(t, 37.0, 37.3);
           h.save(); h.globalAlpha *= fa; E.at(h, SCX, SCY, 1, 0, (cc) => star8a(cc, { r: rS, open: oS, draw: 1, girih: false, glow: 0.7 * (1 - winK * 0.6), lineW: lw, col })); h.restore();
           // clean 8-fold construction: each square edge runs on to one circumscribing circle and stops there
           if (oS > 0.01) {
@@ -429,16 +538,16 @@
           }
         }
         if (winK > 0) {
-          const clip = starPath(0);
-          // niche
-          h.save(); h.clip(clip); h.globalAlpha *= P(t, 29.88, 29.96, 'linear');
-          const n = SP.niche; h.drawImage(n.c, SCX - n.size / 2, SCY - n.size / 2, n.size, n.size);
-          const rv = P(t, 37.12, 37.42, 'inOutSine');
-          if (rv > 0) { h.save(); h.setTransform(1, 0, 0, 1, 0, 0); h.globalAlpha = rv; drawBazaar(h, t); h.restore(); }
-          h.restore();
+          const clip = starPathIR(ek.ir);
+          // niche (dissolves into H's shop, already drawn behind, at the end)
+          if (ek.nk < 1) { h.save(); h.clip(clip); h.globalAlpha *= P(t, 29.88, 29.96, 'linear') * (1 - ek.nk);
+            const n = SP.niche; h.drawImage(n.c, SCX - n.size / 2, SCY - n.size / 2, n.size, n.size);
+            h.restore(); }
           // items, halos, seals
           h.save(); h.clip(clip);
           drawGallery(h, t, c);
+          // the ghosts leave the niche for H's shelf slots (behind the window plane: clipped by it, under the frame)
+          if (t >= flightStart(0) - 0.2) { h.save(); h.setTransform(1, 0, 0, 1, 0, 0); h.globalCompositeOperation = 'lighter'; drawFlight(h, t, c, cap); h.restore(); }
           // dust motes drifting in the niche's warm light
           if (shutK > 0) { h.save(); h.globalCompositeOperation = 'lighter'; for (let i = 0; i < 16; i++) { const px = SCX - 330 + E.hash(i, 61) * 660 + 18 * Math.sin(t * 0.5 + i), py = SCY + 340 - ((E.hash(i, 62) * 680 + t * (10 + 8 * E.hash(i, 63))) % 680), tw = 0.5 + 0.5 * Math.sin(t * 1.7 + i * 2.1); h.globalAlpha = 0.5 * tw * P(t, 30.3, 30.9) * (1 - P(t, 36.6, 37.2)); h.fillStyle = E.rad(h, px, py, 0, 5, [[0, '#FFE7B0', 1], [1, '#FFE7B0', 0]]); h.fillRect(px - 5, py - 5, 10, 10); } h.restore(); }
           // shutters
@@ -454,11 +563,14 @@
               E.layer(h, (l) => { fresh(l, false); l.save(); l.setTransform(m); l.clip(sk); drawSh(l); l.restore(); });
               h.save(); h.globalCompositeOperation = 'lighter'; h.lineJoin = 'round'; h.strokeStyle = E.rgba('#FFE7B0', 0.45 * (1 - rev)); h.lineWidth = 9; h.stroke(sk); h.strokeStyle = E.rgba('#FFF6E0', 0.8 * (1 - rev)); h.lineWidth = 2; h.stroke(sk); h.restore();
             } else drawSh(h);
-            if (shutK > 0) { h.globalCompositeOperation = 'lighter'; const gw = Math.max(2, off * 2); h.fillStyle = E.lin(h, SCX - gw / 2 - 30, 0, SCX + gw / 2 + 30, 0, [[0, '#FFE7B0', 0], [0.5, '#FFF6E0', 0.75 * (1 - shutK * 0.7)], [1, '#FFE7B0', 0]]); h.fillRect(SCX - gw / 2 - 30, SCY - RW, gw + 60, 2 * RW); }
           }
+          // the light between the shutters: the seam brightens first (anticipation, 30.06 →), opens into a column
+          // as they part and then decays on its own envelope (it no longer switches off when the shutters are gone)
+          const lc = 0.75 * (1 - 0.7 * shutK) * sm((t - 30.06) / 0.16) * (1 - sm((t - 30.5) / 0.55));
+          if (lc > 0.002) { h.save(); h.globalCompositeOperation = 'lighter'; const gw = Math.max(2, shutE * (RW + 20) * 2); h.fillStyle = E.lin(h, SCX - gw / 2 - 30, 0, SCX + gw / 2 + 30, 0, [[0, '#FFE7B0', 0], [0.5, '#FFF6E0', lc], [1, '#FFE7B0', 0]]); h.fillRect(SCX - gw / 2 - 30, SCY - RW, gw + 60, 2 * RW); h.restore(); }
           h.restore();
-          // ghosts' grille + frame
-          drawFrame(h, winK, t);
+          // frame (G's gold → H's walnut star frame, drawn by drawKafes)
+          drawFrame(h, winK * (1 - ek.fk), t, ek.ir);
         }
         h.restore();
       });
@@ -470,10 +582,10 @@
         ctx.restore();
         if (vis > 0.002) world((h) => { h.globalAlpha = vis; drawItem(h, 0, t, { flap: 1, bobK: 1 - c.mf }); });
       }
-      const sA = sm((lz - lg(1.8)) / (lg(2.8) - lg(1.8))) * (1 - sm((lz - lg(6.5)) / (lg(9) - lg(6.5))));
-      const rA = sm((lz - lg(3.8)) / (lg(5.2) - lg(3.8))) * (1 - sm((lz - lg(8)) / (lg(11) - lg(8))));
-      drawScales(ctx, t, c, sA, rA);
-      const giA = sm((lz - lg(6.5)) / (lg(10.5) - lg(6.5)));
+      // wing → overlapping scale shingles (ridged once they are big) → the girih grows out of the wing
+      const sA = sm((lz - lg(1.9)) / (lg(3.0) - lg(1.9))) * (1 - sm((lz - lg(9)) / (lg(12.5) - lg(9))));
+      drawScales(ctx, t, c, sA);
+      const giA = t > RET ? sm((lz - lg(6)) / (lg(18) - lg(6))) : sm((lz - lg(7.5)) / (lg(11.5) - lg(7.5)));
       if (giA > 0.003) {
         const cell = 4.5 * Z, relief = P(t, 33.23, 33.97), hue = t * 0.22;
         const sweep = t < 33.2 ? clamp((t - 32.6) / 0.6) : clamp(((t - 33.25) % 0.75) / 0.75) * (t < 34.0 ? 1 : 0);
@@ -489,6 +601,13 @@
             l.globalCompositeOperation = 'source-atop';
             l.fillStyle = E.lin(l, bx - 220, by + 120, bx + 220, by - 120, [[0, '#6FF0FF', 0], [0.3, '#B48CFF', 0.4], [0.55, '#FF7AD9', 0.45], [0.8, '#FFE66D', 0.4], [1, '#FFE66D', 0]]); l.fillRect(0, 0, W, H);
           }
+          // while it resolves the girih lives only on the wing (it comes out of the scales, not around them)
+          const gwm = 1 - sm((lz - lg(11)) / (lg(17) - lg(11)));
+          if (gwm > 0.01) E.layer(l, (b) => {
+            fresh(b, false);
+            if (gwm < 1) { b.fillStyle = E.rgba('#000', 1 - gwm); b.fillRect(0, 0, W, H); }
+            b.save(); applyCam(b, c); drawItem(b, 0, t, { flap: 1, bobK: 1 - c.mf }); b.restore();
+          }, { op: 'destination-in' });
           l.globalCompositeOperation = 'destination-in';
           l.fillStyle = E.rad(l, c.sx, c.sy, 360, 900, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, W, H);
         }, { alpha: giA });
@@ -502,11 +621,11 @@
         }
       }
 
-      /* ---- end: through the window into the bazaar ---- */
-      if (t > 37.0) drawEnd(ctx, t, c, endK);
+      /* ---- end: the page has become H's kafes wall around the star window ---- */
+      if (t > 36.99) drawKafes(ctx, t, c, ek);
 
       /* gloss band guard (macro) */
-      const g = P(t, 31.9, 32.15, 'inOutSine') * (1 - P(t, 34.3, 34.6, 'inOutSine'));
+      const g = P(t, 31.9, 32.15, 'inOutSine') * (1 - P(t, 33.6, 33.95, 'inOutSine'));   // gloss 32.07–33.41 (+0.28 out)
       if (g > 0) { ctx.save(); ctx.translate(540, 1400); ctx.scale(1, 230 / 640); ctx.fillStyle = E.rad(ctx, 0, 0, 0, 640, [[0, '#06101A', 0.22 * g], [1, '#06101A', 0]]); ctx.fillRect(-640, -640, 1280, 1280); ctx.restore(); }
     },
   });
@@ -558,7 +677,7 @@
       const sk = hk0 * (1 - clamp((t - it.out + 0.05) / 0.15));
       if (sk > 0.01) E.at(h, it.x + 78, it.y + 70, sk, 0, (cc) => star8a(cc, { r: 11, open: 0.6, draw: 1, glow: 0.6, lineW: 1.5, col: '#D8B26E', fill: 'rgba(216,178,110,0.35)' }));
       // ghost
-      const ga = 0.6 * sm((t - it.out) / 0.3) * (t < 37.2 ? 1 : 0);   // hands over to the flying ghost at 37.2 (same spot)
+      const ga = 0.6 * sm((t - it.out) / 0.3) * (t < flightStart(i) ? 1 : 0);   // hands over to the flying ghost (same spot)
       if (ga > 0) drawGhost(h, i, it.x, it.y, 1, ga * (it.k === 'snow' ? 0.62 : 1) * (0.9 + 0.1 * Math.sin(t * 3 + i)));
     }
     // decay particles
@@ -594,48 +713,55 @@
       h.restore();
     }
   }
-  /* the window's girih grille: gold (37.22) → walnut kafes rushing past as a blurred foreground with an opening */
-  /* the window's girih grille: thin gold (37.0) → walnut kafes (2→14 px on screen) that the camera pushes THROUGH;
-   * drawn crisp (no blur), clipped to the star window, with the centre opening onto the vitrine */
-  function drawLattice(ctx, t, c) {
-    const gk = P(t, 37.0, 37.25, 'outCubic');
-    if (gk <= 0) return;
-    const rush = ez.inOutCubic(clamp((t - 37.2) / 0.6));
-    const col = E.hexOf(E.mix('#D8B26E', '#5A3A24', P(t, 37.3, 37.6))), lw = lerp(1.8, 3.9, rush), pc = toScreen(c, SCX, SCY);
+  /* the page around the window becomes H's kafes wall: H_numune drawLatticeFG re-drawn on G's camera (screen R =
+   * RW·z, same cell/line/star/frame/half-res blur), grown out from the star frame (rev), thin gold → walnut (mk),
+   * frame gold → walnut (fk), star inner ratio 0.765 → 0.82. At 37.60 (R 500) it is H's own first frame. */
+  function drawKafes(ctx, t, c, ek) {
+    if (ek.rev <= 0.001 && ek.fk <= 0.001) return;
+    const R = RW * c.z, s = R / 500, pc = toScreen(c, SCX, SCY);
+    const star = new Path2D(); star.addPath(S.starPath(R, 8, ek.ir, PI / 8), new DOMMatrix().translate(pc[0], pc[1]).rotate(c.rot * 180 / PI));
     E.layer(ctx, (l) => {
-      fresh(l, false);
-      l.save(); applyCam(l, c); l.clip(starPath(0));
-      if (rush < 1) { l.save(); l.globalCompositeOperation = 'lighter'; l.globalAlpha = 0.4 * (1 - rush); A.lattice(l, { x: SCX - RW, y: SCY - RW, w: 2 * RW, h: 2 * RW, cell: 78, lineW: 5, stroke: '#FFE7B0', clip: false }); l.restore(); }
-      A.lattice(l, { x: SCX - RW, y: SCY - RW, w: 2 * RW, h: 2 * RW, cell: 78, lineW: lw, stroke: col, clip: false });
-      l.restore();
-      if (rush > 0) {
-        l.globalCompositeOperation = 'destination-out';
-        const hole = lerp(30, 1060, ez.inOutSine(rush));
-        l.fillStyle = E.rad(l, pc[0], pc[1], hole * 0.55, hole * 1.1, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, W, H);
+      fresh(l, true);
+      if (ek.rev > 0.001) {
+        const outer = new Path2D(); outer.rect(-300, -300, W + 600, H + 600); outer.addPath(star);
+        l.save(); l.clip(outer, 'evenodd');
+        l.save(); l.translate(pc[0], pc[1]); if (c.rot) l.rotate(c.rot); l.scale(s, s);
+        A.lattice(l, { w: (W + 700) / s, h: (H + 900) / s, cell: 78, lineW: 14 * lerp(0.26, 1, ek.mk), stroke: ek.mk >= 1 ? '#4A2E1C' : E.hexOf(E.mix('#D8B26E', '#4A2E1C', ek.mk)) });
+        l.restore();
+        if (ek.rev < 1) {   // spreads outward from the frame
+          const e = ek.rev, r2 = R * (0.95 + 3.9 * e), r1 = Math.max(0, r2 - R * 0.9);
+          l.globalCompositeOperation = 'destination-in';
+          l.fillStyle = E.rad(l, pc[0], pc[1], r1, r2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-300, -300, W + 600, H + 600);
+        }
+        l.globalCompositeOperation = 'source-atop';
+        l.fillStyle = E.rad(l, pc[0], pc[1], R * 0.9, R * 1.9, [[0, '#E0905A', 0.22 * ek.mk], [1, '#E0905A', 0]]); l.fillRect(0, 0, W, H);
+        l.restore();
       }
-    }, { alpha: gk });
+      if (ek.fk > 0.001) {
+        l.globalAlpha = ek.fk; l.lineJoin = 'miter';
+        l.strokeStyle = '#2E1A10'; l.lineWidth = 40 * s; l.stroke(star);
+        l.strokeStyle = E.lin(l, 0, pc[1] - R, 0, pc[1] + R, [[0, '#8E6444'], [0.5, '#6E4A32'], [1, '#4A2E1C']]); l.lineWidth = 26 * s; l.stroke(star);
+        l.strokeStyle = 'rgba(232,194,122,0.85)'; l.lineWidth = Math.max(1.5, 3 * s); l.stroke(star);
+      }
+    }, { lo: true, blur: ek.blur });
   }
-  /* bazaar world behind + kafes lattice rushing past + ghosts flying to shelf slots */
-  function drawBazaar(l, t) {
-    l.fillStyle = E.lin(l, 0, 0, 0, H, [[0, '#241634'], [0.5, '#4A2A45'], [1, '#6E3B3B']]); l.fillRect(0, 0, W, H);
-    l.fillStyle = E.rad(l, 540, 720, 0, 760, [[0, '#FFAE42', 0.18], [1, '#FFAE42', 0]]); l.fillRect(0, 0, W, H);
-    l.fillStyle = E.rad(l, 540, 760, 40, 470, [[0, '#FFE9B8', 0.95], [0.45, '#FFBE6A', 0.6], [1, '#6E3B3B', 0]]); l.fillRect(140, 300, 800, 850);
-    E.at(l, 540, 1150, 1, 0, (cc) => A.archGate(cc, { t, w: 1000, h: 970, lattice: false, back: null }));   // = H_numune vitrine (opening x141–939, apex y300)
-    for (const [x, y] of [[300, 190], [540, 150], [780, 190]]) { l.fillStyle = E.rad(l, x, y, 0, 160, [[0, '#FFE3A3', 0.55], [0.3, '#FFAE42', 0.22], [1, '#FFAE42', 0]]); l.fillRect(x - 160, y - 160, 320, 320); }
-    l.strokeStyle = 'rgba(201,154,74,0.75)'; l.lineWidth = 6; for (const y of [620, 840, 1060]) { l.beginPath(); l.moveTo(200, y); l.lineTo(880, y); l.stroke(); }
-  }
-  /* bazaar full frame + kafes lattice rushing past + ghosts flying to shelf slots */
-  function drawEnd(ctx, t, c, endK) {
-    const ek = P(t, 37.62, 37.8, 'inOutSine') * 0.45;
-    if (ek > 0) { ctx.save(); ctx.globalAlpha = ek; drawBazaar(ctx, t); ctx.restore(); }
-    // each ghost glides straight to its own H shelf slot (H sample centres; row 3 = nautilus, pomegranate, cherries)
-    const SL = [[310, 612, 0.37], [540, 612, 0.6], [770, 612, 0.41], [310, 1082, 0.46], [540, 1082, 0.44], [770, 840, 0.48]];
-    const fly = ez.inOutCubic(clamp((t - 37.2) / 0.6));
-    if (t >= 37.2) for (let i = 0; i < ITEMS.length; i++) {
-      const it = ITEMS[i], g = SL[i], p0 = toScreen(c, it.x, it.y);
-      const x = lerp(p0[0], g[0], fly), y = lerp(p0[1], g[1], fly), sc = lerp(c.z, g[2], fly);
-      drawGhost(ctx, i, x, y, sc, 0.6 * (it.k === 'snow' ? lerp(0.62, 1, fly) : 1) * (0.9 + 0.1 * Math.sin(t * 3 + i)));
+  /* each ghost glides from its niche spot onto its H shelf slot and becomes H's own ghost drawing there (same
+   * place, size, alpha and flicker as H_numune drawGhosts at 37.60); screen space, inside the window clip */
+  function drawFlight(h, t, c, cap) {
+    const base = h.globalAlpha;
+    for (let i = 0; i < ITEMS.length; i++) {
+      const t0 = flightStart(i); if (t < t0) continue;
+      const it = ITEMS[i], gG = SP.ghost[i];
+      const aG = 0.6 * (it.k === 'snow' ? 0.62 : 1) * (0.9 + 0.1 * Math.sin(t * 3 + i));
+      const p0 = toScreen(c, it.x, it.y), k0 = c.z / 2;                  // G sprite: 2 px per world unit
+      const C0 = [p0[0] + (gG.bx - 300) * k0, p0[1] + (gG.by - 300) * k0], S0 = gG.bs * k0;
+      if (!cap) { const a = aG * (1 - P(t, 37.2, 37.5)); if (a > 0.003) { h.globalAlpha = base * a; h.setTransform(k0, 0, 0, k0, C0[0] - k0 * gG.bx, C0[1] - k0 * gG.by); h.drawImage(gG.c, 0, 0); } continue; }
+      const hg = cap.g[i], w = ez.inOutCubic(clamp((t - t0) / (FL1 - t0)));
+      const Cx = lerp(C0[0], hg.cx, w), Cy = lerp(C0[1], hg.cy, w), Sz = Math.exp(lerp(lg(S0), lg(hg.S), w));
+      const x = sm((w - 0.2) / 0.55), aH = hg.a * hFlick(hg.iH, t) / hFlick(hg.iH, cap.tc);
+      if (x < 1) { const k = Sz / gG.bs; h.globalAlpha = base * aG * (1 - x); h.setTransform(k, 0, 0, k, Cx - k * gG.bx, Cy - k * gG.by); h.drawImage(gG.c, 0, 0); }
+      if (x > 0) { const k = Sz / hg.bs; h.globalAlpha = base * Math.min(1, aH) * x; h.setTransform(k, 0, 0, k, Cx - k * hg.bx, Cy - k * hg.by); h.drawImage(hg.img, 0, 0); }
     }
-    drawLattice(ctx, t, c);
+    h.globalAlpha = base; h.setTransform(1, 0, 0, 1, 0, 0);
   }
 })();

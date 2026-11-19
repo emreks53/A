@@ -7,21 +7,28 @@
  *  7.36–7.80 "bir zaman"  sundial shadow on the warm-lit meadow turns 40°.  7.80 "lezzet": golden pulse +
  *                 three short warm fragrance curls (gone by 8.6).   8.28 "verse": bee lifts off, exits right.
  *  8.62–9.10      6 attachment filaments draw from the heart to the frame edges (y ≤ 1180).
- *  9.14–9.62 "firakıyla"  filaments snap one by one (stubs fade in 0.25 s).  On the 3rd snap the head's
- *                 OWN outer ring tears loose: the five outer petals are re-drawn from the rose geometry
- *                 (A._roseGeom) as free bodies BEHIND the inner rings — the head is left smaller and open.
- *                 Four fly up-left (growth ≤1.25×); the hero petal drifts down-right and hovers clear of
- *                 the stem.  Stem kicks 12°, −0.25 EV, pull-back, roll, decaying shake.
+ *  9.14–9.62 "firakıyla"  filaments snap one by one (stubs recoil in a smooth curve and fade).  On the 3rd snap
+ *                 the head's OWN outer ring tears loose: the five outer petals are re-drawn from the rose
+ *                 geometry (A._roseGeom, at each petal's own tear instant) with the head's petal shading, so
+ *                 they start pixel-identical and keep their depth order (back petals behind the rose, the two
+ *                 front petals in front of it, under the k=1 front petal while they touch) — the head is left
+ *                 smaller and open.  Four are carried up-left by the wind, receding (→0.52×), tumbling and
+ *                 fluttering (never edge-on); the hero petal drifts down-right and hovers clear of the stem,
+ *                 easing from the rose's grade into its own luminous look (9.85–10.3).
+ *                 Stem kicks 12°, −0.25 EV, pull-back, roll, decaying shake.
  *  9.78–10.44 "birçok zaman"  time-lapse: shadow spins 3 turns, clouds race, sun gone, sky → night, rose
  *                 wilts (colour, curl, browned edges), stem droops.
  *  10.46 "elem"   head bows ≈31° (outBack), cold ripple on the ground, a tear gathers on the lowest real
- *                 petal edge.   10.84 "verir": the tear falls onto the hovering petal and hangs from its edge.
+ *                 petal edge.   10.84 "verir": the tear falls onto the hovering petal, runs to its lower edge,
+ *                 hangs there (tip touching the edge) and lets go at 11.26, falling away and dissolving.
  *  10.90–11.80    the camera follows the falling petal (optical zoom about (540,880)); the stem base and
  *                 soil leave the frame first, the world defocuses and dissolves into D's plum by 11.4.
- *                 The petal settles to D's start pose (petalSilhouette(92), rot −0.55) and morphs
+ *                 The petal (not enlarged by the follow zoom) eases its size to that of D's petal by 11.4,
+ *                 settles to D's start pose (petalSilhouette(92), rot −0.55) and morphs
  *                 11.50–11.80 into the honey drop r 26 at (540,880) exactly like D; the bowl (opaque,
  *                 72 % veil, no reflection) rises like D's (1100 px/s, rim centre ≈1325 at 11.80).
- *  Gloss band: the rose layer is darkened + blurred inside y 1150–1650 with a smooth envelope (BCW.roseLayered).
+ *  Gloss band: nothing is darkened/blurred selectively (BCW.roseLayered leaves the rose whole, no front-flower
+ *                 dimming); legibility comes from the engine's text halo + the scene-wide feathered bandScrim.
  * ========================================================================== */
 (function () {
   'use strict';
@@ -30,6 +37,7 @@
   const W = window.BCW;
   const T_HAND = 6.70, T_SNAP0 = 9.14, SNAP_DT = 0.096, T_DETACH = T_SNAP0 + 2 * SNAP_DT;
   const DROP = [540, 880], DROP_R = 26;
+  const T_SW = 9.85, T_REL = 11.26; // hero leaves the head's depth stack · tear lets go of the petal
   const css = W.css, mx = W.mx, RG = W.RG, LG = W.LG;
 
   /* ---------------- timing curves ---------------- */
@@ -156,7 +164,7 @@
     ctx.strokeStyle = css(mx('#FFC2D0', '#9A90B8', n), 0.28); ctx.lineWidth = (o.lw || 1.2) * 0.8; ctx.beginPath(); ctx.moveTo(B[0], B[1]); ctx.quadraticCurveTo((B[0] + T[0]) / 2 + 2, (B[1] + T[1]) / 2, lerp(B[0], T[0], 0.85), lerp(B[1], T[1], 0.85)); ctx.stroke();
   }
   /** flyer pose: starts as the head's own transform (pixel-identical), then is carried up-left by the wind (storyboard)
-      while it recedes (scale 1 → 0.52), tumbles and flutters about its spine (width never below 0.35, so it is never
+      while it recedes (scale 1 → 0.52), tumbles and flutters about its spine (width never below 0.45, so it is never
       seen edge-on as a sliver). Every term starts with zero velocity. */
   function flyerPose(p, t, Hm) {
     const tau = (t - startOf(p.i)) / FLY_LIFE, e0 = sm(tau / 0.22);
@@ -164,10 +172,10 @@
     const dir = -2.25 + (H(p.i, 3) - 0.5) * 0.9, dist = FLY_D * Math.pow(tau, 1.4);
     const dx = Math.cos(dir) * dist + Math.sin(tau * PI * 2.2 + p.i) * 40 * tau * e0, dy = Math.sin(dir) * dist - Math.sin(tau * PI) * 30 * e0;
     const th = ((H(p.i, 5) - 0.5) * 2.4 * tau + 0.25 * Math.sin(tau * 7 + p.i) * tau) * e0;
-    const f = 0.675 + 0.325 * Math.cos(tau * PI * (1.6 + H(p.i, 2) * 1.4)), s = 1 - 0.48 * sm(tau / 0.85);
+    const f = 0.725 + 0.275 * Math.cos(tau * PI * (1.6 + H(p.i, 2) * 1.4)), s = 1 - 0.48 * sm(tau / 0.85);
     const sp = (p.spine * 180) / PI;
     const X = new DOMMatrix().translate(Ms.x + dx, Ms.y + dy).rotate((th * 180) / PI).scale(s).multiply(new DOMMatrix([Hm.a, Hm.b, Hm.c, Hm.d, 0, 0]))
-      .translate(p.M[0], p.M[1]).rotate(sp).scale(1, f).rotate(-sp).translate(-p.M[0], -p.M[1]);
+      .rotate(sp).scale(1, f).rotate(-sp).translate(-p.M[0], -p.M[1]);
     return { X, tau, f, s };
   }
   /** grade the flyers exactly like the rose layer does (BCW.roseLayered: gradeCol @ gradeA, source-atop ≡ a fill over the
@@ -177,7 +185,7 @@
     if (pose.tau > 0.82) ctx.globalAlpha *= 1 - sm((pose.tau - 0.82) / 0.18);
     headPetal(ctx, p.pt, { ds: matDs(pose.X, br), wilt: 0, face: p.pt.face, shadowA: 1 - sm(pose.tau / 0.25) });
     if (g.a > 0.003) { ctx.fillStyle = css(g.col, g.a); ctx.fill(p.path); }
-    const shade = 0.24 * (1 - pose.f) / 0.65; if (shade > 0.003) { ctx.fillStyle = css(RP.shadow, shade); ctx.fill(p.path); }
+    const shade = 0.24 * (1 - pose.f) / 0.55; if (shade > 0.003) { ctx.fillStyle = css(RP.shadow, shade); ctx.fill(p.path); }
     const hz = 0.3 * sm((pose.tau - 0.08) / 0.7); if (hz > 0.003) { ctx.fillStyle = css(g.haze, hz); ctx.fill(p.path); }
     ctx.restore();
   }
@@ -225,11 +233,11 @@
     if (f > 0) {
       const fl = Math.sin((t - 11.0) * 4.6);
       x = lerp(x, DROP[0] + Math.sin(t * 2.6) * 18 * (1 - mk), f); y = lerp(y, DROP[1] + Math.sin(t * 3.4) * 7 * (1 - mk), f);
-      rot = lerp(rot, 0.3 + 0.45 * fl, f); flip = lerp(flip, 0.85 + 0.15 * Math.cos((t - 11.0) * 5), f);
+      rot = lerp(rot, 0.3 + 0.45 * fl, f); flip = lerp(flip, 0.86 + 0.08 * Math.cos((t - 11.0) * 5), f);
     }
     // on-screen size eases continuously (log-scale) from the hover size to the size of D's petal (equal area) BEFORE the
     // shape morph, so the morph only changes the shape — no sudden shrink at 11.3
-    const kS = E.p(t, 10.9, 11.36, 'inOutSine');
+    const kS = E.p(t, 10.86, 11.4, 'inOutSine');
     if (kS > 0) sc = Math.exp(lerp(Math.log(sc), Math.log(heroScD()), kS));
     return { x, y, sc, rot, flip, mk };
   }
@@ -242,6 +250,23 @@
     const f = Math.abs(hs.flip) < 0.12 ? 0.12 * Math.sign(hs.flip || 1) : hs.flip;
     return new DOMMatrix().translate(hs.x, hs.y).rotate((hs.rot * 180) / PI).scale(hs.sc * f, hs.sc).translate(-HERO.M[0], -HERO.M[1]);
   }
+  /** outline index where the tear hangs: the petal's lowest point when the tear reaches the edge (11.2), then tracked */
+  let HANG_I = -1;
+  function hangIdx() {
+    if (HANG_I < 0) {
+      const tt = 11.2, tw2 = W.tw(tt), hx2 = headXf(tt, tw2), pts = heroPts(heroState(tt, camC(tt, hx2), hx2, tw2));
+      HANG_I = 0; pts.forEach((q, i) => { if (q[1] > pts[HANG_I][1]) HANG_I = i; });
+    }
+    return HANG_I;
+  }
+  /** tear attach point (screen) at time tt (stretch at full hang) — used for the release position/velocity */
+  function hangAt(tt) {
+    const tw2 = W.tw(tt), hx2 = headXf(tt, tw2), c2 = camC(tt, hx2), hs2 = heroState(tt, c2, hx2, tw2), q = heroPts(hs2)[hangIdx()];
+    const r = 7 * (W.zoomAt(c2, 1) / c2.zo);
+    return { p: [hs2.x + q[0], hs2.y + q[1] + r * (1.55 * 1.47 - 0.22)], r };
+  }
+  let REL = null;
+  const relState = () => { if (!REL) { const a = hangAt(T_REL), b = hangAt(T_REL - 1 / 120); REL = { p: a.p, r: a.r, v: [(a.p[0] - b.p[0]) * 120, (a.p[1] - b.p[1]) * 120] }; } return REL; };
   let PSIL = null, TSIL = null;
   const petalSilD = () => { if (!PSIL) { const P = A.petalSilhouette(92), ca = Math.cos(-0.55), sa = Math.sin(-0.55); PSIL = A.resample(P.map(([x, y]) => [x * ca - y * sa, x * sa + y * ca]), 128); } return PSIL; };
   /** hero outline in screen offsets (relative to its centre), morphing to D's petal pose by mk */
@@ -451,21 +476,36 @@
     const head = (x, y) => W.toScreen(c, 1, ...hx.toWorld(x, y));
     const heart = head(0, -0.18 * W.ROSE_R), headC = head(0, -0.16 * W.ROSE_R);
     const hs = HERO ? heroState(t, c, hx, ttw) : null;
-    const heroBehind = hs && t < 9.85;
+    // the hero stays in the head's depth stack (in front of the rose, before the filaments/exposure dip) until T_SW, then
+    // is drawn in front of everything with the rose-layer grade + exposure it had, eased off as it becomes luminous
+    const heroFront = hs && t < T_SW;
+    const gradeCol = mx('#6A3D8A', '#1E2246', night), gradeA = 0.1 + 0.22 * night;
+    const Hm = hs || (t >= T_DETACH && t < T_DETACH + 0.2 + FLY_LIFE) ? headMat(c, hx) : null;
+    const gF = { col: gradeCol, a: gradeA, haze: mx(P.sky[0][1], P.sky[1][1], 0.6), brown: hx.wilt / 0.85, headS: [headC[0], headC[1], W.ROSE_R * z * 0.95] };
     W.drawWorld(ctx, {
       cam: c, P, t: ttw, tc, sunX: W.SUN0[0], sunY, sunA, wave: 99, dusk: 1, tint: lerp(0.85, 1, night),
       dof: { back: lerp(3.5, 5, E.p(t, 7, 9)) + 7 * fallBlur, front: 9 + 9 * fallBlur, near: 6 }, stars: night * night, cloudA: 1 - 0.4 * night,
-      pathDim: 0.6 * E.p(t, 6.72, 7.6, 'inOutSine'), bandDim: gk,
+      pathDim: 0.6 * E.p(t, 6.72, 7.6, 'inOutSine'), bandDim: 0, // no selective dimming in the gloss band (scene-wide scrim only)
       afterBack: (l) => sundial(l, c, t, night),
       onRose: (ctx2) => {
+        if (Hm) drawFlyers(ctx2, t, Hm, hx.br, gF, false); // petals from the back of the head: behind the rose
         W.roseLayered(ctx2, c, {
           t: ttw, bloom: 1, wilt: hx.wilt, stemWilt: hx.stemWilt, bend: hx.bend, bow: hx.bow, P,
-          band: gk, stemGrade: lerp(0.68, 0.8, night), rim: lerp(1, 0.6, night), rimCol: mx('#FFB37A', '#8EA6E8', night),
-          gradeCol: mx('#6A3D8A', '#1E2246', night), gradeA: 0.1 + 0.22 * night, brown: hx.wilt / 0.85, headS: [headC[0], headC[1], W.ROSE_R * z * 0.95],
+          stemGrade: lerp(0.68, 0.8, night), rim: lerp(1, 0.6, night), rimCol: mx('#FFB37A', '#8EA6E8', night),
+          gradeCol, gradeA, brown: gF.brown, headS: gF.headS,
           rose: { detach: detFn(t), detachDist: 14, heroIndex: 99 },
           onHead: (hctx) => { if (t < 8.28) W.drawBee(hctx, { fly: 0, off: [0, 0], flip: true, rot: 0.06 * Math.sin(ttw * 2) }, null, ttw); },
-          behind: (l) => { drawFlyers(l, c, t, hx, night); if (heroBehind) drawHero(l, hs, night, 0); },
         });
+        if (Hm) { // petals from the front of the head: in front of the rose, under the k=1 front petal while they touch it
+          drawFlyers(ctx2, t, Hm, hx.br, gF, true);
+          const clips = [];
+          if (heroFront) {
+            drawHero(ctx2, hs, night, 0, { clone: 1, br: hx.br, shadowA: 1 - sm((t - startOf(HERO.i)) / (0.25 * FLY_LIFE)), emu: { col: gradeCol, a: gradeA, ev: 0 } });
+            clips.push([HERO.path, heroMat(hs)]);
+          }
+          for (const p of RING) if (p !== HERO && p.front && t >= startOf(p.i) && t < startOf(p.i) + 0.6) clips.push([p.path, flyerPose(p, t, Hm).X]);
+          drawOccluders(ctx2, t, ttw, Hm, hx, clips, gF);
+        }
         rimLight(ctx2, c, hx, rimA);
         W.sweetPulse(ctx2, heart[0], heart[1], (z / 2.6) * 1.4, t, 7.78);
         W.ribbons(ctx2, heart[0], heart[1], t, 7.8, (z / 2.6) * 1.25);
@@ -515,30 +555,42 @@
         l.globalCompositeOperation = 'source-atop'; l.fillStyle = 'rgba(22,9,30,0.72)'; l.fillRect(0, 0, 1080, 1920);
       });
     }
-    // hero petal (in front once it is clear of the head) → honey drop
+    // hero petal (in front of everything once it is clear of the head) → honey drop
     let hpts = null;
-    if (hs && !heroBehind) {
-      const warm = E.p(t, 11.15, 11.45, 'inOutSine');
-      S.light(ctx, hs.x, hs.y, 150, mx('#8E84C8', '#FFB06A', warm), (0.1 + 0.18 * warm) * (1 - E.p(t, 11.5, 11.6)));
+    if (hs && !heroFront) {
+      const warm = E.p(t, 11.15, 11.45, 'inOutSine'), kB = E.p(t, T_SW, T_SW + 0.45, 'inOutSine');
+      S.light(ctx, hs.x, hs.y, 150, mx('#8E84C8', '#FFB06A', warm), (0.1 + 0.18 * warm) * kB * (1 - E.p(t, 11.5, 11.6)));
       if (t < 11.5 && hs.mk > 0) S.light(ctx, DROP[0], DROP[1] + DROP_R * 0.2, DROP_R * 5.2, '#FFB547', 0.08 * hs.mk);
       const mk = E.p(t, 11.5, 11.8, 'linear');
-      if (t < 11.5) hpts = drawHero(ctx, hs, night, warm);
+      if (t < 11.5) hpts = drawHero(ctx, hs, night, warm, { clone: 1 - kB, br: hx.br, emu: { col: gradeCol, a: gradeA * (1 - kB), ev: ev * (1 - kB) } });
       else drawDrop(ctx, DROP[0], DROP[1], DROP_R, mk, t);
     }
-    // tear: gathers on the lowest real petal edge at "elem", falls onto the hovering petal at "verir", hangs from its edge
+    // tear: gathers on the lowest real petal edge at "elem", falls onto the hovering petal at "verir", runs down its face
+    // to the lower edge and hangs there (tip just touching the edge, never across the petal), then lets go at T_REL and
+    // falls away below the petal, dissolving with the world (the camera follows the petal, so it falls relative to it)
     const dg = E.p(t, 10.46, 10.84, 'outCubic');
-    if (dg > 0 && t < 11.48 && hs) {
-      const r = 7 * z * dg;
+    if (dg > 0 && t < T_REL + 0.42 && hs) {
+      const r = 7 * (z / c.zo) * dg;
       if (t < 10.84) { const lo = headLowest(t, ttw, c, hx); dewDraw(ctx, lo[0], lo[1] + r * 0.95, r, 1, 1 + 0.14 * Math.sin(t * 20) * dg); }
       else {
-        const lo = headLowest(t, ttw, c, hx);
-        const pts = hpts || heroPts(hs); let top = pts[0], bot = pts[0];
-        for (const q of pts) { if (q[1] < top[1]) top = q; if (q[1] > bot[1]) bot = q; }
-        const land = [hs.x + top[0] * 0.4, hs.y + top[1] * 0.4 - r * 0.6], hang = [hs.x + bot[0], hs.y + bot[1] + r * 1.05];
-        const u = t - 10.84, fy = lo[1] + r + 0.5 * 3000 * u * u;
-        const sl = E.p(t, 10.98, 11.2, 'inOutSine'), ab = 1 - E.p(t, 11.3, 11.46);
-        if (fy < land[1] && t < 10.98) dewDraw(ctx, lerp(lo[0], land[0], E.p(t, 10.84, 10.97, 'inQuad')), fy, r, 1, 1.25);
-        else dewDraw(ctx, lerp(land[0], hang[0], sl), lerp(land[1], hang[1], sl), r * (0.9 + 0.1 * ab), ab, lerp(0.9, 1.35, sl));
+        const pts = hpts || heroPts(hs), bot = pts[hangIdx()];
+        const sag = E.p(t, 11.1, T_REL, 'inOutSine'), sl = E.p(t, 10.98, 11.13, 'inOutSine'), stH = lerp(0.9, 1.35, sl) + 0.12 * sag;
+        const hang = [hs.x + bot[0], hs.y + bot[1] + r * (1.55 * stH - 0.22)];
+        if (t < 10.98) {
+          let top = pts[0]; for (const q of pts) if (q[1] < top[1]) top = q;
+          const lo = headLowest(t, ttw, c, hx), land = [hs.x + top[0] * 0.4, hs.y + top[1] * 0.4 - r * 0.6];
+          const u = t - 10.84, fy = lo[1] + r + 0.5 * 3000 * u * u;
+          if (fy < land[1]) dewDraw(ctx, lerp(lo[0], land[0], E.p(t, 10.84, 10.97, 'inQuad')), fy, r, 1, 1.25);
+          else dewDraw(ctx, land[0], land[1], r, 1, 0.9);
+        } else if (t < T_REL) {
+          let top = pts[0]; for (const q of pts) if (q[1] < top[1]) top = q;
+          const land = [hs.x + top[0] * 0.4, hs.y + top[1] * 0.4 - r * 0.6];
+          dewDraw(ctx, lerp(land[0], hang[0], sl), lerp(land[1], hang[1], sl), r, 1, stH);
+        } else {
+          // free fall: keeps the petal's motion at the instant it lets go (decaying like drag), gravity takes over
+          const v = t - T_REL, R0 = relState(), kd = 9, dec = (1 - Math.exp(-kd * v)) / kd;
+          dewDraw(ctx, R0.p[0] + R0.v[0] * dec, R0.p[1] + R0.v[1] * dec + 0.5 * 3000 * v * v, R0.r, 1 - sm((v - 0.12) / 0.3), lerp(1.47, 1.18, sm(v / 0.14)));
+        }
       }
     }
     W.grade(ctx, E.mix('#FFB38A', '#6A3D8A', E.p(t, T_HAND, 7.6, 'inOutSine')), lerp(0.12, 0.15, E.p(t, T_HAND, 7.6)) + 0.07 * E.p(t, 9.6, 10.6) - 0.2 * fallK);
