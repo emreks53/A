@@ -21,14 +21,17 @@ RND = random.Random(1405)
 cfgG = {}
 
 # ------------------------------------------------------------------ olculer
-KAIDE_W = 0.380          # basamakli kaide eni
-BASAMAK_D = 0.260        # her basamak derinligi
-H1 = 0.055               # alt basamak yuksekligi
-H2 = H1 + 0.150          # ust basamak yuksekligi (~13-15 cm fark)
+# Kararli piramit: genis alt tabla (0.30 m) + ustunde, arkaya dayali daha dar ust blok (0.24 m).
+KAIDE_W1 = 0.300         # alt basamak (tabla) eni - 7'li sira (0.194 m) her yanda ~5 cm pay
+KAIDE_W2 = 0.240         # ust basamak (blok) eni - 6'li sira (0.130 m) + yanlarinda rahle ayaklari
+BASAMAK_D = 0.270        # alt basamagin, ust blogun onunde kalan derinligi
+BASAMAK_D2 = 0.320       # ust blok derinligi (6'li sira 0.17 m + arkasinda rahle tabani)
+H1 = 0.045               # alt basamak yuksekligi
+H2 = H1 + 0.155          # ust basamak yuksekligi (19 derece bakista alt sira baslari ust siranin altinda kalir)
 SIRT_PAY = 0.006         # kitap sirtlarinin basamak on kenarindan geride durusu
 DUVAR_Y = 1.45           # arka duvar (cfg "duvar_y"; derin alan bulanikligi icin geride)
 SOL_DUVAR_X = -1.30      # pencereli sol duvar
-LEM_Y_ARKA = -0.010      # yatan Lem'alar'in agiz tarafi (kaideye yakin)
+LEM_Y_ARKA = -0.012      # yatan Lem'alar'in agiz tarafi (kaideye yakin)
 
 
 def srgb(h):
@@ -972,15 +975,16 @@ def sahne_kur(cfg):
     kutu_uv(bm)
     obj_yap("duvar", bm, [m_duvar], smooth=False)
 
-    # ---------------- basamakli kaide (iki parca)
-    m_kaide = M.ahsap("kaide", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#B9A797")), 1.0 / 1.0, rough_mul=0.85, coat=0.25, normal_str=0.5,
-                      rot90=True, doygunluk=cfg.get("ceviz_doygunluk", 0.66), ton_kayma=cfg.get("ceviz_kayma", 0.012))
-    w2 = KAIDE_W / 2
-    bm = kutu_bm(-w2, w2, 0.0, BASAMAK_D, 0.0, H1)
+    # ---------------- basamakli kaide: genis alt tabla + ustunde arkaya dayali dar blok (koyu ceviz)
+    m_kaide = M.ahsap("kaide", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#8C7A6C")), 1.0 / 1.0, rough_mul=0.85,
+                      coat=0.28, normal_str=0.5, rot90=True, doygunluk=cfg.get("ceviz_doygunluk", 0.9),
+                      ton_kayma=cfg.get("ceviz_kayma", 0.006))
+    w1, w2 = KAIDE_W1 / 2, KAIDE_W2 / 2
+    bm = kutu_bm(-w1, w1, 0.0, BASAMAK_D + BASAMAK_D2, 0.0, H1)
     kutu_uv(bm, ofs=(0.13, 0.41))
     alt = obj_yap("kaide_alt", bm, [m_kaide], smooth=True)
     bevel(alt, 0.0022, 4)
-    bm = kutu_bm(-w2, w2, BASAMAK_D, 2 * BASAMAK_D, 0.0, H2)
+    bm = kutu_bm(-w2, w2, BASAMAK_D, BASAMAK_D + BASAMAK_D2, H1, H2)
     kutu_uv(bm, ofs=(0.52, 0.07))
     ust = obj_yap("kaide_ust", bm, [m_kaide], smooth=True)
     bevel(ust, 0.0022, 4)
@@ -1011,8 +1015,8 @@ def sahne_kur(cfg):
             out.append(root)
         return out
 
-    ust_kitaplar = sira(A.UST_SIRA, H2, BASAMAK_D + 0.012, ileri=3)
-    alt_kitaplar = sira(A.ALT_SIRA, H1, SIRT_PAY + 0.002, ileri=None)
+    alt_kitaplar = sira(A.ALT_SIRA, H1, SIRT_PAY + 0.002, ileri=3)       # 7 cilt, on/alt basamak
+    ust_kitaplar = sira(A.UST_SIRA, H2, BASAMAK_D + 0.012, ileri=None)   # 6 cilt, ust basamak
 
     # ---------------- yatan Lem'alar (on kapak yukarida, sirt kameraya)
     png = os.path.join(A.DOKU, f"sirt_{A.DOSYA[A.YATAN]}.png")
