@@ -1,7 +1,7 @@
 """Süreklilik (sıçrama/titreme) denetimi: her zamanlı öğe için ardışık parametre adımlarında kare farkı.
 
-Her dizi için adım başına ortalama mutlak fark (öğe kutusunda) yazılır; ortancanın çok üstündeki adım (sıçrama)
-'!!' ile işaretlenir. Ayrıca determinizm (aynı girdi = aynı kare) ve sakla_sonra=False geri yüklemesi denetlenir.
+Her dizi için adım başına ortalama mutlak fark (öğe kutusunda) yazılır; iki komşusundan da çok büyük tek adım
+(sıçrama) '!!' ile işaretlenir. Ayrıca determinizm (aynı girdi = aynı kare) ve sakla_sonra=False geri yüklemesi denetlenir.
 Film şeritleri: scratchpad/testler/esyalar_surek_*.png
 """
 import sys; sys.path.insert(0, '/home/user/A/video-uretim/dar-i-hizmet/testler')
@@ -25,7 +25,9 @@ def dizi(ad, kare_fn, adimlar, kutu, serit=8):
     d = [float(np.abs(ims[i + 1][y0:y1, x0:x1].astype(np.int16) - ims[i][y0:y1, x0:x1].astype(np.int16)).mean())
          for i in range(len(ims) - 1)]
     med = float(np.median(d)) + 1e-3
-    isaret = ['!!' if (x > 2.6 * med and x > 0.15) else '' for x in d]
+    # sıçrama = komşu adımlarının ikisinden de çok büyük tek adım (hızlı ama sürekli açılmalar işaretlenmez)
+    komsu = [max(d[i - 1] if i > 0 else 0.0, d[i + 1] if i + 1 < len(d) else 0.0) for i in range(len(d))]
+    isaret = ['!!' if (x > 2.0 * k + 0.05 and x > 0.15) else '' for x, k in zip(d, komsu)]
     print(f'{ad:24s} ort {np.mean(d):.3f} ortanca {med:.3f} en büyük {max(d):.3f} (adım {int(np.argmax(d))})  ',
           ' '.join(f'{x:.2f}{s}' for x, s in zip(d, isaret)))
     sec = np.linspace(0, len(ims) - 1, min(serit, len(ims))).astype(int)
