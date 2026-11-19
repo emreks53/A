@@ -173,35 +173,51 @@ def ciz_kapi_sahnesi(V):
 # ---------------------------------------------------------------------------------------------------------------
 # 2) bahçe dünyası: durum (zamana bağlı parametreler)
 # ---------------------------------------------------------------------------------------------------------------
+def _diz_otur():
+    """Diz çöküp topuklar üstünde oturma, eller uyluklarda (secdeden kalkınca, şükürden önce)."""
+    p = dict(insan.POZLAR['diz_dua'])
+    insan.kol_ik(p, 'on', (74.0, -96.0))
+    insan.el_aci(p, 'on', 62.0)
+    insan.kol_ik(p, 'ar', (80.0, -100.0))
+    insan.el_aci(p, 'ar', 58.0)
+    return p
+
+
+DIZ_OTUR = _diz_otur()
+SECDE_X1 = 770.0   # 1. secde (kulluk yeri): kalça kökeni; alın ~295 birim solda
+SECDE_X2 = 830.0   # 2. secde ve şükür (güçlü ağacın gövdesinden uzak)
+
+
 def poz_durumu(V, evre):
-    """Adamın pozu ve ek bilgileri. evre: geçişlerde 'eski'/'yeni' görüntüyü seçmek için zorlama."""
+    """Adamın pozu, yerleşimi ve ek bilgileri. evre: geçişlerde 'eski'/'yeni' görüntüyü zorlamak için."""
     P = insan.POZLAR
-    if V < G2[1] or evre == 'sulama':
-        if evre != 'secde':
-            return dict(poz=P['sula'], ibrik=True, battaniye=0.0)
-    if V < G3[1] or evre == 'secde':
-        if evre != 'hasta':
-            return dict(poz=P['secde'], ibrik=False, battaniye=0.0)
+    if evre == 'sulama' or (evre is None and V < G2[0]):
+        dok = 0.5 + 0.5 * math.sin(V * 2.2)
+        poz = insan.sula_pozu(0.55 + 0.45 * dok) if hasattr(insan, 'sula_pozu') else P['sula']
+        return dict(poz=poz, x=ADAM_X, ibrik=True, battaniye=0.0, seccade=None, dok=dok)
+    if evre == 'secde' or (evre is None and V < G3[0]):
+        return dict(poz=P['secde'], x=SECDE_X1, ibrik=False, battaniye=0.0, seccade=SECDE_X1 - 128, dok=0)
     if V < T_KUVVET:
         u = ilerle(V, T_SABIR, T_SABIR + 0.75, e_io)
-        return dict(poz=insan.poz_karistir(P['oturus_hasta'], P['oturus_dik'], u), ibrik=False,
-                    battaniye=1.0 - 0.0 * u)
-    if V < 21.6:
-        u = ilerle(V, T_KUVVET, T_KUVVET + 0.8, e_io)
-        poz = insan.ayaga_kalkis(u) if hasattr(insan, 'ayaga_kalkis') else insan.poz_karistir(
-            P['oturus_dik'], P['ayakta_dik'], u)
-        return dict(poz=poz, ibrik=False, battaniye=1.0 - ilerle(V, T_KUVVET, T_KUVVET + 0.45, e_io))
+        return dict(poz=insan.poz_karistir(P['oturus_hasta'], P['oturus_dik'], u), x=ADAM_X, ibrik=False,
+                    battaniye=1.0, seccade=None, dok=0)
+    if V < 21.9:
+        u = ilerle(V, T_KUVVET, T_KUVVET + 0.85, e_io)
+        return dict(poz=insan.kalkis(u), x=ADAM_X, ibrik=False, battaniye=1.0,
+                    battaniye_alfa=1.0 - ilerle(V, T_KUVVET, T_KUVVET + 0.4, e_io), seccade=None, dok=0)
     if V < 24.55:
-        return dict(poz=P['secde'], ibrik=False, battaniye=0.0)
+        return dict(poz=P['secde'], x=SECDE_X2, ibrik=False, battaniye=0.0, seccade=SECDE_X2 - 128, dok=0)
     if V < T_SUKUR:
-        u = ilerle(V, 24.55, 25.05, e_io)
-        poz = insan.secdeden_dize(u) if hasattr(insan, 'secdeden_dize') else insan.poz_karistir(
-            P['secde'], P['diz_dua'], u * 0.5)
-        return dict(poz=poz, ibrik=False, battaniye=0.0)
-    u = ilerle(V, T_SUKUR, T_SUKUR + 0.5, e_io)
-    base = insan.secdeden_dize(1.0) if hasattr(insan, 'secdeden_dize') else insan.poz_karistir(
-        P['secde'], P['diz_dua'], 0.5)
-    return dict(poz=insan.poz_karistir(base, P['diz_dua'], u), ibrik=False, battaniye=0.0)
+        u = ilerle(V, 24.55, 25.10, e_io)
+        if u < 1:
+            poz = insan.secdeye(1.0 - u)
+            poz = insan.poz_karistir(poz, DIZ_OTUR, ilerle(V, 24.85, 25.10, e_io))
+        else:
+            poz = DIZ_OTUR
+        return dict(poz=poz, x=SECDE_X2, ibrik=False, battaniye=0.0, seccade=SECDE_X2 - 128, dok=0)
+    u = ilerle(V, T_SUKUR, T_SUKUR + 0.55, e_io)
+    return dict(poz=insan.poz_karistir(DIZ_OTUR, P['diz_dua'], u), x=SECDE_X2, ibrik=False, battaniye=0.0,
+                seccade=SECDE_X2 - 128, dok=0)
 
 
 def durum(V, evre=None):
@@ -263,9 +279,9 @@ def durum(V, evre=None):
 def bahce_kamera(V):
     K = Kamera
     kareler = [
-        (3.00, K(470, 960, 1.06)),
-        (4.40, K(540, 940, 1.0)),
-        (7.80, K(540, 900, 0.98)),
+        (3.00, K(500, 1060, 1.30)),
+        (4.40, K(560, 1080, 1.22)),
+        (7.80, K(560, 1060, 1.20)),
         (8.70, K(575, 1170, 1.42)),
         (9.85, K(585, 1180, 1.48)),
         (10.0, K(540, 905, 0.94)),
@@ -356,8 +372,14 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
             doga.ciz_kokler(t, Ma, s['agac'], derinlik=s['kok'], tohum=2)
             doga.ciz_toprak_kesiti(t, M, -400, 1500, AGAC_Y + 25, 2600, tohum=3)
 
-    # --- adam (ve elindeki ibrik) ---
-    ciz_adam(t, V, s, M)
+    # --- adam (ve elindeki ibrik), suyu, seccade ---
+    bilgi = ciz_adam(t, V, s, M)
+    if s['ibrik'] and bilgi.get('ibrik_uc') is not None:
+        uc = bilgi['ibrik_uc']
+        hedef = nokta_donustur(M, AGAC_X + 18, AGAC_Y - 6)
+        esyalar.ciz_su_akisi(t, np.eye(3), uc, hedef, V, debi=0.55 + 0.45 * s['dok'], tohum=3)
+    if s['seccade'] is not None:
+        mimari.ciz_seccade(t, M @ M_yerlestir(s['seccade'], ADAM_Y + 2, ADAM_OLCEK), uzunluk=440, tohum=1)
 
     # --- ağaç ---
     Ma = M @ M_yerlestir(AGAC_X, AGAC_Y, AGAC_OLCEK)
@@ -368,8 +390,10 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
         x, y, b, r = CICEKLER[i]
         doga.ciz_cicek_fidani(t, M, x, y, b, renk_=r, acilma=s['acilma'][i], sallanma=sal,
                               solgunluk=s['solgunluk'], tohum=10 + i)
-    doga.ciz_cimen(t, M, -300, 1400, 1460, 0.7, sal, tohum=3)
-    doga.ciz_tarh(t, M, 60, 1020, 1455, tohum=4)
+    for i, (x0, x1, y, sc) in enumerate([(-300, 380, 1880, 1.25), (720, 1400, 1900, 1.25), (-300, 250, 1640, 1.0),
+                                         (880, 1400, 1620, 1.0), (-300, 330, 1470, 0.8), (760, 1400, 1480, 0.8),
+                                         (-300, 1400, 1300, 0.55), (-300, 1400, 1210, 0.4)]):
+        doga.ciz_cimen(t, M, x0, x1, y, 1.0, sal, tohum=30 + i, boy=(int(16 * sc), int(36 * sc)))
 
     # --- zemin ---
     zemin_renk = el.karistir('#E2D5BC', '#B9B2B8', 0.55 * s['koyuluk'])
@@ -394,21 +418,22 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
 
 def adam_capasi(V, s, ad, M):
     t = Tuval()
-    Madam = M @ M_yerlestir(ADAM_X, ADAM_Y, ADAM_OLCEK)
+    Madam = M @ M_yerlestir(s['x'], ADAM_Y, ADAM_OLCEK)
     bilgi = insan.ciz_insan(t, Madam, s['poz'], yon=-1, battaniye=s['battaniye'], sakla_sonra=False)
     return bilgi[ad]
 
 
 def ciz_adam(t, V, s, M):
-    Madam = M @ M_yerlestir(ADAM_X, ADAM_Y, ADAM_OLCEK)
+    Madam = M @ M_yerlestir(s['x'], ADAM_Y, ADAM_OLCEK)
     elde = None
+    ibrik_bilgi = {}
     if s['ibrik']:
-        debi = 1.0
-
         def elde(tt, Mel):
-            esyalar.ciz_ibrik(tt, Mel, egim=38.0 + 4 * math.sin(V * 2.1), tohum=1)
+            r = esyalar.ciz_ibrik(tt, Mel, egim=0.0, tohum=1)
+            ibrik_bilgi['uc'] = r.get('uc') if isinstance(r, dict) else r
     bilgi = insan.ciz_insan(t, Madam, s['poz'], yon=-1, isik=(-0.6, -0.8), battaniye=s['battaniye'],
-                            elde=elde, nefes=(V * 0.25) % 1.0)
+                            battaniye_alfa=s.get('battaniye_alfa', 1.0), elde=elde, nefes=(V * 0.25) % 1.0)
+    bilgi['ibrik_uc'] = ibrik_bilgi.get('uc')
     # kalp nuru
     if s['nur'] > 0.01:
         kx, ky = bilgi['kalp']

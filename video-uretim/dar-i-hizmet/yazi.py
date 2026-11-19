@@ -129,8 +129,16 @@ for i, m in enumerate(_Z['manalar']):
                         ard_arda=(i + 1 < len(_Z['manalar']) and abs(_Z['manalar'][i + 1]['an'] - _CIKIS[i]) < 0.01)))
 
 
+def _zemin_parlakligi(R):
+    bolge = R[MANA_Y - 60:MANA_Y + 60:4, 200:880:4]
+    L = 0.2126 * bolge[..., 0] + 0.7152 * bolge[..., 1] + 0.0722 * bolge[..., 2]
+    return float(np.percentile(L, 35))
+
+
 def manalari_ciz(R, V):
-    """V (video zamanı, sn) karesine görünen mana altyazılarını çizer."""
+    """V (video zamanı, sn) karesine görünen mana altyazılarını çizer. Zemin koyuysa (toprak kesiti, fırtına)
+    mürekkep yerine krem renkli yazı ve koyu hale kullanılır."""
+    L = None
     for m in MANALAR:
         g0 = m['giris'] - 1.0 / 30  # ilk harfin okunduğu kareden bir kare önce başlar
         if V < g0 or V > m['cikis'] + 0.45:
@@ -146,6 +154,13 @@ def manalari_ciz(R, V):
         dy = (1 - gir) * 16 - cik * 10
         bul = (1 - gir) * 3.0 + cik * 1.5
         izl = 0.01 + (1 - gir) * 0.035
+        if L is None:
+            L = _zemin_parlakligi(R)
+        k = float(np.clip((0.56 - L) / 0.14, 0.0, 1.0))  # 0: açık zemin (mürekkep), 1: koyu zemin (krem)
+        if k < 0.5:
+            renk_, hale_r, hale = '#2D3247', '#F7F3EC', 0.85
+        else:
+            renk_, hale_r, hale = '#FBF5EA', '#3A3029', 0.55
         x0, y0, rgba = yazi_katmani(m['metin'], merkez=(W / 2, MANA_Y), alfa=alfa, dy=dy, bulanik=bul,
-                                    izleme=izl)
+                                    izleme=izl, renk_=renk_, hale_renk=hale_r, hale=hale)
         bindir(R, x0, y0, rgba)
