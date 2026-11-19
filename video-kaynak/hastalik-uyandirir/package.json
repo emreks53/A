@@ -1,0 +1,10 @@
+{
+  "name": "hastalik-uyandirir-video",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Yirmi Beşinci Lem'a, Üçüncü Deva — akrilik üslupta (Atölye Stil Kataloğu S-042) kodla çizilmiş dikey video",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@napi-rs/canvas": "0.1.65"
+  }
+}

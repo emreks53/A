@@ -26,6 +26,7 @@ src/oku/                   Oku: dikey video akışı (akis.ts), sağa kaydırıp
                            (menba.ts; Külliyat yığınları çizimi menba-cizim.ts; nurlu Kur'an-ı Kerim kuran-cizim.ts)
 content/oku/videolar.json  Oku akışındaki videolar, sırasıyla; aşağıdaki "Oku: video ekleme" bölümüne bakın
 public/videolar/           Videolar (720×1280 H.264), kapak ve paylaşım önizleme görselleri
+video-kaynak/              Kodla çizilen videoların kaynağı (sahneler, çizim motoru, ses miksi); bkz. her klasörün README'si
 content/kitaplar/kitaplar.json  Güneş'te okunabilen kitaplar (PDF, sayfa farkı, içindekiler); "Güneş: kitap ekleme"
 public/kitaplar/           Kitapların PDF'leri (<kimlik>.pdf)
 vite/kitaplar.ts           Kitap listesini denetleyen, pdf.js yazı tipi/cmap dosyalarını derlemeye koyan eklenti
@@ -218,7 +219,7 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
      okunur. `kapak` video yüklenirken görünen ilk kare, `onizleme` Kenz kartının ve paylaşılan bağlantının
      önizleme görselidir.
 
-Şimdilik videolar uygulamayla birlikte gelir (dokuz video ≈ 185 MB). Video sayısı artınca bir video barındırma
+Şimdilik videolar uygulamayla birlikte gelir (on video ≈ 217 MB). Video sayısı artınca bir video barındırma
 hizmetine (Cloudflare Stream, Bunny vb.) taşınmalı; `video` alanına tam adres yazılabilecek şekilde
 genişletilir.
 

@@ -82,7 +82,8 @@ describe('akisOku', () => {
   it('gerçek video listesini okur', () => {
     const akis = akisOku(join(kok, 'content/oku/videolar.json'), join(kok, 'public'));
     expect(akis.site).toBe('https://emreks53.github.io/A/');
-    // sıra: Drive'daki "Animasyon ders" klasörünün numaraları (1, 2.1, 2.2, 3, 4, 6, 7, 8, 9)
+    // sıra: Drive'daki "Animasyon ders" klasörünün numaraları (1, 2.1, 2.2, 3, 4, 6, 7, 8, 9); hastalik-uyandirir
+    // aynı risalenin bir sonraki sayfası olarak hastaya-teselli'nin ardında
     expect(akis.videolar.map((v) => [v.id, v.baslik, v.kitap, v.bolum, sureYazisi(v.sure), menbaYazisi(v), etiketYazisi(v.etiketler)])).toEqual([
       ['ihlas', "On Yedinci Lem'a'dan", "Lem'alar", "On Yedinci Lem'a", '1:59', "Lem'alar, On Yedinci Lem'a, 154. sayfa", '#ihlas #muhabbet #kurtuluş'],
       ['fenler-haliki-tanittirir', "On Birinci Şuâ'dan", 'Şuâlar', 'On Birinci Şuâ', '2:05', 'Şuâlar, On Birinci Şuâ, Altıncı Mesele, 203. sayfa', '#fenler #marifetullah #tefekkür'],
@@ -92,6 +93,7 @@ describe('akisOku', () => {
       ['rizik-ve-kulluk', "Beşinci Söz'den", 'İman ve Küfür Muvâzeneleri', 'Beşinci Söz', '1:31', 'İman ve Küfür Muvâzeneleri, Beşinci Söz, 22. sayfa', '#rızık #tevekkül #kulluk'],
       ['nimet-ve-sukur', "Otuzuncu Lem'a'dan", "Lem'alar", "Otuzuncu Lem'a", '1:19', "Lem'alar, Otuzuncu Lem'a, 381. sayfa", '#hayat #nimet #şükür'],
       ['hastaya-teselli', "Yirmi Beşinci Lem'a'dan", "Lem'alar", "Yirmi Beşinci Lem'a", '0:56', "Lem'alar, Yirmi Beşinci Lem'a, Birinci Deva, 239. sayfa", '#hastalık #sabır #ömür'],
+      ['hastalik-uyandirir', "Yirmi Beşinci Lem'a'dan", "Lem'alar", "Yirmi Beşinci Lem'a", '2:02', "Lem'alar, Yirmi Beşinci Lem'a, Üçüncü Deva, 240. sayfa", '#hastalık #gaflet #şükür'],
       ['gul-ve-beka', "Onuncu Söz'den", 'Sözler', 'Onuncu Söz', '1:12', 'Sözler, Onuncu Söz, 81. sayfa', '#haşir #rahmet #beka'],
     ]);
   });

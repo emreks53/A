@@ -96,6 +96,19 @@
       "onizleme": "videolar/hastaya-teselli-onizleme.jpg"
     },
     {
+      "id": "hastalik-uyandirir",
+      "baslik": "Yirmi Beşinci Lem'a'dan",
+      "kitap": "Lem'alar",
+      "bolum": "Yirmi Beşinci Lem'a",
+      "kisim": "Üçüncü Deva",
+      "sayfa": 240,
+      "etiketler": ["hastalık", "gaflet", "şükür"],
+      "video": "videolar/hastalik-uyandirir.mp4",
+      "kapak": "videolar/hastalik-uyandirir-kapak.jpg",
+      "onizleme": "videolar/hastalik-uyandirir-onizleme.jpg",
+      "kunye": ["HDRI ve dokular: Poly Haven (CC0)"]
+    },
+    {
       "id": "gul-ve-beka",
       "baslik": "Onuncu Söz'den",
       "kitap": "Sözler",
