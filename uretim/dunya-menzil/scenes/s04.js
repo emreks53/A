@@ -406,7 +406,7 @@
           E.restore(L);
         }
       }
-      const fy = MAN_FEET + (1 - c.k) * 980;
+      const fy = MAN_FEET + (1 - c.k) * 980 + (1 - c.k) * (1 - c.k) * 900;   // leaves the frame fully before the cut
       const mk = E.ep(lt, T.hayat - 0.2, T.hayat + 0.45, 'inOutSine');   // he looks up at his world
       const chest = [MAN_X + 0.068 * MAN_H, fy - 0.69 * MAN_H];
       if (c.k > 0.001) {

@@ -62,7 +62,7 @@
     { from: 114, to: 114, text: 'meyvesi' },
     { from: 118, to: 118, text: 'âhirete ait' },
     { from: 119, to: 119, text: 'faydalarına', join: true },
-    { from: 128, to: 129, text: 'dönüşür' },
+    { from: 128, to: 129, text: 'dönüşür', hold: 67.85 },   // gone before the night ink floods in (s15)
     { from: 131, to: 136, text: 'Allah’ı unuttular, Allah da onlara kendilerini unutturdu; işte onlar fasıklardır',
       tone: 'light', verse: true, hold: 74.35 },
     { from: 138, to: 139, text: 'sahip olup', tone: 'light' },
