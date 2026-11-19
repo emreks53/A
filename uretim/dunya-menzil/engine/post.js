@@ -191,9 +191,9 @@
     // grade
     col *= uGrade.z;
     vec2 q = st - 0.5;
-    float vig = 1.0 - uGrade.x * smoothstep(0.35, 0.95, length(q * vec2(1.0, 0.75)) * 1.35);
+    float vig = 1.0 - uGrade.x * (1.0 - 0.75 * raw) * smoothstep(0.35, 0.95, length(q * vec2(1.0, 0.75)) * 1.35);
     col *= vig;
-    col = mix(col, col * vec3(1.02, 1.0, 0.97), uGrade.y);
+    col = mix(col, col * vec3(1.02, 1.0, 0.97), uGrade.y * (1.0 - raw));
     o = vec4(clamp(col, 0., 1.), 1.0);
   }`;
 
