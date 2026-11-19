@@ -213,6 +213,10 @@ class NB:
 COVER_LIN = (0.25, 0.0112, 0.0325)
 if COVER_RGB:
     COVER_LIN = tuple(float(c) for c in COVER_RGB.split(','))
+# arka plandaki ciltler los isikta duruyor: ayni deri renginde okunmalari (bordo degil, cok acik asil kirmizi) icin
+# taban renk daha acik ve daha az doygun
+VOL_RGB = arg('--volcol', None)
+VOL_LIN = tuple(float(c) for c in VOL_RGB.split(',')) if VOL_RGB else (0.50, 0.050, 0.072)
 # varak: doygun sicak altin (#D4AF37 / #C9A24A civari okunacak sekilde); kenar (F82) tinti da altin
 KEYSIZE = arg('--keysize', 0.42, float)
 DESK_KEY = arg('--deskkey', 0.55, float)
@@ -256,8 +260,9 @@ def leather_grain(b, obj, bake=False):
     grain_h = b.math('ADD', grain_h, b.math('MULTIPLY', n2.outputs['Fac'], 0.25))
     return crease, grain_h, n1.outputs['Fac']
 
-def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
+def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None, col=None):
     """Acik asil kirmizi deri/buckram + altin varak (maske ile)."""
+    CL = col or COVER_LIN
     m = bpy.data.materials.new(name)
     b = NB(m)
     tc = b.texco()
@@ -265,7 +270,7 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
     # --- deri grenli doku (pisirilmis doku varsa onu kullan: cok daha hizli)
     crease, grain_h, n1f = leather_grain(b, obj, bake=False)
     # --- renk
-    base = b.mixc(b.math('MULTIPLY', crease, 0.55), COVER_LIN, tuple(c * 0.72 for c in COVER_LIN))
+    base = b.mixc(b.math('MULTIPLY', crease, 0.55), CL, tuple(c * 0.72 for c in CL))
     cvar = b.maprange(n1f, 0.3, 0.7, 0.93, 1.06)
     hsv = b.new('ShaderNodeHueSaturation')
     b.link(base, hsv.inputs['Color']); b.link(cvar, hsv.inputs['Value'])
@@ -689,14 +694,14 @@ def build_book(prefix, Tk, spine_mask, spine_blur=None, bands_mm=PRM['bands'], m
     parts = {}
     z0, z1, xsp, xfo = book_dims(Tk)
     SB = 0.0055 * math.sqrt(Tk / 0.045)
-    deri = MATS['deri']
+    deri = MATS['deri'] if main else MATS['deri_arka']
     # arka karton + mafsal
     bb = rounded_board(prefix + 'arka_karton', JW, XF, -HB / 2, HB / 2, 0.0, BT, coll=coll)
     bb.data.materials.append(deri)
     js_b = joint_strip(prefix + 'arka_mafsal', 0.0, -1, coll); js_b.data.materials.append(deri)
     # sirt
     sp = spine_shell(prefix + 'sirt', Tk, SB, bands_mm, coll)
-    sp.data.materials.append(mat_leather(prefix + 'sirt_mat', spine_mask, spine_blur, 'uv'))
+    sp.data.materials.append(mat_leather(prefix + 'sirt_mat', spine_mask, spine_blur, 'uv', col=None if main else VOL_LIN))
     sp.data.materials.append(MATS['astar'])          # ic yuz: kagit astar (hollow back), deri degil
     sp.modifiers['kalinlik'].material_offset = 1
     # on kapak (kapak maskesi)
@@ -1060,6 +1065,7 @@ def build():
     if 'flatleather' in PROF:
         globals()['mat_leather'] = lambda name, *a, **k: mat_simple(name, COVER_LIN, 0.55)
     MATS['deri'] = mat_leather('deri')
+    MATS['deri_arka'] = mat_leather('deri_arka', col=VOL_LIN)
     obj_map = (1.0 / (XF - JW), 1.0 / HB, -JW / (XF - JW), 0.5)
     MATS['kapak'] = mat_leather('kapak', load_img('kapak_maske.png', True), load_img('kapak_maske_blur.png', True),
                                 'obj', obj_map)
