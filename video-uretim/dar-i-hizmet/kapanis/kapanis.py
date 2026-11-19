@@ -1,5 +1,13 @@
 """Kapanis cekimi (fotogercekci): Risale-i Nur Kulliyati + Kur'an-i Kerim.
 
+Yontem: Cycles CPU'da tam cozunurluk (1080x1920, 128 ornek, esik 0.02, OIDN) tek kare ~411 sn
+surdugu icin (4 cekirdek) 192 kare dogrudan render edilmez. Bunun yerine:
+  1) kare1: hareketin ilk konumundan 1350x2400 (1.25x), %3 genis goruntu alanli buyuk kare
+     (160 ornek, esik 0.015; ~795 sn) + ayni kameradan DOF'suz kamera-uzayi Z derinligi;
+  2) son:   hareketin son konumundan 1080x1920 gercek render (dogrulama icin; ~426 sn);
+  3) hareket.py: derinlige gore yeniden izdusumle 2.5D dolly-in (192 kare, ~4 dk) + son islem.
+  Dogrulama: 2.5D son kare ile gercek son kare render'i arasindaki ortalama mutlak fark ~0.003.
+
 Kullanim (python3, bpy modulu):
     python3 kapanis.py hepsi          # varlik indir + doku uret + kare1 (buyuk) + son kare + 2.5D hareket
     python3 kapanis.py varlik         # Poly Haven CC0 varliklarini indir
