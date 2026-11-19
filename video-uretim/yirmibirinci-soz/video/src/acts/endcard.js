@@ -33,7 +33,7 @@ export const TIMELINE = {
 };
 const PUSH_RATE = 0.0169;            // per second at 23.80 — the rate of the film's last push
 const PIVOT = [540, 1200];           // … and its pivot (frame px, on the vertical centre line)
-const LOCKUP = 'D';
+const LOCKUP = 'F';
 
 const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const span = (t, [a, b]) => clamp((t - a) / (b - a));

@@ -2,7 +2,8 @@
 """
 END CARD comp bake — ONE command rebuilds every derived image of the end card from ../plates/:
 
-    python3 /home/user/work/endcard/comp/bake.py            # ~1 min, numpy + pillow only
+    python3 /home/user/work/endcard/comp/bake.py            # ~10 s, numpy + pillow only
+    python3 /home/user/work/endcard/comp/bake.py --check    # are the baked files older than the plates?
 
 Reads   ../plates/linear/light_{fill,key,accent,quran}_lin16.png, ../plates/linear/view_lut.npy,
         ../plates/plate_meta.json
@@ -95,7 +96,17 @@ def main():
     ap.add_argument('--ca', type=float, default=0.0015)
     ap.add_argument('--bloom', type=float, default=0.04)
     ap.add_argument('--no-looks', action='store_true')
+    ap.add_argument('--check', action='store_true', help='only tell whether the baked files are older than the plates')
     a = ap.parse_args()
+    if a.check:
+        try:
+            with open(os.path.join(HERE, 'meta.json'), encoding='utf-8') as f:
+                baked = json.load(f).get('plates_mtime', 0)
+        except OSError:
+            baked = 0
+        now = max(os.path.getmtime(os.path.join(rc.LIN, f'light_{g}_lin16.png')) for g in rc.GROUPS)
+        print('STALE: the plates are newer than the bake - run this script without --check' if now > baked + 1e-3 else 'OK: the bake is up to date')
+        sys.exit(1 if now > baked + 1e-3 else 0)
     t0 = time.time()
 
     with open(os.path.join(rc.PLATES, 'plate_meta.json'), encoding='utf-8') as f:
@@ -157,7 +168,7 @@ def main():
             'quran_stand_bbox', 'console_top_front_edge_y', 'console_slab_bottom_y', 'drawer1_top_y', 'drawer1_bottom_y',
             'drawer2_top_y', 'row_centre_x', 'suggested_text_block') if k in pos},
         'check': check,
-        'plates_mtime': os.path.getmtime(os.path.join(rc.LIN, 'light_key_lin16.png')),
+        'plates_mtime': max(os.path.getmtime(os.path.join(rc.LIN, f'light_{g}_lin16.png')) for g in rc.GROUPS),
         'baked_at': time.strftime('%Y-%m-%d %H:%M:%S'),
     }
     # walnut colours behind the text block (8-bit sRGB, base state) - for the contrast report in NOTES.md

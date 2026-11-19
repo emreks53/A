@@ -18,6 +18,7 @@ const IVORY = '#F3EAD7', GOLD = '#EDDAAE', RULE = '#D9B872';
 const HALO = [22, 12, 6];                 // deep walnut umber
 
 // Designed on a block 800 x 322 px (x 140..940, y 1328..1650); y = baseline, px from the block top.
+// THE FILM USES F (endcard.js: LOCKUP). A-E are the look-dev variants it was chosen from (out/endcard/NOTES.md).
 export const LOCKUPS = {
   // A — the classical title card: tracked eyebrow, rule, semibold hero, italic line, tracked folio
   A: {
@@ -69,6 +70,16 @@ export const LOCKUPS = {
       { id: 'folio', text: '291. Sayfa', font: '500', px: 44, track: 0.07, fill: IVORY, y: 300 },
     ],
     rule: { y: 65, half: 124, t: 2.0 },
+  },
+  // F — D with larger supporting lines (the folio is the information: it must carry at arm's length)
+  F: {
+    lines: [
+      { id: 'eyebrow', text: 'Risale-i Nur', font: '500', px: 44, track: 0.18, fill: GOLD, y: 38 },
+      { id: 'hero', text: 'Sözler', font: '500', px: 116, track: 0.022, fill: IVORY, y: 164 },
+      { id: 'sub', text: 'Yirmi Birinci Söz', font: 'italic 500', px: 58, track: 0.012, fill: IVORY, y: 236 },
+      { id: 'folio', text: '291. Sayfa', font: '500', px: 48, track: 0.06, fill: IVORY, y: 300 },
+    ],
+    rule: { y: 63, half: 128, t: 2.0 },
   },
 };
 const DESIGN_H = 322;

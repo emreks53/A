@@ -1,12 +1,12 @@
 {
- "_comment": "Cue sheet v1 from storyboard.json (revision 2) + hand-off/end-card cues. t = video seconds of the perceptual hit.",
+ "_comment": "Cue sheet v2: storyboard cues (revision 2) lifted +4 dB, duck 4 dB, end-card cues from src/acts/endcard.js timings.",
  "duration": 29.6,
  "voice": "voice_trim.wav",
  "cues": [
   {
    "t": 0.07,
    "sound": "dab_flurry",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": 0.0,
    "params": {
     "n": 4,
@@ -23,7 +23,7 @@
   {
    "t": 1.8,
    "sound": "whoosh",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": -0.2,
    "params": {
     "duration": 0.7,
@@ -35,7 +35,7 @@
   {
    "t": 3.72,
    "sound": "puff",
-   "gain_db": 0,
+   "gain_db": 4.0,
    "pan": -0.3,
    "params": {
     "seed": 103
@@ -45,7 +45,7 @@
   {
    "t": 4.3,
    "sound": "specks",
-   "gain_db": 0,
+   "gain_db": 4.0,
    "pan": -0.35,
    "params": {
     "duration": 0.8,
@@ -56,7 +56,7 @@
   {
    "t": 4.57,
    "sound": "whoosh",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": 0.2,
    "params": {
     "duration": 0.8,
@@ -68,7 +68,7 @@
   {
    "t": 6.0,
    "sound": "paper",
-   "gain_db": 1,
+   "gain_db": 5.0,
    "pan": 0.15,
    "params": {
     "duration": 0.3,
@@ -79,7 +79,7 @@
   {
    "t": 6.37,
    "sound": "puff",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": 0.15,
    "params": {
     "duration": 0.18,
@@ -90,7 +90,7 @@
   {
    "t": 8.42,
    "sound": "whoosh",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": 0.0,
    "params": {
     "duration": 0.7,
@@ -102,7 +102,7 @@
   {
    "t": 9.67,
    "sound": "shimmer",
-   "gain_db": 0,
+   "gain_db": 4.0,
    "pan": 0.0,
    "params": {
     "duration": 1.4,
@@ -113,7 +113,7 @@
   {
    "t": 10.13,
    "sound": "pop_flurry",
-   "gain_db": -1,
+   "gain_db": 3.0,
    "pan": 0.0,
    "params": {
     "n": 3,
@@ -129,7 +129,7 @@
   {
    "t": 12.93,
    "sound": "pop_flurry",
-   "gain_db": -5,
+   "gain_db": -1.0,
    "pan": 0.0,
    "params": {
     "n": 8,
@@ -142,7 +142,7 @@
   {
    "t": 13.97,
    "sound": "pop",
-   "gain_db": 1,
+   "gain_db": 5.0,
    "pan": 0.1,
    "params": {
     "pitch": 1.2,
@@ -153,7 +153,7 @@
   {
    "t": 15.37,
    "sound": "coin_land",
-   "gain_db": 1,
+   "gain_db": 5.0,
    "pan": 0.1,
    "params": {
     "seed": 113
@@ -163,7 +163,7 @@
   {
    "t": 15.42,
    "sound": "coin_ting",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": 0.1,
    "params": {
     "seed": 114
@@ -173,7 +173,7 @@
   {
    "t": 16.33,
    "sound": "whoosh",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": 0.2,
    "params": {
     "duration": 0.6,
@@ -185,7 +185,7 @@
   {
    "t": 17.07,
    "sound": "shimmer",
-   "gain_db": 1,
+   "gain_db": 5.0,
    "pan": 0.3,
    "params": {
     "duration": 1.5,
@@ -196,7 +196,7 @@
   {
    "t": 18.83,
    "sound": "wood_knock",
-   "gain_db": 1,
+   "gain_db": 5.0,
    "pan": 0.3,
    "params": {
     "style": "lid",
@@ -207,7 +207,7 @@
   {
    "t": 19.97,
    "sound": "dab_flurry",
-   "gain_db": -2,
+   "gain_db": 2.0,
    "pan": 0.3,
    "params": {
     "n": 4,
@@ -219,7 +219,7 @@
   {
    "t": 21.93,
    "sound": "cloth_unroll",
-   "gain_db": 0,
+   "gain_db": 4.0,
    "pan": 0.3,
    "params": {
     "duration": 0.5,
@@ -230,7 +230,7 @@
   {
    "t": 22.87,
    "sound": "coin_drop_in",
-   "gain_db": 2,
+   "gain_db": 6.0,
    "pan": 0.3,
    "params": {
     "bloom": 0.5,
@@ -241,7 +241,7 @@
   {
    "t": 23.0,
    "sound": "room_tone",
-   "gain_db": 0,
+   "gain_db": 3.0,
    "pan": 0.0,
    "align": "start",
    "params": {
@@ -253,13 +253,72 @@
   {
    "t": 23.85,
    "sound": "rise",
-   "gain_db": 0,
+   "gain_db": 4.0,
    "pan": 0.2,
    "params": {
     "duration": 1.7,
     "seed": 121
    },
    "note": "cream cover grows out of the far light (peak inside the cover)"
+  },
+  {
+   "t": 25.05,
+   "sound": "shimmer",
+   "gain_db": 1.0,
+   "pan": 0.0,
+   "params": {
+    "duration": 1.5,
+    "brightness": 0.4,
+    "seed": 131
+   },
+   "note": "end card: warm light on the Qur'an eases on (24.5-25.5)"
+  },
+  {
+   "t": 25.3,
+   "sound": "dab",
+   "gain_db": -1.0,
+   "pan": 0.0,
+   "params": {
+    "seed": 141,
+    "brightness": 0.4
+   },
+   "note": "end card: 'Risale-i Nur'"
+  },
+  {
+   "t": 25.767,
+   "sound": "dab",
+   "gain_db": 1.0,
+   "pan": -0.1,
+   "params": {
+    "seed": 142,
+    "weight": 0.7
+   },
+   "note": "end card: 'Sözler' + accent light"
+  },
+  {
+   "t": 26.233,
+   "sound": "dab",
+   "gain_db": -1.0,
+   "pan": 0.05,
+   "params": {
+    "seed": 143,
+    "brightness": 0.45
+   },
+   "note": "end card: 'Yirmi Birinci Söz'"
+  },
+  {
+   "t": 26.667,
+   "sound": "dab",
+   "gain_db": -1.0,
+   "pan": 0.0,
+   "params": {
+    "seed": 144,
+    "brightness": 0.4
+   },
+   "note": "end card: '291. Sayfa'"
   }
- ]
+ ],
+ "mix": {
+  "duck_db": 4.0
+ }
 }
