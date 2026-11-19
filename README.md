@@ -305,6 +305,8 @@ npm run assets:native
   `strings.xml`, iOS proje dosyası). Mağazaya ilk gönderimden sonra kimlik değiştirilemez.
 - Alıntı yazı tipi Tinos (Apache 2.0), başlık ve sırt yazı tipi EB Garamond (OFL), menü yazı tipi Encode Sans (OFL);
   hepsi uygulamayla birlikte gelir.
+- *Yirminci Söz'den* (285. sayfa; Suluboya Kalemi üslubu) bu depoda üretildi: kaynak kodu, kelime zamanları ve sahne planı
+  `uretim/yirminci-soz-285/` altında.
 - Videolar `emreks53/B` deposundan: *On Birinci Şuâ'dan* (Altıncı Mesele, fenler Hâlık'ı tanıttırır;
   `claude/kurzgesagt-style-turkish-video-2on8vi` dalı) ve *On Yedinci Lem'a'dan* (ihlas;
   `claude/kurzgesagt-style-video-p5a1gi` dalı). Kaynakları ve lisansları o dallarda; künyesi Menba'da.

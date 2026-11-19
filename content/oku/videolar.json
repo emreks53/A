@@ -105,6 +105,18 @@
       "video": "videolar/gul-ve-beka.mp4",
       "kapak": "videolar/gul-ve-beka-kapak.jpg",
       "onizleme": "videolar/gul-ve-beka-onizleme.jpg"
+    },
+    {
+      "id": "misafir-ve-ubudiyet",
+      "baslik": "Yirminci Söz'den",
+      "kitap": "Sözler",
+      "bolum": "Yirminci Söz",
+      "sayfa": 285,
+      "etiketler": ["misafirlik", "kulluk", "ahiret"],
+      "video": "videolar/misafir-ve-ubudiyet.mp4",
+      "kapak": "videolar/misafir-ve-ubudiyet-kapak.jpg",
+      "onizleme": "videolar/misafir-ve-ubudiyet-onizleme.jpg",
+      "kunye": ["Kitap çekimindeki ahşap, deri dokuları ve ortam ışığı: Poly Haven (CC0)"]
     }
   ]
 }
