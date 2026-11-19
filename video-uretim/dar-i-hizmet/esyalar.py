@@ -88,8 +88,9 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
 6. ciz_simge_halkasi(t, M, r, renk_='#F1E3D3', ilerleme=1.0, tohum=0, yog=0.55)
    Simgenin ARKASINA boyanan yumuşak suluboya disk (simgeden SONRA çağırın): açık lavi, biraz koyu ıslak kenar,
    ortası hafif açık, kenar içinde çok soluk ikinci yankı. ilerleme 0..1: boya merkezden organik kenarla yayılır
-   (e_out), sonda temiz daireye oturur. Köken = disk merkezi, r yerel yarıçap. Saklamayı yalnız boyanmış (açılmış)
-   alana, lavinin keskin kenarında bitecek biçimde yazar (gök sonra boyanınca açılma kenarında beyaz hale kalmaz).
+   (yumuşak başlar; sahne ilerleme'yi e_out ile sürebilir), sonda temiz daireye oturur. Köken = disk merkezi, r
+   yerel yarıçap. Saklamayı yalnız boyanmış (açılmış) alana, lavinin keskin kenarında bitecek biçimde yazar (gök
+   sonra boyanınca açılma kenarında beyaz hale kalmaz).
 
 7. ciz_saat(t, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, gorunurluk=1.0, tohum=0, hale=1.0) -> dict
    Güneş üzerinde beliren saat kadranı. Güneş diskini (açık sıcak sarı lavi, ortası açık, ince ıslak kenar) HER
@@ -121,7 +122,7 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
    ilmekli, ani kırıklı grafit karalama çizgileri (3 kalem yolu); altında başa inen iki düşünce kabarcığı.
    * Köken = bulut merkezi; olcek=1'de bulut ~185 x 104 (x -92..93, y -50..54); kabarcıklar y≈+76 (r 11) ve
      +108 (r 6.5): baş tepesi köken + (0, ~150)'de varsayılır (sahne: bas_ust - 150).
-   * olusum 0..1: kabarcıklar (0..0.22) -> lavi merkezden organik açılır (0.08..0.53) -> karalamalar kalem ucu
+   * olusum 0..1: kabarcıklar (0..0.22) -> lavi merkezden organik açılır (0.04..0.56) -> karalamalar kalem ucu
      dolanarak kendini çizer (0.22..1, üç yol sırayla).
    * kaldirma 0..1: ıslak fırça soldan sağa geçer (0..0.8); geçtiği yerde lavi kaldırılır (soluk iz kalır), grafit
      erir (yumuşak gri bulanıklık), kaldırma sınırında hafif geri akış halkası; bulut ~26 birim yükselir, %10
@@ -1639,14 +1640,16 @@ def ciz_simge_halkasi(t: Tuval, M, r, renk_='#F1E3D3', ilerleme=1.0, tohum=0, yo
     if p <= 0.0:
         return
     M = np.asarray(M, np.float64)
-    pe = e_out(p)
+    # yumuşak başlangıçlı yayılma (sahne ilerleme'yi zaten e_out ile sürer; burada da e_out olursa disk ilk karede
+    # yarı boyuna sıçrar)
+    pe = 0.5 * (p + e_io(p))
     disk = damla_blob(0, 0, r, tohum=tohum, duzensizlik=0.012, lob=6, n=64)
     ac = acilma_radyal(pe, 0.0, 0.0, r * 1.02, dalga=0.16 * (1 - pe) + 0.02, on=0.12, tohum=tohum)
 
     def yf(X, Y):
         d = np.sqrt(X * X + Y * Y) / max(r, 1e-6)
         return 0.78 + 0.30 * smoothstep(0.25, 1.0, d)
-    t.lavi(disk, M, renk_, yog=yog, kenar=1.4, dalga=0.07, islak=1.25, islak_gen=3.2, gran=0.10, akis=0.22,
+    t.lavi(disk, M, renk_, yog=yog, kenar=1.4, dalga=0.07, islak=1.7, islak_gen=3.0, gran=0.10, akis=0.22,
            tohum=tohum, maske_fn=ac, yog_fn=yf)
     # hafif ikinci halka (kenarın içinde çok açık bir yankı)
     t.lavi(yol_op(disk, yol_daire(0, 0, r * 0.90), 'fark'), M, renk_, yog=yog * 0.25 * pe, kenar=2.0, dalga=0.1,
@@ -1987,7 +1990,8 @@ def ciz_sikayet_bulutu(t: Tuval, M, olcek=1.0, olusum=1.0, kaldirma=0.0, zaman=0
                         t.lavi(yollar, Ml, '#77738A', yog=0.34, cizgi=3.6, yumusak=4.5, dalga=0.15, islak=0.0,
                                gran=0.12, akis=0.3, tohum=tohum + 2, maske_fn=erimis)
         # ---- bulut lavisi --------------------------------------------------------------------------------
-        g_lv = e_out(np.clip((ol - 0.08) / 0.45, 0, 1))
+        # (e_io: sahne olusum'u zaten e_out ile sürer; burada da e_out olursa lavi ilk karede neredeyse tam belirir)
+        g_lv = e_io(float(np.clip((ol - 0.04) / 0.52, 0, 1)))
         if g_lv > 0.003:
             ac = acilma_radyal(g_lv, 0, 4, 100, dalga=0.18, on=0.12, tohum=tohum + 3)
             t.lavi(sekil, Ml, '#A29DB0', yog=0.44, kenar=1.2, dalga=0.10, islak=1.15, islak_gen=2.8, gran=0.14,
