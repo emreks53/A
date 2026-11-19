@@ -40,6 +40,8 @@
     return p;
   };
   const eraseInk = (L, path) => { L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.fill(path); L.ink.restore(); };
+  /** erase ink and light under an opaque near object (the fence hides the glow of the water behind it) */
+  const eraseIL = (L, path) => { for (const c of [L.ink, L.light]) { c.save(); c.globalCompositeOperation = 'destination-out'; c.fill(path); c.restore(); } };
   /** perspective block of tilled soil (sd −1 left / +1 right of the aisle) */
   const blockPts = (sd, yb = YB, yf = YF) => {
     const a = (y) => 46 * persp(y), o = (y) => 318 * persp(y);
@@ -192,7 +194,7 @@
           const band = poly(top.concat(top.slice().reverse().map(([x, y]) => [x, y + thick(y)])));
           E.wash(L.paint, band, '#B48C62', { mode: 'over', alpha: rv });
           E.wash(L.paint, poly(top.map(([x, y]) => [x, y + thick(y) * 0.5]).concat(top.slice().reverse().map(([x, y]) => [x, y + thick(y)]))), '#6E5040', { alpha: 0.4 * rv });
-          eraseInk(L, band);
+          eraseIL(L, band);
           E.pencil(L.ink, top, { w: 1, a: 0.26 * rv, double: false });
         }
       }
@@ -204,7 +206,7 @@
         const p = E.smoothPath([[x - ww, y + 2], [x - ww, y - hh + ww], [x, y - hh], [x + ww, y - hh + ww], [x + ww, y + 2]], true, 0.2);
         E.wash(L.paint, p, '#C9A274', { mode: 'over' });
         E.wash(L.paint, E.rrect(x + ww * 0.1, y - hh + ww, ww * 0.9, hh - ww + 2, 1), '#6E5040', { alpha: 0.5 });
-        eraseInk(L, p);
+        eraseIL(L, p);
         E.pencil(L.ink, p, { w: 1, a: 0.3, double: false });
       });
     }
@@ -329,14 +331,14 @@
         const x0 = aisleX(ry) + sd * 9 * s, x1 = aisleX(ry) + sd * (52 + (310 - 52) * k) * s;
         const y = ry + 6 * s, hh = 4.2 * s;
         const band = E.smoothPath([[x0, y - hh], [x1, y - hh * 0.6], [x1 + sd * 3, y], [x1, y + hh * 0.6], [x0, y + hh]], true, 0.3);
-        E.wash(L.paint, band, '#F3C2A2', { mode: 'over', alpha: 0.85 });
-        E.wash(L.paint, band, '#D98A7A', { alpha: 0.35 });
+        E.wash(L.paint, band, '#F6DCC4', { mode: 'over', alpha: 0.8 });
+        E.wash(L.paint, band, '#E2A08C', { alpha: 0.22 });
         L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.fill(band); L.ink.restore();
-        lc.save(); lc.globalCompositeOperation = 'lighter'; lc.fillStyle = E.rgba('#FFD9B8', 0.22); lc.fill(band); lc.restore();
+        lc.save(); lc.globalCompositeOperation = 'lighter'; lc.fillStyle = E.rgba('#FFE4C8', 0.16); lc.fill(band); lc.restore();
         // glints flowing outward
         for (let g = 0; g < 4; g++) {
           const u = ((gt * 0.5 + g / 4 + (sd > 0 ? 0.13 : 0)) % 1) * k;
-          E.glow(lc, aisleX(ry) + sd * (52 + 258 * u) * s, y, 9 * s + 4, '#FFF3E0', 0.45 * k);
+          E.glow(lc, aisleX(ry) + sd * (52 + 258 * u) * s, y, 9 * s + 4, '#FFF3E0', 0.38 * k);
         }
       }
     }
@@ -348,8 +350,8 @@
       for (let i = 0; i <= 8; i++) ys.push(E.lerp(yb, yf, i / 8));
       const half = (y) => 7 * persp(y);
       const ch = E.smoothPath(ys.map((y) => [aisleX(y) - half(y), y]).concat(ys.slice().reverse().map((y) => [aisleX(y) + half(y), y])), true, 0.3);
-      E.wash(L.paint, ch, '#F3C2A2', { mode: 'over', alpha: 0.9 });
-      E.wash(L.paint, ch, '#D98A7A', { alpha: 0.3 });
+      E.wash(L.paint, ch, '#F6DCC4', { mode: 'over', alpha: 0.85 });
+      E.wash(L.paint, ch, '#E2A08C', { alpha: 0.24 });
       L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.fill(ch); L.ink.restore();
       lc.save(); lc.globalCompositeOperation = 'lighter'; lc.fillStyle = E.rgba('#FFD9B8', 0.28); lc.fill(ch); lc.restore();
     }
@@ -379,7 +381,7 @@
     const t0 = tW + w.k * 0.09 + w.ri * 0.05 + (w.sd > 0 ? 0.04 : 0);
     const g = E.ep(lt, t0, t0 + 0.7, 'outCubic');
     if (g <= 0) return;
-    PR.wheat(L, w.x, w.y, 118 * w.s, { t: gt + w.seed, growth: g, count: 4 + (w.k === 0 ? 2 : 0), seed: w.seed, glow: glowK * g });
+    PR.wheat(L, w.x, w.y, 118 * w.s, { t: gt + w.seed, growth: g, count: 4 + (w.k === 0 ? 1 : 0), seed: w.seed, glow: glowK * g });
   }
 
   /** trees and wheat back to front (wheat of a back row must not paint over the crowns in front of it) */

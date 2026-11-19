@@ -143,7 +143,7 @@
 
   // the gesture: cradle (s08) → raised up and out toward the world, palm up → lowered, open
   const RAISE = { nS: 1.7, nE: 0.5, nW: -0.72, fS: 0.1, fE: 0.3 };
-  const OPEN = { nS: 0.3, nE: 0.78, nW: -0.28, fS: -0.02, fE: 0.18 };
+  const OPEN = { nS: 0.13, nE: 0.42, nW: -0.12, fS: -0.04, fE: 0.15 };
   function poseAt(lt, t, T) {
     const { pose } = pose08(t);
     const kR = ep(lt, T.raise0, T.raise1, 'inOutCubic');
@@ -153,6 +153,7 @@
       pose[f] = lerp(pose[f], OPEN[f], kL);
     }
     pose.nE += 0.35 * Math.sin(PI * kL);          // the elbow folds softly as the arm comes down
+    pose.nS += 0.14 * Math.sin(PI * seg(lt, T.rel - 0.12, T.low0 + 0.1)) * (1 - kL);   // follow-through as it lets go
     // a small lift of the whole body as he gives it, then settling
     pose.lean += 0.025 * kR * (1 - kL) - 0.01 * kL;
     // gaze: down at the heart in his palm → up to his world → following the heart → resting on the world

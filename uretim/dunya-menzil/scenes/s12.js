@@ -39,6 +39,8 @@
     return p;
   };
   const eraseInk = (L, path) => { L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.fill(path); L.ink.restore(); };
+  /** erase ink and light under an opaque near object (the fence hides the glow of the water behind it) */
+  const eraseIL = (L, path) => { for (const c of [L.ink, L.light]) { c.save(); c.globalCompositeOperation = 'destination-out'; c.fill(path); c.restore(); } };
   /** perspective block of tilled soil (sd −1 left / +1 right of the aisle) */
   const blockPts = (sd, yb = YB, yf = YF) => {
     const a = (y) => 46 * persp(y), o = (y) => 318 * persp(y);
@@ -191,7 +193,7 @@
           const band = poly(top.concat(top.slice().reverse().map(([x, y]) => [x, y + thick(y)])));
           E.wash(L.paint, band, '#B48C62', { mode: 'over', alpha: rv });
           E.wash(L.paint, poly(top.map(([x, y]) => [x, y + thick(y) * 0.5]).concat(top.slice().reverse().map(([x, y]) => [x, y + thick(y)]))), '#6E5040', { alpha: 0.4 * rv });
-          eraseInk(L, band);
+          eraseIL(L, band);
           E.pencil(L.ink, top, { w: 1, a: 0.26 * rv, double: false });
         }
       }
@@ -203,7 +205,7 @@
         const p = E.smoothPath([[x - ww, y + 2], [x - ww, y - hh + ww], [x, y - hh], [x + ww, y - hh + ww], [x + ww, y + 2]], true, 0.2);
         E.wash(L.paint, p, '#C9A274', { mode: 'over' });
         E.wash(L.paint, E.rrect(x + ww * 0.1, y - hh + ww, ww * 0.9, hh - ww + 2, 1), '#6E5040', { alpha: 0.5 });
-        eraseInk(L, p);
+        eraseIL(L, p);
         E.pencil(L.ink, p, { w: 1, a: 0.3, double: false });
       });
     }
@@ -380,7 +382,8 @@
       L.light.save(); L.light.globalCompositeOperation = 'destination-out'; L.light.globalAlpha = 0.45; L.light.fillRect(0, 0, E.W, E.H); L.light.restore();
 
       // ---------------- the man (foreground, screen space)
-      const MX = 188 - lt * 5, MY = 1490, MH = 990;
+      const push = 1 + 0.008 * lt;                                   // a slow, barely felt push-in on him
+      const MX = 188 - lt * 5, MY = 1490 + 2.4 * lt, MH = 990 * push;
       const gaze = { lean: -0.03, head: -0.3, nS: 0.08, nE: 0.16, fS: -0.03, fE: 0.18, nH: 0.04, nK: 0.04, fH: -0.04, fK: 0.04 };
       const calm = { lean: 0.04, head: 0.2, nS: 0.08, nE: 0.14, fS: -0.04, fE: 0.16, nH: 0.04, nK: 0.04, fH: -0.04, fK: 0.04 };
       const surge = { lean: -0.06, head: -0.04, nS: -0.26, nE: 0.3, fS: -0.36, fE: 0.36, nH: 0.05, nK: 0.05, fH: -0.06, fK: 0.06 };

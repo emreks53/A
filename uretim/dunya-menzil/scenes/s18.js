@@ -1,10 +1,12 @@
 /* s18 · 82.45–86.40 · "kendini lâyemut farz ederek dünyaya saplansa,"
    Night. The man stands on the top of his (inflated, false) little world — a curved moonlit horizon with his
    little house and tree on its shoulder; the real (big) world floats far away in the sky.
-   "kendini" 82.69: a stone pedestal pushes up out of the ground and lifts him; he straightens into a proud pose.
+   "kendini" 82.69: a stone pedestal pushes up out of the ground and lifts him; he takes a proud monument stance
+   (chest out, chin up, fists on his hips).
    "lâyemut farz ederek" 83.13–84.2: he petrifies from the feet up into a grey stone monument (assumes himself
    immortal); a cold glint runs over the polished stone.
-   "dünyaya" 84.77: the ground (the world) turns to dark glossy mud, a wet stain spreading from the plinth.
+   "dünyaya" 84.77: the ground (the world) turns to dark glossy clay: a wet stain with lobed tongues runs down the
+   curve from the plinth (soaked halo ahead, drying tide line); the far world is mirrored in the wet clay.
    "saplansa" 85.25: the monument tilts and sinks — plinth swallowed, statue stuck to the knees; rings, drops.
    Cut in from s17, cut out to s19 (he clutches the false world). */
 (function () {

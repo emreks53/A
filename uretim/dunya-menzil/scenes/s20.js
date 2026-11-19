@@ -63,7 +63,7 @@
   const K = {
     glow0: 0.1,
     rise0: lw(168) - 0.12, rise1: lw(169) + 0.8,           // O muhabbet: rises out of the water
-    dark0: lw(169) - 0.1, dark1: lw(169) + 0.9,             // turns sick dark crimson
+    dark0: lw(168) - 0.1, dark1: lw(169) + 0.6,             // turns sick dark crimson as it rises
     vort0: lw(172) - 0.15, vort1: lw(172) + 0.95,           // hadsiz: the endless spiral
     thorn0: lw(172) - 0.05, thorn1: lw(172) + 0.75,         // hadsiz: thorny vines climb out of the water
     bela: lw(173) - 0.04, azap: lw(175) - 0.04,             // bela, azaptır: blooms + cracks
@@ -474,8 +474,8 @@
     // the heart under the water before it rises: a dim crimson glow welling up
     const under = E.ep(lt, K.glow0, K.rise0 + 0.2) * (1 - E.ep(lt, K.rise0 + 0.25, K.rise0 + 0.6));
     if (under > 0) {
-      wash(pnt, E.blob(HX, SURF + 170, 90, { rx: 120, ry: 90, seed: 6, irr: 0.2 }), '#8A3A54', { mode: 'over', alpha: 0.42 * under, soft: 44 });
-      E.glow(L.light, HX, SURF + 160, 230, '#B04E6A', 0.3 * under);
+      wash(pnt, E.blob(HX, SURF + 170, 90, { rx: 120, ry: 90, seed: 6, irr: 0.2 }), '#74304A', { mode: 'over', alpha: 0.42 * under, soft: 44 });
+      E.glow(L.light, HX, SURF + 160, 230, '#94425E', 0.26 * under);
     }
     // the far world mirrored in the water (= s19's), fading as the bloom swallows it
     const rx = wx;
@@ -582,6 +582,18 @@
       for (const o of vines) drawVine(L, o.v, o.V, o.p, 2, 1);
       E.restore(L);
       E.glow(L.light, HX - r * 0.35, hy - r * 0.45, r * 0.5, '#C9D6FF', 0.08 + 0.25 * fl);
+      // each weak heartbeat (in sync with the prop's beat and the sfx) sends out a dim, cold ring of light
+      const gt = lt + T0, ph = (gt * 0.8) % 1;
+      const bu = (ph - 0.12 + 1) % 1 / 0.8; // seconds since the last beat
+      if (bu < 0.9) {
+        const k = bu / 0.9, rad = HR * (1.05 + 1.3 * E.ease.outCubic(k));
+        const ba = (1 - k) * (1 - k) * (0.55 - 0.3 * tight);
+        L.light.save(); L.light.globalCompositeOperation = 'lighter';
+        L.light.strokeStyle = E.rgba('#9A88C8', 0.22 * ba); L.light.lineWidth = 10 * (1 - k) + 2;
+        L.light.beginPath(); L.light.ellipse(HX, hy + 8, rad, rad * 0.95, 0, 0, E.TAU); L.light.stroke();
+        L.light.restore();
+        E.glow(L.light, HX, hy, HR * 1.6, '#8A6AA8', 0.12 * ba);
+      }
     }
     // vignette: the night presses in
     const vg = 0.28 + 0.3 * rev;

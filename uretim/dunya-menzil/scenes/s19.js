@@ -4,9 +4,10 @@
    "şedit" 86.57 / "hissiyat" 86.93: dark crimson ribbons (his intense feelings, now dark) burst from his chest one
      after another and wind round him and the globe, hugging their contour like a binding (behind and in front).
    "sarılsa" 87.91: he clutches it tight — the coils cinch, the last one crosses his eyes, the glass is squeezed.
-   "onda" 88.89: dark water fills the glass from below and drowns the little house; the water-world collapses into
-     the mud, which turns to dark water (a splash, a swell running out).
-   "boğulur" 89.23: bound by the coils he is dragged straight down, one hand reaching up; bubbles.
+   "onda" 88.89: dark water fills the glass from below and drowns the little house; the clay round its foot turns to
+     dark water (a soaking front spreading from the globe) and the level rises.
+   "boğulur" 89.23: the heavy water-world sinks and, bound to it by the coils, he is dragged straight down with it,
+     one hand reaching up; a splash, a swell running out, air escaping from the glass in big bubbles.
    "gider" 89.73: the hand slips under, rings spread, the surface closes; his shape fades in the depth.
    Ends on a calm dark water surface at screen y ≈ 900 with the far world mirrored in it: s20 bleeds in from there
    (the sky continues exactly: same far world, stars, cloud, sky parallax). */
@@ -119,12 +120,12 @@
     { col: '#6A2244', W: 29, yA: 884, yB: 1118, turns: 1.7, th0: 0.6, seed: 5 },
     { col: '#8A3A2E', W: 25, yA: 852, yB: 722, turns: 1.85, th0: 4.1, seed: 8 },
   ];
-  const BACK_X = (y) => MX - 0.062 * MH + 0.02 * (y - 900) * 0; // his back (roughly vertical in the hug)
+  const BACK_X = () => MX - 0.062 * MH; // his back (roughly vertical in the hug)
   function globeHalf(y, squeeze) {
     const d = y - GCY;
     return Math.abs(d) < GR ? Math.sqrt(GR * GR - d * d) * (1 - 0.03 * squeeze) : -1;
   }
-  function coil(rb, lt, tight, alone, sinkY, manDX) {
+  function coil(rb, lt, tight, sinkY, manDX) {
     const n = 150, pts = [], front = [];
     const margin = E.lerp(32, -6, tight);
     const chest = [MX + 0.07 * MH + manDX, FEET - 0.71 * MH + sinkY];
@@ -133,12 +134,12 @@
     for (let i = 0; i <= n; i++) {
       const u = i / n, th = rb.th0 + spin * E.smooth(E.clamp(u / 0.3)) + u * rb.turns * E.TAU;
       const yb = E.lerp(yA, yB, u);
-      const left = BACK_X(yb) + manDX;
+      const left = BACK_X() + manDX;
       const gh = globeHalf(yb, tight);
       const rightG = gh > 0 ? GX + gh : MX + 0.06 * MH;
-      const right = E.lerp(Math.max(rightG, MX + 0.06 * MH), MX + 0.07 * MH, alone) + manDX;
+      const right = Math.max(rightG, MX + 0.06 * MH) + manDX;
       const wob = 1 + 0.05 * E.noise1(u * 7 + rb.seed * 3.1 + lt * 0.6, rb.seed) * (1 - 0.6 * tight);
-      const cx = (left + right) / 2, rx = ((right - left) / 2 + margin * (1 - 0.6 * alone)) * wob;
+      const cx = (left + right) / 2, rx = ((right - left) / 2 + margin) * wob;
       const ry = rx * 0.13 + 6;
       let X = cx + rx * Math.cos(th), Y = yb + sinkY + ry * Math.sin(th);
       const b = E.smooth(E.clamp(u / 0.13));
@@ -318,7 +319,7 @@
   const SINK_A = (() => {
     const tg = K.gone + 0.05;
     const lv = E.lerp(GY - 3, WL, E.ep(tg, K.rise0, K.rise1, 'inOutSine'));
-    return (lv + 18 - FEET + 1.2 * MH) / sinkShape(E.seg(tg, K.sink0, K.sink1));
+    return (lv - 34 - FEET + 1.2 * MH) / sinkShape(E.seg(tg, K.sink0, K.sink1));
   })();
   function draw(L, lt) {
     const T = lt + TS;
@@ -345,7 +346,7 @@
     const manDX = 0;
     const ribs = RIB.map((rb, k) => ({ rb, p: E.ep(lt, K.rib[k], K.rib[k] + 0.85, 'outCubic') }))
       .filter((o) => o.p > 0)
-      .map((o) => ({ ...o, C: coil(o.rb, lt, tight, 0, sinkY, manDX) }));
+      .map((o) => ({ ...o, C: coil(o.rb, lt, tight, sinkY, manDX) }));
     for (const o of ribs) paintRibbon(L, o.rb, o.C, o.p, false, lt, ribA);
 
     // ---- the false world: squeezed by the hug, filled with dark water; then it sinks, dragging him down ----
@@ -405,7 +406,7 @@
     let pose = E.man.lerp(hug, clutch, tight);
     const lose = E.ep(lt, K.liq0, K.sink0 + 0.3, 'inOutCubic');
     if (lose > 0) {
-      const up = { lean: -0.04, head: -0.42, nS: 2.95, nE: 0.12, nW: 0.15, fS: 1.3, fE: 1.05, nH: 0.18, nK: 0.32, fH: -0.14, fK: 0.46 };
+      const up = { lean: -0.04, head: -0.42, nS: 2.95, nE: 0.12, nW: 0.15, fS: 1.3, fE: 1.05, nH: 0.08, nK: 0.2, fH: -0.03, fK: 0.3 };
       pose = E.man.lerp(pose, up, lose);
     }
     pose.lean += 0.012 * Math.sin(lt * 2.4) * (1 - lose) + 0.02 * Math.sin(lt * 9) * E.ep(lt, K.sink0, K.sink0 + 0.2) * (1 - E.ep(lt, K.gone - 0.2, K.gone));
@@ -421,6 +422,12 @@
     const front = liq > 0 ? liqFront(liq) : null;
     if (liq < 1) {
       drawMud(L, lt, front);
+      if (front) { // the clay soaks and darkens just ahead of the water
+        const gpc = groundPath();
+        pnt.save(); pnt.clip(gpc);
+        wash(pnt, liqFront(Math.min(1, liq * 1.1 + 0.02)), '#1E2040', { alpha: 0.45 * (1 - liq), soft: 22 });
+        pnt.restore();
+      }
       // clinging lip of mud round his legs (only while he is still stuck in the clay)
       const lipA = 1 - E.ep(lt, K.liq0, K.liq0 + 0.15);
       if (lipA > 0.01) {
@@ -491,10 +498,10 @@
       const dr = E.rng(195);
       for (let i = 0; i < 16; i++) {
         const t0 = K.sink0 + 0.06 + dr() * 0.16;
-        const x0 = GX + (dr() - 0.5) * GR * 1.8, vx = (dr() - 0.5) * 520, vy = 380 + dr() * 420, sz = 4 + dr() * 6;
+        const x0 = GX + (dr() - 0.5) * GR * 1.8, vx = (dr() - 0.5) * 460, vy = 320 + dr() * 330, sz = 3 + dr() * 4.5;
         const tau = lt - t0;
         if (tau <= 0) continue;
-        const x = x0 + vx * tau, y = GY - 10 - vy * tau + 0.5 * 2200 * tau * tau;
+        const x = x0 + vx * tau, y = GY - 10 - vy * tau + 0.5 * 2600 * tau * tau;
         if (y > surfY(x, lt) + 6) continue;
         wash(pnt, E.blob(x, y, sz, { seed: i, irr: 0.25, n: 12, rx: sz * 0.85, ry: sz * 1.15 }), '#38406A', { mode: 'over' });
         lift(pnt, E.blob(x - sz * 0.3, y - sz * 0.3, sz * 0.25, { seed: i + 5, n: 10 }), 0.5);
@@ -550,13 +557,13 @@
         ring(pnt, MX + 50, surfY(MX + 50, lt) + 5, rr2, rr2 * 0.1, '#B5BEDA', 2.6 * (1 - u) + 0.6, (1 - u) * 0.62);
       }
     }
-    // the night closes in
-    const vg = 0.3 + 0.2 * E.ep(lt, K.fill0, K.gone + 0.5);
+    // the night closes in (the same vignette as s18's last frame, deepening as he goes under)
+    const vg = 0.45 + 0.1 * E.ep(lt, K.fill0, K.gone + 0.5);
     pnt.save();
     pnt.setTransform(1, 0, 0, 1, 0, 0);
-    const g = pnt.createRadialGradient(560, 820, 320, 520, 960, 1350);
+    const g = pnt.createRadialGradient(540, 820, 300, 540, 900, 1250);
     g.addColorStop(0, 'rgba(30,36,66,0)');
-    g.addColorStop(1, `rgba(22,26,48,${vg})`);
+    g.addColorStop(1, `rgba(24,28,52,${vg})`);
     pnt.globalCompositeOperation = 'multiply';
     pnt.fillStyle = g;
     pnt.fillRect(0, 0, E.W, E.H);
