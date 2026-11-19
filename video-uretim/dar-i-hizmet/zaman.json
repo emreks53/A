@@ -1,0 +1,25 @@
+{
+  "aciklama": "Ses kaydındaki kelimelerin başlangıç anları (sn, ses dosyasına göre). Whisper + Türkçe wav2vec2 CTC zorunlu hizalama, spektrogram ve enerji eğrisiyle elle doğrulandı.",
+  "kelimeler": [
+    ["Şu", 0.26], ["dâr-ı", 0.45], ["dünya", 0.74], ["meydan-ı", 1.27], ["imtihandır", 1.78],
+    ["ve", 2.76], ["dâr-ı", 2.90], ["hizmettir", 3.21],
+    ["lezzet", 4.43], ["ve", 5.06], ["ücret", 5.30], ["ve", 5.74], ["mükâfat", 5.85], ["yeri", 6.42], ["değildir", 6.66],
+    ["Madem", 8.03], ["dâr-ı", 8.43], ["hizmettir", 8.72], ["ve", 9.50], ["mahall-i", 9.62], ["ubudiyettir", 10.08],
+    ["hastalıklar", 11.40], ["ve", 12.01], ["musibetler", 12.10], ["dinî", 13.22], ["olmamak", 13.74], ["ve", 14.49], ["sabretmek", 14.64], ["şartıyla", 15.25],
+    ["o", 16.47], ["hizmete", 16.59], ["ve", 17.36], ["o", 17.62], ["ubudiyete", 17.83], ["çok", 18.38], ["muvafık", 18.62], ["oluyor", 19.08], ["ve", 19.74], ["kuvvet", 19.89], ["veriyor", 20.29],
+    ["Ve", 21.46], ["her", 21.57], ["bir", 21.79], ["saati", 22.01], ["bir", 22.69], ["gün", 22.87], ["ibadet", 23.07], ["hükmüne", 23.43], ["getirdiğinden", 23.77],
+    ["şekva", 24.92], ["değil", 25.39], ["şükretmek", 25.83], ["gerektir", 26.41]
+  ],
+  "konusma_sonu": 26.95,
+  "manalar": [
+    {"kelime": "dâr-ı dünya", "mana": "dünya yurdu", "an": 0.45},
+    {"kelime": "meydan-ı imtihandır", "mana": "imtihan meydanıdır", "an": 1.27},
+    {"kelime": "dâr-ı hizmettir", "mana": "hizmet yeridir", "an": 2.90},
+    {"kelime": "mükâfat", "mana": "ödül", "an": 5.85},
+    {"kelime": "dâr-ı hizmettir", "mana": "hizmet yeridir", "an": 8.43},
+    {"kelime": "mahall-i ubudiyettir", "mana": "kulluk yeridir", "an": 9.62},
+    {"kelime": "ubudiyete", "mana": "kulluğa", "an": 17.83},
+    {"kelime": "muvafık", "mana": "uygun", "an": 18.62},
+    {"kelime": "şekva", "mana": "şikâyet", "an": 24.92}
+  ]
+}
