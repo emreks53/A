@@ -162,7 +162,7 @@ export function makeProps(E, W) {
       reveal: { steps: 3, mode: 'mask', order: 'radial', from: [0, 26], jitter: 0.3, dab: 84 },
     });
     // it breaks into about a dozen specks that drift up (sampled from its own paint)
-    const burst = E.makeBurst(glow, { seed: 6402, count: 13, duration: 0.14, wind: [34, -250], spread: 30, life: [0.3, 0.45], size: [20, 34] });
+    const burst = E.makeBurst(glow, { seed: 6402, count: 13, duration: 0.14, wind: [46, -390], spread: 30, life: [0.34, 0.46], size: [22, 36] });
     return { glow, burst };
   });
 
@@ -258,7 +258,9 @@ export function makeProps(E, W) {
       bounds, anchor: [0, 0], seed: 6609, steps: 3, dabSize: 58, reveal: { order: 'sweep', angle: Math.PI * 1.22, jitter: 0.3 },
       draw: (c) => { edge.draw(c, 0, 0); lines.draw(c, 0, 0); seal.draw(c, SX, SY); },
     });
-    const burst = E.makeBurst(ink, { seed: 6610, count: 15, duration: 0.14, wind: [215, 96], spread: 20, life: [0.28, 0.4], size: [20, 32] });
+    // (a speck is at full size for the first third of its life and fades over the last half: the wind is set so
+    // that it visibly travels ~70 px toward the ring in that time; the last one is gone at 6.37 + 0.10 + 0.42 = 6.89)
+    const burst = E.makeBurst(ink, { seed: 6610, count: 15, duration: 0.1, wind: [430, 175], spread: 22, life: [0.32, 0.42], size: [22, 36] });
     return { drawParts, whole, burst, seal: [SX, SY], bounds };
   });
 

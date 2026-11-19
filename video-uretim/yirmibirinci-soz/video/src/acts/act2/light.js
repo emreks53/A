@@ -174,39 +174,55 @@ export function makeLight(E, W, U) {
   }
 
   // ------------------------------------------------------------------ the cream cover (top slot, FRAME px)
-  // The bare primer wall seen through an ordered mask of big sponge prints that grows out of the light's core
-  // (screen 802, 256). Mask stages are even in area, so p = 0.15 / 0.40 / 0.65 / 0.85 IS the covered share.
-  // The order is a soft super-ellipse round the core (taller than wide, slower toward the left), so that the
-  // right column goes first and the man and his dial last. At the core the first two passes are warm white.
+  // The bare primer wall seen through an ordered mask of sponge prints that grows out of the light's core
+  // (screen 802, 256): the swell of 23.10 simply keeps going. Mask stages are even in area, so the p of a pass is
+  // its covered share: 15 / 40 / 59 / 85 % (storyboard 15 / 40 / 65 / 85: the region right of screen x 400 is only
+  // 63 % of the frame and the man's region, x < 400, may be touched by passes 4 and 5 only — a sponge-edged front
+  // that keeps every print right of x 400 covers 59 %).
+  //
+  // The ORDER is the pass-time T(x, y) at which the front reaches a point: per axis a piecewise-linear map from
+  // the distance to the origin to the pass index (how far left / down / right / up each pass reaches), combined
+  // as a super-ellipse — round (n 2.2) for the first bloom, squarer (n 5) later, when the front is the frame's
+  // own shape: pass 1 an oval round the light, pass 2 the mescid, rug and knoll, pass 3 everything right of the
+  // man, pass 4 the man and his dial, pass 5 (the plate, drawn by the scene) the left edge.
   const O = L.sb.endcard.cover.origin_screen;                                // [802, 256]
-  const COVER_STEPS = 20;
-  const coverKey = (x, y, rng) => {
-    const dx = x < O[0] ? (O[0] - x) * 1.4 : (x - O[0]) * 0.8, dy = y > O[1] ? (y - O[1]) / 2.6 : (O[1] - y);
-    return clamp(Math.pow(dx ** 4 + dy ** 4, 0.25) / 1130 * 0.9 + rng.next() * 0.07);
+  const COVER_STEPS = 200, COVER_DAB = 132, SPREAD = 48;                      // a mask print reaches ~48 px beyond its centre
+  const KX = [0, O[0] - 560 - SPREAD, O[0] - 470 - SPREAD, O[0] - 414 - SPREAD, O[0] - 150 - SPREAD, 1000];   // leftward reach of passes 0..5
+  const KY = [0, 640 - O[1] - SPREAD, 1420 - O[1] - SPREAD, 2050, 2700, 3400];                                 // downward
+  const KR = 300, KU = 280;                                                   // rightward / upward: px per pass
+  const pw = (v, xs) => { let i = 1; while (i < xs.length - 1 && v > xs[i]) i++; return i - 1 + (v - xs[i - 1]) / (xs[i] - xs[i - 1]); };
+  const passTime = (x, y) => {
+    const tx = x <= O[0] ? pw(O[0] - x, KX) : (x - O[0]) / KR, ty = y >= O[1] ? pw(y - O[1], KY) : (O[1] - y) / KU;
+    const a = Math.pow(tx ** 2.2 + ty ** 2.2, 1 / 2.2), b = Math.pow(tx ** 5 + ty ** 5, 1 / 5);
+    // the lower-left corner goes last (pass 5 closes the left edge and the bottom)
+    return lerp(a, b, ss(1, 2.5, b)) + ss(1300, 1900, y) * ss(520, 200, x);
   };
+  const coverKey = (x, y, rng) => clamp(passTime(x, y) / 5.6 + rng.next() * 0.012);
+  // p of each pass (the engine's area estimate runs about 1.5 % high: measured shares 15 / 40 / 59 / 85 %, out/act2/g4/chk_cover.txt)
+  const COVER_P = [0.16, 0.415, 0.605, 0.865];
   const cover = once('cover', () => {
     const c = {};
-    c.wall = E.Painted.fromSurface(W.wall, { ax: 0, ay: 0, seed: 2390, steps: COVER_STEPS, dabSize: 210, reveal: { order: coverKey } });
-    const glow = (r, seed) => E.makeCluster({
-      points: [{ x: 0, y: 0, r, rx: r * 0.86, ry: r * 1.2 }], anchor: [0, 0], seed, edgeSoftness: 0.75, reveal: { steps: 2, mode: 'mask', order: 'radial', from: [0, 0] },
-      layers: [
-        { color: '#FFF6D8', coverage: 0.5, size: r * 0.5, stamps: 'body', pores: 0.3 },
-        { color: tf.core, coverage: 0.93, size: r * 0.46, tints: 2, tint: 0.01, pores: 0.3, band: [0.3, 1] },
-      ],
-    });
-    c.white = [glow(210, 2391), glow(330, 2392)];
+    c.wall = E.Painted.fromSurface(W.wall, { ax: 0, ay: 0, seed: 2390, steps: COVER_STEPS, dabSize: COVER_DAB, reveal: { order: coverKey } });
+    // warm white at the core, thinning to the cream of the wall within the first passes: the far light's own white
+    // as a bloom that fills pass 1 (only its fringe is cream primer) and a smaller heart in pass 2 (one coherent
+    // sponge cloud each time, never a sprinkle of flecks); from pass 3 the cover is the primer alone
+    const bloom = (lim, soft, seed, layers, box) => field({ box, depth: (x, y) => clamp((lim - passTime(x, y)) / soft), seed, edge: 0.8, reveal: { steps: 1 }, layers });
+    const heart = (lim, soft, seed, cov, box) => bloom(lim, soft, seed, [
+      { color: '#FFF6D8', coverage: 0.6, size: 96, stamps: 'body', pores: 0.3 },
+      { color: tf.core, coverage: cov, size: 104, tints: 2, tint: 0.01, pores: 0.3, band: [0.22, 1] },
+      { color: '#FFFFFF', coverage: 0.5, size: 80, stamps: 'body', tints: 1, pores: 0.3, band: [0.6, 1], patch: { scale: 170, amount: 0.3 } },
+    ], box);
+    c.white = [heart(1.1, 0.3, 2391, 0.97, [520, 0, 1080, 700]), heart(0.74, 0.3, 2392, 0.94, [580, 0, 1080, 570])];
     return c;
   });
   const coverStage = (t) => L.count(t, T.cover);                              // 0 … 4 inside act 2 (5 = the plate)
   function drawCover(ctx, t) {
     const k = coverStage(t);
     if (!k) return;
-    cover.wall.draw(ctx, 0, 0, { p: T.coverPct[k - 1] });
-    // warm white at the core, thinning to the cream of the wall within the first passes
-    if (k === 1) cover.white[0].draw(ctx, O[0], O[1]);
-    else if (k === 2) cover.white[1].draw(ctx, O[0], O[1]);
-    else if (k === 3) cover.white[1].draw(ctx, O[0], O[1], { p: 0.5 });
+    if (k > 4) { E.blit(ctx, W.wall, 0, 0); return; }                        // 23.80: the bare plate (the scene draws it itself)
+    cover.wall.draw(ctx, 0, 0, { p: COVER_P[k - 1] });
+    if (k <= 2) cover.white[k - 1].draw(ctx);                                // warm white in the first two passes only
   }
 
-  return { drawFar, drawBeads, drawCover, coverStage, sprites: A, cover, geometry: { CX, CY, sd, halfW } };
+  return { drawFar, drawBeads, drawCover, coverStage, passTime, COVER_P, sprites: A, cover, geometry: { CX, CY, sd, halfW } };
 }

@@ -74,14 +74,16 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
 horizontally, 100 = a little upward) or `wrist` (relative, default 0), `elbow` (deg: force the upper-arm
 direction — the forearm is then foreshortened as needed), `fa` (foreshortening of the upper arm that goes with a
 forced `elbow`, default 1), `bend: 'out' | 'in'` (force a planar solution), `pin` (default 1).
-Default solution: planar two-bone IK with the LOWER elbow. **The upper arm never lies inside the torso** (the
-forearm would seem to grow out of his waist):
-* by itself it never swings inward of the vertical — where the planar solution would (`a < 0`), the upper arm hangs
-  straight down (`a = 0`) and the forearm is foreshortened instead (continuous with the planar solution at `a = 0`);
+Default solution: planar two-bone IK with the LOWER elbow. **The upper arm never lies on the torso** (the forearm
+would seem to grow out of his waist) — it stays where it hangs in the rest pose, with sky between arm and waist:
+* by itself it never swings inward of the hanging arm (`a = 11°`, `HANG` in man.js) — where the planar solution would
+  (`a < 11`), the upper arm stays at 11° and the forearm is foreshortened instead (continuous with the planar solution
+  at `a = 11`). `back_right_palm_up`, `back_look_at_empty_palm`, `back_right_palm_receive`, `back_release` are such
+  arms (forearm 0.74…0.95 of its length);
 * a forced `elbow` below 3° while the hand is out at his side is replaced by the upper arm of "held at his side"
-  (`elbow: 5, fa: 0.93`: it hangs outside the torso silhouette as in the rest pose, the elbow at waist height, the
-  forearm foreshortened toward the side). So `elbow: -10` — as older calls have it — gives that arm; the palm
-  lands on the same point.
+  (`elbow: 11, fa: 0.84`, `SIDE_ARM` in man.js: it hangs outside the torso silhouette exactly as in the rest pose, the
+  elbow drawn back a little — 17 px higher —, the forearm foreshortened toward the side and sloping down to the
+  hand). So `elbow: -10` — as older calls have it — gives that arm; the palm lands on the same point.
 Targets farther than the arm (108 + 92 + palm 18…31 px from the shoulder joint) are approached as far as it goes.
 The shoulder joint of the hanging stance is at world (540 ± 54, 773); `sh` moves both.
 
@@ -179,8 +181,12 @@ coin.draw(ctx, px, py - 46);                         // rests on the palm (720, 
 * The turn has two in-between drawings and expects hanging arms; held things are not handled in it (`hands` is
   called after the whole figure). Its body is a narrowed front / back body, not a drawn profile.
 * Named poses that changed in polish round 1 (same palm targets): `front_hand_on_chest` uses `'flat'`,
-  `back_coin_held_at_side` / `back_turned_right` use `'hold'` with the arm of "held at his side",
-  `back_coin_shown` / `back_wind_up` the same upper arm with an open hand.
+  `back_coin_held_at_side` / `back_turned_right` use `'hold'` with the arm of "held at his side" (above),
+  `back_coin_shown` / `back_wind_up` the same upper arm with an open hand; every pose whose upper arm used to hang
+  at 0…8° (palm up, look at palm, receive, release) now keeps it at the rest angle of 11°.
+* A hand held very close to his side (act 2's `SHOWN` / `WIND` targets, 35…45 px beside the hip) leaves the forearm
+  only its shortest length (0.34): it points almost straight down and the open hand is bent 70° at the wrist. Under
+  the coin this is hidden; without a coin such a pose would read as a kinked wrist.
 * `'cupped'` is a side view (palm up); used with a strongly raised hand angle it reads as a hook — keep
   `handAngle` between about 85 and 110.
 * Hand shapes swap, they do not morph; a swap is hidden best inside an arm move (it happens 4 frames after the

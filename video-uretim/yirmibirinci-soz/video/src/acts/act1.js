@@ -29,6 +29,8 @@ const S = {
   deed: [5.67, 5.77, 5.87, 6.00], tremble: 6.30, crumble: [6.37, 6.43, 6.50],
   veilOut: [8.77, 8.90, 9.03, 9.17],
   dotsOut: [10.73, 10.80, 10.87, 10.93, 11.00, 11.07, 11.13, 11.20],       // both legs from the feet upward
+  // dots that the YARIN framing would cut at the left frame edge leave / return while the frame is travelling
+  edgeOut: 4.73, edgeIn: 8.27,
 };
 const TAU = Math.PI * 2;
 // call-ring, per step (r 276 / 200 / 131 / 69): dab scale, dabs left out, dabs moved along the ring (deg).
@@ -96,12 +98,21 @@ export default {
     // passes BEHIND today's sun: its last visible dots (k = 12, 18) keep a dot's spacing from the rim.
     const dots = L.arc.dots, n = dots.length;                                // 27, k = 0 at the left foot
     const behindToday = (x, y) => Math.hypot(x - L.sun.x, y - L.sun.y) < L.sun.r + 2 * L.arc.dotR + 8;
+    // No stencil shape is cut by a frame edge on a hold: in YARIN (4.97-8.07) the left frame edge runs through the
+    // course (k = 9 would stand half cut for three seconds, k = 8 would peek in with the drift). Those dots dab
+    // out while the frame is still gliding there (4.73, one of the print steps) and are printed again as it
+    // glides back (8.27) - both times at the very edge of a travelling frame, where nobody is looking.
+    const atLeftEdge = (x, y) => ['YARIN', 'YARIN_DRIFT'].some((name) => {
+      const cam = L.framing(name), reach = L.arc.dotR * cam.zoom + 8;
+      const [sx] = L.toScreen(cam, x, y, 1);
+      return sx > -reach && sx < reach;
+    });
     this.dots = dots.map(([x, y], k) => {
       const on = k <= 9 ? T.dotsA[Math.floor((9 - k) / 2)] : T.dotsB[Math.min(T.dotsB.length - 1, Math.floor((k - 10) / 2))];
       // both legs leave from the feet upward at the same HEIGHT: position k on the left = position 30 - k on the right
       const m = k <= 15 ? k : 30 - k;
       const off = T.dotsOut[Math.min(T.dotsOut.length - 1, Math.floor(m / 2))];
-      return { x, y, k, on, off, sprite: this.props.dots[k % this.props.dots.length], rot: rng.next() * TAU, hidden: behindToday(x, y) };
+      return { x, y, k, on, off, sprite: this.props.dots[k % this.props.dots.length], rot: rng.next() * TAU, hidden: behindToday(x, y), edge: atLeftEdge(x, y) };
     }).filter((d) => !d.hidden);
     this.nDots = n;
 
@@ -154,8 +165,18 @@ export default {
         if (p > 0) PR.afterglow.glow.draw(ctx, ax, ay, { p });
       }
 
+      // A dot that the rim of yesterday's disc runs through is not drawn (a half dot standing out of the disc read as
+      // a stalk on an orange): ahead of the sun it goes a frame before the disc covers it, behind the sun it is there,
+      // whole, as soon as the disc has cleared it.
+      const rimLo = L.yesterday.r - L.arc.dotR - 2, rimHi = L.yesterday.r + L.arc.dotR + 3;
       for (const d of this.dots) {
         if (t < d.on - e || t >= d.off + 2 / 30 - e) continue;
+        if (sun && t < this.sunPath.tRest + 0.1) { const q = Math.hypot(d.x - sun.x, d.y - sun.y); if (q > rimLo && q < rimHi) continue; }
+        if (d.edge && t >= T.edgeOut - e && t < T.edgeIn - e) {
+          if (t < T.edgeOut + 2 / 30 - e) d.sprite.draw(ctx, d.x, d.y, { p: 0.5, rot: d.rot });   // half out for one step, then gone
+          continue;
+        }
+        if (d.edge && t >= T.edgeIn - e && t < T.edgeIn + 1 / 30 - e) { d.sprite.draw(ctx, d.x, d.y, { rot: d.rot, scale: 1.2 }); continue; }   // printed again
         if (t >= d.off - e) { d.sprite.draw(ctx, d.x, d.y, { p: 0.5, rot: d.rot }); continue; }   // half dabbed out for one step, then gone
         const first = t < d.on + 1 / 30 - e;                                                      // the press: one frame a little larger
         d.sprite.draw(ctx, d.x, d.y, first ? { rot: d.rot, scale: 1.2 } : { rot: d.rot });

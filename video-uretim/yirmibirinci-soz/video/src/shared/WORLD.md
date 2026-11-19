@@ -24,13 +24,13 @@ W.lightFloor                                 // world y: nothing lighter than he
 
 | # | plane | what the world draws | then calls |
 |---|---|---|---|
-| 1 | 0 / 0.15 | wall primer; sky dabs (complete from frame 0) | |
+| 1 | 0 / 0.15 | wall primer; the sky — a composed bake (complete from frame 0) | |
 | 2 | 1.0 | zone tints: dusk passes (left third), pre-dawn wash (right third) | |
-| 3 | 0.3 | small cloud c1 (from 0.07) | **`slots.back`** (1.0) — *extension*: behind today's sun |
-| 4 | 1.0 | today's sun from 8.77: warm sky pass, cobalt annulus, halo passes, disc, recede veil | **`slots.sky`** (1.0) |
+| 3 | 0.3 | small cloud c1 — baked but NOT shown since polish round 1 (see the notes) | **`slots.back`** (1.0) — *extension*: behind today's sun |
+| 4 | 1.0 | today's sun from 8.77: warm sky pass, cobalt annulus, halo passes, disc; from 16.83 / 16.93 its receded variant (paler disc + calm pale halo, dabbed over in two steps; the annulus' outer rim taken back into the sky) | **`slots.sky`** (1.0) |
 | 5 | 1.0 | tomorrow's dashed ring (+ its crumble specks), light column | **`slots.far`** (0.7) |
 | 6 | 0.5 / 0.7 | far ridge (opaque below its crest); mist bank | **`slots.mid`** (1.0) |
-| 7 | 1.0 | the mound (lit from 10.07); the man — **`slots.hands`** inside `man.draw`; hedge; leaf rosettes, buds / flowers | **`slots.front`** (1.0) |
+| 7 | 1.0 | the mound (lit from 10.07); the rosette leaves that pass behind his legs; the man — **`slots.hands`** inside `man.draw`; hedge (with the grass fringe over his soles); the other rosette leaves, buds / flowers | **`slots.front`** (1.0) |
 | 8 | 1.2 / screen | ambient specks (only where screen y < 1190) | **`slots.top`** (frame px) |
 
 main.js then applies `E.finish(ctx)`; the engine draws the glosses.
@@ -41,11 +41,13 @@ main.js then applies `E.finish(ctx)`; the engine draws the glosses.
 * `slots.sky` runs AFTER today's disc. Things that must sit behind today's sun (the course dots near the
   apex: k = 14, 15, 16 lie inside the disc) go into `slots.back`, or are simply not drawn while
   `W.state(t).sun.visible` — the veil cloud covers them before 8.77 anyway.
-* `slots.sky` is in front of the cobalt annulus and of the recede veil: hour-beads and clock-hand take
+* `slots.sky` is in front of the cobalt annulus and of the receded sun: hour-beads and clock-hand take
   their own receded variants at `L.T.sun.recede` (16.83 / 16.93), as the storyboard says.
 * `slots.far` is behind the far ridge (opaque from its crest + 20 px down) and behind the mist bank.
 * `slots.mid` is behind the mound, the man and the hedge (the hedge is opaque from lip + 9 px down, with
-  a 13 px sponge fringe above the lip line `L.lip(x)`); `slots.front` is in front of everything painted.
+  a 13 px sponge fringe above the lip line `L.lip(x)`; in front of his feet, x 478–626, it is a low grass
+  fringe instead: first tufts at y 1186–1196, opaque from y 1198 down at the latest — anything of yours
+  that stands on the ground there is covered from that row); `slots.front` is in front of everything painted.
 * Other planes: `W.withPlane(ctx, t, parallax, fn)` from `slots.top` (frame space) — or compute points
   with `W.toScreen(x, y, t, parallax)`.
 * Gloss windows: nothing you draw may be lighter than hedge_mid below screen y 1222 while a gloss is up
@@ -59,7 +61,7 @@ main.js then applies `E.finish(ctx)`; the engine draws the glosses.
 { coat2,                       // hedge / mound second coat, rosettes, buds, cloud c1 are on (0.07)
   man:   { p, warm },          // p = opening dab-in 0, 1/3, 2/3, 1 (0.13 / 0.20 / 0.27); warm 0 | 1 (10.07)
   specks,                      // ambient specks running (0.27)
-  cloud: { visible, x, y },    // layer px (parallax 0.3)
+  cloud: { visible, x, y },    // layer px (parallax 0.3); visible is always false since polish round 1
   dusk:  { sunset0, sunset1, dusk1, dusk2, recede },          // booleans; recede 0..2
   mist:  { build 0..2, thick 0..3 (1 after 16.47), recede 0..2, thinned, out 0..3, p (1 → 0 while it cross-dabs out), dx },
   ring:  { dashes 0..14, strength 0..1 (1 / .8 / .55 / .35 / .7 / 0), crumble 0..3, p, visible },
@@ -108,6 +110,32 @@ Typical uses: `W.state(t).ring.strength` (what crumbles at 16.57), `.sun.visible
 * Flowers end at world y ≤ 1210 (they open at 10.13, after the YARIN gloss), rosette leaves and the light
   prints of the hedge lip at ≤ `W.lightFloor`; the lit rise never shows below the lip.
 * Bare world for regression: scene `world` (`node tools/render.mjs still --scene world --t 11.4 …`).
+* **Polish round 1, as built** (the interface, the timeline and every layout number are unchanged):
+  * *His feet.* The hedge lip in front of him is a continuous fringe of small grass prints (nothing is cut
+    out round the legs). It hides his soles (y 1203.6; 1207.6 in the dip of the turn) and the lower part of
+    both shoes for every root of the film (rest, turn, half-step at root x 550); a few px of the toe caps
+    stay in sight above the grass. Rosette leaves that would cross the strip his legs can stand in
+    (x 482–620) are printed BEHIND him, whole; all others in front of the hedge as before.
+  * *Frame 0.* The first coat of mound and hedge is a painting of its own (two greens, shadow pockets,
+    a lip of mid-green tufts, primer in the fringe, the foreground thicket); the second coat (0.07) adds
+    lights, tone-on-tone leaf stencils, accents, rosettes and buds.
+  * *Hedge.* Slow value fall-off toward the lower edge and the far flanks, a nearer row of foliage and a
+    thicket of big dark leaf stencils in the strip under the gloss field (below world y ≈ 1660), very dark
+    blue-green accents, a lip of small lights in several tones — all light prints end above `W.lightFloor`,
+    everything below it is darker than hedge_mid.
+  * *Receded sun.* No speckle veil any more: `sprites.sun.far` (the disc painted once more in paler golds)
+    and `sprites.sun.haloFar` (one calm pale ring to r 150) are dabbed over the blazing ones at 16.83 / 16.93;
+    `sprites.sun.rimFar` takes the annulus' outer rim back into the sky (the bead band r 188–232 keeps its
+    cobalt). `sprites.sun.receded` / `.veil` remain as aliases.
+  * *Far ridge.* Two ranges in three tone passes, top fringe of uneven height (never lower than before;
+    solid from crest + 20 px as before, so yesterday's sun sets behind it unchanged).
+  * *Sky.* An own layered bake (`E.makeSpongeTexture`) driven by composition maps in sky-layer px
+    (`skyMap` in world.js): cobalt in a few masses of prints of three sizes, a calm light-blue passage
+    wherever his head, the deed and the coin palm lie in any framing, primer only in deliberate islands
+    low at both flanks and beside the apex — never near a frame corner. It does not depend on `E.makeSky`.
+  * *Cloud c1* is not drawn (`SHOW_CLOUD_C1 = false` in world.js; `state.cloud.visible` stays false): on its
+    storyboard track only a corner-cut fragment of it is ever in frame, which read as a hole in the sky.
+  * *Lit rise.* More of the yellow-green light shows on the crown between the flowers from 10.07.
 * Ambient specks never print over his head: a keep-clear zone round world (540, 697) (alpha 0 inside 50 px,
   full from 82 px, both times the zoom) — a pale fleck on the plain face read as a blemish at CLOSE.
 * Integration checks of the film scene (from `video/`): `node out/world/integ.mjs cam | place | events | palms |

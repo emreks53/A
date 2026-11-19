@@ -151,12 +151,12 @@ export function makeRug(E, W, U) {
     a.core = E.makeGlow({ rx: 34, ry: 56, color: '#FFFDF6', core: '#FFFFFF', density: 0.88, falloff: 0.55, seed: 2414 });
     // --- LINK 1: one soft bloom of the niche's own light (dab-in and back)
     a.bloom = E.makeCluster({
-      points: [{ x: 0, y: 0, r: 150, rx: 122, ry: 150 }], anchor: [0, 0], seed: 2415, edgeSoftness: 0.85,
+      points: [{ x: 0, y: 0, r: 166, rx: 134, ry: 166 }], anchor: [0, 0], seed: 2415, edgeSoftness: 0.85,
       reveal: { steps: 2, mode: 'mask', order: 'radial', from: [0, 0], dab: 80 },
       layers: [
-        { color: P('door_glow'), coverage: 0.5, size: 54, stamps: 'body', pores: 0.4 },
-        { color: P('niche_glow'), coverage: 0.6, size: 46, stamps: 'body', pores: 0.3, band: [0.25, 1] },
-        { color: '#FFFDF6', coverage: 0.8, size: 44, stamps: 'body', pores: 0.3, band: [0.5, 1] },
+        { color: P('door_glow'), coverage: 0.68, size: 54, stamps: 'body', pores: 0.4 },
+        { color: P('niche_glow'), coverage: 0.7, size: 46, stamps: 'body', pores: 0.3, band: [0.3, 1] },
+        { color: '#FFFDF6', coverage: 0.86, size: 44, stamps: 'body', pores: 0.3, band: [0.55, 1] },
       ],
     });
     return a;

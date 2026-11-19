@@ -27,10 +27,11 @@ const HANDS = {
   // (hanging arm: +Y points to the body; arm pointing outward: +Y points down). palm = palm centre.
   // The sleeve's cuff (r 11 round the wrist) is drawn over the first 6-11 px of every hand.
   rest: {
-    // relaxed, hanging, seen edge-on: finger tips curl a little toward the body, the thumb is a gentle bulge on the body side
+    // relaxed, hanging: the palm widest at the thumb, which lies along the index finger and ends in a shallow notch; below
+    // it the fingers are one narrower block whose tips curl a little toward the body
     palm: [22, 0],
-    pts: [[-7, -8.6], [4, -9.8], [15, -10.9], [27, -11.1], [37.5, -10.1], [45.8, -7.2], [51.2, -2.2], [52.4, 3.6], [49.4, 8.2], [43.4, 10.2], [36.6, 10.2],
-      [31.4, 11.4], [26.4, 13.6], [19.6, 14.6], [12.4, 13.4], [5, 10.8], [-7, 8.6]],
+    pts: [[-7, -8.6], [4, -9.6], [14, -10.4], [24, -10.6], [33, -9.8], [41, -7.6], [47.4, -3.8], [51, 1], [51.4, 5.4], [48.6, 8.8], [43.6, 9.8], [38.4, 9.2],
+      [34.6, 9.4], [32.6, 12], [29, 14.2], [24, 14.8], [17.6, 14], [10.6, 12.2], [3.6, 10.2], [-7, 8.6]],
   },
   open: {
     // the mitten: fingers together as one tapered block, a short round thumb standing off at about 45 deg
@@ -39,10 +40,11 @@ const HANDS = {
       [32, 13.4], [35, 16.6], [38.2, 20.8], [39.4, 25.2], [36.8, 28.6], [32, 28.2], [26.6, 24.4], [20.4, 19.8], [14, 16.2], [7.6, 13.2], [1, 10.6], [-7, 9]],
   },
   cupped: {
-    // seen from the side, palm up: a shallow bowl - thick heel, the thumb a low lobe leaning forward, fingers rising gently to the tip
+    // seen from the side, palm up: a shallow bowl - thick heel, the thumb rising from the wrist and leaning forward to a
+    // round tip, the fingers one block rising gently to a blunt tip
     palm: [31, -2],
-    pts: [[-7, 9], [6, 11.2], [18, 12.6], [30, 12.4], [41.6, 10.4], [51.4, 6.6], [58.8, 1], [63.6, -5.6], [65.2, -10.8], [62.6, -14.4], [58, -12.6], [52.4, -8], [46, -4.4], [39, -2.6], [31, -2], [26, -3],
-      [27.6, -6.8], [27.6, -10.8], [24, -13.8], [18, -14.2], [11, -12.4], [3.6, -9.8], [-7, -9]],
+    pts: [[-7, 9], [5, 11], [17, 12.4], [29, 12.4], [40, 10.8], [49.6, 7.6], [57, 3], [62.6, -2.6], [65.6, -8.4], [65.4, -13], [61.8, -15.2], [57.6, -13.4], [53, -9], [47, -5.4],
+      [40, -3.2], [33, -2.4], [29, -3.2], [29.6, -6.6], [29.6, -10.6], [27, -13.8], [22.6, -14.4], [17, -12.6], [10, -10.6], [2, -9.4], [-7, -9]],
   },
   closed: {
     palm: [18, 0],
@@ -72,7 +74,8 @@ const dirOf = (deg) => [Math.sin(deg * DEG), Math.cos(deg * DEG)];        // 0 =
 const angOf = (x, y) => Math.atan2(x, y) / DEG;
 const wrap180 = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
 
-const SIDE_ARM = { elbow: 5, fa: 0.93, min: 3 };   // the upper arm of a hand held at his side (see man.reach)
+const HANG = 11;                     // deg: the upper arm of the hanging arm (REST.a) - by itself no reach brings it further in
+const SIDE_ARM = { elbow: HANG, fa: 0.84, min: 3 };   // the upper arm of a hand held at his side (see man.reach)
 const MINF = 0.34;                   // the shortest a foreshortened arm segment is ever drawn (x its length)
 const ARM0 = { a: 0, fa: 1, b: 0, fb: 1, w: 0, hand: 'rest', flip: 1, pin: 0 };
 const HEAD0 = { pitch: 0, tilt: 0, turn: 0, x: 0, y: 0 };
@@ -213,9 +216,10 @@ function solveArm(T, { hand, flip, handAngle = null, wrist = 0, elbow = null, fa
     let aa = Math.cos(c1 * DEG) >= Math.cos(c2 * DEG) ? c1 : c2;         // default: the lower elbow
     if (bend === 'out') aa = c1; else if (bend === 'in') aa = c2;
     aa = wrap180(aa);
-    // the upper arm never swings inward of the vertical by itself (it would lie inside the torso and the forearm would seem
-    // to grow out of the waist): from there on it hangs straight down and the forearm is foreshortened - continuous at a = 0
-    if (bend === null && aa < 0 && fa0 === 1) return forced(0, 1);
+    // the upper arm never swings inward of where it hangs in the rest pose by itself (it would lie on the torso and the
+    // forearm would seem to grow out of the waist): from there on it stays where it hangs - sky between arm and waist, as
+    // in neutral - and the forearm is foreshortened instead (continuous with the planar solution at a = HANG)
+    if (bend === null && aa < HANG && fa0 === 1) return forced(HANG, 1);
     if (bend === null && (aa < -16 || aa > 150)) return forced(2, fa0);  // elbow would cross the body: hang it instead
     const e = dirOf(aa), v = [W[0] - L1 * e[0], W[1] - L1 * e[1]];
     return { a: aa, fa: 1, b: wrap180(angOf(v[0], v[1]) - aa), fb: 1 };
@@ -809,10 +813,11 @@ export async function makeMan(E, opts = {}) {
   POSES.back_head_bowed_to_ground = P0({ head: head({ pitch: 8 }) });
   POSES.back_nod = P0({ head: head({ pitch: 3 }), shy: 1.5 });
   POSES.back_right_palm_receive = man.reach(P0({ head: head({ turn: 0.6, tilt: 4, pitch: 3 }) }), 'R', [720, 830], { hand: 'cupped', handAngle: 94 });
-  POSES.back_coin_held_at_side = man.reach(back, 'R', [660, 880], { hand: 'hold', handAngle: 100, flip: -1, elbow: 5, fa: 0.93 });
-  POSES.back_turned_right = man.reach(P0({ sh: -4, head: head({ turn: 1 }) }), 'R', [660, 880], { hand: 'hold', handAngle: 100, flip: -1, elbow: 5, fa: 0.93 });
-  POSES.back_coin_shown = man.reach(P0({ sh: -4, head: head({ turn: 1 }) }), 'R', [668, 872], { hand: 'open', handAngle: 108, flip: -1, elbow: 5, fa: 0.93 });
-  POSES.back_wind_up = man.reach(P0({ sh: -4, lean: -1, root: { x: 0, y: 4 }, head: head({ turn: 1 }) }), 'R', [655, 900], { hand: 'open', handAngle: 84, flip: -1, elbow: 4, fa: 0.9 });
+  const SIDE = { elbow: SIDE_ARM.elbow, fa: SIDE_ARM.fa };            // "held at his side": the upper arm hangs as in neutral, the elbow drawn back
+  POSES.back_coin_held_at_side = man.reach(back, 'R', [660, 880], { hand: 'hold', handAngle: 100, flip: -1, ...SIDE });
+  POSES.back_turned_right = man.reach(P0({ sh: -4, head: head({ turn: 1 }) }), 'R', [660, 880], { hand: 'hold', handAngle: 100, flip: -1, ...SIDE });
+  POSES.back_coin_shown = man.reach(P0({ sh: -4, head: head({ turn: 1 }) }), 'R', [668, 872], { hand: 'open', handAngle: 108, flip: -1, ...SIDE });
+  POSES.back_wind_up = man.reach(P0({ sh: -4, lean: -1, root: { x: 0, y: 4 }, head: head({ turn: 1 }) }), 'R', [655, 900], { hand: 'open', handAngle: 84, flip: -1, ...SIDE });
   POSES.back_release = man.reach(P0({ sh: 2, lean: 0.6, step: 1, root: { x: G.stepHips, y: 0 }, head: head({ turn: 1 }) }), 'R', [720, 820], { hand: 'open', handAngle: 110, flip: -1 });
   POSES.back_follow_through = man.reach(P0({ sh: 3, step: 1, root: { x: G.stepHips, y: 0 }, head: head({ turn: 1 }) }), 'R', [755, 800], { hand: 'open', handAngle: 102, flip: -1 });
   POSES.back_final_stand = P0({ sh: -4, step: 1, root: { x: G.stepHips, y: 0 }, head: head({ turn: 1 }) });

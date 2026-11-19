@@ -23,7 +23,7 @@ export function makeActing(E, W, U) {
   const RECV_AT = C.right_palm_receive;                  // (720, 830)
   const recvOpts = { hand: 'cupped', handAngle: 94 };
   const RECV = M.reach(P.back_neutral, 'R', RECV_AT, recvOpts);
-  const ANTIC = M.mix(P.back_neutral, RECV, -0.05);      // a breath of counter-move before the forearm rises
+  const ANTIC = M.mix(P.back_neutral, RECV, -0.035);      // a breath of counter-move before the forearm rises
   const SIDE = P.back_coin_held_at_side, SIDE_T = P.back_turned_right;
   const SHOWN = M.reach(P.back_coin_shown, 'R', palmFor(C.shown_open_hand, 112), { hand: 'open', handAngle: 112, flip: -1, elbow: -10 });
   const WIND = M.reach(P.back_wind_up, 'R', palmFor(C.wind_up, 84), { hand: 'open', handAngle: 84, flip: -1, elbow: -13 });
@@ -33,21 +33,31 @@ export function makeActing(E, W, U) {
   const armL = (pose, da) => ({ ...pose, armL: { ...pose.armL, a: pose.armL.a + da } });
 
   // ------------------------------------------------------------------ arms + stance
+  // eases: a raise that starts softly, overshoots about 7 % and settles (back.out starts at full speed: with the
+  // overlap rule it put the whole raise into three frames — a pop); the forward half of the swing accelerates
+  // into the release at about the coin's own leaving speed (44 px per frame)
+  const softBack = (u) => { const v = u * u - 1, s = 1.4; return 1 + (s + 1) * v * v * v + s * v * v; };
+  const swingIn = (u) => Math.pow(u, 1.6);
   const main = M.track([
-    k(366, P.back_neutral), k(438, P.back_neutral),
-    k(441, ANTIC, e.sine.inOut),                                         // 14.60 a small give …
-    k(448, RECV, e.back.out),                                            // 14.67 → palm up at chest height (720, 830), settled 15.07
+    k(366, P.back_neutral), k(437, P.back_neutral),
+    k(440, ANTIC, e.sine.inOut),                                         // 14.57–14.67 a small give (counter-move) …
+    k(449, RECV, softBack),                                              // 14.67 → palm up at chest height (720, 830): upper arm 440–449, forearm +2 f, hand +2 f (settled 15.10)
     k(473, RECV), k(478, SIDE, e.sine.inOut),                            // 15.77–16.07 closes over the coin, draws it in to his side
     k(482, SIDE), k(492, SIDE_T, e.sine.inOut),                          // 16.07–16.40 turns toward the right column
-    k(660, SIDE_T), k(661, SHOWN),                                       // 22.00–22.17 the hand opens where it is
+    k(660, SIDE_T),
   ], { overlap: 2 });
+  // 22.00 → 22.97: ONE small motion each, too quick for the overlap rule (plain track: the whole arm together)
   const cast = M.track([
+    k(660, SIDE_T), k(665, SHOWN, e.sine.inOut),                         // 22.00–22.17 the hand opens where it is, palm-out
     k(666, SHOWN), k(669, armL(WIND, -2.5), e.sine.inOut),               // 22.20–22.30 dips back to (655, 900), body dips 4 px
-    k(673, armL(REL, 3.5), e.quad.in),                                   // 22.43 RELEASE at (720, 820) with the half-step
+    k(673, armL(REL, 3.5), swingIn),                                     // 22.43 RELEASE at (720, 820) with the half-step
     k(677, armL(FOLLOW, 2), e.cubic.out),                                // 22.57 follows through, hand open, to (755, 800)
-    k(689, armL(FOLLOW, 1)), k(702, FINAL, e.sine.inOut),                // 22.97–23.40 the arm sinks slowly; the hand-off pose
+    k(689, armL(FOLLOW, 1)),                                             // … and rests there a moment
   ]);
-  const SWING = 666 / fps - 1e-6;
+  // 22.97–23.40 the arm sinks slowly — relaxed, so with the overlap rule again: the upper arm leads, the forearm
+  // trails (a soft elbow), the hand arrives last, on the hand-off frame (702); 1.5 f per link keeps it slow
+  const sink = M.track([k(689, armL(FOLLOW, 1)), k(699, FINAL, e.sine.inOut)], { overlap: 1.5 });
+  const SHOW = 660 / fps - 1e-6, SINK = 689 / fps - 1e-6;
 
   // ------------------------------------------------------------------ head: {pitch, tilt, turn}
   const hv = (pitch, tilt, turn) => ({ pitch, tilt, turn, x: 0, y: 0 });
@@ -74,9 +84,9 @@ export function makeActing(E, W, U) {
   /** palm give under the hour (px), by frames since it lands */
   const dip = (n) => kf(n, [[0, 0], [1, 6.5], [2, 9], [3, 7.6], [5, 3], [7, 0], [9, -1.2], [12, 0]]);
   function pose(t) {
-    let p = t < SWING ? main(t) : cast(t);
+    let p = t < SHOW ? main(t) : t < SINK ? cast(t) : sink(t);
     const f = t * fps;
-    if (f >= 452 - 1e-6 && f <= 473 + 1e-6) {
+    if (f >= 454 - 1e-6 && f <= 473 + 1e-6) {
       // the hour on his palm: solve the arm on the giving palm (15.37: 9 px down, recovered by 15.60)
       const n = f - LAND;
       p = M.reach(p, 'R', [RECV_AT[0], RECV_AT[1] + (n > 0 ? dip(n) : 0)], { ...recvOpts, handAngle: recvOpts.handAngle + (n > 0 ? kf(n, [[0, 0], [2, 2.5], [6, 0]]) : 0) });
