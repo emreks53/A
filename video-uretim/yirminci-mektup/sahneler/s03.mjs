@@ -127,14 +127,15 @@ export default {
     const fr = rng(707);
     figurler = [];
     const ekle = (satir, x, y, s, tip, yon, poz) => figurler.push({ satir, x, y, s, tip, yon, poz, faz: fr() * TAU, kol: fr(), el: fr(), gec: fr() });
-    // A: orta tepede küçükler (sırtın biraz altında)
-    [[34, 0.25, 'on', 1, 'V', 34], [78, 0.235, 'on', 1, 'avuc', 22], [206, 0.27, 'yan', 1, 'uzan', 32], [250, 0.25, 'on', 1, 'V', 42],
-      [392, 0.28, 'on', 1, 'tek', 30], [436, 0.26, 'on', 1, 'V', 18], [470, 0.24, 'on', 1, 'avuc', 36], [628, 0.27, 'on', 1, 'V', 26],
-      [670, 0.25, 'yan', -1, 'gogus', 40], [806, 0.28, 'on', 1, 'avuc', 30], [850, 0.26, 'on', 1, 'V', 20], [952, 0.27, 'yan', -1, 'uzan', 26]]
+    // A: orta tepede küçükler (sırtın biraz altında). Komşular arası en az ~omuz + iki kol boyu (kollar kalkınca
+    // birbirinin gövdesine/başına girmesin); aralık düzensiz ki ızgara gibi durmasın.
+    [[30, 0.25, 'on', 1, 'V', 34], [112, 0.235, 'on', 1, 'avuc', 22], [200, 0.27, 'yan', 1, 'uzan', 32], [284, 0.25, 'on', 1, 'V', 42],
+      [370, 0.28, 'on', 1, 'tek', 30], [452, 0.26, 'on', 1, 'V', 18], [530, 0.24, 'on', 1, 'avuc', 36], [620, 0.27, 'on', 1, 'V', 26],
+      [702, 0.25, 'yan', -1, 'gogus', 40], [790, 0.28, 'on', 1, 'avuc', 30], [872, 0.26, 'on', 1, 'V', 20], [960, 0.27, 'yan', -1, 'uzan', 26]]
       .forEach(([x, s, tip, yon, poz, dy]) => ekle(0, x, tOrta.ust(x) + dy, s, tip, yon, poz));
-    // B: yakın tepede orta boy (ayaklar altyazı bandının üstünde)
-    [[96, 0.48, 'yan', 1, 'gogus', 1394], [298, 0.5, 'on', 1, 'avuc', 1374], [352, 0.46, 'on', 1, 'V', 1348], [562, 0.52, 'on', 1, 'tek', 1402],
-      [760, 0.48, 'on', 1, 'avuc', 1366], [812, 0.45, 'on', 1, 'V', 1342], [980, 0.5, 'yan', -1, 'uzan', 1390]]
+    // B: yakın tepede orta boy (ayaklar altyazı bandının üstünde); açılan kollar komşuya değmeyecek aralıkta
+    [[96, 0.48, 'yan', 1, 'gogus', 1394], [262, 0.5, 'on', 1, 'avuc', 1374], [404, 0.46, 'on', 1, 'V', 1348], [562, 0.52, 'on', 1, 'tek', 1402],
+      [714, 0.48, 'on', 1, 'avuc', 1366], [856, 0.45, 'on', 1, 'V', 1342], [990, 0.5, 'yan', -1, 'uzan', 1390]]
       .forEach(([x, s, tip, yon, poz, y]) => ekle(1, x, y, s, tip, yon, poz));
     // C: önde, alt köşelerde büyük iki figür (omuz üstü çekim)
     ekle(2, 150, 2090, 1.12, 'on', 1, 'V');
@@ -210,7 +211,8 @@ export default {
     const madalyonGuc = 0.62 * an(t, 16.6, 1.1, ease.inOutSine) + 0.5 * parla + 0.25 * nabiz;
     const saadet = an(t, T.parlak + 0.1, 1.0, ease.inOutSine);
     const sel = an(t, DALIS.bas + 0.22, 0.36, ease.inOutSine); // dalışta ışık seli
-    const zeminDalis = an(t, DALIS.bas + 0.42, 0.3, ease.inOutSine);
+    // ışık zemini manzarayı madalyon ekranı doldurmadan tamamen örter (soluk manzara hayaleti kalmasın)
+    const zeminDalis = an(t, DALIS.bas + 0.2, 0.28, ease.inOutSine);
     const zeminAlfa = Math.max(1 - geri, zeminDalis);
     const dunyaGorunur = zeminAlfa < 0.999;
 

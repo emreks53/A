@@ -40,7 +40,7 @@ const KAM = kameraYolu([
 const kamOnce = KAM(ITME.t0);
 const nurEkran0 = ekranda(kamOnce, NUR.x, NUR.y);
 
-function kamera(t) {
+export function kamera(t) {
   if (t < ITME.t0) return KAM(t);
   // itme: nurun ekrandaki merkezi (540, 900)'e kayarken yakınlaşma log uzayında artar; ardından yavaş oturma
   const e1 = an(t, ITME.t0, ITME.sure, ease.inOutCubic);
