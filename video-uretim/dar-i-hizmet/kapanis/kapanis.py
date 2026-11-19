@@ -30,18 +30,18 @@ import ayarlar as A  # noqa: E402
 CFG = {
     "tohum": 7,
     "lens": 75,
-    "pitch": 14.5,
+    "pitch": 10.5,               # daha onden bakis: ayni dikey aralikta konu daha genis
     "mesafe": 3.05,
     "hedef": [0.0, 0.18, 0.30],
-    "fstop": 4.0,
+    "fstop": 2.8,
     "samples": 64,
     "esik": 0.04,
     "rx": 540,
     "ry": 960,
     "dolly": 0.055,              # hareket boyunca mesafenin %5.5'i kadar yaklas
     "kaydir_v": -0.006,          # kamera kendi yukari ekseninde 6 mm asagi (cok hafif dikey suruklenme)
-    "hedef_kuran_ust": 0.107,    # kadraj: Kur'an ust kenari (ustten oran)
-    "hedef_lem_alt": 0.656,      # kadraj: Lem'alar on alt kenari
+    "hedef_kuran_ust": 0.060,    # kadraj: Kur'an ust kenari (ustten oran)
+    "hedef_lem_alt": 0.662,      # kadraj: Lem'alar + kurdele alt kenari (dolly sonunda da < 0.68 kalsin)
 }
 CFG_DOSYA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ayar.json")
 
@@ -105,7 +105,7 @@ def kamera_coz(cfg, sahne):
     for it in range(14):
         sahne.kamera_konum(cam, cfg, 0.0)
         k = kadraj_olc()
-        top, bot = k["kuran"]["y0"], k["lemalar"]["y1"]
+        top, bot = k["kuran"]["y0"], max(k["lemalar"]["y1"], k["kurdele"]["y1"])
         span, hspan = bot - top, cfg["hedef_lem_alt"] - cfg["hedef_kuran_ust"]
         cfg["mesafe"] *= (span / hspan) ** 0.9
         mid, hmid = (top + bot) / 2, (cfg["hedef_lem_alt"] + cfg["hedef_kuran_ust"]) / 2
@@ -152,9 +152,72 @@ def render_kare(path, cfg, t=0.0, z_pass=False):
     return dt
 
 
+def maske_render(path):
+    """Olcum maskesi (her kitabin sirt derisi ayri gri seviye) - sahne kurulduktan sonra cagrilir."""
+    import bpy
+    import sahne
+    sc = bpy.context.scene
+    sahne.maske_modu()
+    sc.render.dither_intensity = 0.0
+    sc.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+
+
+def _hex(c):
+    return "#%02X%02X%02X" % tuple(int(round(float(x) * 255)) for x in c)
+
+
+def sirt_olc(img_path, mask_path, erode=1, yaz=True):
+    """Sirt derisi piksellerinin (yaldiz ve cevresi haric) golge / orta / parlak tonlari.
+    Parlaklik yuzdeliklerine gore: golge P5-P15, orta P40-P60, parlak P90-P98 bandlarinin ortalama rengi."""
+    import colorsys
+    import cv2
+    import numpy as np
+    im = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32)
+    im /= 65535.0 if im.max() > 255 else 255.0
+    mk = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    if mk.shape != im.shape[:2]:
+        mk = cv2.resize(mk, (im.shape[1], im.shape[0]), interpolation=cv2.INTER_NEAREST)
+    lab = np.rint(mk / 15.0).astype(int) - 1
+    sirali = A.UST_SIRA + A.ALT_SIRA + [A.YATAN]
+    hsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
+    Hh, Ss = hsv[..., 0], hsv[..., 1]
+    yaldiz = (Hh >= 26.5) & (lab >= 0)
+    yaldiz = cv2.dilate(yaldiz.astype(np.uint8), np.ones((3, 3), np.uint8), iterations=max(1, erode + 1)).astype(bool)
+    lum = im @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+    ker = np.ones((3, 3), np.uint8)
+    tum = np.zeros(lab.shape, bool)
+    kitap = {}
+    for i, a in enumerate(sirali):
+        m = (lab == i).astype(np.uint8)
+        if erode:
+            m = cv2.erode(m, ker, iterations=erode)
+        m = m.astype(bool) & ~yaldiz
+        if m.sum() < 20:
+            continue
+        tum |= m
+        kitap[a] = _hex(np.median(im[m], axis=0))
+
+    def bant(m, lo, hi):
+        L = lum[m]
+        a, b = np.percentile(L, lo), np.percentile(L, hi)
+        sel = m & (lum >= a) & (lum <= b)
+        c = im[sel].mean(0)
+        h, s_, v = colorsys.rgb_to_hsv(*c)
+        return dict(hex=_hex(c), h=round(h * 360, 1), s=round(s_, 3), v=round(v, 3), n=int(sel.sum()))
+    out = dict(golge=bant(tum, 5, 15), orta=bant(tum, 40, 60), parlak=bant(tum, 90, 98),
+               piksel=int(tum.sum()), kitap=kitap,
+               en_parlak_kanal=float(np.percentile(im[tum].max(1), 99.9)))
+    if yaz:
+        for k in ("golge", "orta", "parlak"):
+            print(f"SIRT {k:7s} {out[k]['hex']}  h={out[k]['h']:5.1f}  s={out[k]['s']:.3f}  v={out[k]['v']:.3f}")
+        print("SIRT kitap medyanlari", json.dumps(kitap, ensure_ascii=False))
+    return out
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "test"
-    ek = json.loads(sys.argv[2]) if len(sys.argv) > 2 else None
+    ek = json.loads(sys.argv[2]) if len(sys.argv) > 2 and cmd != "olc" else None
     os.makedirs(A.TEST, exist_ok=True)
     os.makedirs(A.KARELER, exist_ok=True)
     if cmd in ("varlik", "hepsi"):
@@ -171,6 +234,12 @@ def main():
         ad = cfg.get("ad", "deneme")
         dt = render_kare(os.path.join(A.TEST, ad + ".png"), cfg, cfg.get("t", 0.0))
         print(f"SURE {dt:.1f}s")
+        if cfg.get("maske", True):
+            maske_render(os.path.join(A.TEST, ad + "_maske.png"))
+            sirt_olc(os.path.join(A.TEST, ad + ".png"), os.path.join(A.TEST, ad + "_maske.png"))
+    if cmd == "olc":
+        # python3 kapanis.py olc <goruntu.png> <maske.png>
+        sirt_olc(sys.argv[2], sys.argv[3], erode=int(sys.argv[4]) if len(sys.argv) > 4 else 1)
     if cmd == "zaman":
         cfg = cfg_yukle(dict(ek or {}, rx=1080, ry=1920, samples=128, esik=0.02))
         sahne, sc, k = kur(cfg)

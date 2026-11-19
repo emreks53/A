@@ -7,6 +7,7 @@ import math
 import os
 import random
 import sys
+import zlib
 
 import bpy  # noqa: I001  (bmesh, bpy'den sonra yuklenmeli)
 import bmesh
@@ -25,7 +26,7 @@ BASAMAK_D = 0.260        # her basamak derinligi
 H1 = 0.055               # alt basamak yuksekligi
 H2 = H1 + 0.150          # ust basamak yuksekligi (~13-15 cm fark)
 SIRT_PAY = 0.006         # kitap sirtlarinin basamak on kenarindan geride durusu
-DUVAR_Y = 1.15           # arka duvar
+DUVAR_Y = 1.45           # arka duvar (cfg "duvar_y"; derin alan bulanikligi icin geride)
 SOL_DUVAR_X = -1.30      # pencereli sol duvar
 LEM_Y_ARKA = -0.010      # yatan Lem'alar'in agiz tarafi (kaideye yakin)
 
@@ -210,6 +211,15 @@ class Malzeme:
         b.l(cmm.outputs["Color"], c1b.inputs["B"])
         b.l(c1b.outputs["Result"], hsv.inputs["Color"])
         renk_s = hsv.outputs["Color"]
+        # kitaba ozgu ton sapmasi: nesne ozelligi "ton" (RGB, carpimsal sapma; yoksa 0 -> degisiklik yok)
+        aton = b.n("ShaderNodeAttribute", (x0 + 1100, 900), attribute_type="OBJECT", attribute_name="ton")
+        bir = b.n("ShaderNodeVectorMath", (x0 + 1250, 900), operation="ADD")
+        bir.inputs[1].default_value = (1.0, 1.0, 1.0)
+        b.l(aton.outputs["Vector"], bir.inputs[0])
+        tmul = b.n("ShaderNodeVectorMath", (x0 + 1400, 800), operation="MULTIPLY")
+        b.l(renk_s, tmul.inputs[0])
+        b.l(bir.outputs["Vector"], tmul.inputs[1])
+        renk_s = tmul.outputs["Vector"]
         if kenar_asinma:
             # kapak kenarlarina yakin koyulasma: UV (u: dis yol boyu, v: z), nesne ozellikleri u_tot, H
             sepu = b.n("ShaderNodeSeparateXYZ", (x0 + 200, -800))
@@ -280,14 +290,22 @@ class Malzeme:
 
     def _altin(self, b, normal_s, loc, tc):
         g = b.n("ShaderNodeBsdfPrincipled", loc)
-        g.inputs["Base Color"].default_value = srgb(cfgG.get("altin", "#D3A759"))
+        g.inputs["Base Color"].default_value = srgb(cfgG.get("altin", "#C2913E"))
         g.inputs["Metallic"].default_value = 1.0
         nz = b.n("ShaderNodeTexNoise", (loc[0] - 400, loc[1] - 300), i_Scale=600.0, i_Detail=3.0)
         b.l(tc.outputs["Object"], nz.inputs["Vector"])
-        mr = b.n("ShaderNodeMapRange", (loc[0] - 200, loc[1] - 300), i_To_Min=0.20, i_To_Max=0.36)
+        r0, r1 = cfgG.get("altin_puruz", (0.10, 0.28))
+        mr = b.n("ShaderNodeMapRange", (loc[0] - 200, loc[1] - 300), i_To_Min=r0, i_To_Max=r1)
         b.l(nz.outputs["Fac"], mr.inputs["Value"])
         b.l(mr.outputs["Result"], g.inputs["Roughness"])
-        b.l(normal_s, g.inputs["Normal"])
+        # varak kirisikligi: ~0.7 mm'lik faset normalleri -> gunes altinda kucuk parilti noktalari
+        vr = b.n("ShaderNodeTexVoronoi", (loc[0] - 400, loc[1] - 550), feature="F1", i_Scale=cfgG.get("altin_faset", 1000.0))
+        b.l(tc.outputs["Object"], vr.inputs["Vector"])
+        bp = b.n("ShaderNodeBump", (loc[0] - 200, loc[1] - 550), i_Strength=cfgG.get("altin_kirisik", 0.65),
+                 i_Distance=0.00004)
+        b.l(vr.outputs["Distance"], bp.inputs["Height"])
+        b.l(normal_s, bp.inputs["Normal"])
+        b.l(bp.outputs["Normal"], g.inputs["Normal"])
         return g
 
     def deri(self, ad, renk, koyu, kenar=False, kuran=False):
@@ -506,7 +524,7 @@ class Malzeme:
         return m
 
     def ahsap(self, ad, varlik, tint, scale, rough_mul=1.0, coat=0.0, normal_str=0.6, rot90=False,
-              kazanc=1.0, doygunluk=1.0, kontrast=1.0):
+              kazanc=1.0, doygunluk=1.0, kontrast=1.0, ton_kayma=0.0):
         key = ("ahsap", ad)
         if key in self.cache:
             return self.cache[key]
@@ -528,6 +546,7 @@ class Malzeme:
         mx.inputs["B"].default_value = tuple(min(4.0, c * kazanc) for c in tint[:3]) + (1.0,)
         hs = b.n("ShaderNodeHueSaturation", (-600, 200))
         hs.inputs["Saturation"].default_value = doygunluk
+        hs.inputs["Hue"].default_value = 0.5 + ton_kayma
         b.l(d.outputs["Color"], hs.inputs["Color"])
         if kontrast != 1.0:
             # ortalama etrafinda kontrast azalt: c' = m + (c - m) * k
@@ -556,6 +575,155 @@ class Malzeme:
         self.cache[key] = m
         return m
 
+    def masa(self, varlik, tint, olcek, kazanc=2.3, doygunluk=0.85, kontrast=0.8, coat=0.3, normal_str=0.35):
+        """Masa ustu kaplamasi: tekrar etmeyen mese.
+        - iki farkli olcek/kaydirmali ornekleme, damar boyunca uzanan yaprak (leaf) maskesiyle karisir
+        - damarlar dumduz degil: capraz yonde dusuk frekansli dalgalanma
+        - genis olcekli ton farki, hafif asinma (mat/parlak bolgeler), seyrek toz zerreleri
+        UV (kutu_uv, metre): U = dunya y (damara dik), V = dunya x (damar boyu)."""
+        m = yeni_mat("masa")
+        b = NB(m)
+        tc = b.n("ShaderNodeTexCoord", (-2200, 0))
+        sep = b.n("ShaderNodeSeparateXYZ", (-2000, 0))
+        b.l(tc.outputs["UV"], sep.inputs["Vector"])
+        # damar dalgalanmasi (U'ya, V boyunca degisen kucuk kayma)
+        cw = b.n("ShaderNodeCombineXYZ", (-2000, -250))
+        b.l(sep.outputs["X"], cw.inputs["X"])
+        b.l(sep.outputs["Y"], cw.inputs["Y"])
+        mw = b.n("ShaderNodeMapping", (-1850, -250))
+        mw.inputs["Scale"].default_value = (2.2, 0.55, 1.0)
+        b.l(cw.outputs["Vector"], mw.inputs["Vector"])
+        nzw = b.n("ShaderNodeTexNoise", (-1650, -250), i_Scale=1.0, i_Detail=2.0, i_Roughness=0.5)
+        b.l(mw.outputs["Vector"], nzw.inputs["Vector"])
+        wa = b.n("ShaderNodeMath", (-1450, -250), operation="MULTIPLY_ADD")
+        wa.inputs[1].default_value = 0.016
+        wa.inputs[2].default_value = -0.008
+        b.l(nzw.outputs["Fac"], wa.inputs[0])
+        ua = b.n("ShaderNodeMath", (-1300, -100), operation="ADD")
+        b.l(sep.outputs["X"], ua.inputs[0])
+        b.l(wa.outputs["Value"], ua.inputs[1])
+        cuv = b.n("ShaderNodeCombineXYZ", (-1150, 0))
+        b.l(ua.outputs["Value"], cuv.inputs["X"])
+        b.l(sep.outputs["Y"], cuv.inputs["Y"])
+        s = 1.0 / olcek
+        mpa = b.n("ShaderNodeMapping", (-950, 150))
+        mpa.inputs["Scale"].default_value = (s, s, s)
+        mpb = b.n("ShaderNodeMapping", (-950, -150))
+        mpb.inputs["Scale"].default_value = (s * 0.86, s * 0.86, s)
+        mpb.inputs["Location"].default_value = (0.37, 0.61, 0.0)
+        mpb.inputs["Rotation"].default_value = (0.0, 0.0, math.pi)
+        b.l(cuv.outputs["Vector"], mpa.inputs["Vector"])
+        b.l(cuv.outputs["Vector"], mpb.inputs["Vector"])
+        imgs = {}
+        for k, mp_, yy in (("a", mpa, 400), ("b", mpb, -400)):
+            for har, data in (("Diffuse", False), ("Rough", True), ("nor_gl", True)):
+                t = b.n("ShaderNodeTexImage", (-700, yy), image=resim(V.yol(varlik, har), data=data))
+                b.l(mp_.outputs["Vector"], t.inputs["Vector"])
+                imgs[(k, har)] = t
+                yy -= 260
+        # yaprak maskesi: damar boyunca uzun, damara dik ~18-25 cm genislikte duzensiz seritler
+        mm = b.n("ShaderNodeMapping", (-1150, -700))
+        mm.inputs["Scale"].default_value = (4.6, 0.35, 1.0)
+        b.l(cuv.outputs["Vector"], mm.inputs["Vector"])
+        nzm = b.n("ShaderNodeTexNoise", (-950, -700), i_Scale=1.0, i_Detail=1.5, i_Roughness=0.4)
+        b.l(mm.outputs["Vector"], nzm.inputs["Vector"])
+        msk = b.n("ShaderNodeMapRange", (-750, -700), i_From_Min=0.47, i_From_Max=0.53)
+        b.l(nzm.outputs["Fac"], msk.inputs["Value"])
+        F = msk.outputs["Result"]
+
+        def karis(har, dt, loc):
+            mx = b.n("ShaderNodeMix", loc, data_type=dt)
+            b.l(F, mx.inputs["Factor"])
+            b.l(imgs[("a", har)].outputs["Color"], mx.inputs["A"])
+            b.l(imgs[("b", har)].outputs["Color"], mx.inputs["B"])
+            return mx.outputs["Result"]
+        dif = karis("Diffuse", "RGBA", (-400, 300))
+        rgh = karis("Rough", "FLOAT", (-400, -100))
+        nor = karis("nor_gl", "RGBA", (-400, -400))
+        hs = b.n("ShaderNodeHueSaturation", (-250, 300))
+        hs.inputs["Saturation"].default_value = doygunluk
+        b.l(dif, hs.inputs["Color"])
+        mxk = b.n("ShaderNodeMix", (-100, 350), data_type="RGBA")
+        mxk.inputs["Factor"].default_value = 1.0 - kontrast
+        mxk.inputs["B"].default_value = (0.25, 0.19, 0.13, 1.0)
+        b.l(hs.outputs["Color"], mxk.inputs["A"])
+        mx = b.n("ShaderNodeMix", (50, 300), data_type="RGBA", blend_type="MULTIPLY")
+        mx.inputs["Factor"].default_value = 1.0
+        mx.inputs["B"].default_value = tuple(min(4.0, c * kazanc) for c in tint[:3]) + (1.0,)
+        b.l(mxk.outputs["Result"], mx.inputs["A"])
+        # genis olcekli ton farki (yaprak yapraga ve bolgesel), +-%3
+        nzt = b.n("ShaderNodeTexNoise", (-400, 650), i_Scale=1.3, i_Detail=2.0)
+        b.l(tc.outputs["Object"], nzt.inputs["Vector"])
+        mrt = b.n("ShaderNodeMapRange", (-200, 650), i_From_Min=0.3, i_From_Max=0.7, i_To_Min=0.965, i_To_Max=1.03)
+        b.l(nzt.outputs["Fac"], mrt.inputs["Value"])
+        mrt2 = b.n("ShaderNodeMapRange", (-200, 800), i_To_Min=0.985, i_To_Max=1.015)
+        b.l(F, mrt2.inputs["Value"])
+        tm = b.n("ShaderNodeMath", (0, 700), operation="MULTIPLY")
+        b.l(mrt.outputs["Result"], tm.inputs[0])
+        b.l(mrt2.outputs["Result"], tm.inputs[1])
+        cmt = b.n("ShaderNodeCombineColor", (150, 700))
+        for ch in ("Red", "Green", "Blue"):
+            b.l(tm.outputs["Value"], cmt.inputs[ch])
+        mxt = b.n("ShaderNodeMix", (300, 300), data_type="RGBA", blend_type="MULTIPLY")
+        mxt.inputs["Factor"].default_value = 1.0
+        b.l(mx.outputs["Result"], mxt.inputs["A"])
+        b.l(cmt.outputs["Color"], mxt.inputs["B"])
+        # asinma: kullanilan bolgelerde cila matlasir, renk cok hafif acilir
+        nza = b.n("ShaderNodeTexNoise", (-400, -800), i_Scale=2.2, i_Detail=3.0, i_Roughness=0.6)
+        b.l(tc.outputs["Object"], nza.inputs["Vector"])
+        wear = b.n("ShaderNodeMapRange", (-200, -800), i_From_Min=0.52, i_From_Max=0.68)
+        b.l(nza.outputs["Fac"], wear.inputs["Value"])
+        # toz: seyrek, alt-milimetrik acik zerreler
+        vt = b.n("ShaderNodeTexVoronoi", (-400, -1100), feature="F1", i_Scale=110.0, i_Randomness=1.0)
+        b.l(tc.outputs["Object"], vt.inputs["Vector"])
+        dlt = b.n("ShaderNodeMath", (-200, -1050), operation="LESS_THAN")
+        dlt.inputs[1].default_value = 0.055
+        b.l(vt.outputs["Distance"], dlt.inputs[0])
+        sepc = b.n("ShaderNodeSeparateColor", (-200, -1200))
+        b.l(vt.outputs["Color"], sepc.inputs["Color"])
+        sec = b.n("ShaderNodeMath", (-50, -1200), operation="GREATER_THAN")
+        sec.inputs[1].default_value = 0.90
+        b.l(sepc.outputs["Red"], sec.inputs[0])
+        toz = b.n("ShaderNodeMath", (100, -1100), operation="MULTIPLY")
+        b.l(dlt.outputs["Value"], toz.inputs[0])
+        b.l(sec.outputs["Value"], toz.inputs[1])
+        tozf = b.n("ShaderNodeMath", (250, -1100), operation="MULTIPLY")
+        tozf.inputs[1].default_value = 0.55
+        b.l(toz.outputs["Value"], tozf.inputs[0])
+        cw2 = b.n("ShaderNodeMix", (450, 300), data_type="RGBA")
+        cw2.inputs["B"].default_value = (0.80, 0.78, 0.74, 1.0)
+        b.l(mxt.outputs["Result"], cw2.inputs["A"])
+        b.l(tozf.outputs["Value"], cw2.inputs["Factor"])
+        # puruzluluk: doku * 0.9, asinmada +0.10, tozda 0.9
+        rm = b.n("ShaderNodeMath", (-100, -100), operation="MULTIPLY")
+        rm.inputs[1].default_value = 0.9
+        b.l(rgh, rm.inputs[0])
+        rw = b.n("ShaderNodeMath", (50, -200), operation="MULTIPLY_ADD")
+        rw.inputs[1].default_value = 0.10
+        b.l(wear.outputs["Result"], rw.inputs[0])
+        b.l(rm.outputs["Value"], rw.inputs[2])
+        rt = b.n("ShaderNodeMix", (250, -200), data_type="FLOAT")
+        rt.inputs["B"].default_value = 0.9
+        b.l(rw.outputs["Value"], rt.inputs["A"])
+        b.l(toz.outputs["Value"], rt.inputs["Factor"])
+        nmap = b.n("ShaderNodeNormalMap", (100, -450), i_Strength=normal_str)
+        b.l(nor, nmap.inputs["Color"])
+        bs = b.n("ShaderNodeBsdfPrincipled", (700, 0))
+        b.l(cw2.outputs["Result"], bs.inputs["Base Color"])
+        b.l(rt.outputs["Result"], bs.inputs["Roughness"])
+        b.l(nmap.outputs["Normal"], bs.inputs["Normal"])
+        bs.inputs["Specular IOR Level"].default_value = 0.5
+        if coat > 0:
+            cwm = b.n("ShaderNodeMath", (450, -600), operation="MULTIPLY_ADD")
+            cwm.inputs[1].default_value = -0.45 * coat
+            cwm.inputs[2].default_value = coat
+            b.l(wear.outputs["Result"], cwm.inputs[0])
+            b.l(cwm.outputs["Value"], bs.inputs["Coat Weight"])
+            bs.inputs["Coat Roughness"].default_value = 0.20
+        out = b.n("ShaderNodeOutputMaterial", (1000, 0))
+        b.l(bs.outputs["BSDF"], out.inputs["Surface"])
+        return m
+
     def duvar(self):
         m = yeni_mat("duvar")
         b = NB(m)
@@ -574,7 +742,7 @@ class Malzeme:
         b.l(bw.outputs["Val"], mr.inputs["Value"])
         mx = b.n("ShaderNodeMix", (-150, 200), data_type="RGBA", blend_type="MULTIPLY")
         mx.inputs["Factor"].default_value = 1.0
-        mx.inputs["A"].default_value = srgb("#EFE3CF")
+        mx.inputs["A"].default_value = srgb(cfgG.get("duvar_renk", "#EDE8E0"))
         cm = b.n("ShaderNodeCombineColor", (-250, 50))
         for ch in ("Red", "Green", "Blue"):
             b.l(mr.outputs["Result"], cm.inputs[ch])
@@ -625,8 +793,14 @@ class Malzeme:
 
 
 # ===================================================================== kitap
-RENK_DERI = srgb("#C39282")       # cok acik, solgun gul-taba deri (kalibre edilir)
-RENK_KOYU = srgb("#946A5E")
+RENK_DERI = srgb("#B08676")       # cok acik, solgun gul-taba (acik kahveye kayan) deri; render'da kalibre edildi
+RENK_KOYU = srgb("#865D4F")       # bas/kuyruk ve kenar asinmasi
+# Birkac kitabin derisi digerlerinden cok az farkli (ayri parti deri / yillanma): dogrusal RGB carpimsal sapma
+TON = {
+    "Mektubat": (0.070, 0.085, 0.100),          # biraz daha solgun / acik
+    "Asâ-yı Mûsâ": (-0.050, -0.075, -0.095),    # biraz daha derin, kahveye yakin
+    "Barla Lâhikası": (0.025, -0.020, -0.015),  # cok hafif daha gul
+}
 RENK_SAYFA = srgb("#E9DCC3")
 RENK_ARKA_KAGIT = srgb("#EDE2CB")
 RENK_KURAN = srgb("#E7DDCA")       # inci / fildisi beyazi deri
@@ -703,25 +877,38 @@ def cilt_mesh(ad, T, H, D, bt, front_face_side=+1):
     return bm, info
 
 
-def sayfa_bloku(T, H, D, p, kare=0.003):
+def sayfa_bloku(T, H, D, p, kare=0.003, rnd=None):
     bt, ys, st = p["bt"], p["ys"], p["st"]
     x0, x1 = -T / 2 + bt + 0.0002, T / 2 - bt - 0.0002
     y0 = st + ys * 0.55
     y1 = D - kare
     z0, z1 = kare, H - kare
     bm = kutu_bm(x0, x1, y0, y1, z0, z1)
-    # sirt tarafi hafif dis bukey (yuvarlatilmis sirt)
-    for v in bm.verts:
-        if abs(v.co.y - y0) < 1e-6:
-            pass
+    if rnd is not None:
+        # sayfa bloku ust/alt yuzeyi kusursuz duz degil: ortada cok hafif cokme + kucuk dalga (0.1-0.4 mm)
+        bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=6, use_grid_fill=True)
+        a1 = rnd.uniform(0.00012, 0.00038)
+        a2 = rnd.uniform(0.00005, 0.00014)
+        ph = rnd.uniform(0.0, 2 * math.pi)
+        egim = rnd.uniform(-0.00020, 0.00020)
+        for v in bm.verts:
+            tx = (v.co.x - x0) / (x1 - x0)
+            ty = (v.co.y - y0) / (y1 - y0)
+            if abs(v.co.z - z1) < 1e-7:
+                v.co.z += -a1 * math.sin(math.pi * tx) * (0.55 + 0.45 * ty) + a2 * math.sin(5.0 * ty + ph) + egim * (ty - 0.5)
+            elif abs(v.co.z - z0) < 1e-7:
+                v.co.z += 0.5 * a1 * math.sin(math.pi * tx) * ty
+        bm.normal_update()
     return bm, (x0, x1, y0, y1, z0, z1)
 
 
 class KitapUretici:
     def __init__(self, M):
         self.M = M
-        self.m_deri = M.deri("deri_kapak", RENK_DERI, RENK_KOYU)
-        self.m_kenar = M.deri("deri_kenar", RENK_DERI, RENK_KOYU, kenar=True)
+        self.renk = srgb(cfgG["deri"]) if cfgG.get("deri") else RENK_DERI
+        self.koyu = srgb(cfgG["deri_koyu"]) if cfgG.get("deri_koyu") else RENK_KOYU
+        self.m_deri = M.deri("deri_kapak", self.renk, self.koyu)
+        self.m_kenar = M.deri("deri_kenar", self.renk, self.koyu, kenar=True)
         self.m_ic = M.kagit("ic_kagit", RENK_ARKA_KAGIT)
         self.m_sayfa = M.kagit("sayfa", RENK_SAYFA)
         self.m_kaptal = M.kaptal("kaptal", srgb("#EADFC8"), srgb("#8B3A3F"))
@@ -730,20 +917,21 @@ class KitapUretici:
         T = A.kalinlik(ad)
         H, D = A.KITAP_H, A.KITAP_D
         bm, info = cilt_mesh(ad, T, H, D, 0.0027)
-        m_sirt = self.M.sirt(ad, png, info["u_s0"], info["arc"], H, RENK_DERI, RENK_KOYU)
+        m_sirt = self.M.sirt(ad, png, info["u_s0"], info["arc"], H, self.renk, self.koyu)
         root = bpy.data.objects.new("kitap_" + A.DOSYA[ad], None)
         bpy.context.scene.collection.objects.link(root)
         m_on = self.m_deri
         if ad == A.YATAN:
             p_ = info["p"]
             m_on = self.M.kor_kapak("lemalar_on", os.path.join(A.DOKU, "lemalar_kapak.png"), info["u_k0"],
-                                    H * 0 + (D - p_["ys"] - p_["gw"]), H, RENK_DERI, RENK_KOYU)
+                                    H * 0 + (D - p_["ys"] - p_["gw"]), H, self.renk, self.koyu)
         cov = obj_yap("cilt_" + A.DOSYA[ad], bm, [self.m_deri, m_sirt, self.m_ic, self.m_kenar, m_on])
         bevel(cov, 0.0007, 3)
         cov["u_tot"] = info["u_tot"]
         cov["H"] = H
+        cov["ton"] = TON.get(ad, (0.0, 0.0, 0.0))
         cov.parent = root
-        bm2, (x0, x1, y0, y1, z0, z1) = sayfa_bloku(T, H, D, info["p"])
+        bm2, (x0, x1, y0, y1, z0, z1) = sayfa_bloku(T, H, D, info["p"], rnd=random.Random(zlib.crc32(ad.encode("utf-8"))))
         pb = obj_yap("sayfa_" + A.DOSYA[ad], bm2, [self.m_sayfa])
         bevel(pb, 0.00035, 2)
         pb.parent = root
@@ -762,15 +950,17 @@ class KitapUretici:
 
 # ================================================================ sahne kur
 def sahne_kur(cfg):
+    global DUVAR_Y
     cfgG.clear(); cfgG.update(cfg)
+    DUVAR_Y = cfg.get("duvar_y", 1.45)
     temizle()
     sc = bpy.context.scene
     M = Malzeme()
     KU = KitapUretici(M)
 
-    # ---------------- masa
-    m_masa = M.ahsap("masa", cfg.get("masa_doku", "white_oak_veneer"), srgb(cfg.get("masa_ton", "#F6E9DA")), 1.0 / cfg.get("masa_olcek", 0.5), rough_mul=0.9, coat=cfg.get("masa_cila", 0.32), normal_str=0.35,
-                     kazanc=cfg.get("masa_kazanc", 2.3), doygunluk=0.85, kontrast=0.8)
+    # ---------------- masa (tekrarsiz mese kaplama)
+    m_masa = M.masa(cfg.get("masa_doku", "white_oak_veneer"), srgb(cfg.get("masa_ton", "#F4EEE2")), cfg.get("masa_olcek", 0.85),
+                    kazanc=cfg.get("masa_kazanc", 2.3), doygunluk=0.85, kontrast=0.8, coat=cfg.get("masa_cila", 0.32), normal_str=0.35)
     bm = kutu_bm(-2.2, 2.2, -3.2, DUVAR_Y, -0.03, 0.0)
     kutu_uv(bm, ofs=(0.37, 0.11))
     masa = obj_yap("masa", bm, [m_masa], smooth=False)
@@ -782,8 +972,8 @@ def sahne_kur(cfg):
     obj_yap("duvar", bm, [m_duvar], smooth=False)
 
     # ---------------- basamakli kaide (iki parca)
-    m_kaide = M.ahsap("kaide", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#C4AE9E")), 1.0 / 1.0, rough_mul=0.85, coat=0.25, normal_str=0.5,
-                      rot90=True, doygunluk=0.72)
+    m_kaide = M.ahsap("kaide", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#B9A797")), 1.0 / 1.0, rough_mul=0.85, coat=0.25, normal_str=0.5,
+                      rot90=True, doygunluk=cfg.get("ceviz_doygunluk", 0.66), ton_kayma=cfg.get("ceviz_kayma", 0.012))
     w2 = KAIDE_W / 2
     bm = kutu_bm(-w2, w2, 0.0, BASAMAK_D, 0.0, H1)
     kutu_uv(bm, ofs=(0.13, 0.41))
@@ -940,7 +1130,7 @@ def kuran_ve_rahle(M, KU, cfg):
     cov["H"] = H
     bevel(cov, 0.0009, 3)
     cov.parent = root
-    bm2, (x0, x1, y0, y1, z0, z1) = sayfa_bloku(T, H, D, p)
+    bm2, (x0, x1, y0, y1, z0, z1) = sayfa_bloku(T, H, D, p, rnd=random.Random(29))
     pb = obj_yap("kuran_sayfa", bm2, [m_sayfa])
     bevel(pb, 0.0004, 2)
     pb.parent = root
@@ -955,8 +1145,8 @@ def kuran_ve_rahle(M, KU, cfg):
     # --- Egik cerceve (L-birimi) yerel uzayi: kitap y in [-T,0] (on yuz -T), z in [0,H]
     lean = math.radians(cfg.get("kuran_egim", 15.0))
     yaw = math.radians(cfg.get("kuran_yaw", 4.5))
-    m_ahsap = M.ahsap("rahle", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#C4AE9E")), 1.0, rough_mul=0.8, coat=0.3, normal_str=0.5,
-                      rot90=True, doygunluk=0.72)
+    m_ahsap = M.ahsap("rahle", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#B9A797")), 1.0, rough_mul=0.8, coat=0.3, normal_str=0.5,
+                      rot90=True, doygunluk=cfg.get("ceviz_doygunluk", 0.66), ton_kayma=cfg.get("ceviz_kayma", 0.012))
     # L-birimi sinirlari (yerel)
     RW = 0.226
     sirt_d = 0.011
@@ -996,6 +1186,55 @@ def kuran_ve_rahle(M, KU, cfg):
 
 
 # ================================================================ isiklar
+def kelvin(K):
+    """Yaklasik siyah cisim rengi (dogrusal RGB)."""
+    t = K / 100.0
+    if t <= 66:
+        r = 255
+        g = 99.4708025861 * math.log(t) - 161.1195681661
+        b = 0 if t <= 19 else 138.5177312231 * math.log(t - 10) - 305.0447927307
+    else:
+        r = 329.698727446 * ((t - 60) ** -0.1332047592)
+        g = 288.1221695283 * ((t - 60) ** -0.0755148492)
+        b = 255
+    c = [max(0, min(255, v)) / 255 for v in (r, g, b)]
+    return tuple(((x / 12.92) if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4) for x in c)
+
+
+def gunes_yonu(cfg):
+    """Sahneden gunese birim vektor. gunes_yuk: yukseklik acisi, gunes_az: -x ekseninden kameraya (-y) dogru."""
+    el = math.radians(cfg.get("gunes_yuk", 22.0))
+    az = math.radians(cfg.get("gunes_az", 26.0))
+    return Vector((-math.cos(el) * math.cos(az), -math.cos(el) * math.sin(az), math.sin(el)))
+
+
+def pencere_izi(P, L):
+    """P noktasini aydinlatan gunes isininin sol duvar (pencere) duzlemini kestigi (y, z)."""
+    s = (SOL_DUVAR_X - P[0]) / L.x
+    return P[1] + s * L.y, P[2] + s * L.z
+
+
+def pencere_tasarimi(cfg):
+    """Pencere acikligi, dikmeler, kayitlar ve tul perdenin kenari: golgelerinin sahnede nereye
+    dusecegi (hedef noktalar) verilerek gunes yonune gore hesaplanir."""
+    L = gunes_yonu(cfg)
+    dy = DUVAR_Y
+    on = cfg.get("pen_on_hedef", (-0.75, -1.9, 0.0))          # on pervaz golgesi bu noktanin onunde kalir
+    arka = cfg.get("pen_arka_hedef", (-1.0, dy, 0.6))         # arka pervaz golgesi duvarda bu noktada
+    ust = cfg.get("pen_ust_hedef", (0.42, dy, 1.02))          # ust pervaz golge kenari duvarda bu noktadan gecer
+    ya = pencere_izi(on, L)[0] - 0.05
+    yb = pencere_izi(arka, L)[0]
+    zb = pencere_izi(ust, L)[1]
+    za = cfg.get("pen_alt", 0.20)
+    # dikme: ust siranin sag kismina (Mesnevi..Kastamonu) yumusak dikey golge bandi + sag duvarda bir bant
+    dik = [pencere_izi(P, L)[0] for P in cfg.get("dikme_hedef", [(0.075, 0.28, 0.38), (0.36, dy, 0.55)])]
+    # kayit: alt siranin ust kismini ve kaide onunu capraz kesen yumusak golge (duvarda sol tarafta devam eder)
+    kay = [pencere_izi(P, L)[1] for P in cfg.get("kayit_hedef", [(0.0, 0.0, 0.235)])]
+    ph = cfg.get("perde_hedef", (-0.10, 0.62, 0.62))
+    perde_y = pencere_izi(ph, L)[0] if ph else None
+    return dict(L=L, ya=ya, yb=yb, za=za, zb=zb, dikmeler=dik, kayitlar=kay, perde_y=perde_y)
+
+
 def isiklar(cfg):
     sc = bpy.context.scene
     w = bpy.data.worlds.new("dunya")
@@ -1009,7 +1248,7 @@ def isiklar(cfg):
     env = nt.nodes.new("ShaderNodeTexEnvironment")
     env.image = bpy.data.images.load(V.yol("brown_photostudio_05", "hdri"), check_existing=True)
     bg = nt.nodes.new("ShaderNodeBackground")
-    bg.inputs["Strength"].default_value = cfg.get("hdri_guc", 0.08)
+    bg.inputs["Strength"].default_value = cfg.get("hdri_guc", 0.04)
     out = nt.nodes.new("ShaderNodeOutputWorld")
     nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
     nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
@@ -1030,99 +1269,101 @@ def isiklar(cfg):
         ob.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
         return ob
 
-    def kelvin(K):
-        # yaklasik siyah cisim rengi (lineer)
-        t = K / 100.0
-        if t <= 66:
-            r = 255
-            g = 99.4708025861 * math.log(t) - 161.1195681661
-            b = 0 if t <= 19 else 138.5177312231 * math.log(t - 10) - 305.0447927307
-        else:
-            r = 329.698727446 * ((t - 60) ** -0.1332047592)
-            g = 288.1221695283 * ((t - 60) ** -0.0755148492)
-            b = 255
-        c = [max(0, min(255, v)) / 255 for v in (r, g, b)]
-        return tuple(((x / 12.92) if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4) for x in c)
-
-    # ana yumusak isik (sol on ust; buyuk difuzor / pencere yansimasi)
-    # ana isik: sol duvardaki genis pencereden gelen gok isigi (pencere acikligini dolduran alan isigi)
-    ya, yb = cfg.get("pencere_y", (-2.0, 0.85))
-    za, zb = cfg.get("pencere_z", (0.12, 1.90))
-    pen = alan("ana", (SOL_DUVAR_X + 0.09, (ya + yb) / 2, (za + zb) / 2), (5.0, (ya + yb) / 2, (za + zb) / 2),
-               (yb - ya) * 0.98, (zb - za) * 0.98, cfg.get("ana_guc", 340), kelvin(6200))
+    P = pencere_tasarimi(cfg)
+    cfgG["_pencere"] = P
+    ya, yb, za, zb = P["ya"], P["yb"], P["za"], P["zb"]
+    # gok isigi: pencere acikligini dolduran serin, genis alan isigi (golgelerdeki yumusak dolgu)
+    pen = alan("gok", (SOL_DUVAR_X + 0.09, (ya + yb) / 2, (za + zb) / 2), (5.0, (ya + yb) / 2, (za + zb) / 2),
+               (yb - ya) * 0.98, (zb - za) * 0.98, cfg.get("gok_guc", 60), kelvin(cfg.get("gok_k", 8000)))
     pen.rotation_euler = Euler((0.0, math.radians(90.0), 0.0), "XYZ")    # -Z -> +x
     pen.data.size, pen.data.size_y = (zb - za) * 0.98, (yb - ya) * 0.98
-    # sag dolgu (krem duvardan yansima gibi)
-    alan("dolgu", (1.3, -0.6, 0.55), (0.0, 0.2, 0.25), 1.2, 1.0, cfg.get("dolgu_guc", 5), kelvin(5000))
-    # sag-on beyaz yansitici (bounce kart)
-    alan("kart", (0.95, -1.45, 0.45), (0.0, 0.15, 0.25), 1.0, 1.0, cfg.get("kart_guc", 11), kelvin(5600))
-    # kamera tarafindan cok hafif on dolgu
-    alan("on", (0.25, -2.4, 0.7), (0.0, 0.0, 0.25), 1.4, 0.6, cfg.get("on_guc", 0), kelvin(5200))
+    # sag taraftaki krem duvar/perde yansimasi (dusuk: golge tarafi derinlesir)
+    alan("dolgu", (1.3, -0.6, 0.55), (0.0, 0.2, 0.25), 1.2, 1.0, cfg.get("dolgu_guc", 0.8), kelvin(5600))
+    alan("kart", (0.95, -1.45, 0.45), (0.0, 0.15, 0.25), 1.0, 1.0, cfg.get("kart_guc", 1.0), kelvin(5800))
+    # kameranin arkasindaki acik renkli oda (duvar/tavan yansimasi): golgeleri notr ve yumusak doldurur
+    if cfg.get("on_guc", 50) > 0:
+        on = alan("on", (0.35, -3.2, 1.0), (0.0, 0.1, 0.25), cfg.get("on_en", 2.6), cfg.get("on_boy", 1.6), cfg.get("on_guc", 50),
+                  kelvin(cfg.get("on_k", 7000)))
+        if cfg.get("on_duvar_haric", True):
+            # arka duvar bu dolgudan pay almaz: duvardaki gunes lekeleri ile golge arasi oran gercekci kalir
+            col = bpy.data.collections.new("on_alici")
+            for o in sc.objects:
+                if o.type == "MESH" and o.name != "duvar":
+                    col.objects.link(o)
+            on.light_linking.receiver_collection = col
 
-    # gunes (sabah, sol ust): sol duvardaki pencereden girer. Isik baglama ile iki bileşen:
-    #  - duvar gunesi: arka duvarda pencere kasasi/kayit desenli yumusak lekeler
-    #  - Kur'an gunesi: kapagi yalayan (sıyırarak gelen) yumusak isik; kitaplar ve masa golgede.
-    def gunes(ad, yon, guc, alicilar):
-        ld = bpy.data.lights.new(ad, "SUN")
-        ld.energy = guc
-        ld.angle = math.radians(cfg.get("gunes_aci", 2.8))
-        ld.color = kelvin(4400)
-        sun = bpy.data.objects.new(ad, ld)
-        sc.collection.objects.link(sun)
-        d = Vector(yon).normalized()
-        sun.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
-        col = bpy.data.collections.new(ad + "_alici")
-        for o in sc.objects:
-            if o.name.startswith(alicilar):
-                col.objects.link(o)
-        sun.light_linking.receiver_collection = col
-        return sun
-    gunes("gunes_duvar", cfg.get("gunes_yon", (0.79, 0.44, -0.40)), cfg.get("gunes_guc", 10.0), ("duvar",))
-    gunes("gunes_kuran", cfg.get("gunes2_yon", (0.92, 0.18, -0.35)), cfg.get("gunes2_guc", 13.0),
-          ("kuran", "rahle_sirt", "rahle_raf", "rahle_dudak"))
-    sol_duvar(cfg)
+    # sabah gunesi: sol pencereden alcak acida giren tek gunes (isik baglama yok): duvara, kaideye,
+    # kitaplara ve masaya kasa/kayit ve tul perde golgeleriyle (yari golgeli) duser.
+    ld = bpy.data.lights.new("gunes", "SUN")
+    ld.energy = cfg.get("gunes_guc", 10.0)
+    ld.angle = math.radians(cfg.get("gunes_aci", 1.2))
+    # ~4400 K'lik sabah gunesi, biraz altin sariya kaydirilmis (blackbody seftali tonu yerine)
+    ld.color = srgb(cfg.get("gunes_renk", "#FFDCB0"))[:3]
+    try:
+        ld.cycles.max_bounces = 1024
+    except Exception:
+        pass
+    sun = bpy.data.objects.new("gunes", ld)
+    sc.collection.objects.link(sun)
+    sun.rotation_euler = (-P["L"]).to_track_quat("-Z", "Y").to_euler()
+    sol_duvar(cfg, P)
 
 
-def sol_duvar(cfg):
-    """Pencereli sol duvar (kadraj disi): gunes isigini pencere kasasi/kayit golgeleriyle sinirlar."""
+def sol_duvar(cfg, P):
+    """Pencereli sol duvar (kadraj disi, kameraya gorunmez): gunesi kasa, dikme, kayit ve tul perdeyle sinirlar."""
     x = SOL_DUVAR_X
-    ya, yb = cfg.get("pencere_y", (-2.0, 0.85))
-    za, zb = cfg.get("pencere_z", (0.12, 1.90))
-    dikmeler = cfg.get("dikmeler", (-1.05, 0.0, 0.62))
-    kayitlar = cfg.get("kayitlar", (0.90, 1.45))
+    ya, yb, za, zb = P["ya"], P["yb"], P["za"], P["zb"]
+    dw, kw = cfg.get("dikme_en", 0.050), cfg.get("kayit_en", 0.045)
     bm = bmesh.new()
 
     def dik(y0, y1, z0, z1):
         vs = [bm.verts.new((x, y, z)) for (y, z) in ((y0, z0), (y1, z0), (y1, z1), (y0, z1))]
-        f = bm.faces.new(vs)
-        return f
-    Y0, Y1, Z0, Z1 = -3.2, DUVAR_Y, -0.05, 2.6
+        return bm.faces.new(vs)
+    Y0, Y1, Z0, Z1 = -4.5, DUVAR_Y, -0.05, 3.2
+    m_sd = Malzeme.basit(None, "sol_duvar_m", srgb("#E9DFCF"), 0.9)
+    # duvar (10 cm pervaz derinligi)
     dik(Y0, ya, Z0, Z1)
     dik(yb, Y1, Z0, Z1)
     dik(ya, yb, Z0, za)
     dik(ya, yb, zb, Z1)
-    for ym in dikmeler:                          # dikey dikmeler
-        dik(ym - 0.024, ym + 0.024, za, zb)
-    for zk in kayitlar:                          # yatay kayitlar
-        dik(ya, yb, zk - 0.022, zk + 0.022)
-    for f in bm.faces:
-        if f.normal.x < 0:
-            f.normal_flip()
-    ob = obj_yap("sol_duvar", bm, [], smooth=False)
-    sol = ob.modifiers.new("kalinlik", "SOLIDIFY")
-    sol.thickness = 0.12
-    sol.offset = -1.0
-    ob.visible_camera = False
-    ob.data.materials.append(Malzeme.basit(None, "sol_duvar_m", srgb("#E9DFCF"), 0.9))
-    if cfg.get("perde", True):
+
+    def kalin(ad, t):
+        for f in bm.faces:
+            if f.normal.x < 0:
+                f.normal_flip()
+        ob = obj_yap(ad, bm, [], smooth=False)
+        sol = ob.modifiers.new("kalinlik", "SOLIDIFY")
+        sol.thickness = t
+        sol.offset = -1.0
+        ob.visible_camera = False
+        ob.data.materials.append(m_sd)
+        return ob
+    kalin("sol_duvar", 0.10)
+    # dograma: dikme ve kayitlar ince (3.5 cm derin) - golge genisligi egik isikta fazla buyumesin
+    bm = bmesh.new()
+    for ym in P["dikmeler"]:                     # dikey dikmeler
+        dik(ym - dw / 2, ym + dw / 2, za, zb)
+    for zk in P["kayitlar"]:                     # yatay kayitlar
+        dik(ya, yb, zk - kw / 2, zk + kw / 2)
+    if P["dikmeler"] or P["kayitlar"]:
+        kalin("dograma", cfg.get("dograma_derin", 0.035))
+    else:
+        bm.free()
+    py = P.get("perde_y")
+    if cfg.get("perde", True) and py is not None and py < yb:
+        # tul perde: pencerenin arka kismini (py..yb) kaplar; kivrimlar boyunca gecirgenlik degisir,
+        # on kenarinda toplanmis (daha yogun) bir pay vardir.
         bm = bmesh.new()
-        xp = x + 0.06
-        n = 40
+        xp = x + 0.07
+        y0p, y1p = py, yb + 0.08
+        n = max(24, int((y1p - y0p) / 0.012))
         rows = []
+        rr = random.Random(77)
+        faz = [rr.uniform(0, 6.28) for _ in range(3)]
         for i in range(n + 1):
-            y = ya + (yb - ya) * i / n
-            xx = xp + 0.012 * math.sin(i * 1.7) + 0.006 * math.sin(i * 0.53)
-            rows.append((bm.verts.new((xx, y, za)), bm.verts.new((xx, y, zb))))
+            y = y0p + (y1p - y0p) * i / n
+            xx = xp + 0.014 * math.sin(y * 52.0 + faz[0]) + 0.007 * math.sin(y * 19.0 + faz[1])
+            rows.append((bm.verts.new((xx, y, za - 0.06)), bm.verts.new((xx, y, zb + 0.10))))
         for i in range(n):
             bm.faces.new((rows[i][0], rows[i + 1][0], rows[i + 1][1], rows[i][1]))
         pob = obj_yap("perde", bm, [], smooth=True)
@@ -1130,20 +1371,36 @@ def sol_duvar(cfg):
         pob.visible_glossy = False
         pm = yeni_mat("perde_m")
         b = NB(pm)
-        tc = b.n("ShaderNodeTexCoord", (-900, 0))
-        wv = b.n("ShaderNodeTexWave", (-700, 0), wave_type="BANDS", bands_direction="Y", i_Scale=3.0,
-                 i_Distortion=2.5, i_Detail=2.0)
-        b.l(tc.outputs["Object"], wv.inputs["Vector"])
-        mr = b.n("ShaderNodeMapRange", (-500, 0), i_To_Min=cfg.get("perde_min", 0.62), i_To_Max=cfg.get("perde_max", 0.86))
+        tc = b.n("ShaderNodeTexCoord", (-1100, 0))
+        sp = b.n("ShaderNodeSeparateXYZ", (-950, 0))
+        b.l(tc.outputs["Object"], sp.inputs["Vector"])
+        # kivrim yogunlugu: y boyunca duzensiz bantlar (kumas kat sayisi), z boyunca cok yavas degisim
+        cm = b.n("ShaderNodeCombineXYZ", (-800, 0))
+        b.l(sp.outputs["Y"], cm.inputs["X"])
+        mz = b.n("ShaderNodeMath", (-950, -200), operation="MULTIPLY")
+        mz.inputs[1].default_value = 0.08
+        b.l(sp.outputs["Z"], mz.inputs[0])
+        b.l(mz.outputs["Value"], cm.inputs["Y"])
+        wv = b.n("ShaderNodeTexWave", (-650, 0), wave_type="BANDS", bands_direction="X", i_Scale=cfg.get("perde_sik", 5.5),
+                 i_Distortion=3.0, i_Detail=2.5, i_Detail_Scale=1.5)
+        b.l(cm.outputs["Vector"], wv.inputs["Vector"])
+        mr = b.n("ShaderNodeMapRange", (-450, 0), i_To_Min=cfg.get("perde_min", 0.12), i_To_Max=cfg.get("perde_max", 0.45))
         b.l(wv.outputs["Fac"], mr.inputs["Value"])
-        tr = b.n("ShaderNodeBsdfTransparent", (-200, 100))
-        tl = b.n("ShaderNodeBsdfTranslucent", (-200, -100))
-        tl.inputs["Color"].default_value = srgb("#FFF4E6")
-        ms = b.n("ShaderNodeMixShader", (100, 0))
-        b.l(mr.outputs["Result"], ms.inputs["Fac"])
-        b.l(tl.outputs["BSDF"], ms.inputs[1])
-        b.l(tr.outputs["BSDF"], ms.inputs[2])
-        out = b.n("ShaderNodeOutputMaterial", (300, 0))
+        # on kenarda toplanmis kumas: py'den itibaren ~6 cm daha yogun
+        hm = b.n("ShaderNodeMapRange", (-650, -300), i_From_Min=y0p + 0.012, i_From_Max=y0p + 0.07,
+                 i_To_Min=cfg.get("perde_kenar", 0.80), i_To_Max=0.0)
+        b.l(sp.outputs["Y"], hm.inputs["Value"])
+        mx = b.n("ShaderNodeMath", (-300, -100), operation="MAXIMUM")
+        b.l(mr.outputs["Result"], mx.inputs[0])
+        b.l(hm.outputs["Result"], mx.inputs[1])
+        tr = b.n("ShaderNodeBsdfTransparent", (-100, 100))
+        tl = b.n("ShaderNodeBsdfTranslucent", (-100, -100))
+        tl.inputs["Color"].default_value = srgb("#FFF6EA")
+        ms = b.n("ShaderNodeMixShader", (150, 0))
+        b.l(mx.outputs["Value"], ms.inputs["Fac"])
+        b.l(tr.outputs["BSDF"], ms.inputs[1])
+        b.l(tl.outputs["BSDF"], ms.inputs[2])
+        out = b.n("ShaderNodeOutputMaterial", (350, 0))
         b.l(ms.outputs["Shader"], out.inputs["Surface"])
         pob.data.materials.append(pm)
 
@@ -1159,7 +1416,7 @@ def kamera(cfg):
     cd.clip_start = 0.1
     cd.clip_end = 30
     cd.dof.use_dof = cfg.get("dof", True)
-    cd.dof.aperture_fstop = cfg.get("fstop", 4.0)
+    cd.dof.aperture_fstop = cfg.get("fstop", 2.8)
     cd.dof.aperture_blades = 7
     cd.dof.aperture_rotation = math.radians(12)
     cam = bpy.data.objects.new("kamera", cd)
@@ -1168,7 +1425,8 @@ def kamera(cfg):
     # odak: Lem'alar sirti / alt sira arasi
     odak = bpy.data.objects.new("odak", None)
     sc.collection.objects.link(odak)
-    odak.location = cfg.get("odak", (0.0, LEM_Y_ARKA - A.KITAP_D + 0.045, 0.02))
+    # f/2.8: Lem'alar ile alt sira arasinda (ikisi de keskin), ust sira hafif, duvar belirgin bulanik
+    odak.location = cfg.get("odak", (0.0, -0.045, 0.07))
     cd.dof.focus_object = odak
     kamera_konum(cam, cfg)
     return cam
@@ -1234,6 +1492,60 @@ def derinlik_modu():
     sc.render.image_settings.color_mode = "RGB"
 
 
+def maske_modu():
+    """Olcum maskesi: her kitabin sirt derisi kendi gri seviyesinde (8 bit PNG'de 15*(k+1)), digerleri siyah.
+    Isiklar kapali, DOF yok, piksel basina tek ornek (kenar karisimi yok)."""
+    sc = bpy.context.scene
+    sirali = A.UST_SIRA + A.ALT_SIRA + [A.YATAN]
+
+    def emis(ad, v):
+        m = yeni_mat(ad)
+        b = NB(m)
+        em = b.n("ShaderNodeEmission", (0, 0))
+        em.inputs["Color"].default_value = (v, v, v, 1.0)
+        em.inputs["Strength"].default_value = 1.0
+        out = b.n("ShaderNodeOutputMaterial", (200, 0))
+        b.l(em.outputs["Emission"], out.inputs["Surface"])
+        return m
+    siyah = emis("maske_siyah", 0.0)
+    for o in sc.objects:
+        if o.type != "MESH":
+            continue
+        k = None
+        for i, a in enumerate(sirali):
+            if o.name == "cilt_" + A.DOSYA[a]:
+                k = i
+        for slot in o.material_slots:
+            if k is not None and slot.material and slot.material.name.startswith("sirt_"):
+                p8 = 15.0 * (k + 1) / 255.0
+                lin = p8 / 12.92 if p8 <= 0.04045 else ((p8 + 0.055) / 1.055) ** 2.4
+                slot.material = emis("maske_%d" % k, lin)
+            else:
+                slot.material = siyah
+    sc.world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.0
+    for o in sc.objects:
+        if o.type == "LIGHT":
+            o.hide_render = True
+    sc.camera.data.dof.use_dof = False
+    sc.cycles.samples = 1
+    sc.cycles.use_adaptive_sampling = False
+    sc.cycles.use_denoising = False
+    sc.cycles.max_bounces = 0
+    sc.cycles.pixel_filter_type = "BOX"
+    sc.cycles.filter_width = 0.01
+    vs = sc.view_settings
+    vs.view_transform = "Standard"
+    vs.look = "None"
+    vs.exposure = 0.0
+    vs.gamma = 1.0
+    if hasattr(vs, "use_white_balance"):
+        vs.use_white_balance = False
+    sc.render.image_settings.file_format = "PNG"
+    sc.render.image_settings.color_depth = "8"
+    sc.render.image_settings.color_mode = "BW"
+    return sirali
+
+
 # ================================================================ render
 def render_ayar(cfg):
     sc = bpy.context.scene
@@ -1285,7 +1597,7 @@ def render_ayar(cfg):
     vs = sc.view_settings
     vs.view_transform = "AgX"
     vs.look = cfg.get("look", "AgX - Medium High Contrast")
-    vs.exposure = cfg.get("pozlama", 0.65)
+    vs.exposure = cfg.get("pozlama", 0.22)
     vs.gamma = 1.0
     if hasattr(vs, "use_white_balance"):
         vs.use_white_balance = cfg.get("beyaz_denge", False)

@@ -156,7 +156,7 @@ def manalari_ciz(R, V):
         izl = 0.01 + (1 - gir) * 0.035
         if L is None:
             L = _zemin_parlakligi(R)
-        k = float(np.clip((0.56 - L) / 0.14, 0.0, 1.0))  # 0: açık zemin (mürekkep), 1: koyu zemin (krem)
+        k = float(np.clip((0.70 - L) / 0.10, 0.0, 1.0))  # 0: açık zemin (mürekkep), 1: koyu zemin (krem)
         if k < 0.5:
             renk_, hale_r, hale = '#2D3247', '#F7F3EC', 0.85
         else:
