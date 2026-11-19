@@ -39,7 +39,14 @@ def plaka(i):
     im = cv2.cvtColor(im[..., :3], cv2.COLOR_BGR2RGB)
     if im.shape[0] != H or im.shape[1] != W:
         im = cv2.resize(im, (W, H), interpolation=cv2.INTER_AREA)
-    return im
+    return renk_duzelt(im)
+
+
+def renk_duzelt(P):
+    """Hafif beyaz dengesi (sıcak yansımayı azaltır: ciltler şeftaliden çok soluk gül / açık deri okunur) ve
+    yumuşak bir S eğrisi (kamerayla çekilmiş kontrast)."""
+    x = np.clip(P * np.array([0.975, 0.995, 1.035], np.float32), 0, 1)
+    return np.clip(x + 0.16 * (x - 0.5) * (1 - np.abs(2 * x - 1)), 0, 1)
 
 
 def _gren(kare_no):

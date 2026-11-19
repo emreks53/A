@@ -1026,6 +1026,57 @@ def _kume_durum(isk, durum, g, yaprak, sallanma):
     return sonuc
 
 
+def _agac_kenar_bosluklari(isk, tohum):
+    """Taç kenarına yakın 3-5 küçük gök boşluğu (olgun taçta; bütün yaprak katmanlarını deler, dalları değil).
+    Her boşluk içinde en derinde kaldığı kümeye bağlıdır: (küme sırası, dx/R, dy/R, r/R, blob tohumu) — küme
+    sallanır ya da büyürken boşluk onunla gider ve hep o kümenin içinde kalır. İskeletin rastgele dizisini
+    değiştirmez (ayrı üreteç); iskelette önbelleklenir."""
+    if 'bosluk_kenar' in isk:
+        return isk['bosluk_kenar']
+    durum, _ = _agac_durum(isk, 1.0, 0.0)
+    kum = _kume_durum(isk, durum, 1.0, 1.0, 0.0)
+    rng = np.random.default_rng(15485863 + tohum * 11)
+    sonuc = []
+    if kum:
+        ax = np.concatenate([q['pts'] for q in kum], 0)
+        f = 2.0  # birim / piksel
+        X0, Y0 = ax[:, 0].min() - 20, ax[:, 1].min() - 20
+        w_ = int((ax[:, 0].max() + 20 - X0) / f) + 1
+        h_ = int((ax[:, 1].max() + 20 - Y0) / f) + 1
+        U = np.zeros((h_, w_), np.uint8)
+        for q in kum:
+            cv2.fillPoly(U, [np.round((q['pts'] - [X0, Y0]) / f).astype(np.int32)], 1)
+        d_dis = cv2.distanceTransform(U, cv2.DIST_L2, 5) * f
+        ys_, xs_ = np.mgrid[0:h_, 0:w_]
+        Xg, Yg = X0 + xs_ * f, Y0 + ys_ * f
+        # tek bir kümenin içinde kalma payı (boşluk bağlandığı kümeyle hareket edince taç dışına taşmasın)
+        ic = np.full((h_, w_), -1e9, np.float32)
+        for q in kum:
+            np.maximum(ic, 0.84 * q['R'] - np.sqrt((Xg - q['x']) ** 2 + (Yg - q['y']) ** 2), out=ic)
+        tcx, tcy, trx, try_ = isk['tac']
+        hedef = int(rng.integers(3, 6))
+        secilen = []
+        for br in rng.uniform(14, 21, 16):
+            if len(secilen) >= hedef:
+                break
+            uygun = (d_dis > br * 1.6) & (d_dis < br * 1.6 + 46) & (ic > br * 1.15) & (Yg < tcy + try_ * 0.28)
+            for (sx, sy, _) in secilen:
+                uygun &= (Xg - sx) ** 2 + (Yg - sy) ** 2 > 190 ** 2
+            idx = np.flatnonzero(uygun)
+            if len(idx) == 0:
+                continue
+            j = int(idx[int(rng.integers(0, len(idx)))])
+            secilen.append((float(Xg.ravel()[j]), float(Yg.ravel()[j]), float(br)))
+        kumeler = isk['kumeler']
+        for (hx, hy, br) in secilen:
+            q = max(kum, key=lambda q: 0.84 * q['R'] - math.hypot(hx - q['x'], hy - q['y']))
+            ki = next(i for i, k in enumerate(kumeler) if k is q['ham'])
+            R = q['R']
+            sonuc.append((ki, (hx - q['x']) / R, (hy - q['y']) / R, br / R, int(rng.integers(0, 10 ** 5))))
+    isk['bosluk_kenar'] = sonuc
+    return sonuc
+
+
 def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yaprak=1.0, damla=0.0,
              sakla_sonra=True):
     isk = _agac_iskelet(tohum)
@@ -1205,6 +1256,30 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
             if izd is not None:
                 sl_, m_ = izd
                 np.maximum(B.S[sl_], m_ * 0.7, out=B.S[sl_])
+    # gök boşlukları: yalnız taç kenarına yakın 3-5 küçük, yumuşak kenarlı açıklık (koyu çekirdekte delik yok).
+    # Bütün yaprak katmanlarını deler (ön kümeler boyanmadan önce saklamaya ve silüet dışına yazılır); her boşluk
+    # bağlı olduğu kümeyle sallanır/büyür, kütle olgunlaştıkça yumuşakça açılır (sıçrama yok).
+    if kumeler:
+        kb = _agac_kenar_bosluklari(isk, tohum)
+        if kb:
+            harita = {id(q['ham']): q for q in kumeler}
+            olc_e = sc * math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2])))
+            dl, yum = [], []
+            for (ki, dxr, dyr, brr, bt) in kb:
+                q = harita.get(id(isk['kumeler'][ki]))
+                if q is None:
+                    continue
+                ag = q['w'] * sstep(0.62, 0.95, q['R'] / q['ham']['R']) * max(0.0, min(1.0, yaprak)) ** 0.5
+                ag *= sstep(0.55, 0.8, g)
+                if ag <= 0.06:
+                    continue
+                bx = q['x'] + dxr * q['R'] - sallanma * 0.2 * dyr * q['R']
+                by = q['y'] + dyr * q['R']
+                r_ = brr * q['R'] * ag
+                dl.append(EL.damla_blob(bx, by, 1.0, tohum=bt, duzensizlik=0.2, lob=5, rx=r_ * 1.18, ry=r_ * 0.86))
+                yum.append(min(6.0, max(1.0, 0.3 * r_ * olc_e)))
+            if dl:
+                B.sakla_yol(dl, Ms, yumusak=float(np.mean(yum)), delik=True)
     B.sakla(kume_boya(2, '#A2C98F', '#7FB383', 0.48, '#4E8466', 0.30, ust=0.45, acik=0.72, isik_g=0.3))
     B.sakla(kume_boya(1, '#8EBA8A', '#6EA27E', 0.50, '#477B63', 0.24, ust=0.45))
     yapraklari_boya()
@@ -1265,19 +1340,6 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
     B.sakla(iz_dal)
 
     # ------------------------------------------------------------------ arka kütle
-    # gök boşlukları (arka kütlede dalların göründüğü delikler)
-    if isk['bosluk'] and any(q['kat'] == 0 for q in kumeler):
-        dl = []
-        for (bx, by, br, bt) in isk['bosluk']:
-            # boşluk, çevresindeki kütle olgunlaştıkça açılır
-            ag = 0.0
-            for q in kumeler:
-                if q['kat'] == 0 and (q['x'] - bx) ** 2 + (q['y'] - by) ** 2 < (q['R'] * 0.8) ** 2:
-                    ag = max(ag, q['w'] * min(1.0, q['R'] / (q['ham']['R'] * 0.9)))
-            if ag > 0.05:
-                dl.append(EL.damla_blob(bx, by, br * ag * yaprak ** 0.5, tohum=bt, duzensizlik=0.18, lob=5))
-        if dl:
-            B.sakla_yol(dl, Ms, yumusak=1.0, delik=True)
     kume_boya(0, '#7FA592', '#6A977E', 0.56, '#3F6F5F', 0.20, acik=0.75, ust=0.35, isik_g=0.5)
 
     B.bitir(sakla_sonra=sakla_sonra)
@@ -1601,7 +1663,7 @@ def ciz_toprak_kesiti(t: Tuval, M, x0, x1, y_zemin, y_alt, tohum=0, cimen=True, 
 # çimen (ortak)
 # ================================================================================================================
 def _cimen_boya(B, M, x0, x1, y, yogunluk, sallanma, rng, boy=(14, 34), ince=False, renk1='#93B77F',
-                renk2='#6F9F72', golge='#4F7F5E', yog=0.55):
+                renk2='#6F9F72', golge='#4F7F5E', yog=0.55, duzensiz=0.0):
     """Zemin çizgisi boyunca çimen tutamları (yerel). Döner: lavi izi."""
     yollar, koyu = [], []
     L = x1 - x0
@@ -1611,6 +1673,13 @@ def _cimen_boya(B, M, x0, x1, y, yogunluk, sallanma, rng, boy=(14, 34), ince=Fal
         nb = int(rng.integers(3, 7))
         hb = rng.uniform(*boy)
         yy0 = y + (rng.uniform(-0.45, 0.45) * boy[1] if not ince else 0.0)  # tek sıra değil, dar bir bant
+        if duzensiz > 0:
+            # öbekler ve boşluklar: düşük frekanslı yoğunluk; y'de geniş oynama
+            yog_alan = 0.5 + 0.5 * math.sin(cx / 173.0 + 1.3 * (i % 7)) * math.sin(cx / 61.0 + 0.7)
+            if rng.random() > 0.30 + 0.70 * yog_alan:
+                continue
+            yy0 += duzensiz * float(np.clip(rng.normal(0.0, 0.55), -1.4, 1.4)) * 30.0 * (boy[1] / 34.0)
+            hb *= 0.8 + 0.4 * rng.random()
         for j in range(nb):
             u = (j + 0.5) / nb - 0.5
             h = hb * rng.uniform(0.55, 1.0) * (1 - 0.5 * abs(u))
@@ -2390,12 +2459,15 @@ def ciz_tas(t: Tuval, M, x, y, r, tohum=0, isik=(-0.6, -0.8), yass=1.0, sakla_so
     return dict(tepe=nokta_donustur(M, x, y - r))
 
 
-def ciz_cimen(t: Tuval, M, x0, x1, y, yogunluk=1.0, sallanma=0.0, tohum=0, boy=(14, 34), sakla_sonra=True):
+def ciz_cimen(t: Tuval, M, x0, x1, y, yogunluk=1.0, sallanma=0.0, tohum=0, boy=(14, 34), sakla_sonra=True,
+              duzensiz=0.0):
+    """duzensiz>0: tutamlar düz sıralar yerine dağınık (y oynar, öbekler ve boşluklar oluşur)."""
     rng = np.random.default_rng(3307 + tohum)
-    B = _boya_ac(t, M, (x0 - 20, y - boy[1] * 1.5, x1 + 20, y + boy[1] * 0.5 + 6), tohum=tohum + 51)
+    ek = 40 * duzensiz * (boy[1] / 34.0)
+    B = _boya_ac(t, M, (x0 - 20, y - boy[1] * 1.5 - ek, x1 + 20, y + boy[1] * 0.5 + 6 + ek), tohum=tohum + 51)
     if B is None:
         return None
-    _cimen_boya(B, M, x0, x1, y, yogunluk, sallanma, rng, boy=boy)
+    _cimen_boya(B, M, x0, x1, y, yogunluk, sallanma, rng, boy=boy, duzensiz=duzensiz)
     B.bitir(sakla_sonra=sakla_sonra)
     return None
 
@@ -2592,7 +2664,8 @@ def ciz_cayir(t: Tuval, M, x0, y0, x1, y1, tohum=0, ufuk_y=None, renk_uzak='#D3D
 
 
 def ciz_dere(t: Tuval, M, noktalar, genislik, zaman=0.0, tohum=0, daralma=0.6, taslar=0.5, tas_sayi=3,
-             sakla_sonra=True):
+             sakla_sonra=True, tas_konumlari=None):
+    """tas_konumlari: [(x, y, r), ...] yerel — basamak taşlarını tam verilen yerlere koyar (yürüyenin adımları)."""
     rng = np.random.default_rng(5507 + tohum)
     P0 = np.asarray(noktalar, np.float64)
     om = _yumusak_omurga(P0, n=160)
@@ -2619,7 +2692,12 @@ def ciz_dere(t: Tuval, M, noktalar, genislik, zaman=0.0, tohum=0, daralma=0.6, t
     isik = (-0.6, -0.8)
     # 1) basamak taşları (önde)
     tas_konum = []
-    if tas_sayi > 0:
+    if tas_konumlari:
+        tas_konum = [(float(x), float(y), float(r)) for (x, y, r) in tas_konumlari]
+        for (cx, cy, r) in sorted(tas_konum, key=lambda q: -q[1]):
+            _tas_boya(B, M, cx, cy + r * 0.3, r, rng, isik, yass=0.95, renk1='#CFC7C0', renk2='#C2BAB8',
+                      golge_yer=False, islak_tas=0.5)
+    elif tas_sayi > 0:
         j = int(np.clip(taslar, 0, 1) * (len(om) - 1))
         for q in range(tas_sayi):
             fr = (q + 0.5) / tas_sayi * 2 - 1  # -1..1 enine

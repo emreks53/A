@@ -120,48 +120,7 @@ def _cift_cizgi(c, x0, x1, y, ppm, paint, ters=False):
     return y - t2 - gap - t1
 
 
-YAZAR = "Bediüzzaman Said Nursî"
-BASLIK_EN_ORAN = 0.70        # baslik murekkebinin sirt enine orani (aksan/kuyruk dahil, cap ortasina simetrik)
-BASLIK_CAP_MM = 10.5          # tum ciltlerde ayni buyuk harf yuksekligi (ince sirtlarda kucultulur)
-
-
-def _dikey_yazi(metin, font_yolu, ppm, cap_mm, en_mm, boy_mm):
-    """Metni yatay cizip saat yonunde 90 derece cevirir (sirtta bastan kuyruga okunur).
-    Olcek: buyuk harf yuksekligi <= cap_mm, cap ortasina simetrik murekkep eni <= en_mm, murekkep boyu <= boy_mm.
-    Donus: (dizi, cap-ortasi x, yazi-ortasi y, bilgi)."""
-    ref = 400
-    f = ImageFont.truetype(font_yolu, ref, layout_engine=ImageFont.Layout.RAQM)
-    l, t, r, b = f.getbbox(metin, anchor="ls")
-    cap = -f.getbbox("H", anchor="ls")[1]
-    yari = max(-t - cap / 2.0, b + cap / 2.0)
-    s = min(cap_mm * ppm / cap, en_mm * ppm / (2 * yari), boy_mm * ppm / (r - l))
-    fs = max(6, int(round(ref * s)))
-    f = ImageFont.truetype(font_yolu, fs, layout_engine=ImageFont.Layout.RAQM)
-    l, t, r, b = f.getbbox(metin, anchor="ls")
-    capp = -f.getbbox("H", anchor="ls")[1]
-    pad = 8
-    im = Image.new("L", (r - l + 2 * pad, b - t + 2 * pad), 0)
-    bx, by = pad - l, pad - t
-    ImageDraw.Draw(im).text((bx, by), metin, font=f, fill=255, anchor="ls")
-    th = im.size[1]
-    rot = np.asarray(im.transpose(Image.Transpose.ROTATE_270), np.float32) / 255.0
-    cx = (th - 1) - (by - capp / 2.0)          # cap ortasi (donmus goruntude x)
-    cy = bx + (l + r) / 2.0                     # yazi ortasi (donmus goruntude y)
-    ust, alt = (by - capp / 2.0) - (by + t), (by + b) - (by - capp / 2.0)
-    return rot, cx, cy, dict(cap_mm=capp / ppm, en_mm=2 * max(ust, alt) / ppm, boy_mm=(r - l) / ppm, px=fs)
-
-
-def _yapistir(hedef, ra, ox, oy):
-    Hp, W = hedef.shape
-    ys0, xs0 = max(0, oy), max(0, ox)
-    ys1, xs1 = min(Hp, oy + ra.shape[0]), min(W, ox + ra.shape[1])
-    hedef[ys0:ys1, xs0:xs1] = np.maximum(hedef[ys0:ys1, xs0:xs1], ra[ys0 - oy:ys1 - oy, xs0 - ox:xs1 - ox])
-
-
-def sirt_dokusu(ad, ppm=16):
-    """Sirt yerlesimi (bastan, mm): 7-17 yaldiz bas suslemesi | 17-60 yazar paneli (kucuk yaldiz
-    "Bediüzzaman Said Nursî") | kor (yaldizsiz) cift cizgi | 60-214 baslik paneli | kor cift cizgi | 223-233 kuyruk suslemesi.
-    Baslik: tum ciltlerde ayni boy, ince sirtlarda sirt eninin %70'ine ve panel boyuna sigacak kadar kucultulur."""
+def sirt_dokusu(ad, ppm=16, cap_max_mm=10.0):
     T = A.kalinlik(ad)
     p = A.cilt_parametreleri(T)
     arc = A.sirt_yay_uzunlugu(p) * 1000.0      # mm
@@ -170,72 +129,98 @@ def sirt_dokusu(ad, ppm=16):
     Hp = int(round(H * ppm))
     surf, c = _skia_canvas(W, Hp)
     paint = _beyaz()
-    kenar = 0.9 * ppm
+    kenar = 0.9 * ppm                     # cizgiler sirt kenarina kadar yakin
     x0, x1 = kenar, W - kenar
-    hh = 2.8 * ppm
 
-    # --- bas ve kuyruk yaldiz suslemeleri
-    y = 7.0 * ppm
-    y = _cift_cizgi(c, x0, x1, y, ppm, paint)
-    yb0 = y + 0.8 * ppm
-    _bant_motif(c, x0 + 0.6 * ppm, x1 - 0.6 * ppm, yb0 + hh, hh, ppm, paint)
-    y_ust = _cift_cizgi(c, x0, x1, yb0 + 2 * hh + 0.8 * ppm, ppm, paint)
-    y = Hp - 7.0 * ppm
-    y = _cift_cizgi(c, x0, x1, y, ppm, paint, ters=True)
-    yb1 = y - 0.8 * ppm
-    _bant_motif(c, x0 + 0.6 * ppm, x1 - 0.6 * ppm, yb1 - hh, hh, ppm, paint)
-    y_alt = _cift_cizgi(c, x0, x1, yb1 - 2 * hh - 0.8 * ppm, ppm, paint, ters=True)
+    # --- bas ve kuyruk suslemeleri
+    def susleme(ust):
+        if ust:
+            y = 8.5 * ppm
+            y = _cift_cizgi(c, x0, x1, y, ppm, paint)
+            yb0 = y + 1.0 * ppm
+            hh = 3.4 * ppm
+            _bant_motif(c, x0 + 0.6 * ppm, x1 - 0.6 * ppm, yb0 + hh, hh, ppm, paint)
+            y = yb0 + 2 * hh + 1.0 * ppm
+            y = _cift_cizgi(c, x0, x1, y, ppm, paint)
+            return y
+        y = Hp - 8.5 * ppm
+        y = _cift_cizgi(c, x0, x1, y, ppm, paint, ters=True)
+        yb1 = y - 1.0 * ppm
+        hh = 3.4 * ppm
+        _bant_motif(c, x0 + 0.6 * ppm, x1 - 0.6 * ppm, yb1 - hh, hh, ppm, paint)
+        y = yb1 - 2 * hh - 1.0 * ppm
+        y = _cift_cizgi(c, x0, x1, y, ppm, paint, ters=True)
+        return y
+
+    y_ust = susleme(True)
+    y_alt = susleme(False)
     foil = _surf_to_np(surf)
 
-    # --- kor (yaldizsiz) panel cizgileri: deriye bastirilmis ince cift cizgiler
-    ks, kc = _skia_canvas(W, Hp)
-    kp = _beyaz()
-    y_p1 = 60.0 * ppm                      # yazar paneli / baslik paneli siniri
-    y_p2 = 214.0 * ppm                     # baslik paneli alt siniri
-    _cift_cizgi(kc, kenar * 0.6, W - kenar * 0.6, y_p1, ppm, kp)
-    _cift_cizgi(kc, kenar * 0.6, W - kenar * 0.6, y_p2, ppm, kp, ters=True)
-    # bas/kuyruk suslemesinin disinda da birer kor cizgi (sirt kenarina yakin)
-    kc.drawRect(skia.Rect(kenar * 0.6, 4.6 * ppm, W - kenar * 0.6, 5.0 * ppm), kp)
-    kc.drawRect(skia.Rect(kenar * 0.6, Hp - 5.0 * ppm, W - kenar * 0.6, Hp - 4.6 * ppm), kp)
-    kor = _surf_to_np(ks)
-
-    # --- yazar satiri (yazar panelinin ortasinda, kucuk yaldiz)
+    # --- baslik (Pillow + raqm; yatay ciz, saat yonunde 90 derece cevir)
+    ref = 400
+    font = ImageFont.truetype(A.FONT_600, ref, layout_engine=ImageFont.Layout.RAQM)
+    l, t, r, b = font.getbbox(ad, anchor="ls")       # taban cizgisine gore
+    cap_ref = -font.getbbox("H", anchor="ls")[1]      # buyuk harf yuksekligi
+    cap_mid = -cap_ref / 2.0                          # taban cizgisine gore merkez
+    ust_tasma = cap_mid - t                           # merkezden yukari murekkep
+    alt_tasma = b - cap_mid
+    yari = max(ust_tasma, alt_tasma)
+    marj = max(1.7, 0.10 * arc)
+    kullan = arc - 2 * marj
+    s_w = (kullan * ppm) / (2 * yari)                 # enine sigdirma
+    bos_uzun = (y_alt - y_ust) / ppm - 2 * 9.0        # mm
+    s_l = (bos_uzun * ppm) / (r - l)
+    s_c = (cap_max_mm * ppm) / cap_ref
+    s = min(s_w, s_l, s_c)
+    fs = max(8, int(round(ref * s)))
+    font = ImageFont.truetype(A.FONT_600, fs, layout_engine=ImageFont.Layout.RAQM)
+    l, t, r, b = font.getbbox(ad, anchor="ls")
+    capp = -font.getbbox("H", anchor="ls")[1]
+    pad = 8
+    tw, th = r - l + 2 * pad, b - t + 2 * pad
+    im = Image.new("L", (tw, th), 0)
+    d = ImageDraw.Draw(im)
+    bx, by = pad - l, pad - t                         # taban cizgisi noktasi
+    d.text((bx, by), ad, font=font, fill=255, anchor="ls")
+    rot = im.transpose(Image.Transpose.ROTATE_270)    # saat yonunde 90
+    # yatayda taban cizgisi -> dikeyde x konumu; cap merkezi sirt ortasina
+    # dondurmede: yeni_x = th-1-y_eski, yeni_y = x_eski
+    cap_mid_y = by - capp / 2.0
+    cx_new = (th - 1) - cap_mid_y
+    mid_x_old = (l + r) / 2.0 + bx - l + l            # yazi orta noktasi
+    mid_x_old = bx + (l + r) / 2.0
+    cy_new = mid_x_old
+    hedef_x = W / 2.0
+    hedef_y = Hp * 0.44                               # orta bolge, biraz yukarida
+    ox = int(round(hedef_x - cx_new))
+    oy = int(round(hedef_y - cy_new))
     yazi = np.zeros((Hp, W), np.float32)
-    pan_ust, pan_alt = y_ust / ppm, y_p1 / ppm
-    ra, cx, cy, by = _dikey_yazi(YAZAR, A.FONT_500, ppm, cap_mm=2.2, en_mm=0.42 * arc,
-                                 boy_mm=(pan_alt - pan_ust) - 2 * 3.0)
-    _yapistir(yazi, ra, int(round(W / 2.0 - cx)), int(round((pan_ust + pan_alt) / 2 * ppm - cy)))
-
-    # --- baslik
-    bp0, bp1 = y_p1 / ppm + 1.6, y_p2 / ppm - 1.6
-    ra, cx, cy, bb = _dikey_yazi(ad, A.FONT_600, ppm, cap_mm=BASLIK_CAP_MM, en_mm=BASLIK_EN_ORAN * arc,
-                                 boy_mm=(bp1 - bp0) - 2 * 7.0)
-    merkez = (bp0 + bp1) / 2 - 0.06 * (bp1 - bp0)          # optik orta: panel ortasinin biraz ustu
-    merkez = max(merkez, bp0 + 7.0 + bb["boy_mm"] / 2)       # uzun baslik panel cizgisine degmesin
-    _yapistir(yazi, ra, int(round(W / 2.0 - cx)), int(round(merkez * ppm - cy)))
+    ra = np.asarray(rot, np.float32) / 255.0
+    ys0, xs0 = max(0, oy), max(0, ox)
+    ys1, xs1 = min(Hp, oy + ra.shape[0]), min(W, ox + ra.shape[1])
+    yazi[ys0:ys1, xs0:xs1] = ra[ys0 - oy:ys1 - oy, xs0 - ox:xs1 - ox]
     foil = np.maximum(foil, yazi)
 
     foil = _asinma(foil, ppm, RNG, siddet=0.6)
-    yukseklik = ndimage.gaussian_filter(np.maximum(foil, 0.85 * kor), 0.22 * ppm)
+    yukseklik = ndimage.gaussian_filter(foil, 0.22 * ppm)
 
-    # --- deri yaslanma maskesi: bas/kuyruk ve sirt kenarlarinda; kor cizgiler hafif koyu (perdahli)
+    # --- deri yaslanma maskesi: bas/kuyruk ve sirt kenarlarinda
     yy = np.linspace(0, H, Hp, dtype=np.float32)[:, None]
     xx = np.linspace(0, arc, W, dtype=np.float32)[None, :]
     dy = np.minimum(yy, H - yy)
     dx = np.minimum(xx, arc - xx)
     n = _gurultu((Hp // 8 + 1, W // 8 + 1), 2.0, RNG)
     n = np.asarray(Image.fromarray(n).resize((W, Hp), Image.BILINEAR))
-    yas = np.exp(-dy / 3.5) * 0.95 + np.exp(-dx / 1.2) * 0.35
+    yas = np.exp(-dy / 3.5) * 0.9 + np.exp(-dx / 1.6) * 0.45
     yas = yas * (0.75 + 0.35 * n)
+    # sirtin dokunulan orta kisimlarinda hafif parlama/koyulasma lekeleri
     yas += 0.10 * np.clip(_gurultu((Hp // 16 + 1, W // 16 + 1), 1.5, RNG), 0, None).repeat(16, 0).repeat(16, 1)[:Hp, :W]
-    yas = np.maximum(yas, 0.45 * ndimage.gaussian_filter(kor, 0.15 * ppm))
     yas = np.clip(yas, 0, 1)
 
     rgb = np.stack([foil, yukseklik, yas], -1)
     out = os.path.join(A.DOKU, f"sirt_{A.DOSYA[ad]}.png")
     Image.fromarray((rgb * 255 + 0.5).astype(np.uint8), "RGB").save(out, optimize=False, compress_level=3)
-    return out, dict(arc_mm=arc, font_px=bb["px"], cap_mm=bb["cap_mm"], en_oran=bb["en_mm"] / arc,
-                     boy_mm=bb["boy_mm"], yazar_cap=by["cap_mm"])
+    return out, dict(arc_mm=arc, font_px=fs, cap_mm=capp / ppm)
 
 
 # ------------------------------------------------------- Kur'an on kapagi
@@ -503,11 +488,10 @@ def hepsi():
     os.makedirs(A.DOKU, exist_ok=True)
     bilgi = {}
     for ad in A.ORAN:
-        ppm = 32 if ad == A.YATAN else 20
+        ppm = 24 if ad == A.YATAN else 16
         out, inf = sirt_dokusu(ad, ppm=ppm)
         bilgi[ad] = inf
-        print(f"{ad:30s} arc={inf['arc_mm']:.1f}mm cap={inf['cap_mm']:.2f}mm en={inf['en_oran'] * 100:.0f}% "
-              f"boy={inf['boy_mm']:.0f}mm yazar_cap={inf['yazar_cap']:.2f}mm -> {os.path.basename(out)}")
+        print(f"{ad:30s} arc={inf['arc_mm']:.1f}mm cap={inf['cap_mm']:.2f}mm -> {out}")
     print(kuran_kapak())
     print(lemalar_kapak())
     return bilgi
