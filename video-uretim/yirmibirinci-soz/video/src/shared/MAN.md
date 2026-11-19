@@ -22,7 +22,7 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
 | `man.point(name, pose, opts)` | → `[wx, wy]`: `palmL palmR wristL wristR elbowL elbowR shoulderL shoulderR chest neck head headTop hip footL footR` |
 | `man.hand('L'｜'R', pose)` | → `{wrist, palm, rot, side, flip, shape}` (world px; `rot` = canvas angle of the hand's long axis) for props |
 | `man.turn(t, t0 = 44/30)` | view value of the stepped turn when keyed by time: 0.2 / 0.4 / 0.6 / 0.8 on four frames, 1 from `t0 + 4 f` |
-| `man.draw(ctx, t, {pose, warm, p, hands})` | paints him; extras for review scenes: `x, y` (root, default 540 / 1200), `scale`, `breath` (−1…1) |
+| `man.draw(ctx, t, {pose, warm, p, hands})` | paints him; extras: `squash: {sx, dip}` (the body narrowed to `sx` about the root, the hips sunk `dip` px — the world eases the turn with it, see "the turn"), and for review scenes `x, y` (root, default 540 / 1200), `scale`, `breath` (−1…1) |
 | `man.prepare(skin, warm, stage)` | pre-bake another sprite set (`'front'`, 1, 3 …); sets that were not prepared are baked on first use |
 | `man.drawHand(ctx, shape, x, y, {angle, flip, side, warm, scale})` | review helper: one hand alone |
 | `man.G`, `man.HAND_SHAPES`, `man.REST_ARM`, `man.pose(partial)` | geometry numbers, `['rest','open','cupped','closed','flat','hold']`, the hanging arm, fill-in of a partial pose |
@@ -34,8 +34,9 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
 
 ```js
 { view: 1,                      // 0 front skin, 1 back skin; in between = the turn drawings (below)
-  root: {x: 0, y: 0},           // px. x moves the HIPS (feet stay planted); y sinks the whole figure (dips)
-  step: 0,                      // 0..1 half-step: his screen-right shoe goes 22 px to the right (use with root.x = 10)
+  root: {x: 0, y: 0},           // px. x moves the HIPS, y sinks them (dips) — the FEET stay planted on the ground line, the legs give
+  step: 0,                      // 0..1 half-step: his screen-right shoe goes 22 px to the right (use with root.x = 10); on the way
+                                // (0 < step < 1) the shoe is off the ground, up to 7 px at step 0.5 — it lifts and lands, it does not slide
   lean: 0,                      // deg, body roll about the hips (keep |lean| <= 1)
   sh: 0,                        // px, shoulder line shift toward screen-right (torso sheared, hem stays): +4 reach, -4 "turned right"
   shy: 0,                       // px, shoulders sink (settle of the nod)
@@ -65,7 +66,9 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
   skin): + = turned to screen-right: the hair mass moves 4 px left, a sliver of cheek / jaw and the ear show on
   the right, the far ear hides. `x, y` px offsets.
 * The **half-step** is `step: 1, root: {x: 10, y: 0}` (right shoe +22, hips +10; legs stay rigid and simply
-  tilt). `back_release`, `back_follow_through` and `back_final_stand` carry it.
+  tilt). `back_release`, `back_follow_through` and `back_final_stand` carry it. While `step` travels from 0 to 1 the
+  stepping shoe leaves the ground (`7·sin(π·step)` px, `G.stepLift`) and its leg shortens by as much; a body dip
+  (`root.y`) is taken up by both legs. The shoes are in sight above the grass now, so nothing of this is hidden.
 * Poses are plain objects of numbers (+ two discrete fields per arm), so `E.track` / `E.mix` also work on
   them, but only `man.mix` / `man.track` switch `hand` / `flip` at the half-way point and clamp sensibly.
 
@@ -96,11 +99,20 @@ The shoulder joint of the hanging stance is at world (540 ± 54, 773); `sh` move
   ear at the left; back torso with a closed collar) · else back. He turns toward screen-left (where the first glow
   is). On both drawings the BODY (legs, pelvis, torso, arms) is shown narrowed about the root with
   `scaleX = 1 − 0.4·sin(π·view)` (0.65 at 1/3 and 2/3, never below 0.6) and the whole figure dips
-  `4·sin(π·view)` px; neck and head are NOT narrowed — they are their own stencil shapes (`TURN_HEAD` in man.js:
-  skin patch, hair mass, ear, neckline). Key it on twos with `view: 1/3` (1.47), `2/3` (1.53), `1` (1.60) — as
-  act 1 does — or use `man.turn(t)` for a per-frame squash. Turn only with both arms hanging.
-* `warm`: `< 0.5` normal colours, `≥ 0.5` the lit state (top #CF6E48, trousers #63473A, one extra pass of light
-  dabs, stronger light band on the arms). Stepped by the world.
+  `4·sin(π·view)` px (hips and everything above; the feet stay on the ground); neck and head are NOT narrowed — they
+  are their own stencil shapes (`TURN_HEAD` in man.js: skin patch, hair mass, ear, neckline). Key it on twos with
+  `view: 1/3` (1.47), `2/3` (1.53), `1` (1.60) — as act 1 does — or use `man.turn(t)` for a per-frame squash. Turn only
+  with both arms hanging.
+  **In the film the WORLD eases the turn frame by frame** (critics round; `TURN_EASE` in world.js, only when the act
+  supplies the pose): body width / dip on frames 43 … 48 = 0.90 / 1 · 0.77 / 3 · 0.64 / 4 · 0.64 / 4 · 0.77 / 3 ·
+  0.90 / 1 (front skin on 43, drawing 1 on 44–45, drawing 2 on 46–47, back skin from 48, full width from 49), and on
+  frame 45 drawing 2 is dabbed over drawing 1 through a sponge mask at one half (`E.drawThrough`) — the cross-dab's
+  middle state. No frame changes the silhouette by more than about a fifth.
+* `warm`: `< 0.5` normal colours, `≥ 0.5` the lit state. It is an ADDED light, not a lift of the whole garment
+  (critics round): the brick coat stays as the ground and shows in the pores and gaps of an orange coat (#CF6E48)
+  dabbed over it (about a sixth of the surface), the shade prints are brick again, and the light is one pass of
+  peach-orange dabs (#E48A5C, a few #F0A478) on the upper right shoulder / back only — the side of the sun; the arms'
+  light band is peach-orange too. Trousers #63473A, skin and hair one small step lighter. Stepped by the world.
 * `p`: the opening dab-in, quantised to thirds: `1/3` dark base coat (stencil-sharp) · `2/3` + mid tones ·
   `1` + lit / shade dabs, edge prints and the arm light bands. `p <= 0` draws nothing.
 * Breathing is inside `draw` (pure function of absolute `t`): shoulders, neck, head ±3 px with period 3.4 s,
@@ -127,6 +139,19 @@ after the whole figure.
 
 ## Look (how it is built)
 
+* **Critics round (the figure as a human, the paint as paint).** Front view: the hair has mass (a short cut 7 px
+  above the skull, the hairline low on the forehead, side volume down to the ear line), small ears under it, a real
+  neck between jaw and a round crew neck, the skin painted like his clothes (darker ground in the pores, a lighter
+  dab pass on the side of the light, a soft shade pass — still a plain, featureless face). Back view: the hair mass
+  ends in a curved nape hairline narrower than the head, the ears stand 5–6 px clear of it, the nape is lit skin.
+  The hanging arm is 18 px shorter than the reach length (the relaxed forearm is drawn foreshortened, `REST` = `{a: 11,
+  fa: 1, b: −12.2, fb: 0.8}`: elbow where it was, wrist at the crotch line, palm centre y 975, finger tips on the upper
+  thigh; reaches use the full lengths, every palm target is unchanged). He has
+  FEET: shoes 43 px wide (toe caps, turned out a little) / 37 px (heels from behind), 19 px of upper under a wider
+  trouser hem; the world's grass overlaps only their soles. Dark shapes (hair, trousers, shoes) show the wall's
+  cream primer in their pores (real pores of the coat, the primer at about 50 % over the dark ground — never white
+  flecks) and carry a second-tone dab pass (`paint(…, {primer, second})`).
+
 * Every part is a `bakeStencil` print baked at 2× world size (`man.BAKE`) and drawn at ½: razor-sharp at zoom 1.5
   and with `--ss 2`. Paint per part: dark base → dense mid tone with pores → fine mottling; torso, legs, head
   add an irregular lit patch upper right, a shade patch lower left and thin edge prints (shade inside the
@@ -142,16 +167,17 @@ after the whole figure.
   through TONE, not outline: before the arm is drawn, two porous prints of the forearm + hand silhouette are
   printed on the torso, shifted to the lower left (the light comes from the upper right) and cut to the torso's
   own stencil (`castShadow`, palette `cast`). A hanging arm casts nothing.
-* Trousers break on the shoe 12 px above the sole; the shoe is a low dome on a flat sole with round corners (toe
-  cap in the front skin, a narrower heel in the back skin). Legs and shoes are clean stencil shapes down to the
-  sole line (y 1203.5); the hedge lip in front of him is the world's.
+* Trousers break on the shoe 19 px above the sole (hem 31 px wide); the shoe is a low dome on a flat sole with
+  round corners (toe cap in the front skin, a narrower heel with the shoe's outer side beyond it in the back skin).
+  Legs and shoes are clean stencil shapes down to the sole line (y 1203.5); the hedge lip in front of him is the
+  world's (its grass overlaps the soles only).
 * Scratch surfaces (`E.scratch`): `man:u / man:sh / man:li` (one arm's limb group: paint, shade stock — also the
   cast tone —, light stock) and `man:uh / man:shh / man:lih` (its hand). Each has ONE fixed
   size (limb 528², hand 256² bake px) whatever the pose: the figure is baked at 2× and shown at ½ × zoom, where the
   browser resamples a canvas through mip levels of the whole canvas — a scratch whose size followed the pose (or
   the poses drawn before: engine scratches only grow) gave different pixels for the same frame depending on the
   render order (fixed at integration; `node out/world/integ.mjs det`).
-* Parts: `torso(front|back|turn1|turn2) pelvis leg(±1) shoe(view:±1) neck face hairFront hairBack ear cheek
+* Parts: `torso(front|back|turn1|turn2) pelvis leg(±1) shoe(view:±1) neck(front|back) face hairFront hairBack ear cheek
   turnSkin(1|2) turnHair(1|2) upper fore hand(rest|open|cupped|closed|flat|hold)` + stock prints (`sh` shade core,
   `sf` shade fringe, `li` light, `cs` / `cf` cast tone) for `upper fore hand`. Colours: `COL` in man.js (palette of the
   storyboard: #B4553A / #4A342A / #2E1F1B / #E0A47C / #3B2620, warm #CF6E48 / #63473A).

@@ -13,8 +13,9 @@
 //                   light.js   five light-beads
 //                   build.js   chest -> mescid (minaret first: it rises from behind the plateau's edge)
 //                   rug.js     rolled rug, the unrolling seccade, its glowing niche
-//   hands   1.0     dial.js    the hour floating down / on his palm / in his half-closed hand
-//   front   1.0     dial.js    the coin shown, swung, in flight, sinking; the minting's glint
+//   hands   1.0     dial.js    the hour floating down / on his palm / in his half-closed hand / shown in his finger tips
+//                              and swung: BEHIND his hand as long as he holds it (thumb and fingers in front of the rim)
+//   front   1.0     dial.js    the coin in flight, sinking into the niche; the minting's glint
 //                   rug.js     LINK 1: the niche's bloom
 //   top     frame   light.js   the cream cover 23.40–23.80 (frame 714 = the bare primer plate, drawn by the scene)
 //

@@ -11,13 +11,13 @@ export const TL = {
   glint: [15.40, 15.47, 15.53], glintOff: 15.60,
   toSide: [15.77, 16.03],
   turn: [16.63, 16.73, 16.83],                                           // the right column turns over (on threes)
-  light: [16.83, 16.93, 17.00, 17.07], swell: 23.10,                     // far light: peach, gold, white core, pink rim
+  light: [16.83, 16.90, 16.97], swell: 23.23,                            // far light: peach, gold, white core + pink rim (settled 4 frames before «gelecek» 17.14); swell = LINK 3
   lbeads: [17.80, 17.90, 18.00, 18.10, 18.20],
-  chest: { body: [18.27, 18.40, 18.53], lid: 18.83, lidRest: 18.97, seam: [19.50, 19.57] },
+  chest: { body: [18.27, 18.40, 18.53], lid: 18.77, lidRest: 18.87, seam: [19.50, 19.57] },   // lid printed f563, at rest f566 (gloss 18.92)
   morph: { squash: 19.87, m1: [19.97, 20.27], m2: [20.00, 20.27], m3: [20.13, 20.30], m3rest: 20.33, fin1: 20.33, fin2: 20.37, rest: 20.43 },
   rug: { spill: 21.27, roll: [21.33, 21.40], unroll: [21.43, 21.93], glow: [21.73, 21.80], flick: [21.90, 21.97] },
   coin: { show: [22.00, 22.17], tick: 22.17, swing: 22.20, back: 22.30, release: 22.43, follow: 22.57, niche: 22.87, sunk: 22.97 },
-  links: { bloom: 22.90, bloomEnd: 23.07, door: 23.00, far: 23.10 },
+  links: { bloom: 22.90, bloomEnd: 23.10, door: 23.07, far: 23.23 },     // the three answers, 5 frames apart (687 / 692 / 697)
   cover: [23.40, 23.50, 23.60, 23.70, 23.80],   // the covered share of each pass: light.js (COVER_P)
 };
 

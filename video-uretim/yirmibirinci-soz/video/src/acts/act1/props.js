@@ -2,10 +2,11 @@
 // 'act1/…'), in WORLD px on the subject plane, light from the upper right like the rest of the film.
 //
 //   veil       the veil cloud over today's sun: two overlapping halves, peach-gold rim, lavender under-dab
-//   callDabs   the white-gold dabs of the «Ey nefis!» ring, each on a violet-blue under-dab
+//   callDabs   the white-gold dabs of the «Ey nefis!» ring (three print shapes), each on a soft lavender-grey under-dab
 //   sun        yesterday's sun: stencil disc r 100 in three passes (deep orange / orange / peach-gold lights) + halo
-//   afterglow  the soft peach / pink cluster on the ridge, with its specks
-//   dots       the deep-ochre course dots (stencil r 12, maroon inner edge), a few variants
+//   afterglow  the last light on the ridge (pink / peach round an ivory-gold core) and the sponge specks it breaks into
+//   dots       the course dots: FLAT two-tone mid-ochre stencils r 10, in the tone of the sky third they cross
+//   crown      one soft pass of light on the crown of the mound (the lit rise answers «bil»)
 //   deed       the ghost title-deed: primer sheet, dashed maroon edge, folded corner, dashed lines, ochre seal
 //
 // Painting rule (ENGINE.md §6): opaque matte prints with holes, three tones + a pale core, tight
@@ -90,23 +91,31 @@ export function makeProps(E, W) {
   });
 
   // ------------------------------------------------------------------ call-ring dabs
-  // Round prints of light: warm white with a gold fringe and a white-hot core, each on a slightly larger
-  // violet-blue under-dab (as the clouds have theirs) so that the light reads on the pale sky.
-  const callDabs = once('call', () => Array.from({ length: 6 }, (_, i) => E.makeCluster({
-    points: [{ x: 0, y: 0, rx: 25, ry: 23 }], seed: 6201 + i, edgeSoftness: 0.4, anchor: [0, 0],
-    layers: [
-      // the dark the light is painted on: a violet-blue print a little larger than the dab, showing all round
-      // it as a speckled rim (heavier below, as under the clouds)
-      { color: P('call_ring_under'), coverage: 0.86, size: 22, offset: [-2, 4], grow: 1.2, stamps: 'open', pores: 0.25 },
-      { color: '#A7A0D6', coverage: 0.3, size: 14, offset: [-2, 4], grow: 1.3, stamps: 'soft' },
-      // the light itself: warm white, a powdery pale-gold fringe with a few gold prints, a white-hot core
-      { color: P('call_ring', 0), coverage: 0.97, size: 22, tint: 0.01, stamps: 'dense', pores: 0 },
-      { color: '#FBE9B0', coverage: 0.6, size: 14, band: [0.0, 0.46], stamps: 'open' },
-      { color: P('call_ring', 1), coverage: 0.34, size: 11, band: [0.0, 0.4], stamps: 'body', patch: { scale: 26, amount: 0.42, seed: 6201 + i } },
-      { color: '#FFFFFF', coverage: 0.92, size: 15, band: [0.42, 1], stamps: 'body', tints: 1, pores: 0 },
-    ],
-    reveal: { steps: 3, mode: 'mask', order: 'random', dab: 22 },
-  })));
+  // Prints of LIGHT, not cotton: a gold print with a pale-gold middle and a small white-hot core, each on a soft
+  // lavender-grey under-dab (the clouds' own under-dab tone, showing below it) so that it reads on the pale sky.
+  // Three print shapes (round, oval, two-lobed), two seeds of each; act1.js varies size and angle per dab.
+  const callDabs = once('call', () => {
+    const shapes = [
+      [{ x: 0, y: 0, rx: 25, ry: 23 }],
+      [{ x: 0, y: 0, rx: 30, ry: 19 }],
+      [{ x: -9, y: 3, r: 19 }, { x: 11, y: -4, r: 16 }],
+    ];
+    return Array.from({ length: 6 }, (_, i) => E.makeCluster({
+      points: shapes[i % 3], seed: 6201 + i, edgeSoftness: 0.4, anchor: [0, 0],
+      layers: [
+        // what the light is painted on: a soft lavender-grey print, a little larger, heavier below
+        { color: P('cloud_under_dab'), coverage: 0.74, size: 22, offset: [-2, 5], grow: 1.16, stamps: 'open', pores: 0.25 },
+        { color: '#CBC5DC', coverage: 0.3, size: 14, offset: [-2, 5], grow: 1.26, stamps: 'soft' },
+        // the light: a gold print that shows as the rim, a pale-gold middle, a broad white-hot core
+        { color: P('call_ring', 1), coverage: 0.96, size: 21, tint: 0.02, stamps: 'dense', pores: 0 },
+        { color: '#F3C95A', coverage: 0.2, size: 11, band: [0.0, 0.3], stamps: 'open', patch: { scale: 26, amount: 0.4, seed: 6201 + i } },
+        { color: '#FBEDB4', coverage: 0.92, size: 16, band: [0.17, 1], stamps: 'body', pores: 0 },
+        { color: P('call_ring', 0), coverage: 0.94, size: 14, band: [0.32, 1], stamps: 'body', tints: 1, pores: 0 },
+        { color: '#FFFFFF', coverage: 0.7, size: 11, band: [0.5, 1], stamps: 'body', tints: 1, pores: 0 },
+      ],
+      reveal: { steps: 3, mode: 'mask', order: 'random', dab: 22 },
+    }));
+  });
 
   // ------------------------------------------------------------------ yesterday's sun
   const Y = L.yesterday, R = Y.r;
@@ -150,39 +159,95 @@ export function makeProps(E, W) {
   });
 
   // ------------------------------------------------------------------ afterglow on the ridge
+  // The LAST LIGHT where the disc went down: pink and peach round an ivory-gold core that is lighter than every
+  // sunset dab of the dusk zone around it - so that it is seen to come (4.10-4.23) and seen to GO (4.30-4.43).
   const afterglow = once('afterglow', () => {
     const glow = E.makeCluster({
-      points: [{ x: 0, y: 0, rx: 172, ry: 140 }], seed: 6401, edgeSoftness: 0.36, anchor: [0, 0],
+      points: [{ x: 0, y: 0, rx: 156, ry: 128 }], seed: 6401, edgeSoftness: 0.36, anchor: [0, 0],
       layers: [
-        { color: P('afterglow', 1), coverage: 0.82, size: 92, stamps: 'any', pores: 0.3 },
-        { color: P('afterglow', 0), coverage: 0.84, size: 84, band: [0.12, 1], stamps: 'any', pores: 0.3, patch: { scale: 150, amount: 0.16 } },
-        { color: '#F6B96A', coverage: 0.7, size: 66, band: [0.3, 1], stamps: 'body', pores: 0.3 },
-        { color: '#FBE3B8', coverage: 0.5, size: 44, band: [0.46, 1], stamps: 'open' },
+        { color: P('afterglow', 1), coverage: 0.82, size: 90, stamps: 'any', pores: 0.3 },
+        { color: P('afterglow', 0), coverage: 0.86, size: 82, band: [0.1, 1], stamps: 'any', pores: 0.3, patch: { scale: 150, amount: 0.14 } },
+        { color: '#FAD596', coverage: 0.84, size: 64, band: [0.24, 1], stamps: 'body', pores: 0.3 },
+        { color: '#FFEDC6', coverage: 0.86, size: 50, band: [0.34, 1], stamps: 'body', pores: 0.2 },
+        { color: '#FFF8E8', coverage: 0.7, size: 34, band: [0.5, 1], stamps: 'open' },
       ],
       reveal: { steps: 3, mode: 'mask', order: 'radial', from: [0, 26], jitter: 0.3, dab: 84 },
     });
-    // it breaks into about a dozen specks that drift up (sampled from its own paint)
-    const burst = E.makeBurst(glow, { seed: 6402, count: 13, duration: 0.14, wind: [46, -390], spread: 30, life: [0.34, 0.46], size: [22, 36] });
-    return { glow, burst };
+    // What it breaks into: SPONGE PRINTS of its own light (about 48 px: seen on a phone), each of which thins out
+    // print by print (three mask stages) while it drifts up - act1.js moves them.
+    const tones = [['#FFEDC6', '#FFF8E8'], ['#F4C79A', '#FFEDC6'], ['#EEA0BA', '#F6C3B0'], ['#FAD596', '#FFF8E8'], ['#FFF3D6', '#FAD596']];
+    const specks = tones.map(([a, b], i) => E.makeCluster({
+      points: [{ x: 0, y: 0, rx: 25, ry: 20 }], seed: 6411 + i, edgeSoftness: 0.3, anchor: [0, 0],
+      layers: [
+        { color: a, coverage: 0.92, size: 19, stamps: 'body', pores: 0.2 },
+        { color: b, coverage: 0.62, size: 12, band: [0.3, 1], stamps: 'open' },
+      ],
+      reveal: { steps: 3, mode: 'mask', order: 'random', dab: 15 },
+    }));
+    return { glow, specks };
   });
 
   // ------------------------------------------------------------------ course dots
-  const DR = L.arc.dotR;
-  const dots = once('dots', () => Array.from({ length: 5 }, (_, i) => E.bakeStencil({
-    shape: E.shape.ellipse(0, 0, DR), base: P('arc_dots'), anchor: [0, 0], seed: 6501 + i, bleed: false, pad: 3,
-    layers: [
-      { color: '#B4712A', coverage: 0.5, size: 13, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(-5, 4, x - y) },
-      { color: '#C98A3C', coverage: 0.3, size: 8, stamps: 'open', maskFn: (x, y) => ss(0, 8, x - y) },
-      { color: '#7C4418', coverage: 0.3, size: 9, stamps: 'soft', maskFn: (x, y) => ss(2, -6, x - y) },
-    ],
-    edge: [{ color: P('arc_dots_edge'), width: 3.5, opacity: 0.8, dir: [-0.7, 0.7], tile: 'fine' }, { color: P('arc_dots_edge'), width: 2.5, opacity: 0.32, dir: null, tile: 'fine' }],
-    reveal: { steps: 2, mode: 'mask', dab: 13 },
-  })));
+  // FLAT two-tone stencil dots, r 10: mid ochre, ONE lighter sponge pass over the upper right (it meets the base
+  // along a chord with a stippled frontier - no centre light, nothing radial), a few cream-primer pores, the rim
+  // only as a 3 px inner-edge print on the lower left. Every third of the sky gives the course its own tone:
+  //   day    under the open sky
+  //   dusk1 / dusk2   the two dusk passes dabbed over it (4.13 lavender, 4.27 violet-blue): a step cooler and darker each
+  //   mist   the pre-dawn mist dabbed over it: paler, powdered
+  // The under-painting of a dot is the same in all its tones (same seed, same layers first), so a change of tone
+  // reads as a pass landing ON the dot.
+  const DR = 10;
+  const dots = once('dots', () => {
+    const TONE = {
+      day: { base: '#B8752A', light: '#D7A050', edge: '#5B2A1E' },
+      dusk1: { base: '#A3633A', light: '#C2854F', edge: '#57283A' },
+      dusk2: { base: '#8E5140', light: '#AE7055', edge: '#48213C' },
+      mist: { base: '#C48A42', light: '#DEAF68', edge: '#84502E' },
+    };
+    const make = (tone, i) => {
+      const q = TONE[tone], ang = -0.785 + [0, 0.3, -0.26, 0.16, -0.12][i], off = [1.5, 0.5, 2.2, 1, 2.8][i];
+      const side = (x, y) => x * Math.cos(ang) + y * Math.sin(ang) - off;                 // > 0: the upper-right cap
+      return E.bakeStencil({
+        shape: E.shape.ellipse(0, 0, DR), base: q.base, anchor: [0, 0], seed: 6501 + i, bleed: false, pad: 3,
+        layers: [
+          { color: q.light, coverage: 0.97, size: 9, stamps: 'dense', pores: 0, tint: 0.012, maskFn: (x, y) => ss(-0.4, 1.4, side(x, y)) },
+          { color: E.mixHex(P('primer'), q.base, 0.4), coverage: 0.05, size: 18, stamps: 'speck' },
+        ],
+        edge: { color: q.edge, width: 3, opacity: 0.72, dir: [-0.7, 0.7], tile: 'fine' },
+        reveal: { steps: 2, mode: 'mask', dab: 11 },
+      });
+    };
+    const out = { r: DR };
+    for (const tone of Object.keys(TONE)) out[tone] = Array.from({ length: 5 }, (_, i) => make(tone, i));
+    return out;
+  });
+
+  // ------------------------------------------------------------------ the crown of the mound answers («bil», 11.53)
+  // One soft pass of light dabs ALONG THE TOP EDGE of the lit rise, in two parts: `inner` (behind his shins) and
+  // `outer` (the two shoulders of the mound). Painted in world px, drawn at (0, 0) in slots.mid - behind the mound,
+  // the man and the flowers, so only what stands above the crown line shows: a rim of yellow-green and pale gold.
+  const crown = once('crown', () => {
+    const M = L.mound, top = (x) => M.top(x);
+    const part = (xs, seed) => E.makeCluster({
+      points: xs.map(([x, lift, rx, ry]) => ({ x, y: top(x) - lift, rx, ry })), seed, edgeSoftness: 0.3, anchor: [540, 1090],
+      layers: [
+        { color: P('mound_lit', 0), coverage: 0.84, size: 26, stamps: 'body', pores: 0.3 },
+        { color: '#D6EC92', coverage: 0.6, size: 18, band: [0.16, 1], stamps: 'open' },
+        { color: P('mound_lit', 1), coverage: 0.5, size: 15, band: [0.3, 1], stamps: 'body', patch: { scale: 60, amount: 0.3, seed } },
+      ],
+      reveal: { steps: 2, mode: 'mask', order: 'random', dab: 26 },
+    });
+    // [x, lift above the crown line, rx, ry]: uneven little heaps, never a ribbon
+    const inner = part([[452, 5, 26, 15], [486, 9, 24, 17], [522, 6, 22, 14], [560, 8, 24, 16], [596, 10, 25, 17], [630, 5, 24, 14]], 6701);
+    const outer = part([[318, 3, 20, 12], [352, 6, 24, 15], [388, 9, 26, 16], [420, 6, 22, 14], [662, 7, 24, 15], [696, 9, 26, 16], [730, 5, 23, 14], [762, 3, 19, 12]], 6702);
+    return { inner, outer, at: [540, 1090] };
+  });
 
   // ------------------------------------------------------------------ the deed (senet)
-  // Local px round its centre: 140 x 175, folded corner top-right (36 px). A GHOST: bare primer with one thin
+  // Local px round its centre: 140 x 175, folded corner top-right (48 px: the sheet floats 28 px nearer the course of
+  // the days than in the storyboard, and the larger fold keeps its corner a clear 12 px off the nearest course dot). A GHOST: bare primer with one thin
   // pass of ivory dabs — the sky keeps showing through its pores — inside a bold dashed maroon edge.
-  const D = L.deed, dw = D.w / 2, dh = D.h / 2, FOLD = 36;
+  const D = L.deed, dw = D.w / 2, dh = D.h / 2, FOLD = 48;
   const deed = once('deed', () => {
     const maroon = P('deed_edge'), ochre = P('tomorrow_dashes');
     const sheetPts = [[-dw, -dh], [dw - FOLD, -dh], [dw, -dh + FOLD], [dw, dh], [-dw, dh]];
@@ -216,12 +281,13 @@ export function makeProps(E, W) {
         { color: '#FFFFFF', coverage: 0.2, size: 24, stamps: 'open', tints: 1, maskFn: (x, y) => ss(40, -50, y - x * 0.6) },
       ],
     });
-    // pass 3: three dashed lines of 'writing' (never letters)
-    const lineY = [-34, -8, 18], lineX1 = [34, 46, 6];
+    // pass 3: three dashed lines of 'writing' (never letters) - a step LIGHTER and THINNER than the border dashes
+    // (4.6 px, short dashes, a rose-brown): the edge and the ochre seal stay the heavy things of the sheet
+    const lineY = [-30, -6, 17], lineX1 = [14, 40, 2];
     const lines = E.bakeStencil({
-      shape: E.shape.union(...lineY.map((y, i) => E.shape.dashes([[-48, y], [lineX1[i], y]], { dash: [17, 13, 15][i], gap: 8, width: 6.5, cap: 'round', phase: [0, 5, 2][i] }))),
-      anchor: [0, 0], seed: 6605, bleed: false, base: '#5C2C30',
-      layers: [{ color: '#7B4444', coverage: 0.45, size: 12, stamps: 'open' }],
+      shape: E.shape.union(...lineY.map((y, i) => E.shape.dashes([[-48, y], [lineX1[i], y]], { dash: [11, 9, 10][i], gap: 6.5, width: 4.6, cap: 'round', phase: [0, 4, 2][i] }))),
+      anchor: [0, 0], seed: 6605, bleed: false, base: '#8E5F5A',
+      layers: [{ color: '#A67A72', coverage: 0.4, size: 10, stamps: 'open' }],
     });
     // the seal: a miniature of tomorrow's ring — dashed ochre ring r 23 round one full ochre pass
     const SR = D.seal_r, SX = 34, SY = 54;
@@ -264,5 +330,5 @@ export function makeProps(E, W) {
     return { drawParts, whole, burst, seal: [SX, SY], bounds };
   });
 
-  return { veil, callDabs, sun, afterglow, dots, deed };
+  return { veil, callDabs, sun, afterglow, dots, crown, deed };
 }

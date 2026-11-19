@@ -1,7 +1,7 @@
 // build.js — the little chest (sandukça) on the knoll and the small mescid it grows into (act 2, mid slot).
 //
 //   18.27 / 18.40 / 18.53  chest body in three passes (wood, straps + plank slits, lights + gold plates + lock plate)
-//   18.83                  the barrel lid is printed on top, drops 14 px, settles 18.97 — a finger ajar (dark seam)
+//   18.77                  the low lid is printed on top, drops 14 px, at rest 18.87 — a finger ajar (dark seam)
 //   19.50 / 19.57          the seam lights from inside (+ a few gold spill dabs over the lid's lower edge)
 //   19.87–19.97            anticipation: the chest squashes 6 %
 //   19.97–20.27  MOVE 1    the lid rises and rounds into the lead-blue dome on a low drum (mask tween + cross-dab)
@@ -9,7 +9,7 @@
 //                          same passes; the lock plate opens into the glowing doorway
 //   20.13–20.33  MOVE 3    the pencil minaret rises at the left as one sprite
 //   20.33 / 20.37          gold crescents pop on (dome, then minaret)
-//   21.27 / 23.00          the doorway brightens one step (door-light spill / link 2)
+//   21.27 / 23.07          the doorway brightens one step (door-light spill / LINK 2: + halo on the stone, lit windows)
 //
 // One pointed arch everywhere: lock plate -> doorway (and the rug's niche, the far light).
 // Everything is cut live (E.drawStencil) out of textures that are pinned in world space, so nothing is ever
@@ -25,14 +25,19 @@ export function makeBuilding(E, W, U) {
   // ------------------------------------------------------------------ geometry (world px)
   const B0 = C.body, B1 = M.body;                       // 925–1155 x 655–770  ->  900–1180 x 640–770
   const LID_BASE = B0.y0 - C.lid.seam_gap_px;           // 640: the lid's lower edge (15 px seam)
-  const LID_H = LID_BASE - C.lid.top_y;                 // 70
+  const LID_H = Math.round((LID_BASE - C.lid.top_y) * 0.7);   // 49: a modest coffer — the storyboard's barrel lid (70) flattened by 30 %
+  const LID_TOP = LID_BASE - LID_H;                     // 591
   const D = M.dome, DR = M.drum;                        // dome 925–1155 x 452–596, drum 920–1160 x 596–640
   const DOME_H = D.y1 - D.y0, DOME_R = 113;             // E.shape.dome bulges ~1.5 % beyond its base radius
-  const LID_P = [[119, 0], [119, 36], [90, LID_H], [0, LID_H]];
+  const LID_P = [[119, 0], [119, 27], [94, LID_H], [0, LID_H]];
   const DOME_P = [[DOME_R, 0], [DOME_R * 1.1, DOME_H * 0.52], [DOME_R * 0.56, DOME_H * 0.9], [0, DOME_H]];
   /** the cap between lid (u = 0) and dome (u = 1); u may overshoot */
   const capPts = (u, baseY) => profilePts(cx, baseY, LID_P.map((p, i) => [lerp(p[0], DOME_P[i][0], u), lerp(p[1], DOME_P[i][1], u)]), 30);
   const DOOR = M.door, LOCK = C.lock_plate;
+  // LEAD-BLUE (review, L11): a slate blue, hue ~213° — not the palette's teal, which read green-blue on a phone
+  const DM = ['#27486E', '#39619A', '#5F8DBE', '#B2CAE3'], DM_MID = '#4873AC', DM_RIB = '#18304E';
+  // the minaret stands 12 px further right than the storyboard's and is 6 px wider: its shaft (870–904) meets the body's wall
+  const MN = { ...M.minaret, x0: M.minaret.x0 + 12, x1: M.minaret.x1 + 18, shaft_x: [M.minaret.shaft_x[0] + 12, M.minaret.shaft_x[1] + 18] };
   const ARCH_POINT = 0.8;
   const PLATE_EDGE = { color: '#8A5216', width: 3, opacity: 0.75 };
   const archAt = (u, grow = 0) => shape.arch(cx, lerp(LOCK.centre[1] + LOCK.h / 2, DOOR.y1, u),
@@ -51,7 +56,8 @@ export function makeBuilding(E, W, U) {
     { color: '#8E5A27', coverage: 0.56, size: 50, pores: 0.3, maskFn: (x, y) => lerp(1, 0.4, ss(0.3, 0.75, lit(x, y))), patch: { scale: 110, amount: 0.34 } },
     { color: P('chest_wood_dark'), coverage: 0.32, size: 36, stamps: 'open', maskFn: (x, y) => ss(0.62, 0.2, lit(x, y)), patch: { scale: 90, amount: 0.46 } },
     { color: '#B67E36', coverage: 0.42, size: 40, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.4, 0.8, lit(x, y)), patch: { scale: 100, amount: 0.4 } },
-    { color: P('primer'), coverage: 0.05, size: 18, stamps: 'soft' },
+    { color: '#9A6428', coverage: 0.2, size: 22, stamps: 'open', patch: { scale: 70, amount: 0.5, seed: 8 } },          // second-tone dab pass
+    { color: P('primer'), coverage: 0.055, size: 9, stamps: 'soft', opacity: 0.6 },                                      // pores: cream primer, small, never white
   ];
   const lineP = (pts) => { const p = new Path2D(); pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y))); return p; };
   const addLine = (path, pts) => { pts.forEach(([x, y], i) => (i ? path.lineTo(x, y) : path.moveTo(x, y))); };
@@ -80,12 +86,13 @@ export function makeBuilding(E, W, U) {
     // pass 2: dark straps with rivets
     const strap = (x, seed) => E.bakeStencil({
       shape: shape.rect(x - 10, B0.y0, 20, B0.y1 - B0.y0), base: P('chest_straps'), anchor: [0, 0], seed, bleed: false,
-      layers: [{ color: '#33221B', coverage: 0.4, size: 22, stamps: 'open' }, { color: '#6A4B3A', coverage: 0.3, size: 16, stamps: 'body', maskFn: (px) => ss(x - 4, x + 8, px) }],
-      details: { print: 'solid', draw: (c) => { c.fillStyle = '#E8B040'; for (const y of [B0.y0 + 13, B0.y1 - 13]) { c.beginPath(); c.arc(x, y, 3.6, 0, 7); c.fill(); } } },
+      layers: [{ color: '#33221B', coverage: 0.4, size: 22, stamps: 'open' }, { color: '#6A4B3A', coverage: 0.3, size: 16, stamps: 'body', maskFn: (px) => ss(x - 4, x + 8, px) },
+        { color: P('primer'), coverage: 0.05, size: 7, stamps: 'soft', opacity: 0.6 }],
+      details: { print: 'solid', draw: (c) => { c.fillStyle = '#8A6A4A'; for (const y of [B0.y0 + 13, B0.y1 - 13]) { c.beginPath(); c.arc(x, y, 3, 0, 7); c.fill(); } } },
     });
     const straps = [strap(cx - 68, 2103), strap(cx + 68, 2104)];
     a.body2 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2105, steps: 2, dabSize: 70, reveal: { order: 'sweep', angle: -Math.PI / 2, jitter: 0.3 }, draw: (c) => { for (const s of straps) s.draw(c, 0, 0); } });
-    // pass 3: light dabs on the upper right, gold corner plates
+    // pass 3: light dabs on the upper right (no gold corner plates: gold is on the lock plate and the lid's two thin bands only)
     const lights = E.bakeStencil({
       shape: body0, anchor: [0, 0], seed: 2106, bleed: false,
       layers: [
@@ -93,13 +100,7 @@ export function makeBuilding(E, W, U) {
         { color: '#E2B56A', coverage: 0.3, size: 20, stamps: 'open', maskFn: (x, y) => ss(0.74, 0.95, bodyLit(x, y)), patch: { scale: 60, amount: 0.5 } },
       ],
     });
-    const corner = (x, y, sx, sy, seed) => {
-      const k = 30, pts = [[0, 0], [k, 0], [k, 7], [15, 10], [10, 15], [7, k], [0, k]].map(([px, py]) => [x + sx * px, y + sy * py]);
-      return E.bakeStencil({ shape: shape.polygon(pts), anchor: [0, 0], seed, ...gold({ lit: (px, py) => ss(0.3, 0.7, bodyLit(px, py)) }),
-        details: { print: 'solid', draw: (c) => { c.fillStyle = '#7A4614'; c.beginPath(); c.arc(x + sx * 8, y + sy * 8, 2.6, 0, 7); c.fill(); } } });
-    };
-    const corners = [corner(B0.x0, B0.y0, 1, 1, 2107), corner(B0.x1, B0.y0, -1, 1, 2108), corner(B0.x0, B0.y1, 1, -1, 2109), corner(B0.x1, B0.y1, -1, -1, 2110)];
-    a.body3 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2111, steps: 2, dabSize: 70, reveal: { order: 'sweep', angle: -Math.PI / 2, jitter: 0.3 }, draw: (c) => { lights.draw(c, 0, 0); for (const k of corners) k.draw(c, 0, 0); } });
+    a.body3 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2111, steps: 2, dabSize: 70, reveal: { order: 'sweep', angle: -Math.PI / 2, jitter: 0.3 }, draw: (c) => { lights.draw(c, 0, 0); } });
     // the finished body as a texture for the morph (wood rectangle + passes 2 and 3)
     a.bodyTex = E.bakeSprite({ bounds: R_WOOD, anchor: [R_WOOD[0], R_WOOD[1]], seed: 2112, draw: (c) => { a.wood.draw(c, 0, 0); a.body2.draw(c, 0, 0); a.body3.draw(c, 0, 0); } });
 
@@ -134,26 +135,30 @@ export function makeBuilding(E, W, U) {
     });
 
     // --- lid texture: wood, a darker rim, two gold bands, fanning slat slits (they echo the dome's ribs)
-    const lidLit = upRight(B0.x0, B0.x1, C.lid.top_y - 30, LID_BASE);
+    const lidLit = upRight(B0.x0, B0.x1, LID_TOP - 30, LID_BASE);
     const slats = new Path2D();
     for (const k of [-3, -2, -1, 0, 1, 2, 3]) {
       if (Math.abs(k) === 2) continue;                                    // the gold bands sit there
-      addLine(slats, Array.from({ length: 9 }, (_, i) => { const v = i / 8, y = lerp(LID_BASE - 14, R_LID[1], v); return [cx + k * 34 * (1 - 0.34 * v) + 1.2 * Math.sin(i * 1.3 + k), y]; }));
+      addLine(slats, Array.from({ length: 9 }, (_, i) => { const v = i / 8, y = lerp(LID_BASE - 12, R_LID[1], v); return [cx + k * 34 * (1 - 0.34 * v) + 1.2 * Math.sin(i * 1.3 + k), y]; }));
     }
     a.lid = tex(R_LID, { base: P('chest_wood'), seed: 2120, layers: woodLayers(lidLit),
       slits: { path: slats, width: 2, color: '#47290F', opacity: 0.74 },
       details: [
-        { print: 'solid', draw: (c) => { c.fillStyle = '#6A4120'; c.fillRect(R_LID[0], LID_BASE - 13, R_LID[2] - R_LID[0], 13); } },
-        { print: 'solid', draw: (c) => {
+        { print: 'solid', draw: (c) => { c.fillStyle = '#6A4120'; c.fillRect(R_LID[0], LID_BASE - 11, R_LID[2] - R_LID[0], 11); } },
+        { print: 'solid', draw: (c) => {                                  // two THIN gold bands
           c.fillStyle = P('gold_fittings');
-          for (const s of [-1, 1]) { c.beginPath(); c.moveTo(cx + s * 60, LID_BASE); c.lineTo(cx + s * 76, LID_BASE); c.lineTo(cx + s * 52, R_LID[1]); c.lineTo(cx + s * 38, R_LID[1]); c.closePath(); c.fill(); }
+          for (const s of [-1, 1]) { c.beginPath(); c.moveTo(cx + s * 64, LID_BASE); c.lineTo(cx + s * 72, LID_BASE); c.lineTo(cx + s * 49, R_LID[1]); c.lineTo(cx + s * 42, R_LID[1]); c.closePath(); c.fill(); }
         } },
         { print: 'print', opacity: 0.8, draw: (c) => {
           c.fillStyle = P('door_glow');
-          for (const s of [-1, 1]) { c.beginPath(); c.moveTo(cx + s * 66 + 2, LID_BASE); c.lineTo(cx + s * 66 + 7, LID_BASE); c.lineTo(cx + s * 43 + 6, R_LID[1]); c.lineTo(cx + s * 43 + 1, R_LID[1]); c.closePath(); c.fill(); }
+          for (const s of [-1, 1]) { c.beginPath(); c.moveTo(cx + s * 67 + 1, LID_BASE); c.lineTo(cx + s * 67 + 4, LID_BASE); c.lineTo(cx + s * 45 + 3, R_LID[1]); c.lineTo(cx + s * 45, R_LID[1]); c.closePath(); c.fill(); }
         } },
       ],
     });
+    // the lid's handle: a small dark iron knob (the gold one is the foot of the dome's finial and arrives with it)
+    const knobShape = shape.union(shape.ellipse(0, 0, 9, 8.5), shape.ellipse(0, 8, 12.5, 4));
+    a.knobIron = E.bakeStencil({ shape: knobShape, anchor: [0, 0], seed: 2122, base: P('chest_straps'), bleed: false,
+      layers: [{ color: '#33221B', coverage: 0.4, size: 12, stamps: 'open' }, { color: '#7A5A46', coverage: 0.4, size: 9, stamps: 'body', maskFn: (x, y) => ss(-2, 4, x - y) }, { color: P('primer'), coverage: 0.05, size: 6, stamps: 'soft', opacity: 0.6 }] });
     a.knob = E.bakeStencil({ shape: shape.union(shape.ellipse(0, 0, 10.5, 10), shape.ellipse(0, 9, 14, 4.5)), anchor: [0, 0], seed: 2121, ...gold({ lit: (x, y) => ss(-3, 4, x - y), edge: 2.6 }) });
 
     // --- dome texture (lead-blue; ribs through slits, laid out for the finished dome)
@@ -171,19 +176,20 @@ export function makeBuilding(E, W, U) {
       const wide = 2.6 * (0.62 + 0.38 * Math.cos((k / 6) * (Math.PI / 2))) * ribRng.range(0.75, 1.3);
       ribs.push(shape.ribbon(pts, [wide * 1.1, wide * 0.25]));
     }
-    const dm = P('dome');
+    const dm = DM;
     a.dome = tex(R_DOME, { base: dm[0], seed: 2130, reveal: { steps: 5, mode: 'mask', order: 'sweep', angle: -Math.PI / 2, jitter: 0.5, dab: 80 },
       layers: [
-        { color: '#163B4C', coverage: 0.3, size: 50, pores: 0.3, patch: { scale: 100, amount: 0.5 } },
+        { color: '#1B3554', coverage: 0.3, size: 50, pores: 0.3, patch: { scale: 100, amount: 0.5 } },
         { color: dm[1], coverage: 0.6, size: 48, pores: 0.3, maskFn: lit(0.3, 0.5), patch: { scale: 100, amount: 0.36 } },
-        { color: '#3F8C9E', coverage: 0.9, size: 46, pores: 0.3, poreScale: 0.7, maskFn: lit(0.56, 0.62) },
+        { color: DM_MID, coverage: 0.9, size: 46, pores: 0.3, poreScale: 0.7, maskFn: lit(0.56, 0.62) },
         { color: dm[2], coverage: 0.9, size: 44, pores: 0.3, poreScale: 0.6, maskFn: lit(0.72, 0.775) },
         { color: dm[3], coverage: 0.8, size: 34, stamps: 'body', pores: 0.3, poreScale: 0.7, maskFn: lit(0.865, 0.91) },
-        { color: '#3F8C9E', coverage: 0.14, size: 44, stamps: 'speck', maskFn: (x, y) => lit(0.46, 0.54)(x, y) * lit(0.64, 0.56)(x, y) },
+        { color: DM_MID, coverage: 0.14, size: 44, stamps: 'speck', maskFn: (x, y) => lit(0.46, 0.54)(x, y) * lit(0.64, 0.56)(x, y) },
         { color: dm[2], coverage: 0.14, size: 44, stamps: 'speck', maskFn: (x, y) => lit(0.62, 0.7)(x, y) * lit(0.8, 0.73)(x, y) },
-        { color: P('primer'), coverage: 0.2, size: 22, stamps: 'soft', maskFn: lit(0.5, 0.24), patch: { scale: 60, amount: 0.66, sharp: 0.4 } },
+        // pores of the shadow side: the cream primer at 60 %, small and dense — never white flecks (D2)
+        { color: P('primer'), coverage: 0.09, size: 10, stamps: 'soft', opacity: 0.6, maskFn: lit(0.5, 0.24), patch: { scale: 60, amount: 0.5, sharp: 0.4 } },
       ],
-      slits: { shape: shape.union(...ribs), width: 2.4, color: '#0E2C3A', opacity: 0.86 },
+      slits: { shape: shape.union(...ribs), width: 2.4, color: DM_RIB, opacity: 0.86 },
     });
 
     // --- stone texture: ivory walls, shadow side at the left, a row of mauve dabs under the cornice, two windows
@@ -222,24 +228,36 @@ export function makeBuilding(E, W, U) {
       { color: P('door_core'), coverage: 0.84, size: 20, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1.16, 0.96, dR(x, y)) },
       { color: '#FFFDF6', coverage: 0.84, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.82, 0.6, dR(x, y)) },
     ] });
-    // a few warm dabs on the stone round the arch (state 2) — the doorway's own light, no rays
+    // LINK 2 (23.07) is the mescid's answer, and it must be READ (review): the doorway's light spreads on the stone
+    // round the arch (a wide loose halo of warm dabs, printed under the maroon frame) and the two windows light
+    // up from inside — warm gold in their maroon frames, no rays
     a.doorHalo = E.makeCluster({
-      w: 150, h: 150, seed: 2154, anchor: [75, 110], edgeSoftness: 0.8,
-      shapeFn: (x, y) => { const d = Math.hypot((x - 75) / 62, (y - 86) / 76); return clamp(Math.min((d - 0.5) / 0.2, (1.06 - d) / 0.3)) * ss(134, 112, y); },
+      w: 210, h: 190, seed: 2154, anchor: [105, 150], edgeSoftness: 0.8,
+      shapeFn: (x, y) => { const d = Math.hypot((x - 105) / 92, (y - 118) / 104); return clamp(Math.min((d - 0.34) / 0.16, (1.06 - d) / 0.36)) * ss(176, 150, y); },
       layers: [
-        { color: P('door_glow'), coverage: 0.5, size: 20, stamps: 'body', pores: 0.3, patch: { scale: 40, amount: 0.3 } },
-        { color: P('door_core'), coverage: 0.24, size: 13, stamps: 'open' },
+        { color: P('door_glow'), coverage: 0.6, size: 22, stamps: 'body', pores: 0.3, patch: { scale: 46, amount: 0.24 } },
+        { color: P('door_core'), coverage: 0.34, size: 15, stamps: 'open', band: [0.4, 1] },
+        { color: '#F2BE48', coverage: 0.12, size: 13, stamps: 'soft' },
       ],
       reveal: { steps: 1 },
+    });
+    a.winGlow = M.windows.map((w, i) => {
+      const lr = (x, y) => Math.hypot((x - w.centre_x) / (w.w * 0.5), (y - (w.sill_y - w.h * 0.42)) / (w.h * 0.56));
+      return E.bakeStencil({ shape: shape.arch(w.centre_x, w.sill_y - 3, w.w - 7, w.h - 8, ARCH_POINT), base: '#EDB23A', anchor: [0, 0], seed: 2156 + i, bleed: false,
+        layers: [
+          { color: P('door_glow'), coverage: 0.8, size: 16, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1.0, 0.7, lr(x, y)) },
+          { color: P('door_core'), coverage: 0.7, size: 12, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.6, 0.3, lr(x, y)) },
+        ],
+        edge: { color: '#8A5216', width: 2.4, opacity: 0.55, dir: null } });
     });
     // the breathing core (drawn clipped to the door opening, scaled by a breath)
     a.core = E.makeGlow({ rx: 15, ry: 30, color: P('door_core'), core: '#FFFDF6', density: 0.86, falloff: 0.5, seed: 2155 });
 
     // --- minaret: ONE sprite (shaft, balcony on a corbel, lead-blue cone)
-    const mn = M.minaret, mx = (mn.shaft_x[0] + mn.shaft_x[1]) / 2, balc = mn.balconies_y[0];
+    const mn = MN, mx = (mn.shaft_x[0] + mn.shaft_x[1]) / 2, balc = mn.balconies_y[0], shw = (mn.shaft_x[1] - mn.shaft_x[0]) / 2;
     const corbel = shape.polygon([[mn.x0 + 2, balc + 3], [mn.x1 - 2, balc + 3], [mn.shaft_x[1], balc + 20], [mn.shaft_x[0], balc + 20]]);
     const shaftShape = shape.union(
-      shape.rect(mn.shaft_x[0], balc, mn.shaft_x[1] - mn.shaft_x[0], mn.base_y - balc + 2),
+      shape.rect(mn.shaft_x[0], balc, mn.shaft_x[1] - mn.shaft_x[0], mn.base_y - balc + 6),
       shape.rect(mn.shaft_x[0] + 2, mn.cap_base_y - 2, mn.shaft_x[1] - mn.shaft_x[0] - 4, balc - mn.cap_base_y + 4),
       shape.rect(mn.x0, balc - 13, mn.x1 - mn.x0, 16), corbel,
       shape.rect(mn.shaft_x[0] - 1, mn.cap_base_y - 2, mn.shaft_x[1] - mn.shaft_x[0] + 2, 7),
@@ -256,24 +274,26 @@ export function makeBuilding(E, W, U) {
         { print: 'print', draw: (c) => {
           c.fillStyle = '#A9604C';
           c.fill(corbel.path);
-          for (let i = 0; i < 5; i++) c.fillRect(mn.x0 + 5 + i * 8.2, balc - 10, 3.2, 9);
+          for (let i = 0; i < 6; i++) c.fillRect(mn.x0 + 5 + i * (mn.x1 - mn.x0 - 13.4) / 5, balc - 10, 3.4, 9);
           c.fillRect(mn.shaft_x[0] - 1, mn.cap_base_y - 1, mn.shaft_x[1] - mn.shaft_x[0] + 2, 4);
         } },
-        (c) => { c.fillStyle = P('window_maroon'); c.fill(shape.arch(mx, balc - 34, 10, 26, ARCH_POINT).path); c.fill(shape.arch(mx, balc + 126, 11, 30, ARCH_POINT).path); },
+        (c) => { c.fillStyle = P('window_maroon'); c.fill(shape.arch(mx, balc - 34, 12, 27, ARCH_POINT).path); c.fill(shape.arch(mx, balc + 126, 13, 32, ARCH_POINT).path); },
       ],
-      edge: { color: P('stone_edge'), width: 4, opacity: 0.5 },
+      edge: { color: P('stone_edge'), width: 4, opacity: 0.5, dir: null },
       bleed: { color: '#B9A2A4', amount: 0.7 },
     });
-    const capShp = shape.polygon([[mx - 17, mn.cap_base_y], [mx - 12.5, mn.cap_base_y - 20], [mx - 6.5, mn.cap_base_y - 44], [mx, mn.cap_tip_y], [mx + 6.5, mn.cap_base_y - 44], [mx + 12.5, mn.cap_base_y - 20], [mx + 17, mn.cap_base_y]]);
+    const cw = shw + 3;
+    const capShp = shape.polygon([[mx - cw, mn.cap_base_y], [mx - cw * 0.74, mn.cap_base_y - 20], [mx - cw * 0.38, mn.cap_base_y - 44], [mx, mn.cap_tip_y], [mx + cw * 0.38, mn.cap_base_y - 44], [mx + cw * 0.74, mn.cap_base_y - 20], [mx + cw, mn.cap_base_y]]);
     const cap = E.bakeStencil({
       shape: capShp, base: dm[0], anchor: [0, 0], seed: 2161, bleed: { color: dm[1], amount: 0.7 },
       layers: [
         { color: dm[1], coverage: 0.7, size: 26, pores: 0.3, maskFn: (x) => ss(mx - 8, mx + 2, x) },
         { color: dm[2], coverage: 0.8, size: 20, pores: 0.3, maskFn: (x) => ss(mx + 1, mx + 7, x) },
         { color: dm[3], coverage: 0.5, size: 12, stamps: 'body', maskFn: (x, y) => ss(mx + 5, mx + 10, x) * ss(mn.cap_base_y - 40, mn.cap_base_y - 8, y) },
+        { color: P('primer'), coverage: 0.06, size: 7, stamps: 'soft', opacity: 0.6, maskFn: (x) => ss(mx + 2, mx - 8, x) },
       ],
     });
-    a.minaret = E.bakeSprite({ bounds: [mn.x0 - 8, mn.cap_tip_y - 8, mn.x1 + 8, mn.base_y + 6], anchor: [0, 0], seed: 2162, draw: (c) => { shaft.draw(c, 0, 0); cap.draw(c, 0, 0); } });
+    a.minaret = E.bakeSprite({ bounds: [mn.x0 - 8, mn.cap_tip_y - 8, mn.x1 + 8, mn.base_y + 10], anchor: [0, 0], seed: 2162, draw: (c) => { shaft.draw(c, 0, 0); cap.draw(c, 0, 0); } });
     a.minaretH = mn.base_y - mn.cap_tip_y;
 
     // --- gold finials (alem): they pop on at 20.33 / 20.37; a darker ochre edge holds them on the white core
@@ -308,11 +328,11 @@ export function makeBuilding(E, W, U) {
   /** the minaret alone: it rises from behind the plateau's front edge, so the knoll's fringe is drawn after it */
   function drawMinaret(ctx, t) {
     if (!on(t, m.m3[0])) return;
-    const { u3 } = morphAt(t), mn = M.minaret;
+    const { u3 } = morphAt(t), mn = MN;
     const rise = overshoot(u3, 0.04, 0.8);
     ctx.save();
     ctx.beginPath();
-    ctx.rect(mn.x0 - 12, mn.finial_top_y - 60, mn.x1 - mn.x0 + 24, mn.base_y + 3 - (mn.finial_top_y - 60));
+    ctx.rect(mn.x0 - 12, mn.finial_top_y - 60, mn.x1 - mn.x0 + 24, mn.base_y + 7 - (mn.finial_top_y - 60));
     ctx.clip();
     const dy = (1 - rise) * (A.minaretH + 20);
     A.minaret.draw(ctx, 0, dy);
@@ -347,11 +367,11 @@ export function makeBuilding(E, W, U) {
       if (p3 > 0) { A.body3.draw(ctx, 0, 0, { p: p3 }); A.plate.draw(ctx, 0, 0, { p: p3 }); }
       if (lidOn) {
         const n = nf(t, c.lid);
-        const dy = kf(n, [[0, -14], [1, -5], [2, 0]]), sy = kf(n, [[1, 1], [2, 0.955], [3, 0.985], [4, 1]]);
+        const dy = kf(n, [[0, -14], [1, -5], [2, 0]]), sy = kf(n, [[1, 1], [2, 0.958], [3, 1]]);   // printed, dropped, at rest on the 4th frame
         ctx.save();
         ctx.translate(cx, LID_BASE + dy); ctx.scale(2 - sy, sy); ctx.translate(-cx, -LID_BASE);
         cutBy(ctx, shape.polygon(capPts(0, LID_BASE)), A.lid, R_LID, { bleed: { color: P('chest_wood_dark'), amount: 0.8 } });
-        A.knob.draw(ctx, cx, C.knob_top_y + 10);
+        A.knobIron.draw(ctx, cx, LID_TOP - 5);
         ctx.restore();
         if (on(t, c.seam[1])) A.spill.draw(ctx, cx, LID_BASE + 2, { scale: 1 + 0.025 * Math.sin((t - ft(c.seam[1])) * 2.4) });
       }
@@ -365,7 +385,7 @@ export function makeBuilding(E, W, U) {
     const bx0 = lerp(B0.x0, B1.x0, e2), bx1 = lerp(B0.x1, B1.x1, e2);
     const bodyShape = shape.rect(bx0, bodyTop, bx1 - bx0, by - bodyTop);
     const drumShape = shape.rect(lerp(B0.x0 + 6, DR.x0, e2), baseY - 1, lerp(B0.x1 - B0.x0 - 12, DR.x1 - DR.x0, e2), bodyTop - baseY + 2);
-    const stoneEdge = { color: P('stone_edge'), width: 6, opacity: 0.55 };
+    const stoneEdge = { color: P('stone_edge'), width: 6, opacity: 0.55, dir: null };   // the lavender inner edge runs ALL ROUND: the ivory never melts into the light behind it
     // light inside, widening as the lid lifts, until the stone prints over it
     if (cp < 1) cutBy(ctx, drumShape, A.light, R_LIGHT);
     cutBy(ctx, drumShape, A.stone, R_STONE, { p: cp, edge: { ...stoneEdge, width: 4 } });
@@ -374,7 +394,7 @@ export function makeBuilding(E, W, U) {
     // lock plate -> doorway
     const frameS = archAt(e2, lerp(0, DOOR.frame_px, clamp(e2))), innerS = archAt(e2);
     // LINK 2: the doorway's own light on the stone round the arch — printed UNDER the maroon frame, which stays whole
-    if (cp >= 1 && doorLevel(t) >= 2) A.doorHalo.draw(ctx, cx, DOOR.y1);
+    if (cp >= 1 && doorLevel(t) >= 2) { A.doorHalo.draw(ctx, cx, DOOR.y1); for (const w of A.winGlow) w.draw(ctx, 0, 0); }
     cutBy(ctx, frameS, A.frame, R_DOOR, { p: cp });
     if (cp < 1) cutBy(ctx, innerS, A.plateTex, R_DOOR, { edge: PLATE_EDGE });
     cutBy(ctx, innerS, A.glow, R_DOOR, { p: cp });
@@ -390,7 +410,7 @@ export function makeBuilding(E, W, U) {
     // lid -> dome
     const capS = shape.polygon(capPts(e1, baseY));
     if (cp < 1) cutBy(ctx, capS, A.lid, [R_LID[0], R_LID[1] + (baseY - LID_BASE)], cp > 0 ? {} : { bleed: { color: P('chest_wood_dark'), amount: 0.8 } });
-    cutBy(ctx, capS, A.dome, R_DOME, { p: cp, bleed: cp >= 1 ? { color: P('dome', 1), amount: 0.8 } : null });
+    cutBy(ctx, capS, A.dome, R_DOME, { p: cp, bleed: cp >= 1 ? { color: DM[1], amount: 0.8 } : null });
     // the knob rides the apex and becomes the foot of the finial
     const apex = baseY - lerp(LID_H, DOME_H, e1);
     const nfin = nf(t, m.fin1);
@@ -398,7 +418,7 @@ export function makeBuilding(E, W, U) {
       A.finDome.draw(ctx, cx, apex - 13, { scale: pop3(nfin) });
       A.burstD.draw(ctx, cx, apex - 13, t - ft(m.fin1));
     }
-    A.knob.draw(ctx, cx, apex - 4);
+    (nfin >= -1e-6 ? A.knob : A.knobIron).draw(ctx, cx, apex - 4);     // the iron handle turns into the finial's gold foot as the finial pops
     ctx.restore();
   }
 

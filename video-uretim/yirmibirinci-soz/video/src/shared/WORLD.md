@@ -24,13 +24,13 @@ W.lightFloor                                 // world y: nothing lighter than he
 
 | # | plane | what the world draws | then calls |
 |---|---|---|---|
-| 1 | 0 / 0.15 | wall primer; the sky — a composed bake (complete from frame 0) | |
-| 2 | 1.0 | zone tints: dusk passes (left third), pre-dawn wash (right third) | |
+| 1 | 0 / 0.15 | wall primer; the sky — a composed bake (complete from frame 0; about a tenth of it is bare primer between the prints) | |
+| 2 | 1.0 | zone tints: dusk passes (left third), pre-dawn wash (right third) — banks of cloud with lobed inner edges, never slabs | |
 | 3 | 0.3 | small cloud c1 — baked but NOT shown since polish round 1 (see the notes) | **`slots.back`** (1.0) — *extension*: behind today's sun |
 | 4 | 1.0 | today's sun from 8.77: warm sky pass, cobalt annulus, halo passes, disc; from 16.83 / 16.93 its receded variant (paler disc + calm pale halo, dabbed over in two steps; the annulus' outer rim taken back into the sky) | **`slots.sky`** (1.0) |
 | 5 | 1.0 | tomorrow's dashed ring (+ its crumble specks), light column | **`slots.far`** (0.7) |
 | 6 | 0.5 / 0.7 | far ridge (opaque below its crest); mist bank | **`slots.mid`** (1.0) |
-| 7 | 1.0 | the mound (lit from 10.07); the rosette leaves that pass behind his legs; the man — **`slots.hands`** inside `man.draw`; hedge (with the grass fringe over his soles); the other rosette leaves, buds / flowers | **`slots.front`** (1.0) |
+| 7 | 1.0 | the mound (lit from 10.07); the rosette leaves that pass behind his legs and flower f2 with its rosette (his stepping shoe is planted in front of it); the man — **`slots.hands`** inside `man.draw` (the world eases his turn frame by frame, frames 43–48, and cross-dabs the two turn drawings on frame 45 with `E.drawThrough`); hedge (its grass overlaps only the SOLES of his shoes); the other rosette leaves, buds / flowers | **`slots.front`** (1.0) |
 | 8 | 1.2 / screen | ambient specks (only where screen y < 1190) | **`slots.top`** (frame px) |
 
 main.js then applies `E.finish(ctx)`; the engine draws the glosses.
@@ -46,25 +46,28 @@ main.js then applies `E.finish(ctx)`; the engine draws the glosses.
 * `slots.far` is behind the far ridge (opaque from its crest + 20 px down) and behind the mist bank.
 * `slots.mid` is behind the mound, the man and the hedge (the hedge is opaque from lip + 9 px down, with
   a 13 px sponge fringe above the lip line `L.lip(x)`; in front of his feet, x 478–626, it is a low grass
-  fringe instead: first tufts at y 1186–1196, opaque from y 1198 down at the latest — anything of yours
-  that stands on the ground there is covered from that row); `slots.front` is in front of everything painted.
+  fringe instead: first tufts at y 1196–1202, opaque from y 1204 down at the latest — it overlaps only the soles of
+  his shoes, and anything of yours that stands on the ground there is covered from that row);
+  `slots.front` is in front of everything painted.
 * Other planes: `W.withPlane(ctx, t, parallax, fn)` from `slots.top` (frame space) — or compute points
   with `W.toScreen(x, y, t, parallax)`.
 * Gloss windows: nothing you draw may be lighter than hedge_mid below screen y 1222 while a gloss is up
   (`L.gloss.windows`); in world px that row is `W.lightFloor` (≈ 1203: the YARIN framing at zoom 1.15 puts
   world y 1204 on screen row 1222, drift included). Above it you are free.
-* world.js itself uses no engine scratch surface and no `E.drawThrough`; you may use them in your slots.
+* world.js uses `E.drawThrough` (the engine's `frame` scratch) on ONE frame only — frame 45, the middle of the
+  turn's cross-dab, drawn right after the man — and no other engine scratch; you may use them in your slots (not
+  nested inside another `drawThrough`).
 
 ## `W.state(t)` — the shared timeline (storyboard §5), frame-snapped
 
 ```js
-{ coat2,                       // hedge / mound second coat, rosettes, buds, cloud c1 are on (0.07)
-  man:   { p, warm },          // p = opening dab-in 0, 1/3, 2/3, 1 (0.13 / 0.20 / 0.27); warm 0 | 1 (10.07)
+{ coat2,                       // hedge / mound second coat, rosettes, buds: TRUE FROM FRAME 0 (critics round; was 0.07)
+  man:   { p, warm },          // p = opening dab-in 0, 1/3, 2/3, 1 on THREES: 0.10 / 0.20 / 0.30 (was 0.13 / 0.20 / 0.27); warm 0 | 1 (10.07)
   specks,                      // ambient specks running (0.27)
   cloud: { visible, x, y },    // layer px (parallax 0.3); visible is always false since polish round 1
   dusk:  { sunset0, sunset1, dusk1, dusk2, recede },          // booleans; recede 0..2
-  mist:  { build 0..2, thick 0..3 (1 after 16.47), recede 0..2, thinned, out 0..3, p (1 → 0 while it cross-dabs out), dx },
-  ring:  { dashes 0..14, strength 0..1 (1 / .8 / .55 / .35 / .7 / 0), crumble 0..3, p, visible },
+  mist:  { build 0..2, thick 0..3 (1 after 16.47; the passes land at 6.93 / 7.00 / 7.07 — was 7.00 / 7.07 / 7.17), recede 0..2, thinned, out 0..3, p (1 → 0 while it cross-dabs out), dx },
+  ring:  { dashes 0..14, strength 0..1 (1 / .8 / .55 / .35 after 6.93 / 7.00 / 7.07, .7 at 16.47, 0), crumble 0..3, p, visible },
   sun:   { visible (8.77), bare (9.17), blaze (9.57), halo 0..3, settle 0..4, recede 0..2,
            haloR (0 | 190 | 250 | 300 | 170 | 150), annulus 0..1, breath (halo scale now),
            core, mid, rim, peach, white, warmSky },           // which halo prints are on
@@ -110,7 +113,34 @@ Typical uses: `W.state(t).ring.strength` (what crumbles at 16.57), `.sun.visible
 * Flowers end at world y ≤ 1210 (they open at 10.13, after the YARIN gloss), rosette leaves and the light
   prints of the hedge lip at ≤ `W.lightFloor`; the lit rise never shows below the lip.
 * Bare world for regression: scene `world` (`node tools/render.mjs still --scene world --t 11.4 …`).
-* **Polish round 1, as built** (the interface, the timeline and every layout number are unchanged):
+* **Critics round, as built** (interface, layout numbers and palm targets unchanged; TWO retimings, both ordered by the
+  lead: the opening — second coat from frame 0, the man's passes on frames 3 / 6 / 9 — and the mist's thickening passes
+  with the ring's veil steps on frames 208 / 210 / 212; `layout.js` `TIMELINE`, `RETIMED`):
+  * *Sky.* The light-blue ground is a pressed coat with pores and irregular gaps: bare primer shows on about a tenth
+    of the sky stage (more toward the horizon, at the flanks and round the apex; pinholes only in the calm passage,
+    near the frame corners and in act 2's surround bands). Cobalt and lavender are lacy, porous prints with broken
+    contours (`skyMap`, `sky` in world.js). No cobalt print lies on or just above his head in any framing
+    (`headClear`; the YARIN dab is gone).
+  * *Dusk and pre-dawn zones, mist.* Cloud contours (`puffs` in world.js: a body, lobes along the inner edge, a top
+    that feathers off, strays trailing 60–140 px toward the centre — never as far as his hanging arms); the mist bank
+    has a billowing top and a scalloped inner edge. The dusk passes are open prints (about 60 % dusk paint; the day's
+    blue is dabbed back over the sunset first), and the two RECEDE passes (10.73 / 10.87) now make the dusk side one
+    step LIGHTER and less saturated (#B3ABCB, #C4BED9, a pale blue) instead of duskier: the centre column carries the
+    colour. The wash keeps clear of the place the minted coin floats in (world 724, 758).
+  * *Hedge.* Three dab families that can be told apart — the deep coat, hedge_deep as discrete prints gathered in
+    200–300 px clusters with shadow pockets between, lighter greens as small prints inside the clusters — plus fine
+    ochre-olive pinholes. How light a row may get follows the gloss (D3: nothing lighter than hedge_mid inside the
+    field): `LIGHT_FLOOR` (≈ 1203) … `TEXT0` (≈ 1290) life up to hedge_mid one step down; `TEXT0` … `TEXT1` (≈ 1500,
+    the rows the gloss ink can lie on) the calmest rows; `TEXT1` … `DECO0` (≈ 1597, the first row below the field in
+    every gloss window) life again; below `DECO0` the FRIEZE: hedge_mid, yellow-green, primer pinholes, the dark
+    thicket and sprigs of light stencil leaves with a lavender shadow print inside their lower-left edge.
+  * *His feet.* The grass fringe in front of him overlaps only the SOLES (tufts from y 1196–1202, solid from 1204):
+    13–17 px of both shoes stand in sight. Flower f2 and its rosette are printed behind him, so the shoe he plants
+    with the half-step (x 581–618) is in sight too.
+  * *The turn.* Eased frame by frame by the world (`TURN_EASE`), with a real cross-dab on frame 45 — see MAN.md.
+  * `mound.base` / `hedge.base` are the finished coats now (the first coat alone is never shown).
+* **Polish round 1, as built** (the interface, the timeline and every layout number are unchanged; superseded where the
+  critics round above says otherwise):
   * *His feet.* The hedge lip in front of him is a continuous fringe of small grass prints (nothing is cut
     out round the legs). It hides his soles (y 1203.6; 1207.6 in the dip of the turn) and the lower part of
     both shoes for every root of the film (rest, turn, half-step at root x 550); a few px of the toe caps

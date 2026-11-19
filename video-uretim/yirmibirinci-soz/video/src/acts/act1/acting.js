@@ -42,8 +42,11 @@ export function makeActing(E, W) {
     k(204, B()), k(209, B({ sh: 4 }), e.cubic.out),
     k(212, B({ sh: 4 })), k(214, B({ sh: 3 }), e.cubic.out), k(216, B({ sh: 3 })), k(220, B({ sh: 2 }), e.sine.inOut),
     k(222, B({ sh: 2 })), k(238, B(), e.sine.inOut),
-    // 11.53–11.73 he straightens with the smallest nod: the shoulders settle
-    k(348, B()), k(351, B({ shy: 1.5 }), e.sine.inOut), k(355, B(), e.sine.inOut),
+    // 10.70–11.00 he lowers his gaze to the ground he stands on: the shoulders ease down with the head
+    k(321, B()), k(330, B({ shy: 2 }), e.sine.inOut),
+    // 11.53 «bil» - the ONE hit of the line: the shoulders dip with the nod (6 px below level, 3 frames) and come
+    // back up as he straightens (4 frames, a breath of overshoot); settled 11.77
+    k(346, B({ shy: 2 })), k(349, B({ shy: 6 }), e.sine.inOut), k(353, B(), arrive(0.06, 0.75)),
   ]);
 
   const H = (pitch = 0, tilt = 0, turn = 0, x = 0, y = 0) => M.pose({ view: 1, armL: REST, armR: REST, head: { pitch, tilt, turn, x, y } });
@@ -74,10 +77,12 @@ export function makeActing(E, W) {
     k(240, H(0, 0, 0), e.sine.inOut),                                                      // 7.40–7.97 the head returns level
     // 9.27–9.50 he lifts his head a little to today's sun (5 degrees) — arms stay down
     k(278, H(0, 0, 0)), k(285, H(-5), e.sine.inOut),
-    // 10.70–11.00 he lowers his gaze to the lit ground he stands on (8 degrees)
-    k(321, H(-5)), k(330, H(8), e.sine.inOut),
-    // 11.53–11.73 he straightens: level, the smallest nod, level
-    k(346, H(8)), k(349, H(-0.5), e.cubic.out), k(352, H(3), e.sine.inOut), k(356, H(0), e.sine.inOut),
+    // 10.70–11.00 he lowers his gaze to the lit ground he stands on (10 degrees, the head 2 px down with it)
+    k(321, H(-5)), k(330, H(10, 0, 0, 0, 2), e.sine.inOut),
+    // 11.53 «bil»: a firm NOD - the bowed head tips on (18 degrees: the crown drops, the nape shows; 3 frames, the
+    // word starts at 11.61 on its lowest point) and comes up level as he straightens (4 frames, a breath of
+    // overshoot); settled 11.77
+    k(346, H(10, 0, 0, 0, 2)), k(349, H(18, 0, 0, 0, 3), e.sine.inOut), k(353, H(0), arrive(0.06, 0.75)),
   ]);
 
   // ---------------------------------------------------------------- arms

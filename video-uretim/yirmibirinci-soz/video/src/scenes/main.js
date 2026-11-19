@@ -14,9 +14,24 @@ const LEAD = 0.6;     // s: an act is baked this long before its first frame
 const KEEP = 1.0;     // s: … and released once t is further than this from its range
 const EPS = 1e-6;
 
+// THE LAST HOLD (lead, after the film review): the film's final picture — the hour placed in the niche, the
+// three links answering — had no time to rest before the cream cover. Output time is stretched between the
+// coin's landing (22.97) and the cover's first pass (23.40) by HOLD.add seconds: film time runs slower there
+// (C1, speed 1 at both ends), so the arm sinks more slowly, the links are spaced out and the tableau settles;
+// from 23.40 + add everything (cover, end card) simply runs HOLD.add later on its own unchanged clock.
+// HOLD.add must be a whole number of frames; 0 switches the stretch off.
+export const HOLD = { a: 22.97, b: 23.40, add: 0 / 30 };
+export function filmTime(T) {
+  const { a, b, add } = HOLD, B = b + add;
+  if (add <= 0 || T <= a) return T;
+  if (T >= B) return T - add;
+  const u = (T - a) / (B - a), m = (B - a) / (b - a), u2 = u * u, u3 = u2 * u;   // Hermite, slopes m (= real speed 1)
+  return a + (b - a) * ((u3 - 2 * u2 + u) * m + (3 * u2 - 2 * u3) + (u3 - u2) * m);
+}
+
 export default {
   id: 'main',
-  duration: 29.6,
+  duration: 29.6 + HOLD.add,
   finish: false,       // the scene applies E.finish itself (the end card does its own)
   glosses: true,       // replaced in init by the storyboard's custom list (sahipsin ends 8.35)
 
@@ -31,8 +46,8 @@ export default {
   },
 
   /** Bake the part(s) that time t needs, release the ones that are far away. Awaited before every frame. */
-  async prepare(t, E) {
-    const W = this.W;
+  async prepare(T, E) {
+    const W = this.W, t = filmTime(T);
     for (const p of this.parts) {
       const { mod } = p;
       const need = t >= mod.from - LEAD - EPS && t < mod.to - EPS;
@@ -52,8 +67,8 @@ export default {
     }
   },
 
-  draw(ctx, t, E) {
-    const W = this.W;
+  draw(ctx, T, E) {
+    const W = this.W, t = filmTime(T);
     if (t >= this.endAt - EPS) {
       endcard.draw(ctx, t, E, W);
       return;

@@ -31,42 +31,60 @@ export function makeDial(E, W, U, acting) {
 
   const A = once('all', () => {
     const a = {};
-    // --- the clock-hand (drawn pointing along +x, anchored at the hub)
+    // --- the clock-hand (drawn pointing along +x, anchored at the hub): a CLOCK hand — a solid round hub (r 13) on the
+    //     disc's centre, a blade that swells from 15 to 18 px at one third and tapers to a neck, a lozenge tip, and a
+    //     short rounded counterweight (30 px) on the other side of the hub. No ring, no pin: one dark stencil shape.
+    const HL = HD.length;                                                   // 186
     const hand = shape.union(
-      shape.polygon([[0, -HD.width / 2], [HD.length - 16, -HD.tip_width / 2], [HD.length - 5, -2.4], [HD.length, 0], [HD.length - 5, 2.4], [HD.length - 16, HD.tip_width / 2], [0, HD.width / 2]]),
-      shape.polygon([[2, -6], [-26, -4.2], [-33, 0], [-26, 4.2], [2, 6]]),
-      shape.ellipse(0, 0, HD.hub_r),
+      shape.polygon([[-2, -7.5], [30, -8.3], [62, -9], [100, -7.5], [HL - 48, -4.3], [HL - 48, 4.3], [100, 7.5], [62, 9], [30, 8.3], [-2, 7.5]]),
+      shape.polygon([[HL - 54, -3.6], [HL - 42, -7.6], [HL - 32, -9.4], [HL - 24, -8.6], [HL - 12, -4.6], [HL - 4, -1.5], [HL, 0],
+        [HL - 4, 1.5], [HL - 12, 4.6], [HL - 24, 8.6], [HL - 32, 9.4], [HL - 42, 7.6], [HL - 54, 3.6]]),
+      shape.polygon([[-22, -6.6], [2, -6.4], [2, 6.4], [-22, 6.6]]),          // (all members wind the same way: opposite windings cut a hole where they overlap — the old "ferrule")
+      shape.ellipse(-22.5, 0, 7.5),
+      shape.ellipse(0, 0, 13),
     );
-    // receded states (16.83 / 16.93): the hand goes one value step toward the sky — a greyer, lighter maroon with a
-    // few pale specks of the world's over-dab; its silhouette stays whole (a 15 px hand under a 30 % veil read
-    // as a corroded stick)
-    const HBASE = [P('clock_hand'), '#614048', '#73545C'], HDARK = ['#33151A', '#4A2C34', '#5C4048'], HLIT = ['#6B3A34', '#83595A', '#967074'];
+    // receded states (16.83 / 16.93): the hand goes toward the sky in two value steps — a greyer, lighter maroon; its
+    // silhouette stays whole. Paint (all three states): two maroon tones dabbed over the base, and fine pores of the
+    // cream primer at 50–70 % (small and dense — never white flecks, which read as chipped paint)
+    const HBASE = [P('clock_hand'), '#6A4A52', '#896C73'], HDARK = ['#33151A', '#553439', '#75585F'], HLIT = ['#6B3A34', '#8A6263', '#A28285'];
+    const HPORE = ['#AD978C', '#BAA69D', '#C6B4AA'];                       // the cream primer (#EFE4CF) at 60 % in the pores of each state
     const mkHand = (n) => E.bakeStencil({
-      shape: hand, base: HBASE[n], anchor: [0, 0], seed: 2501, bleed: false, density: 2,
+      shape: hand, base: HPORE[n], anchor: [0, 0], seed: 2501, bleed: false, density: 2,
       layers: [
-        { color: HDARK[n], coverage: 0.36, size: 26, stamps: 'open', patch: { scale: 60, amount: 0.4 } },
-        { color: HLIT[n], coverage: 0.34, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1, -3, y), patch: { scale: 50, amount: 0.4 } },
-        { color: P('primer'), coverage: 0.03, size: 12, stamps: 'soft' },
-        ...(n ? [{ color: '#B9D3E2', coverage: 0.05 * n, size: 14, stamps: 'soft' }] : []),
+        { color: HBASE[n], coverage: 0.99, size: 20, stamps: 'dense', pores: 0.5, poreScale: 0.5, tint: 0.02 },
+        { color: HDARK[n], coverage: 0.4, size: 24, stamps: 'open', pores: 0.3, poreScale: 0.5, patch: { scale: 60, amount: 0.4 } },
+        { color: HLIT[n], coverage: 0.5, size: 18, stamps: 'body', pores: 0.3, poreScale: 0.5, maskFn: (x, y) => ss(2, -4, y), patch: { scale: 50, amount: 0.3 } },
       ],
-      details: { print: 'solid', draw: (c) => { c.fillStyle = n ? '#D8B46A' : '#E8A93A'; c.beginPath(); c.arc(0, 0, 3.8, 0, 7); c.fill(); } },
       reveal: { steps: 2, order: 'sweep', angle: 0, jitter: 0.5, dab: 60 },
     });
     a.hand = [0, 1, 2].map(mkHand);
 
-    // --- hour-beads: white-ivory, lavender shadow inside the lower-left edge; 5 prints, 3 states
+    // --- hour-beads: white-ivory, lavender shadow inside the lower-left edge; 5 prints, 3 states. Receded (16.83 /
+    //     16.93) they go TWO value steps toward the sky (#B4C3D8 with their lavender shadow: about 1.6 : 1 on the
+    //     over-dabbed ring) — after its recede the dial is a quiet pattern, the eye rests on chest / mescid / rug
     const bl = E.sphereLight(0, 0, RB, RB);
     const mkBead = (seed, st) => E.bakeStencil({
-      shape: shape.ellipse(0, 0, RB), base: [P('hour_bead'), '#E9ECEE', P('hour_bead_receded')][st], anchor: [0, 0], seed, density: 2,
-      bleed: { color: P('hour_bead_shadow'), amount: 0.5 },
+      shape: shape.ellipse(0, 0, RB), base: [P('hour_bead'), '#D3DAE6', '#B4C3D8'][st], anchor: [0, 0], seed, density: 2,
+      bleed: st ? false : { color: P('hour_bead_shadow'), amount: 0.5 },
       layers: [
-        { color: ['#DCD6EC', '#D2D3E6', '#C3CBE0'][st], coverage: 0.7, size: 20, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.46, 0.3, bl(x, y)) },
-        { color: ['#FFFFFF', '#F4F6F6', '#E2E8EE'][st], coverage: 0.6, size: 16, stamps: 'body', maskFn: (x, y) => ss(0.66, 0.84, bl(x, y)) },
-        { color: P('primer'), coverage: 0.05, size: 10, stamps: 'soft' },
+        { color: ['#DCD6EC', '#C3C6DE', '#A7B3D0'][st], coverage: 0.7, size: 20, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.46, 0.3, bl(x, y)) },
+        { color: ['#FFFFFF', '#E0E6EE', '#C2CFE0'][st], coverage: 0.6, size: 16, stamps: 'body', maskFn: (x, y) => ss(0.66, 0.84, bl(x, y)) },
+        ...(st < 2 ? [{ color: P('primer'), coverage: [0.05, 0.03][st], size: 10, stamps: 'soft' }] : []),
       ],
-      edge: { color: [P('hour_bead_shadow'), '#A9A4D0', '#A3A9CC'][st], width: 4.6, opacity: 0.62 },
+      edge: { color: [P('hour_bead_shadow'), '#A29FCC', '#9A9DC6'][st], width: 4.6, opacity: [0.62, 0.58, 0.55][st] },
     });
     a.beads = [0, 1, 2].map((st) => [2511, 2512, 2513, 2514, 2515].map((s) => mkBead(s, st)));
+    // --- the ring they sit on, receded: a porous over-dab of a greyed sky blue on the cobalt band (r 160–250), in the
+    //     world's two recede steps — the cobalt stays in its pores, so the ring is still a ring, one step nearer the sky
+    const vr = (x, y) => Math.hypot(x - DX, y - DY);
+    a.veil = U.field({
+      box: [DX - 270, DY - 270, DX + 270, DY + 270], seed: 2516, edge: 0.5, reveal: { steps: 2, order: 'random', layerMix: 0 },
+      depth: (x, y) => { const r = vr(x, y); return clamp(Math.min((r - 158) / 26, (252 - r) / 26)); },
+      layers: [
+        { color: '#6FA6CF', coverage: 0.66, size: 56, stamps: 'open', tint: 0.03, pores: 0.3 },
+        { color: '#7DB4D6', coverage: 0.3, size: 42, stamps: 'soft', patch: { scale: 120, amount: 0.4 } },
+      ],
+    });
 
     // --- the hour: gold face r 30 (matte, rimless), two maroon hands, and the rim that is stamped round it
     const gl = E.sphereLight(0, 0, R30, R30);
@@ -82,18 +100,23 @@ export function makeDial(E, W, U, acting) {
       edge: [{ color: P('coin_rim'), width: 2.6, opacity: 0.8, dir: null }, { color: '#8A4E16', width: 4.4, opacity: 0.5 }],
     });
     const mkHour = (len, seed) => E.bakeStencil({
-      shape: shape.capsule(len - C.clock_hands.stroke / 2, C.clock_hands.stroke / 2), base: P('clock_hand'), anchor: [0, 0], seed, density: 2, bleed: false,
-      layers: [{ color: '#33151A', coverage: 0.3, size: 12, stamps: 'open' }, { color: '#6B3A34', coverage: 0.3, size: 9, stamps: 'body', maskFn: (x, y) => ss(1, -2, y) }],
+      shape: shape.capsule(len - C.clock_hands.stroke / 2, C.clock_hands.stroke / 2), base: HPORE[0], anchor: [0, 0], seed, density: 2, bleed: false,
+      layers: [
+        { color: P('clock_hand'), coverage: 0.99, size: 18, stamps: 'dense', pores: 0.4, poreScale: 0.4, tint: 0.02 },
+        { color: '#33151A', coverage: 0.3, size: 18, stamps: 'open', pores: 0.3, poreScale: 0.4 },
+        { color: '#6B3A34', coverage: 0.3, size: 18, stamps: 'body', pores: 0.3, poreScale: 0.4, maskFn: (x, y) => ss(1, -2, y) },
+      ],
     });
     a.long = mkHour(C.clock_hands.long, 2521);
     a.short = mkHour(C.clock_hands.short, 2522);
     a.pin = E.bakeStencil({ shape: shape.ellipse(0, 0, 2.6), base: '#F0C050', anchor: [0, 0], seed: 2523, density: 2, bleed: false, layers: [] });
     // rim: dark-ochre band, a ring of small gold beads, a milled outer edge
     a.rim = E.bakeStencil({
-      shape: shape.ellipse(0, 0, R42), base: P('coin_rim'), anchor: [0, 0], seed: 2524, density: 2, bleed: false,
+      shape: shape.ellipse(0, 0, R42), base: '#CDAD87', anchor: [0, 0], seed: 2524, density: 2, bleed: false,   // base = the cream primer at 60 % (in the pores)
       layers: [
-        { color: '#7C4614', coverage: 0.4, size: 22, stamps: 'open', maskFn: (x, y) => ss(4, -12, x - y) },
-        { color: '#B8741E', coverage: 0.5, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(-6, 14, x - y) },
+        { color: P('coin_rim'), coverage: 0.99, size: 20, stamps: 'dense', pores: 0.45, poreScale: 0.45, tint: 0.02 },
+        { color: '#7C4614', coverage: 0.4, size: 22, stamps: 'open', pores: 0.3, poreScale: 0.45, maskFn: (x, y) => ss(4, -12, x - y) },
+        { color: '#B8741E', coverage: 0.5, size: 18, stamps: 'body', pores: 0.3, poreScale: 0.45, maskFn: (x, y) => ss(-6, 14, x - y) },
       ],
       details: [
         { print: 'solid', draw: (c) => {                                    // the beaded ring
@@ -132,9 +155,13 @@ export function makeDial(E, W, U, acting) {
 
   // ------------------------------------------------------------------ the coin's picture
   const SHORT_A = (A0 - 90) * DEG;                                          // the short hand points to five o'clock
-  /** o: {scale, rot, rim (null | scale of the stamped rim), sx, sy, tick (deg), faceP, hands} */
+  /**
+   * o: {scale, k (the coin's size in the world, 1 … K2), rot, rim (null | scale of the stamped rim), sx, sy, tick (deg),
+   * faceP, hands}. The two clock-hands keep their length with the coin but not their stroke: on the small coin of the
+   * wide framing they are printed 1.2 x as broad (9.4 px), so that the hour still reads as a clock on a phone.
+   */
   function drawCoin(ctx, x, y, o = {}) {
-    const sc = o.scale ?? 1;
+    const kk = o.k ?? 1, sc = (o.scale ?? 1) * kk;
     if (sc <= 0.01) return;
     ctx.save();
     ctx.translate(x, y);
@@ -143,9 +170,15 @@ export function makeDial(E, W, U, acting) {
     if (o.rim) A.rim.draw(ctx, 0, 0, { scale: o.rim });
     A.face.draw(ctx, 0, 0, { p: o.faceP ?? 1 });
     if (o.hands !== false) {
-      A.short.draw(ctx, 0, 0, { rot: SHORT_A });
-      A.long.draw(ctx, 0, 0, { rot: (-90 + (o.tick ?? 0)) * DEG });
-      A.pin.draw(ctx, 0, 0);
+      const broad = 1 + 0.2 * clamp((1 - kk) / (1 - acting.K2));
+      for (const [spr, rot] of [[A.short, SHORT_A], [A.long, (-90 + (o.tick ?? 0)) * DEG]]) {
+        ctx.save();
+        ctx.rotate(rot);
+        ctx.scale(1, broad);
+        spr.draw(ctx, 0, 0);
+        ctx.restore();
+      }
+      A.pin.draw(ctx, 0, 0, { scale: broad });
     }
     ctx.restore();
   }
@@ -157,8 +190,9 @@ export function makeDial(E, W, U, acting) {
   const landAt = (() => { const h = acting.held(ft(G.land)); return [h.x, h.y]; })();
   const floatPath = E.curve([POPPED, [656, 598], [670, 660], [705, 722], [landAt[0] + 1, landAt[1] - 26], landAt], { tension: 0.5 });
   const F_GO = F_SET + 7;                                                   // it begins to float down at 14.47
+  const BIG = 34 / R30, F_BIG0 = 428, F_BIG1 = 455;                         // the hovering hour's size, and the camera's follow move
   // the cast: quadratic bezier, sine ease-out by arc length (storyboard's speed table: placed, not pitched)
-  const FL = C.flight, relAt = (() => { const h = acting.held(ft(T.coin.release)); return [h.x, h.y]; })();
+  const FL = C.flight, relAt = (() => { const h = acting.held(ft(T.coin.release)); return [h.x, h.y]; })();   // from his finger tips
   const bez = (u) => { const v = 1 - u; return [v * v * relAt[0] + 2 * v * u * FL.bezier_control[0] + u * u * FL.target_niche_centre[0], v * v * relAt[1] + 2 * v * u * FL.bezier_control[1] + u * u * FL.target_niche_centre[1]]; };
   const LUT = (() => { const pts = Array.from({ length: 241 }, (_, i) => bez(i / 240)); const d = [0]; for (let i = 1; i < pts.length; i++) d.push(d[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); return { pts, d, len: d[d.length - 1] }; })();
   const atArc = (s) => { const want = clamp(s) * LUT.len; let lo = 0, hi = LUT.d.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (LUT.d[m] <= want) lo = m; else hi = m; } const u = (want - LUT.d[lo]) / ((LUT.d[hi] - LUT.d[lo]) || 1); return [lerp(LUT.pts[lo][0], LUT.pts[hi][0], u), lerp(LUT.pts[lo][1], LUT.pts[hi][1], u)]; };
@@ -184,7 +218,7 @@ export function makeDial(E, W, U, acting) {
       // the pop: 40 px outward along the hand, r 22 -> 30, overshoot, settled 14.23
       const n = f - F_POP;
       const d = kf(n, [[0, 0.42], [1, 0.86], [2, 1.13], [3, 1.17], [4, 1.09], [5, 1.0], [6, 0.97], [7, 0.99], [8, 1]]);
-      const s = kf(n, [[0, 0.95], [1, 1.1], [2, 1.14], [3, 1.06], [4, 0.98], [5, 0.99], [6, 1]]);
+      const s = kf(n, [[0, 0.95], [1, 1.2], [2, 1.33], [3, 1.3], [4, 1.2], [5, 1.14], [6, BIG]]);            // r 40 at its peak, r 34 settled
       return { slot: 'sky', x: lerp(CHOSEN[0], POPPED[0], d), y: lerp(CHOSEN[1], POPPED[1], d), scale: s, hands: on(t, G.hands) };
     }
     if (f < F_LAND - 1e-6) {
@@ -193,21 +227,26 @@ export function makeDial(E, W, U, acting) {
       const bob = 2.6 * Math.sin((n / 9) * Math.PI) * ss(F_GO - F_SET + 6, 0, n);
       const u = E.ease.sine.in(clamp((f - F_GO) / (F_LAND - F_GO)));
       const [x, y] = floatPath.at(u);
-      return { slot: 'hands', x, y: y - bob, scale: 1, rot: 0.05 * Math.sin(n * 0.21) * (1 - u) };
+      // r 34 while it hovers at HOME (on «saatini» it must read as an hour at once); it is r 30 again by the time the
+      // camera has followed it down (14.27–15.17: the push-in more than makes up for it — on screen it only grows)
+      const big = lerp(BIG, 1, E.ease.sine.inOut(clamp((f - F_BIG0) / (F_BIG1 - F_BIG0))));
+      return { slot: 'hands', x, y: y - bob, scale: big, rot: 0.05 * Math.sin(n * 0.21) * (1 - u) };
     }
     if (f < F_REL - 1e-6) {
-      // in his hand: minted on landing (the rim is stamped round it), then held, then shown
+      // in his hand: minted on landing (the rim is stamped round it), then held, then shown in his finger tips —
+      // always BEHIND the hand (slot `hands`): thumb and fingers lie in front of its rim, no layer ever flips
       const n = f - F_LAND, h = acting.held(t);
       const rim = kf(n, [[0, 44 / 42], [1, 1.03], [2, 1]]);
       const sy = kf(n, [[0, 0.94], [1, 0.975], [2, 1]]);
-      return { slot: h.open ? 'front' : 'hands', x: h.x, y: h.y + (1 - sy) * R42, scale: 1, rim, sy, sx: 2 - sy, tick: on(t, T.coin.tick) ? 6 : 0 };
+      return { slot: 'hands', x: h.x, y: h.y + (1 - sy) * R42, scale: 1, k: h.k, rim, sy, sx: 2 - sy, tick: on(t, T.coin.tick) ? 6 : 0 };
     }
     if (f < F_NICHE + 3 - 1e-6) {
-      // the cast: face to us, a small in-plane roll out and back; then it sinks into the glow (3 frames)
+      // the cast: face to us, a small in-plane roll out and back; then it sinks into the glow (3 frames). On the release
+      // frame it is still between his fingers (behind them); one frame later it has cleared the hand
       const n = f - F_REL, s = kf(n, flightKeys);
       const [x, y] = atArc(s);
       const sink = f - F_NICHE;
-      return { slot: 'front', x, y, scale: sink > 0 ? kf(sink, [[0, 1], [1, 0.74], [2, 0.42], [3, 0]]) : 1, rim: 1, tick: 6, rot: 11 * DEG * Math.sin(Math.PI * clamp(n / 13)) };
+      return { slot: n < 0.5 ? 'hands' : 'front', x, y, k: acting.K2, scale: sink > 0 ? kf(sink, [[0, 1], [1, 0.74], [2, 0.42], [3, 0]]) : 1, rim: 1, tick: 6, rot: 11 * DEG * Math.sin(Math.PI * clamp(n / 13)) };
     }
     return null;
   }
@@ -217,6 +256,7 @@ export function makeDial(E, W, U, acting) {
   function drawSky(ctx, t) {
     if (!on(t, T.hand.print)) return;
     const st = recede(t), f = t * fps;
+    if (st > 0) A.veil.draw(ctx, { p: st / 2 });
     // beads k = 1..24, three per step on twos, behind the hand's tip
     if (f >= BEAD0 - 1e-6) {
       const goldOn = on(t, G.dab[1]);

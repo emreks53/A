@@ -14,15 +14,20 @@
 const SB_URL = '/storyboard.json';
 
 /** Storyboard §5 "State timeline of every shared asset, 0–24 s" (prose in teams.shared_state_timeline). */
+// Retimed in the critics round (lead's decisions L7 / L8; the storyboard prose still has the old times, see RETIMED):
+//   * frame 0 is already the full landscape with its second coat (coat2 0.07 -> 0.00), and the man dabs in on
+//     THREES at 0.10 / 0.20 / 0.30 (was 0.13 / 0.20 / 0.27) — he stands before the call ring at 0.43;
+//   * the mist thickens over the ring at 6.93 / 7.00 / 7.07 (was 7.00 / 7.07 / 7.17), the third pass together with
+//     the hand's stop, and the ring's veil steps with it: nothing changes at 7.17, inside the «sahipsin» fade-in.
 const TIMELINE = {
-  coat2: 0.07,                                  // hedge + mound second coat, rosettes, buds, cloud c1
-  man: { passes: [0.13, 0.20, 0.27], turn: [1.47, 1.53, 1.60], warm: 10.07 },
+  coat2: 0.0,                                   // hedge + mound second coat, rosettes, buds (cloud c1 is not shown)
+  man: { passes: [0.10, 0.20, 0.30], turn: [1.47, 1.53, 1.60], warm: 10.07 },
   specks: { from: 0.27 },
   dusk: { sunset0: 1.27, sunset1: 2.63, dusk1: 4.13, dusk2: 4.27, recede: [10.73, 10.87] },
-  mist: { build: [4.50, 4.67], thicken: [7.00, 7.07, 7.17], recede: [10.73, 10.87], thin: 16.47, out: [16.63, 16.73, 16.83] },
+  mist: { build: [4.50, 4.67], thicken: [6.93, 7.00, 7.07], recede: [10.73, 10.87], thin: 16.47, out: [16.63, 16.73, 16.83] },
   ring: {
     on: [4.83, 4.90, 4.97, 5.03], counts: [4, 4, 3, 3],
-    veil: [[7.00, 0.8], [7.07, 0.55], [7.17, 0.35]],   // strength after each thickening pass
+    veil: [[6.93, 0.8], [7.00, 0.55], [7.07, 0.35]],   // strength after each thickening pass
     reink: [16.47, 0.7], crumble: [16.57, 16.63, 16.70], specksGone: 16.83,
   },
   sun: {
@@ -33,6 +38,8 @@ const TIMELINE = {
   mound: { lit: 10.07 },
   film: { acts: 12.20, cover: 23.40, plate: 23.80, end2d: 24.00 },
 };
+/** Times that the critics round moved on purpose (not in the storyboard's prose timeline): no warning for these. */
+const RETIMED = new Set(['6.93', '0.00']);
 
 const num = (s) => (String(s).match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
 
@@ -71,7 +78,7 @@ function crossCheck(sb, L, warn) {
     ...T.ring.on, ...T.ring.veil.map((v) => v[0]), T.ring.reink[0], ...T.ring.crumble,
     T.sun.disc, T.sun.bare, ...T.sun.halo, ...T.sun.settle, ...T.sun.recede, ...T.column.on, T.mound.lit,
   ];
-  for (const v of want) if (!have.has(v.toFixed(2))) warn(`timeline time ${v} is not in storyboard.teams.shared_state_timeline any more`);
+  for (const v of want) if (!have.has(v.toFixed(2)) && !RETIMED.has(v.toFixed(2))) warn(`timeline time ${v} is not in storyboard.teams.shared_state_timeline any more`);
   const opens = sb.layout.flowers.lip.map((f) => f.opens.toFixed(2));
   for (const v of opens) if (!have.has(v)) warn(`flower opening time ${v} differs between layout.flowers and the shared timeline`);
   // 3. shared motion constants

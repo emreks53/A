@@ -1,7 +1,7 @@
 // type.js — the source lockup of the end card (four lines on the dark walnut).
 //
-//   Risale-i Nur          eyebrow: small, letter-spaced, pale gold
-//   ─────────────         thin gold hairline, draws from its centre
+//   Risale-i Nur          the work: letter-spaced, the same ivory as the other lines
+//   ─────────────         a gold rule (3 px), draws from its centre
 //   Sözler                the hero line
 //   Yirmi Birinci Söz     italic
 //   291. Sayfa            the folio
@@ -18,7 +18,8 @@ const IVORY = '#F3EAD7', GOLD = '#EDDAAE', RULE = '#D9B872';
 const HALO = [22, 12, 6];                 // deep walnut umber
 
 // Designed on a block 800 x 322 px (x 140..940, y 1328..1650); y = baseline, px from the block top.
-// THE FILM USES F (endcard.js: LOCKUP). A-E are the look-dev variants it was chosen from (out/endcard/NOTES.md).
+// THE FILM USES G (endcard.js: LOCKUP). A-F are the first version's variants (out/endcard/NOTES.md); G is the
+// revision after review round 1: every line readable on a phone at arm's length, the block 30 px higher.
 export const LOCKUPS = {
   // A — the classical title card: tracked eyebrow, rule, semibold hero, italic line, tracked folio
   A: {
@@ -80,6 +81,21 @@ export const LOCKUPS = {
       { id: 'folio', text: '291. Sayfa', font: '500', px: 48, track: 0.06, fill: IVORY, y: 300 },
     ],
     rule: { y: 63, half: 128, t: 2.0 },
+  },
+  // G — review round 1: "Risale-i Nur" and "291. Sayfa" must read on a phone at arm's length (the client asked
+  //     for the source AND the page). The first line 27 % larger and ivory like the rest, a 3 px rule, the page
+  //     line larger, the hero a little smaller (104: still 1.8 x the next line) and the line gaps tighter, so the
+  //     whole block ends 30 px higher: last baseline 1598 (was 1627), lowest ink 1613 = 38 px above the Shorts
+  //     caption line (was 10 px). Tried and dropped: hero 96 (reads like a list, not a title), first line 60
+  //     (wider than the chapter line: the eye starts there and stays).
+  G: {
+    lines: [
+      { id: 'eyebrow', text: 'Risale-i Nur', font: '500', px: 56, track: 0.12, fill: IVORY, y: 43 },
+      { id: 'hero', text: 'Sözler', font: '500', px: 104, track: 0.022, fill: IVORY, y: 151 },
+      { id: 'sub', text: 'Yirmi Birinci Söz', font: 'italic 500', px: 58, track: 0.012, fill: IVORY, y: 213 },
+      { id: 'folio', text: '291. Sayfa', font: '500', px: 52, track: 0.05, fill: IVORY, y: 271 },
+    ],
+    rule: { y: 62, half: 110, t: 3.0, taper: 0.55 },
   },
 };
 const DESIGN_H = 322;
@@ -143,7 +159,7 @@ export function bakeLockup(E, block, variant = 'A', opts = {}) {
   });
   // the hairline: tapered, gold, with its own soft shadow; baked at full length, grown by scale
   const R = spec.rule;
-  const half = R.half * k, T = R.t * Math.max(0.8, k), padX = 16, padY = 12;
+  const half = R.half * k, T = R.t * Math.max(0.8, k), padX = 16, padY = 12, TAPER = R.taper ?? 0.85;
   const ry = Math.round(top + R.y * k);
   const rs = E.surface(Math.ceil(half * 2) + padX * 2, padY * 2);
   {
@@ -152,11 +168,11 @@ export function bakeLockup(E, block, variant = 'A', opts = {}) {
       const c = rs.w / 2, y = padY, N = 40;
       ctx.beginPath();
       for (let i = 0; i <= N; i++) {
-        const u = (i / N) * 2 - 1, th = (T / 2) * (1 - Math.pow(Math.abs(u), 2.2) * 0.85);
+        const u = (i / N) * 2 - 1, th = (T / 2) * (1 - Math.pow(Math.abs(u), 2.2) * TAPER);
         if (i) ctx.lineTo(c + u * half, y - th); else ctx.moveTo(c + u * half, y - th);
       }
       for (let i = N; i >= 0; i--) {
-        const u = (i / N) * 2 - 1, th = (T / 2) * (1 - Math.pow(Math.abs(u), 2.2) * 0.85);
+        const u = (i / N) * 2 - 1, th = (T / 2) * (1 - Math.pow(Math.abs(u), 2.2) * TAPER);
         ctx.lineTo(c + u * half, y + th);
       }
       ctx.closePath();

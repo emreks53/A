@@ -18,17 +18,19 @@ export function makeGround(E, W, U) {
   const { TL: T, ft, on, field } = U;
   const K = L.knoll;
   const once = (k, f) => E.once('act2/ground/' + k, f);
+  const LIT_T = T.light[T.light.length - 1];            // the far light's last (brightest) pass: rim + fringe take its light
   const FLOOR = W.lightFloor ?? 1203;                    // nothing lighter than hedge_mid below this row
 
   // ------------------------------------------------------------------ geometry (world px)
   const PLAT = K.plateau_y;                              // 770
   const X1 = L.visibleRect(1, 14)[2];
-  // The outline as one line y = sil(x). Left part: a table through these points (shoulder at x ~ 850 so the
-  // minaret has ground; through the storyboard's flank about (810, 900), (765, 1040); running out to the left
-  // below y 1100, where the flowered rise stands in front of it).
-  const SH = [[610, 1290], [648, 1232], [690, 1172], [728, 1108], [757, 1040], [781, 966], [802, 894], [822, 838], [844, 800], [869, 779], [899, 771], [936, 769]];
+  // The outline as one line y = sil(x): an S-curve. It runs out flat to the left behind the flowered rise
+  // (concave foot), climbs, and turns over a ROUND shoulder into the plateau that carries chest / mescid
+  // (x 866–1190); right of the mescid the crown rolls away toward the frame's edge. The upper flank keeps clear
+  // of his hand and the coin (x <= 760 at y 800–900).
+  const SH = [[470, 1300], [540, 1222], [600, 1154], [650, 1094], [694, 1036], [729, 980], [757, 924], [779, 872], [800, 828], [824, 796], [852, 778], [888, 771], [930, 769]];
   const TAB = (() => {
-    const c = E.curve(SH, { tension: 0.5 }), n = 480, xs = [], ys = [];
+    const c = E.curve(SH, { tension: 0.5 }), n = 520, xs = [], ys = [];
     for (let i = 0; i <= n; i++) { const [x, y] = c.at(i / n); if (!xs.length || x > xs[xs.length - 1] + 1e-3) { xs.push(x); ys.push(y); } }
     return { xs, ys };
   })();
@@ -39,25 +41,59 @@ export function makeGround(E, W, U) {
     while (hi - lo > 1) { const m = (lo + hi) >> 1; if (rev ? a[m] >= v : a[m] <= v) lo = m; else hi = m; }
     return lerp(b[lo], b[hi], (v - a[lo]) / (a[hi] - a[lo]));
   };
-  const XS = SH[SH.length - 1][0];                       // 936: the plateau begins
-  const crown = (x) => PLAT - 1 + 2.4 * Math.sin(x / 61 + 0.7) + 1.4 * Math.sin(x / 23) + 38 * ss(1215, 1470, x) ** 1.3;
+  const XS = SH[SH.length - 1][0];                       // 930: the plateau begins
+  const ROLL = 1196;                                     // right of the mescid's wall the crown rolls away
+  const crown = (x) => PLAT - 1 + 2.2 * Math.sin(x / 61 + 0.7) + 1.3 * Math.sin(x / 23)
+    + 96 * ((Math.max(0, x - ROLL) / 190) ** 1.7) + ss(ROLL - 10, ROLL + 60, x) * (3.5 * Math.sin(x / 15.5 + 1) + 2.5 * Math.sin(x / 7.1));
   /** the knoll's upper outline */
   const sil = (x) => (x >= XS ? crown(x) : look(TAB.xs, TAB.ys, x) + (crown(XS) - SH[SH.length - 1][1]) * ss(880, XS, x));
   /** its left outline x(y) for rows below the plateau */
   const flank = (y) => (y <= SH[SH.length - 1][1] ? XS : look(TAB.ys, TAB.xs, y, true));
-  const lump = (x, y) => 5 * Math.sin(y / 43 + 1) + 3 * Math.sin(y / 17 + x / 60);
+  const lump = (x, y) => 6 * Math.sin(y / 39 + 1) + 3.5 * Math.sin(y / 15 + x / 60) + 2 * Math.sin(y / 6.7);   // foliage clumps along the flank
   const dTop = (x, y) => y - sil(x);
   const dSide = (x, y) => x - flank(y) - lump(x, y);
   /** px inside the outline (approximately) */
-  const inside = (x, y) => Math.min(dTop(x, y), y > PLAT + 10 ? dSide(x, y) * 0.94 : 1e4);
+  const inside = (x, y) => Math.min(dTop(x, y), y > PLAT + 10 ? dSide(x, y) * 0.9 : 1e4);
   const depth = (x, y) => clamp((inside(x, y) + 10) / 42);
-  const BOX = [SH[0][0] - 10, PLAT - 46, X1, L.lipY + 36];
-  const lightOK = (size) => (x, y) => (y + size * 0.7 <= FLOOR ? 1 : 0);
-  /** 1 = the rim and the upper face on the light's side; 0 = the flank and the foot */
-  const lit = (x, y) => clamp(0.92 * ss(210, 0, dTop(x, y)) + 0.3 * ss(860, 1240, x) - 0.75 * ss(150, 10, dSide(x, y)) - 0.2 * ss(1040, 1180, y));
+  const BOX = [SH[0][0] - 10, PLAT - 70, X1, L.lipY + 36];
+  const FOOT = L.lipY + 6;
+  /**
+   * The MODELLING: 1 at the crown, 0 at the foot — three sponge tone bands (deep foot / mid face / light crown)
+   * whose frontiers bow with the hill: they sag in the middle of the face (it bulges toward us), climb toward the
+   * side the light is on (right) and dive along the left flank, which turns away from the light.
+   */
+  const relief = (x, y) => {
+    const h = 1 - dTop(x, y) / (FOOT - sil(x));
+    const bow = 0.07 * Math.sin((x - 800) / 170) + 0.035 * Math.sin(x / 47 + y / 90) + 0.025 * Math.sin(x / 23 - y / 31);
+    return h + bow + 0.1 * ss(980, 1300, x) - 0.3 * ss(230, 0, dSide(x, y)) * ss(PLAT - 20, PLAT + 90, y);
+  };
+  const Z1 = 0.36, Z2 = 0.66;                            // frontiers: deep | mid | light
+  const zone = (a, b, w = 0.035) => (x, y) => { const r = relief(x, y); return ss(a - w, a + w, r) * ss(b + w, b - w, r); };
+  const below = (a, w = 0.035) => (x, y) => ss(a + w, a - w, relief(x, y));
+  const above = (a, w = 0.035) => (x, y) => ss(a - w, a + w, relief(x, y));
 
   const kc = P('knoll');                                 // ['#3E8A5C', '#5FA36A', '#A9D38A']
-  const G0 = '#3C8865';                                  // base: a blue-green one step lighter than the hedge
+  const G0 = '#3B8760';                                  // the mid face: a blue-green one step lighter than the hedge
+  const DEEP = P('hedge_deep'), DARK = '#225F48';        // the foot is the hedge's own deep green: one land
+  // stencil leaves: a few leaf tips break the contour, a few lie tone-on-tone in the face (it is foliage, not a wall)
+  const leaf = (len, wid, bend, seed, base, mid, light, side) => {
+    const m = (x, y) => ss(wid * 0.05, -wid * 0.3, (y - bend * 0.7) * -side) * ss(0.12, 0.34, x / len) * ss(0.95, 0.6, x / len);
+    return E.bakeStencil({ shape: E.shape.leaf(len, wid, bend), base, seed, anchor: [0, 0], pad: 4, bleed: false, reveal: { steps: 1 },
+      layers: [
+        { color: E.tone(base, 0.04), coverage: 0.5, size: wid * 0.9, pores: 0.3 },
+        { color: E.tone(base, -0.05), coverage: 0.25, size: wid * 0.6, stamps: 'open', pores: 0.3 },
+        { color: mid, coverage: 0.62, size: wid * 0.46, stamps: 'soft', maskFn: m },
+        { color: light, coverage: 0.36, size: wid * 0.4, stamps: 'airy', pores: 0, maskFn: (x, y) => ss(0.45, 0.85, m(x, y)) },
+      ] });
+  };
+  const DEG = Math.PI / 180;
+  // [x, rot°, len, wid, bend, lit side] — bases a few px inside the outline, tips outside it
+  const TIPS = [[676, -128, 50, 21, 3, -1], [716, -150, 44, 19, -3, 1], [744, -118, 56, 23, 4, -1], [768, -146, 46, 20, -2, 1], [790, -112, 52, 22, 3, -1],
+    [818, -128, 42, 18, -3, 1], [1214, -74, 46, 20, 3, 1], [1252, -98, 54, 22, -4, -1], [1296, -66, 48, 20, 3, 1]];
+  const tipAt = (x) => { const y = sil(x); return x < XS ? [flank(y) + 9, y + 7] : [x, y + 9]; };
+  const INNER = [[742, 1118, -32, 62, 26, 5, 1], [826, 968, -58, 58, 24, -4, -1], [868, 1126, -24, 66, 27, 4, 1], [1226, 948, -128, 60, 25, 4, -1],
+    [1284, 1076, -150, 64, 26, -5, 1], [1196, 1146, -36, 58, 24, 3, -1], [884, 868, -70, 50, 21, 3, 1]];
+
   const A = once('all', () => {
     const a = {};
     const base = [
@@ -65,49 +101,81 @@ export function makeGround(E, W, U) {
       { color: G0, coverage: 0.985, size: 92, tint: 0.03, pores: 0.3, maskFn: (x, y) => ss(26, 52, inside(x, y)) },
     ];
     const coat = [
-      // the shadow side: the flank and the foot, teal
-      { color: '#2D7257', coverage: 0.74, size: 58, stamps: 'body', pores: 0.5, maskFn: (x, y) => ss(0.42, 0.2, lit(x, y)), patch: { scale: 170, amount: 0.26 } },
-      { color: '#24614C', coverage: 0.4, size: 40, stamps: 'open', maskFn: (x, y) => ss(0.3, 0.06, lit(x, y)), patch: { scale: 130, amount: 0.42, sharp: 0.3 } },
-      // the face: mid green in clumps, denser toward the rim
-      { color: '#4B9870', coverage: 0.66, size: 52, stamps: 'body', pores: 0.5, maskFn: (x, y) => ss(0.3, 0.52, lit(x, y)), patch: { scale: 160, amount: 0.3, sharp: 0.3, seed: 31 } },
-      { color: '#5FA878', coverage: 0.5, size: 38, stamps: 'body', pores: 0.4, maskFn: (x, y) => ss(0.5, 0.74, lit(x, y)) * lightOK(38)(x, y), patch: { scale: 150, amount: 0.34, sharp: 0.3, seed: 31 } },
-      // powdery frontier between shadow and face
-      { color: '#4B9870', coverage: 0.12, size: 44, stamps: 'speck', maskFn: (x, y) => ss(0.16, 0.3, lit(x, y)) * ss(0.46, 0.34, lit(x, y)) },
-      { color: '#24614C', coverage: 0.14, size: 30, stamps: 'soft', patch: { scale: 110, amount: 0.6 } },
-      { color: P('primer'), coverage: 0.05, size: 22, stamps: 'soft', maskFn: (x, y) => ss(90, 10, dTop(x, y)), patch: { scale: 110, amount: 0.6 } },
+      // the FOOT: deep green, darkest where it meets the hedge
+      { color: DEEP, coverage: 0.9, size: 56, stamps: 'body', pores: 0.4, maskFn: below(Z1), patch: { scale: 170, amount: 0.12 } },
+      { color: DARK, coverage: 0.5, size: 44, stamps: 'open', pores: 0.3, maskFn: below(Z1 - 0.1, 0.06), patch: { scale: 130, amount: 0.34, sharp: 0.3 } },
+      { color: P('hedge_dark'), coverage: 0.3, size: 34, stamps: 'open', maskFn: below(Z1 - 0.22, 0.06), patch: { scale: 110, amount: 0.4 } },
+      // the FACE: mid green in clumps
+      { color: '#44916A', coverage: 0.5, size: 50, stamps: 'body', pores: 0.5, maskFn: zone(Z1, Z2), patch: { scale: 150, amount: 0.3, sharp: 0.3, seed: 31 } },
+      { color: DEEP, coverage: 0.16, size: 36, stamps: 'open', maskFn: zone(Z1, Z2 - 0.1), patch: { scale: 120, amount: 0.5 } },
+      // the CROWN and upper slope: a clear step lighter (still green: the yellow lights come with the far light)
+      { color: '#56A072', coverage: 0.9, size: 50, stamps: 'body', pores: 0.4, maskFn: above(Z2), patch: { scale: 170, amount: 0.1 } },
+      { color: '#69AE78', coverage: 0.5, size: 38, stamps: 'body', pores: 0.4, maskFn: above(Z2 + 0.1, 0.05), patch: { scale: 140, amount: 0.3, sharp: 0.3, seed: 31 } },
+      // powdery frontiers: each tone sprays a little into its neighbour
+      { color: DEEP, coverage: 0.1, size: 44, stamps: 'speck', maskFn: zone(Z1 + 0.02, Z1 + 0.12, 0.03) },
+      { color: '#44916A', coverage: 0.1, size: 44, stamps: 'speck', maskFn: zone(Z1 - 0.12, Z1 - 0.02, 0.03) },
+      { color: '#56A072', coverage: 0.1, size: 44, stamps: 'speck', maskFn: zone(Z2 - 0.12, Z2 - 0.02, 0.03) },
+      { color: '#3F8A62', coverage: 0.09, size: 40, stamps: 'speck', maskFn: zone(Z2 + 0.02, Z2 + 0.12, 0.03) },
+      { color: P('primer'), coverage: 0.04, size: 20, stamps: 'soft', maskFn: (x, y) => ss(90, 10, dTop(x, y)), patch: { scale: 110, amount: 0.6 } },
     ];
     const f = field({ box: BOX, depth, seed: 2201, edge: 0.5, layers: [...base, ...coat], k: 1.25,
       reveal: { steps: 2, order: 'sweep', angle: -Math.PI / 2, jitter: 0.16, dab: 150 } });
-    // opaque inside (the engine does the same for stencils with a base): the base colour is laid under the dabs
     {
       const c = f.painted.final.ctx;
       c.save();
       c.translate(-BOX[0], -BOX[1]);
+      // leaf tips first (behind the mass, so only what breaks the contour shows) ...
       c.globalCompositeOperation = 'destination-over';
+      TIPS.forEach(([x, rot, len, wid, bend, side], i) => {
+        const [px, py] = tipAt(x), hi = relief(px, py + 30) > Z2 - 0.1;
+        leaf(len, wid, bend, 2230 + i, hi ? '#3E8A5C' : '#2A6E4C', hi ? '#56A072' : '#3B8760', hi ? '#7DBB80' : '#4B9870', side).draw(c, px, py, { rot: rot * DEG });
+      });
+      // ... then the base colour under the dabs: opaque inside (the engine does the same for stencils with a base)
       c.fillStyle = G0;
       c.beginPath();
       c.moveTo(BOX[2] + 2, BOX[3] + 2);
       for (let x = BOX[2] + 2; x >= XS - 40; x -= 6) c.lineTo(x, sil(x) + 18);
-      for (let y = sil(XS - 40) + 22; y <= BOX[3] + 2; y += 6) c.lineTo(flank(y) + lump(0, y) + 22, y);
-      c.lineTo(flank(BOX[3]) + 22, BOX[3] + 2);
+      for (let y = sil(XS - 40) + 22; y <= BOX[3] + 2; y += 6) c.lineTo(flank(y) + lump(0, y) + 24, y);
+      c.lineTo(flank(BOX[3]) + 24, BOX[3] + 2);
       c.closePath();
       c.fill();
+      // tone-on-tone leaves lying in the face: one small tone step off their ground, a powdery lighter half
+      c.globalCompositeOperation = 'source-atop';
+      INNER.forEach(([x, y, rot, len, wid, bend, side], i) => {
+        const r = relief(x, y), g = r > Z2 ? '#56A072' : r > Z1 ? G0 : DEEP;
+        leaf(len, wid, bend, 2250 + i, E.tone(g, -0.045), E.tone(g, 0.02), E.tone(g, 0.08), side).draw(c, x, y, { rot: rot * DEG, alpha: 0.9 });
+      });
       c.restore();
     }
     a.knoll = f;
 
-    // --- the rim and the upper face in the far light (17.07): yellow-green lights in clumps, a few warm ones
-    const LITP = { scale: 140, amount: 0.3, sharp: 0.3, seed: 47 };
+    // --- the crown and the upper slope in the far light (with its last pass): yellow-green lights in clumps,
+    //     pale yellow along the rim, a few warm ones — and the crown's leaf tips catch it
+    const LITP = { scale: 140, amount: 0.24, sharp: 0.3, seed: 47 };
+    const rimK = (x, y) => ss(70, 6, dTop(x, y)) * ss(0, 60, dSide(x, y) - 10 + (y < PLAT + 10 ? 200 : 0));
     a.lit = field({ box: BOX, depth, seed: 2202, edge: 0.5, k: 1.25, reveal: { steps: 1 }, layers: [
-      { color: '#7DBB80', coverage: 0.6, size: 44, stamps: 'body', pores: 0.4, maskFn: (x, y) => ss(0.62, 0.8, lit(x, y)), patch: LITP },
-      { color: kc[2], coverage: 0.62, size: 34, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.8, 0.94, lit(x, y)), patch: { ...LITP, amount: 0.36 } },
-      { color: '#D3E6A0', coverage: 0.4, size: 22, stamps: 'body', maskFn: (x, y) => ss(0.9, 1.02, lit(x, y)) * ss(46, 6, dTop(x, y)), patch: { ...LITP, amount: 0.46 } },
-      { color: '#7DBB80', coverage: 0.1, size: 40, stamps: 'speck', maskFn: (x, y) => ss(0.48, 0.62, lit(x, y)) * ss(0.78, 0.66, lit(x, y)) },
+      { color: '#7DBB80', coverage: 0.66, size: 46, stamps: 'body', pores: 0.4, maskFn: above(Z2 - 0.02), patch: LITP },
+      { color: kc[2], coverage: 0.66, size: 36, stamps: 'body', pores: 0.3, maskFn: above(Z2 + 0.1, 0.05), patch: { ...LITP, amount: 0.3 } },
+      { color: '#CDE49A', coverage: 0.5, size: 24, stamps: 'body', maskFn: (x, y) => above(Z2 + 0.2, 0.05)(x, y) * ss(110, 20, dTop(x, y)), patch: { ...LITP, amount: 0.4 } },
+      { color: '#E6EDA6', coverage: 0.34, size: 17, stamps: 'body', maskFn: rimK, patch: { ...LITP, scale: 90, amount: 0.46 } },
+      { color: '#7DBB80', coverage: 0.1, size: 40, stamps: 'speck', maskFn: zone(Z2 - 0.16, Z2 - 0.02, 0.03) },
+      { color: '#69AE78', coverage: 0.2, size: 34, stamps: 'open', maskFn: zone(Z1 + 0.12, Z2 - 0.02, 0.05), patch: { scale: 130, amount: 0.5, seed: 47 } },
       { color: '#F5E2A6', coverage: 0.1, size: 16, stamps: 'soft', maskFn: (x, y) => ss(34, 4, dTop(x, y)) * ss(880, 960, x) },
     ] });
+    {
+      const c = a.lit.painted.final.ctx;
+      c.save();
+      c.translate(-BOX[0], -BOX[1]);
+      c.globalCompositeOperation = 'destination-over';
+      TIPS.forEach(([x, rot, len, wid, bend, side], i) => {
+        const [px, py] = tipAt(x);
+        if (relief(px, py + 30) > Z2 - 0.1) leaf(len, wid, bend, 2230 + i, '#5FA36A', '#8CC383', '#CDE49A', side).draw(c, px, py, { rot: rot * DEG });
+      });
+      c.restore();
+    }
 
     // --- the grass fringe of the rim, drawn after the buildings: tufts along the plateau's front edge
-    const FB = [840, PLAT - 30, X1, PLAT + 52];
+    const FB = [840, PLAT - 30, X1, PLAT + 52 + 64];                 // (the crown rolls 55 px down toward the frame's edge)
     const tuft = (x) => 5 * Math.sin(x / 13) + 3 * Math.sin(x / 5.3 + 1) + 2.5 * Math.sin(x / 31 + 2);
     const fd = (x, y) => clamp(Math.min((y - (sil(x) - 3 + tuft(x))) / 12, (sil(x) + 46 - y) / 30, (x - 846) / 26));
     a.fringe = field({ box: FB, depth: fd, seed: 2203, edge: 0.55, k: 1.25, reveal: { steps: 1 }, layers: [
@@ -118,24 +186,27 @@ export function makeGround(E, W, U) {
       { color: '#2D7257', coverage: 0.22, size: 15, stamps: 'open', maskFn: (x, y) => ss(sil(x) + 8, sil(x) + 30, y), patch: { scale: 60, amount: 0.4 } },
     ] });
 
-    // --- warm mist along the foot of the knoll: a low bank of the same make as tomorrow's mist (big soft prints,
-    //     a darker under-dab, pale puffs on top), only warm — peach-gold under cream and white-gold. Its foot
-    //     lies behind the hedge lip; it is CUT at the light floor (nothing light below it while a gloss is up)
-    //     and keeps clear of the rug's fringe (y 1103).
+    // --- warm mist along the foot of the knoll: MIST, not ground — a thin, broken veil of pale gold-rose wisps
+    //     (long lens shapes at different heights, translucent, full of pores) lying IN FRONT of the knoll's deep
+    //     foot, which shows through it and joins the hedge between the wisps. No cream, no white: its lightest
+    //     tone is a pale gold. It is CUT at the light floor (nothing light below it while a gloss is up) and
+    //     keeps clear of the rug's fringe (y 1103).
     const MB = K.base_mist;
-    const mTop = (x) => MB.y0 + 2 + 9 * Math.sin(x / 83 + 2) + 5 * Math.sin(x / 31) - 34 * ss(880, 770, x) - 24 * ss(1185, 1300, x);
-    const mBox = [MB.x0 - 70, MB.y0 - 80, Math.min(MB.x1 + 40, X1), FLOOR + 40];
-    const under = (x, y) => y - mTop(x);
-    const md = (x, y) => clamp(Math.min((under(x, y) + 14) / 70, (x - MB.x0 + 40) / 120));
+    // density: 1 low at the foot, thinning upward to a wavering top (y ~1105–1150) that hangs in three long wisps
+    const mTop = (x) => 1100 + 18 * Math.sin(x / 96 + 2.2) + 9 * Math.sin(x / 41 + 0.6) + 4 * Math.sin(x / 17);
+    const dens = (x, y) => clamp((y - mTop(x)) / 92) * ss(MB.x0 - 80, MB.x0 + 40, x) * (0.66 + 0.34 * Math.sin(x / 74 + 1.1) ** 2);
+    const mBox = [MB.x0 - 90, MB.y0 - 70, Math.min(MB.x1 + 40, X1), FLOOR + 40];
     {
       const [x0, y0, x1, y1] = mBox;
       const sh = (fn) => (x, y) => fn(x + x0, y + y0);
-      const c = E.clusterDabs({ w: x1 - x0, h: y1 - y0, seed: 2204, edgeSoftness: 0.7, anchor: [0, 0], shapeFn: sh(md), layers: [
-        { color: '#EDC49A', coverage: 0.9, size: 84, tint: 0.03, opacity: [0.8, 1], pores: 0.3 },
-        { color: '#F1B39A', coverage: 0.24, size: 62, stamps: 'open', opacity: [0.5, 0.8], patch: { scale: 180, amount: 0.5 } },
-        { color: '#F7E2BC', coverage: 0.72, size: 74, stamps: 'body', tint: 0.02, opacity: [0.85, 1], pores: 0.4, maskFn: sh((x, y) => ss(6, 32, under(x, y))), patch: { scale: 200, amount: 0.28 } },
-        { color: P('warm_mist', 0), coverage: 0.62, size: 58, stamps: 'body', tint: 0.012, pores: 0.3, maskFn: sh((x, y) => ss(22, 48, under(x, y))), patch: { scale: 170, amount: 0.34 } },
-        { color: '#FFFFFF', coverage: 0.2, size: 44, stamps: 'speck', tints: 1, opacity: [0.7, 1] },
+      const c = E.clusterDabs({ w: x1 - x0, h: y1 - y0, seed: 2204, edgeSoftness: 0.95, anchor: [0, 0], shapeFn: sh((x, y) => clamp(dens(x, y) * 1.5 + 0.03)), layers: [
+        // a veil, like tomorrow's mist — only warm: translucent lacy prints of gold-rose, pale gold powder in it, a
+        // little light where it is densest; the knoll's deep foot shows through all of it
+        { color: '#E6B4A4', coverage: 0.5, size: 76, stamps: 'airy', opacity: [0.4, 0.62], maskFn: sh((x, y) => ss(0.05, 0.45, dens(x, y))) },
+        { color: '#EFCBA2', coverage: 0.56, size: 62, stamps: 'airy', opacity: [0.5, 0.72], maskFn: sh((x, y) => ss(0.25, 0.7, dens(x, y))), patch: { scale: 160, amount: 0.16 } },
+        { color: '#EFCBA2', coverage: 0.2, size: 60, stamps: 'speck', opacity: [0.6, 0.9], maskFn: sh((x, y) => ss(0.0, 0.3, dens(x, y))) },
+        { color: '#F5DDAE', coverage: 0.5, size: 48, stamps: 'soft', opacity: [0.6, 0.85], maskFn: sh((x, y) => ss(0.5, 0.9, dens(x, y))), patch: { scale: 120, amount: 0.24 } },
+        { color: '#E6B4A4', coverage: 0.1, size: 50, stamps: 'speck', opacity: [0.6, 0.9] },
       ] });
       const sf = E.surface(c.w, c.h, E.res);
       E.paintLayered(sf, c.dabs, c.dabs.meta);
@@ -170,7 +241,7 @@ export function makeGround(E, W, U) {
     const p = knollP(t);
     if (p <= 0) return;
     A.knoll.draw(ctx, { p });
-    if (on(t, T.light[3])) A.lit.draw(ctx);
+    if (on(t, LIT_T)) A.lit.draw(ctx);
     // the mist at its foot: there from the first step, complete with the second; it drifts a few px
     const dx = 5 * Math.sin((t - 16.6) * 0.7);
     ctx.save();
@@ -180,7 +251,7 @@ export function makeGround(E, W, U) {
   }
   /** in front of the buildings: the grass their bases stand in, then the door's light */
   function drawFront(ctx, t) {
-    if (!on(t, T.light[3])) return;
+    if (!on(t, LIT_T)) return;
     A.fringe.draw(ctx);
     if (on(t, T.rug.spill)) A.spill.draw(ctx);
   }

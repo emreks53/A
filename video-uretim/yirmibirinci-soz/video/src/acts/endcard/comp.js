@@ -10,11 +10,12 @@
 // Per frame, for every device pixel (so --scale 0.5 / 1 / --ss 2 are the same picture):
 //   1. light state      cur = base + q * dq + a * da                         (16-bit, plate resolution)
 //   2. camera           Catmull-Rom resample of cur, a pure scale about (pivX, pivY)
-//   3. vignette         -0.25 EV in the corners, r^2.2, in linear light, anchored to the FRAME
-//   4. dissolve         primer plate (the film's last painted frame) -> photograph, weight w
+//   3. vignette         -0.34 EV in the corners, r^2.2, in linear light, anchored to the FRAME
+//   4. dissolve         the room comes up as LIGHT on the primer plate (the film's last painted frame):
+//                       an exposure that comes down from a white-out, see `dissolve` in compose()
 //   5. titles           the text layer (RGBA read back from its own canvas) composited "over"
-//   6. grain            luminance grain sigma 1.3 / 255 in the mid-tones (1.6 shadows, 0.6 highlights)
-//                       + chroma grain 0.4 / 255, about 1.3 px clumps, a NEW field on every frame
+//   6. grain            luminance grain sigma 2.0 / 255 in the mid-tones (2.3 shadows, 1.0 highlights)
+//                       + chroma grain 0.5 / 255, about 1.5 px clumps, a NEW field on every frame
 //                       (a pure function of the frame number), added BEFORE the 8-bit rounding:
 //                       it is the dither, so the cream wall cannot band
 // Everything is a pure function of the parameters: no state survives a frame except caches whose
@@ -22,8 +23,9 @@
 
 const FW = 1080, FH = 1920;
 const TS = 2048, TMASK = TS - 1;          // grain field: a 2048 x 2048 torus, larger than the frame
-const GRAIN = { shadow: 1.6, mid: 1.3, high: 0.6, chroma: 0.4, seed: 2100 };   // finish.py's numbers
-const VIG_EV = 0.25, VIG_POW = 2.2;
+// finish.py's law, half as strong again and slightly coarser (review round 1: "it must read as a photograph")
+const GRAIN = { shadow: 2.3, mid: 2.0, high: 1.0, chroma: 0.5, size: 1.5, seed: 2100 };
+const VIG_EV = 0.34, VIG_POW = 2.2;
 const GRAIN_Q = 32;                       // int8 grain: 32 counts per sigma
 // The supersampled film (canvas 2x, lanczos to 1080) low-passes the grain a little; this restores
 // the strength measured on the delivered 1080 frame (see NOTES.md, "grain").
@@ -39,7 +41,7 @@ function hash32(a) {
   return (t ^ (t >>> 14)) >>> 0;
 }
 
-/** Gaussian noise, blurred to ~1.3 px clumps on a torus (no seam anywhere), unit variance, as int8. */
+/** Gaussian noise, blurred to ~GRAIN.size px clumps on a torus (no seam anywhere), unit variance, as int8. */
 function makeGrainField(seed) {
   const n = TS * TS, a = new Float32Array(n), b = new Float32Array(n);
   let s = seed | 0;
@@ -54,8 +56,8 @@ function makeGrainField(seed) {
     a[i] = u * Math.cos(v);
     a[i + 1] = u * Math.sin(v);
   }
-  // finish.py: blur sigma = (1.3 - 1) * 0.6 + 0.35 = 0.53 px
-  const sg = 0.53, k1 = Math.exp(-0.5 / (sg * sg)), k2 = Math.exp(-2 / (sg * sg)), kn = 1 + 2 * k1 + 2 * k2;
+  // finish.py: blur sigma = (size - 1) * 0.6 + 0.35 px   (0.65 px for 1.5 px clumps)
+  const sg = (GRAIN.size - 1) * 0.6 + 0.35, k1 = Math.exp(-0.5 / (sg * sg)), k2 = Math.exp(-2 / (sg * sg)), kn = 1 + 2 * k1 + 2 * k2;
   const w0 = 1 / kn, w1 = k1 / kn, w2 = k2 / kn;
   for (let y = 0; y < TS; y++) {
     const o = y * TS;
@@ -120,7 +122,9 @@ export async function loadPlates(res, baseUrl = new URL('../../../../endcard/com
     PW >>= 1;
     PH >>= 1;
   }
-  return { meta, PW, PH, base, dq: deltas[0], da: deltas[1], cur: new Uint16Array(base), lq: 0, la: 0 };
+  // the photograph's own wall tone (linear light, 0..1): the dissolve matches the primer plate to it
+  const wallRef = (meta.wall_ref_srgb || [0.918, 0.88, 0.81]).map((c) => Math.max(0.05, s2l(c)));
+  return { meta, PW, PH, base, dq: deltas[0], da: deltas[1], cur: new Uint16Array(base), lq: 0, la: 0, wallRef };
 }
 
 /** cur = base + q * dq + a * da (only the two crops are touched). */
@@ -155,6 +159,9 @@ export function makeComp(P, cw, ch, res) {
     S2L[i] = s2l(i / 65535) * 65535;
     L2S[i] = l2s(i / 65535) * 255;
   }
+  const P2L = new Float32Array(256);                    // the primer plate's 8-bit values -> linear 0..1
+  for (let i = 0; i < 256; i++) P2L[i] = s2l(i / 255);
+  const [WR, WG, WB] = P.wallRef;
   const VN = 4096, VIG = new Float32Array(VN + 1);
   for (let i = 0; i <= VN; i++) VIG[i] = Math.pow(2, -VIG_EV * Math.pow(i / VN, VIG_POW / 2));   // index = r^2 * VN
   const grain = makeGrainField(GRAIN.seed);
@@ -186,7 +193,20 @@ export function makeComp(P, cw, ch, res) {
    * Compose one frame into `out` (ImageData).
    *   o.scale, o.pivX, o.pivY   camera: pure scale about a frame point (logical px)
    *   o.q, o.a                  weights of the Qur'an light and the Sözler accent (0..1)
-   *   o.w                       dissolve: 0 = primer plate, 1 = photograph
+   *   o.w                       0 = primer plate, 1 = photograph (the grain follows it; w >= 1: no dissolve)
+   *   o.dis                     { g, m, c, sat } while w < 1 — the dissolve, in linear light, per channel:
+   *                               r   = photograph / its own wall tone        (the picture as "density" on a paper)
+   *                               r'  = y + sat * (r - y), y = luminance of r (an over-exposed film loses colour)
+   *                               T0  = S(g * r'), S(x) = x / (1 + x^4)^(1/4) over-exposed by the gain g and clipped
+   *                                                                           softly at the paper: with a large g
+   *                                                                           everything is paper; as g comes down
+   *                                                                           the dark wood appears first, then the
+   *                                                                           shadows on the wall, the books last
+   *                               T1  = 1 - c * (1 - T0)                      c: 0 -> 1 on the first frames (no pop)
+   *                               T   = T1 + m * (r - T1)                     m: 0 -> 1 hands over to the true picture
+   *                               out = (primer + m * (wall tone - primer)) * T
+   *                             so the wall IS the primer plate until the light of the room has formed on it, and
+   *                             at m = 1 the frame is the photograph exactly.
    *   o.primer                  Uint8ClampedArray RGBA of the film's primer plate (needed while w < 1)
    *   o.text                    null or { data, x, y, w, h } — RGBA (not premultiplied) text layer in device px
    *   o.frame                   integer frame number (grain seed)
@@ -195,6 +215,9 @@ export function makeComp(P, cw, ch, res) {
     const { PW, PH, cur } = P;
     const s = o.scale, w = o.w, primer = o.primer;
     if (w < 1 && !primer) throw new Error('endcard comp: the primer plate is needed while the dissolve runs');
+    const dis = w < 1 ? (o.dis || { g: 1, m: w, c: 1 }) : null;
+    const dg = dis ? dis.g : 1, dm = dis ? dis.m : 1, dc = dis ? dis.c : 1, dsat = dis ? (dis.sat ?? 1) : 1;
+    const I16 = 1 / 65535;
     setLights(P, o.q, o.a);
     const k = PW / FW;
     const key = `${s}|${o.pivX}|${o.pivY}`;
@@ -251,18 +274,31 @@ export function makeComp(P, cw, ch, res) {
         r = r < 0 ? 0 : r > 65535 ? 65535 : r;
         g = g < 0 ? 0 : g > 65535 ? 65535 : g;
         b = b < 0 ? 0 : b > 65535 ? 65535 : b;
-        R[m] = L2S[(S2L[r | 0] * f) | 0];
-        R[m + 1] = L2S[(S2L[g | 0] * f) | 0];
-        R[m + 2] = L2S[(S2L[b | 0] * f) | 0];
+        if (dis) {                                       // keep linear light for the dissolve (0..65535)
+          R[m] = S2L[r | 0] * f;
+          R[m + 1] = S2L[g | 0] * f;
+          R[m + 2] = S2L[b | 0] * f;
+        } else {
+          R[m] = L2S[(S2L[r | 0] * f) | 0];
+          R[m + 1] = L2S[(S2L[g | 0] * f) | 0];
+          R[m + 2] = L2S[(S2L[b | 0] * f) | 0];
+        }
       }
-      // ---- dissolve from the primer plate
+      // ---- dissolve: the room comes up as light on the primer plate (see o.dis above)
       const row = Y * cw * 4;
-      if (w < 1) {
+      if (dis) {
         for (let X = 0, m = 0, p = row; X < cw; X++, m += 3, p += 4) {
-          const a = primer[p], b = primer[p + 1], c = primer[p + 2];
-          R[m] = a + w * (R[m] - a);
-          R[m + 1] = b + w * (R[m + 1] - b);
-          R[m + 2] = c + w * (R[m + 2] - c);
+          const r0 = (R[m] * I16) / WR, r1 = (R[m + 1] * I16) / WG, r2 = (R[m + 2] * I16) / WB;
+          const y = (0.2126 * r0 + 0.7152 * r1 + 0.0722 * r2) * (1 - dsat);
+          for (let c = 0; c < 3; c++) {
+            const wr = c === 0 ? WR : c === 1 ? WG : WB, rr = c === 0 ? r0 : c === 1 ? r1 : r2;
+            const pl = P2L[primer[p + c]];
+            const x = dg * (y + dsat * rr), x2 = x * x;
+            const t1 = 1 - dc * (1 - x / Math.sqrt(Math.sqrt(1 + x2 * x2)));
+            let v = (pl + dm * (wr - pl)) * (t1 + dm * (rr - t1));
+            v = v < 0 ? 0 : v > 1 ? 1 : v;
+            R[m + c] = L2S[(v * 65535) | 0];
+          }
         }
       }
       // ---- titles

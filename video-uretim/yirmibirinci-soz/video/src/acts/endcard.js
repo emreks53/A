@@ -18,40 +18,60 @@ const fr = (n) => n / FPS;
 /** Every time of the end card (seconds; elements start ON a frame). The sound team's table in NOTES.md is this. */
 export const TIMELINE = {
   start: fr(714),                    // 23.800  the primer plate, exactly as the 2D film leaves it
-  dissolve: [fr(714), fr(741)],      // 23.800 → 24.700  primer → photograph (base light), smootherstep
+  dissolve: [fr(714), fr(741)],      // 23.800 → 24.700  primer → photograph (base light): the room comes up as light
   quran: [fr(735), fr(765)],         // 24.500 → 25.500  the warm light on the Qur'an eases on
   on: {                              // first visible frame of each element (56 % → 86 % → 98 % → 100 %)
     eyebrow: fr(759),                // 25.300  Risale-i Nur
-    rule: fr(762),                   // 25.400  the hairline draws from its centre (0.5 s)
+    rule: fr(762),                   // 25.400  the rule draws from its centre (0.5 s)
     hero: fr(773),                   // 25.767  Sözler
     sub: fr(787),                    // 26.233  Yirmi Birinci Söz
     folio: fr(800),                  // 26.667  291. Sayfa
   },
   accent: [fr(773), fr(800)],        // 25.767 → 26.667  the accent on the Sözler volume eases on
-  push: [fr(714), fr(825)],          // 23.800 → 27.500  one slow push, 1.69 %/s at the start, at rest at the end
+  push: [fr(714), fr(888)],          // 23.800 → 29.600  one slow push that arrives on the LAST frame: never at rest
   end: fr(888),                      // 29.600
 };
-const PUSH_RATE = 0.0169;            // per second at 23.80 — the rate of the film's last push
-const PIVOT = [540, 1200];           // … and its pivot (frame px, on the vertical centre line)
-const LOCKUP = 'F';
+const PUSH_TRAVEL = 0.0313;          // total: scale 1.0000 → 1.0313 (the travel of the first version)
+const PIVOT = [540, 1200];           // the pivot of the film's last push (frame px, on the vertical centre line)
+const LOCKUP = 'G';
+// The dissolve (comp.js, `o.dis`): the exposure comes down from DIS.ev to DIS.evMin stops over the first DIS.evEnd
+// of the window (dark wood first, then the shadows on the wall, the books last), the hand-over to the true
+// photograph (wall falloff, the last of the books, the white Qur'an) runs from DIS.mix[0] to DIS.mix[1].
+const DIS = { ev: 4.6, evMin: 0.6, evEnd: 1.0, evPow: 1.3, on: 0.4, mix: [0.4, 1.0], sat: 0.65 };
 
 const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const span = (t, [a, b]) => clamp((t - a) / (b - a));
+// A time that is a frame time up to float noise (the renderer's `from + i / fps`, the scene's `T - HOLD.add`) is
+// put exactly on the frame: the card is then a pure function of the FRAME NUMBER, bit for bit, whatever clock
+// offset the scene applies. Any other time (a still at 24.01) is used as given.
+const onFrame = (t) => { const f = Math.round(t * FPS); return Math.abs(t * FPS - f) < 1e-4 ? f / FPS : t; };
 const smoother = (u) => u * u * u * (u * (u * 6 - 15) + 10);
 const sineIO = (u) => 0.5 - 0.5 * Math.cos(Math.PI * u);
 
-/** Camera scale at t: velocity = PUSH_RATE * (1 + cos(pi u)) / 2 — constant at first, zero (and flat) at the end. */
+/**
+ * Camera scale at t: a quadratic ease-out over the whole card — 1.08 %/s at 23.80, decelerating evenly and
+ * arriving (velocity 0) on the last frame, so the photograph is never frozen: 0.33 %/s are left at 27.80,
+ * 0.19 %/s one second before the end.
+ */
 export function pushScale(t) {
-  const [a, b] = TIMELINE.push, u = span(t, [a, b]);
-  return 1 + PUSH_RATE * (b - a) * (u / 2 + Math.sin(Math.PI * u) / (2 * Math.PI));
+  const u = span(t, TIMELINE.push);
+  return 1 + PUSH_TRAVEL * (1 - (1 - u) * (1 - u));
 }
+const smooth = (u) => u * u * (3 - 2 * u);
 
 /** All animated numbers of the card at time t (pure). */
 export function stateAt(t) {
+  t = onFrame(t);
   const te = t + 1e-7;               // frame times are n / 30: keep the frame on its side of a key
   const u = span(te, TIMELINE.dissolve);
   return {
     w: u < 1e-5 ? 0 : smoother(u),   // exactly 0 on frame 714: that frame is the film's primer plate, untouched
+    dis: {                           // the dissolve's own numbers (used while w < 1)
+      g: Math.pow(2, DIS.evMin + (DIS.ev - DIS.evMin) * Math.pow(1 - clamp(u / DIS.evEnd), DIS.evPow)),
+      m: smooth(span(u, DIS.mix)),
+      c: smooth(clamp(u / DIS.on)),
+      sat: DIS.sat,
+    },
     q: sineIO(span(te, TIMELINE.quran)),
     a: sineIO(span(te, TIMELINE.accent)),
     scale: pushScale(te),
@@ -79,7 +99,7 @@ export async function makeCard(E, opts = {}) {
 
   function textLayer(t) {
     if (opts.noText) return null;                        // look-dev / contrast measurement only
-    const te = t + 1e-7;
+    const te = onFrame(t) + 1e-7;
     if (te < Math.min(TIMELINE.on.eyebrow, TIMELINE.on.rule) - 1 / FPS) return null;
     const done = lockupSettled(te, TIMELINE.on, FPS);
     if (done && settled) return settled;
@@ -96,7 +116,7 @@ export async function makeCard(E, opts = {}) {
   function paint(ctx, t, primer) {
     const st = stateAt(t);
     const out = comp.compose({
-      scale: st.scale, pivX: PIVOT[0], pivY: PIVOT[1], q: st.q, a: st.a, w: st.w,
+      scale: st.scale, pivX: PIVOT[0], pivY: PIVOT[1], q: st.q, a: st.a, w: st.w, dis: st.dis,
       primer: st.w < 1 ? primer() : null, text: textLayer(t), frame: st.frame,
     });
     ctx.putImageData(out, 0, 0);

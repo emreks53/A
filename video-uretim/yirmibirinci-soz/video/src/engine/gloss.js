@@ -58,8 +58,9 @@ function fitSize(text) {
   setType(c, SIZE);
   const m = c.measureText(text);
   const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-  // very short glosses ("en az") are set a little larger so they still carry on a phone
-  const boost = clamp(250 / w, 1, 1.2);
+  // one size for every gloss that fits (lead's decision after the film review: "en az" at 1.2x made the
+  // glosses change voice from word to word); only a long gloss shrinks to the frame
+  const boost = 1;
   return Math.min(Math.round(SIZE * boost), Math.floor((SIZE * env.W * MAX_WIDTH) / (w * (1 + SQUEEZE))));
 }
 
