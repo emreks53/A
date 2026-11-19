@@ -98,7 +98,9 @@
   /** rounded rectangle path */
   E.rrect = (x, y, w, h, r) => {
     const p = new Path2D();
-    r = Math.min(r, w / 2, h / 2);
+    if (w < 0) { x += w; w = -w; }
+    if (h < 0) { y += h; h = -h; }
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
     p.moveTo(x + r, y);
     p.arcTo(x + w, y, x + w, y + h, r);
     p.arcTo(x + w, y + h, x, y + h, r);
@@ -114,11 +116,29 @@
    * opts: mode 'glaze' (multiply, default) | 'over'; alpha; grad: {from:[x,y], to:[x,y], c2, r?} linear (or radial if r)
    *       light: 0..1 lighten the colour (thin wash); soft: px of edge softness (wet-in-wet, uses blur filter)
    */
+  /** soft-edged fill of a solid colour, fast: the path is drawn far off-canvas and only its blurred shadow
+      lands in place (ctx.filter blur costs ~30 ms per call on a 1080x1920 canvas; this costs ~1-7 ms).
+      blur is in user units (scales with the current transform). */
+  const OFF = 20000;
+  E.softFill = (ctx, path, color, blur) => {
+    const m = ctx.getTransform();
+    const sc = Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) || 1;
+    ctx.save();
+    ctx.setTransform(new DOMMatrix().translate(-OFF, 0).multiply(m));
+    ctx.shadowColor = color;
+    ctx.shadowBlur = Math.max(0.5, blur * sc * 2);
+    ctx.shadowOffsetX = OFF;
+    ctx.shadowOffsetY = 0;
+    ctx.fillStyle = color;
+    ctx.fill(path);
+    ctx.restore();
+  };
+
   E.wash = (ctx, path, color, opts = {}) => {
     const { mode = 'glaze', alpha = 1, grad = null, soft = 0, light = 0 } = opts;
     ctx.save();
     ctx.globalCompositeOperation = mode === 'over' ? 'source-over' : 'multiply';
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha *= alpha;
     const col = light ? E.shade(color, light) : color;
     if (grad) {
       let g;
@@ -127,9 +147,17 @@
       if (grad.stops) grad.stops.forEach(([o, c]) => g.addColorStop(o, c));
       else { g.addColorStop(0, col); g.addColorStop(1, grad.c2); }
       ctx.fillStyle = g;
-    } else ctx.fillStyle = col;
-    if (soft) ctx.filter = `blur(${soft}px)`;
-    ctx.fill(path);
+      if (soft) {
+        const m = ctx.getTransform();
+        ctx.filter = `blur(${soft * (Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) || 1)}px)`;
+      }
+      ctx.fill(path);
+    } else if (soft) {
+      E.softFill(ctx, path, col, soft);
+    } else {
+      ctx.fillStyle = col;
+      ctx.fill(path);
+    }
     ctx.restore();
   };
 
@@ -137,10 +165,9 @@
   E.lift = (ctx, path, alpha = 1, soft = 0) => {
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = alpha;
-    if (soft) ctx.filter = `blur(${soft}px)`;
-    ctx.fillStyle = '#ffffff';
-    ctx.fill(path);
+    ctx.globalAlpha *= alpha;
+    if (soft) E.softFill(ctx, path, '#ffffff', soft);
+    else { ctx.fillStyle = '#ffffff'; ctx.fill(path); }
     ctx.restore();
   };
 
@@ -152,13 +179,14 @@
   /** dry-brush stroke along a polyline (broken, textured) */
   E.dryBrush = (ctx, pts, color, { width = 18, seed = 5, alpha = 0.8, bristles = 7 } = {}) => {
     const r = E.rng(seed);
+    const base = ctx.globalAlpha;
     ctx.save();
     ctx.globalCompositeOperation = 'multiply';
     ctx.strokeStyle = color;
     ctx.lineCap = 'round';
     for (let b = 0; b < bristles; b++) {
       const off = (b / (bristles - 1) - 0.5) * width;
-      ctx.globalAlpha = alpha * (0.35 + 0.65 * r());
+      ctx.globalAlpha = base * alpha * (0.35 + 0.65 * r());
       ctx.lineWidth = width / bristles * (0.8 + r() * 0.9);
       ctx.beginPath();
       let drawing = false;
@@ -180,12 +208,13 @@
   /** paint splatter droplets */
   E.splatter = (ctx, cx, cy, spread, color, { seed = 7, n = 14, size = 5, alpha = 0.7 } = {}) => {
     const r = E.rng(seed);
+    const base = ctx.globalAlpha;
     ctx.save();
     ctx.globalCompositeOperation = 'multiply';
     ctx.fillStyle = color;
     for (let i = 0; i < n; i++) {
       const a = r() * E.TAU, d = Math.pow(r(), 0.7) * spread;
-      ctx.globalAlpha = alpha * (0.4 + 0.6 * r());
+      ctx.globalAlpha = base * alpha * (0.4 + 0.6 * r());
       ctx.beginPath();
       ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, size * (0.3 + r()), 0, E.TAU);
       ctx.fill();
@@ -200,12 +229,13 @@
    */
   E.pencil = (ctx, path, opts = {}) => {
     const { w = 1.6, a = 0.55, color = E.P.ink, double = true, seed = 11, jitter = 1.2 } = opts;
+    const base = ctx.globalAlpha;
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = color;
     const draw = (dx, dy, alpha, width) => {
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = base * alpha;
       ctx.lineWidth = width;
       ctx.save();
       ctx.translate(dx, dy);
@@ -235,7 +265,7 @@
     ctx.beginPath();
     ctx.rect(x0 - 10, -size, (w + 20) * E.ease.outQuad(p), size * 2);
     ctx.clip();
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha *= alpha;
     ctx.fillStyle = color;
     ctx.fillText(text, 0, 0);
     ctx.restore();
@@ -256,7 +286,7 @@
     if (pts.length < 2) return;
     ctx.save();
     ctx.strokeStyle = color;
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha *= alpha;
     ctx.lineWidth = w;
     ctx.lineCap = 'round';
     ctx.beginPath();
@@ -351,7 +381,8 @@
   E.translate = (L, x, y) => E.each(L, (c) => c.translate(x, y));
   E.scale = (L, s, s2 = s) => E.each(L, (c) => c.scale(s, s2));
   E.rotate = (L, a) => E.each(L, (c) => c.rotate(a));
-  E.alpha = (L, a) => E.each(L, (c) => (c.globalAlpha = a));
+  /** multiply the current alpha of all three layers (use inside E.save/E.restore) */
+  E.alpha = (L, a) => E.each(L, (c) => (c.globalAlpha *= a));
 
   // ---------- backgrounds ----------
   /** soft graded sky / background wash covering the whole frame (screen space) */
@@ -363,7 +394,7 @@
     if (mid) g.addColorStop(0.55, mid);
     g.addColorStop(1, bottom);
     ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha *= alpha;
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, E.W, E.H);
     // a few large soft blooms so the wash is not mechanically even

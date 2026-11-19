@@ -7,7 +7,7 @@
   E.FPS = 30;
 
   // ---------- math ----------
-  E.clamp = (x, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
+  E.clamp = (x, a = 0, b = 1) => (x !== x ? a : x < a ? a : x > b ? b : x);
   E.lerp = (a, b, t) => a + (b - a) * t;
   /** normalised progress of t through [a, b], clamped to 0..1 */
   E.seg = (t, a, b) => E.clamp((t - a) / (b - a));

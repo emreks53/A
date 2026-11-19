@@ -88,6 +88,18 @@ Optional scene fields:
 - Full-bleed backgrounds (a soft sky/paper wash) usually; vignettes floating on paper are allowed where it
   serves the idea. Depth: 2–4 layers with gentle parallax.
 
+## Alpha, softness, performance
+
+- `E.alpha(L, a)` MULTIPLIES the current alpha of all layers (use inside `E.save(L)/E.restore(L)`); every paint
+  helper and prop multiplies its own `alpha` with the context's current alpha, so fades compose.
+- `soft:` edges (E.wash/E.lift/E.bloom) are fast (shadow-blur trick, scales with the transform). Avoid
+  `ctx.filter = 'blur()'` in scene code: it costs ~30 ms per call on a full canvas. For soft solid fills use
+  `E.softFill(ctx, path, color, blurPx)`.
+- `E.smoothPath` (Catmull-Rom) overshoots on sharp corners / long straight sides — for boxes use `E.rrect`
+  or build polygons with straight `lineTo`, or subdivide first (`E.wobblyShape`).
+- Big props cost tens of ms (bigWorld ~65 ms, personalWorld ~35 ms, ground ~37 ms, statue/stone 30–47 ms).
+  Budget the frame (< ~1.5 s total incl. ~0.5 s fixed overhead).
+
 ## The man
 
 `E.man.draw(L, {x, y, h, view:'side'|'front'|'back', facing:±1, pose, alpha, tint, tintAmt, desat, outline})`.

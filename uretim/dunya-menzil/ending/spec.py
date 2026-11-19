@@ -41,9 +41,9 @@ AUTHOR_PANEL = (172.5, 217.5)
 SPINE_PPM = 12
 
 # Kur'an (orta boy mushaf)
-QURAN_T = 44.0
-QURAN_H = 240.0
-QURAN_D = 168.0
+QURAN_T = 38.0
+QURAN_H = 215.0
+QURAN_D = 150.0
 QURAN_PPM = 10
 
 
@@ -65,11 +65,11 @@ def spine_arc(T):
 
 
 # ---------------------------------------------------------------- rahle --
-RAHLE_W = 190.0      # width of a leaf (along world X)
-RAHLE_L = 380.0      # length of a leaf
-RAHLE_T = 14.0       # thickness of a leaf
-RAHLE_HINGE = 150.0  # distance of the hinge from the bottom end of a leaf
-RAHLE_THETA = 44.0   # leaf angle from the horizontal (degrees)
+RAHLE_W = 168.0      # width of a leaf (along world X)
+RAHLE_L = 300.0      # length of a leaf
+RAHLE_T = 15.0       # thickness of a leaf
+RAHLE_HINGE = 120.0  # distance of the hinge from the bottom end of a leaf
+RAHLE_THETA = 40.0   # leaf angle from the horizontal (degrees)
 RAHLE_FINGERS = 5
 
 
@@ -117,56 +117,176 @@ def rahle_notch_len():
     return RAHLE_T / 2 / math.sin(phi) + RAHLE_T / 2 * abs(math.cos(phi) / math.sin(phi)) + 1.2
 
 
+def rahle_half_width(y):
+    """Right-hand contour of a leaf (mm): flared feet, slight waist at the
+    hinge, widening again toward the top."""
+    hw = RAHLE_W / 2
+    yh = RAHLE_HINGE
+    if y <= 6.0:
+        return hw + 4.0 * (1 - y / 6.0) ** 2           # small flare at the foot
+    if y <= yh:
+        t = (y - 6.0) / (yh - 6.0)
+        return hw - 7.0 * math.sin(t * math.pi / 2) ** 1.5
+    t = min(1.0, (y - yh) / ((RAHLE_L - yh) * 0.55))
+    return hw - 7.0 + 7.0 * math.sin(t * math.pi / 2) ** 2
+
+
+def cart_y0():
+    return 0.10 * RAHLE_HINGE + 0.27 * RAHLE_HINGE + 7.0
+
+
+def rahle_cartouche():
+    """Lobed horizontal cartouche (lattice field) in the lower part of a leaf."""
+    y0 = cart_y0()
+    y1 = RAHLE_HINGE - rahle_notch_len() - 6.0
+    yc, hh = (y0 + y1) / 2, (y1 - y0) / 2
+    hx = 0.36 * RAHLE_W
+    pts = []
+    n = 80
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        c, s_ = math.cos(t), math.sin(t)
+        # superellipse with pointed (ogee) ends
+        x = hx * math.copysign(abs(c) ** 0.55, c)
+        y = hh * math.copysign(abs(s_) ** 0.35, s_) * (1 - 0.35 * abs(c) ** 6)
+        pts.append((x, yc + y))
+    return pts
+
+
+def rahle_window(yh=None, U=None):
+    """Pointed-arch (mihrab) window polygon in the upper part of a leaf."""
+    W = RAHLE_W
+    yh = RAHLE_HINGE if yh is None else yh
+    U = RAHLE_L - yh if U is None else U
+    wx = 0.29 * W
+    y0 = yh + 20.0
+    spring = yh + 0.56 * U
+    arch = _pointed_arch(0.0, spring, wx, 0.26 * U, 20)
+    return [(-wx, y0), (wx, y0)] + arch[::-1]
+
+
+def _inside(poly, x, y):
+    c = False
+    n = len(poly)
+    for i in range(n):
+        x1, y1 = poly[i]
+        x2, y2 = poly[(i + 1) % n]
+        if (y1 > y) != (y2 > y):
+            xi = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+            if xi > x:
+                c = not c
+    return c
+
+
+def _dist_to_poly(poly, x, y):
+    best = 1e9
+    n = len(poly)
+    for i in range(n):
+        x1, y1 = poly[i]
+        x2, y2 = poly[(i + 1) % n]
+        dx, dy = x2 - x1, y2 - y1
+        L2 = dx * dx + dy * dy
+        t = 0.0 if L2 == 0 else max(0.0, min(1.0, ((x - x1) * dx + (y - y1) * dy) / L2))
+        px, py = x1 + t * dx, y1 + t * dy
+        best = min(best, math.hypot(x - px, y - py))
+    return best
+
+
 def rahle_leaf(which):
     """2D design of one rahle leaf (mm). x across width (centred), y along
     the length (0 = foot). Returns (outline, holes); polygons are CCW lists.
     which: 'A' or 'B' (alternate hinge fingers)."""
     W, L, yh = RAHLE_W, RAHLE_L, RAHLE_HINGE
-    hw = W / 2
+    U = L - yh
     nh = rahle_notch_len()
-    fw = W / RAHLE_FINGERS
-    # which fingers are cut away (notched) in this leaf
+    fw_n = RAHLE_FINGERS
     cut = [1, 3] if which == 'A' else [0, 2, 4]
+    hw_h = rahle_half_width(yh)          # half width at the hinge
+    fw = 2 * hw_h / fw_n
 
     out = []
-    # --- foot: two legs separated by a pointed arch opening
-    aw = 0.27 * W
-    arch = _pointed_arch(0.0, 14.0, aw, 52.0, 16)
-    out += [(-hw, 0.0), (-aw, 0.0)]
+    # --- foot: two legs separated by a cusped (trefoil-headed) arch
+    aw = 0.25 * W
+    hwf = rahle_half_width(0.0)
+    out += [(-hwf, 0.0), (-aw, 0.0)]
+    arch = _pointed_arch(0.0, 0.10 * yh, aw, 0.27 * yh, 22)
     out += arch
-    out += [(aw, 0.0), (hw, 0.0)]
-    # --- right side, with notch for finger 4 if cut
+    out += [(aw, 0.0), (hwf, 0.0)]
+    # --- right side up to the crest (with hinge notch for finger 4)
+    ys = [3.0, 6.0] + [6.0 + (yh - nh - 6.0) * i / 10 for i in range(1, 11)]
+    for y in ys:
+        out.append((rahle_half_width(y), y))
     if 4 in cut:
-        out += [(hw, yh - nh), (hw - fw, yh - nh), (hw - fw, yh + nh), (hw, yh + nh)]
-    # --- crest at the top end
-    rc = 10.0
-    out += _arc_pts(hw - rc, L - 10 - rc, rc, 0.0, math.pi / 2, 6)
-    n = 24
+        out += [(hw_h, yh - nh), (hw_h - fw, yh - nh), (hw_h - fw, yh + nh), (hw_h, yh + nh)]
+    else:
+        out += [(rahle_half_width(yh), yh)]
+    y_top0 = L - 34.0
+    for i in range(1, 13):
+        y = yh + nh + (y_top0 - yh - nh) * i / 12
+        out.append((rahle_half_width(y), y))
+    # --- crest: shoulders + onion-dome ogee to the apex
+    hwt = rahle_half_width(y_top0)
+    n = 40
     for i in range(1, n):
-        x = (hw - rc) - (2 * (hw - rc)) * i / n
-        t = abs(x) / 34.0
-        bump = 9.0 * (math.cos(min(t, 1.0) * math.pi / 2) ** 2) if t < 1 else 0.0
-        out.append((x, L - 10 + bump))
-    out += _arc_pts(-hw + rc, L - 10 - rc, rc, math.pi / 2, math.pi, 6)
-    # --- left side, notch for finger 0
+        t = 1 - i / n                       # 1 -> 0 (right edge -> centre)
+        x = hwt * t
+        dome = (math.cos(math.pi * t / 2)) ** 2.2
+        shoulder = 6.0 * math.exp(-((t - 0.78) / 0.08) ** 2)
+        out.append((x, y_top0 + 34.0 * dome - shoulder))
+    out.append((0.0, L))
+    for i in range(n - 1, 0, -1):
+        t = 1 - i / n
+        x = -hwt * t
+        dome = (math.cos(math.pi * t / 2)) ** 2.2
+        shoulder = 6.0 * math.exp(-((t - 0.78) / 0.08) ** 2)
+        out.append((x, y_top0 + 34.0 * dome - shoulder))
+    # --- left side down
+    for i in range(12, 0, -1):
+        y = yh + nh + (y_top0 - yh - nh) * i / 12
+        out.append((-rahle_half_width(y), y))
     if 0 in cut:
-        out += [(-hw, yh + nh), (-hw + fw, yh + nh), (-hw + fw, yh - nh), (-hw, yh - nh)]
+        out += [(-hw_h, yh + nh), (-hw_h + fw, yh + nh), (-hw_h + fw, yh - nh), (-hw_h, yh - nh)]
+    else:
+        out += [(-rahle_half_width(yh), yh)]
+    for y in reversed(ys):
+        out.append((-rahle_half_width(y), y))
 
     holes = []
     # hinge slots for interior fingers
     for f in cut:
-        if f in (0, RAHLE_FINGERS - 1):
+        if f in (0, fw_n - 1):
             continue
-        x0 = -hw + f * fw
+        x0 = -hw_h + f * fw
         holes.append([(x0, yh - nh), (x0 + fw, yh - nh), (x0 + fw, yh + nh), (x0, yh + nh)])
-    # lower part openwork: eight-point star and side lozenges
-    holes.append(_star8(0.0, 103.0, 19.0))
-    holes.append(_lozenge(-55.0, 100.0, 11.0, 30.0))
-    holes.append(_lozenge(55.0, 100.0, 11.0, 30.0))
-    # upper part: mihrab window (straight jambs + pointed arch)
-    win_arch = _pointed_arch(0.0, 262.0, 30.0, 40.0, 16)
-    holes.append([(-30.0, 196.0), (30.0, 196.0)] + win_arch[::-1])
-    holes.append(_circle(0.0, 326.0, 8.0))
-    holes.append(_lozenge(-60.0, 246.0, 10.0, 34.0))
-    holes.append(_lozenge(60.0, 246.0, 10.0, 34.0))
+    # lower part (the face turned to the viewer): star-and-cross lattice in a
+    # lobed cartouche between the foot arch and the hinge
+    cart = rahle_cartouche()
+    pitch_l = 13.0
+    R_l = 4.7
+    yc_l = sum(p[1] for p in cart) / len(cart)
+    for j in range(4):
+        y = yc_l + 12.0 * (j - 1.5)
+        for i in range(-6, 7):
+            x = pitch_l * i
+            if _inside(cart, x, y) and _dist_to_poly(cart, x, y) > R_l + 1.9:
+                holes.append(_star8(x, y, R_l))
+            cx, cy = x + pitch_l / 2, y + 6.0
+            if _inside(cart, cx, cy) and _dist_to_poly(cart, cx, cy) > 3.6:
+                holes.append(_lozenge(cx, cy, 4.0, 4.0))
+    # upper part: star-and-cross lattice inside the mihrab window
+    win = rahle_window()
+    pitch = 15.0
+    R = 5.4
+    xs = [pitch * (i - 6) for i in range(13)]
+    yy0 = yh + 20.0 + pitch * 0.62
+    for j in range(16):
+        y = yy0 + pitch * j
+        for x in xs:
+            if _inside(win, x, y) and _dist_to_poly(win, x, y) > R + 2.4:
+                holes.append(_star8(x, y, R))
+            cx, cy = x + pitch / 2, y + pitch / 2
+            if _inside(win, cx, cy) and _dist_to_poly(win, cx, cy) > 4.6:
+                holes.append(_lozenge(cx, cy, 4.6, 4.6))
+    # crest: small star near the apex
+    holes.append(_star8(0.0, L - 22.0, 6.0))
     return out, holes
