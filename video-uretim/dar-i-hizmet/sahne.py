@@ -118,8 +118,7 @@ def meydan_adam(V):
 
 def ciz_meydan(t: Tuval, V, cam: Kamera):
     M = cam.M()
-    Mu = cam.M(0.7)
-    Muu = cam.M(0.45)
+    Muu = mt.ufuk_M(cam, 0.45, MEYDAN_UFUK)
     sal = 0.18 * math.sin(V * 1.4)
     # önden arkaya: ön çimen, adam, yakın taşlar, dere, yol, orta plan, uzak ağaçlar, yokuş, çayır, tepeler, gök
     for i, (y, s_) in enumerate([(1900, 1.3), (1830, 1.15), (1700, 1.0)]):
@@ -151,7 +150,8 @@ def ciz_meydan(t: Tuval, V, cam: Kamera):
     el.uzak_agac_sirasi(t, Muu, -400, 1500, MEYDAN_UFUK, yuk=34, renk_='#9DB3A8', yog=0.42)
     el.tepe_sirasi(t, Muu, -400, 1500, MEYDAN_UFUK - 4, 110, '#B4C3CB', yog=0.32, tohum=4)
     el.tepe_sirasi(t, Muu, -400, 1500, MEYDAN_UFUK - 30, 150, '#C6CFD8', yog=0.22, tohum=9)
-    el.gok(t, cam.M(0.35), bulutlar=[(260, 300, 300, 110, 1), (820, 200, 240, 90, 2)], ufuk=0.42)
+    el.gok(t, mt.ufuk_M(cam, 0.35, MEYDAN_UFUK), bulutlar=[(260, 300, 300, 110, 1), (820, 200, 240, 90, 2)],
+           ufuk=0.42)
 
 
 def ciz_kapi_sahnesi(V):
@@ -239,7 +239,7 @@ def durum(V, evre=None):
     s['agac'] = anahtar(V, [(0, 0.10), (16.4, 0.10), (18.6, 0.24), (T_KUVVET - 0.05, 0.26), (T_KUVVET + 0.85, 1.0)],
                         e_io)
     s['kok'] = anahtar(V, [(T_SABIR - 0.1, 0.25), (T_SABIR + 0.9, 0.65), (T_KUVVET, 0.7), (T_KUVVET + 0.9, 1.0)])
-    s['kesit'] = anahtar(V, [(T_SABIR - 0.15, 0.0), (T_SABIR + 0.55, 1.0), (T_KUVVET + 0.6, 1.0), (21.8, 0.0)])
+    s['kesit'] = anahtar(V, [(T_SABIR - 0.15, 0.0), (T_SABIR + 0.55, 1.0), (T_KUVVET + 0.55, 1.0), (21.35, 0.0)])
     # çiçekler: [arka sol, arka sağ, ön sol1, ön sol2, ön sağ1, ön sağ2]
     taban = anahtar(V, [(0, 0.12), (8.0, 0.12), (9.6, 0.30), (12.0, 0.30)])
     acilmalar = []
@@ -291,8 +291,9 @@ def bahce_kamera(V):
         (13.3, K(540, 950, 1.02)),
         (14.10, K(0, 0, 2.3)),   # kalbe yaklaş (konum aşağıda doldurulur)
         (14.85, K(0, 0, 2.38)),
-        (15.75, K(520, 1230, 0.86)),
-        (17.0, K(535, 1090, 0.94)),
+        (15.80, K(495, 1555, 1.50)),
+        (16.55, K(500, 1545, 1.46)),
+        (17.45, K(535, 1090, 0.94)),
         (20.15, K(540, 1060, 0.97)),
         (21.05, K(540, 820, 0.76)),
         (21.75, K(560, 760, 0.80)),
@@ -329,7 +330,7 @@ def kalp_dunya():
 # ---------------------------------------------------------------------------------------------------------------
 CICEKLER = [  # x, y, boy, renk
     (215, 1440, 230, 'allik'), (930, 1450, 240, 'seftali'),
-    (95, 1700, 330, 'beyaz'), (300, 1835, 300, 'allik'), (850, 1800, 320, 'gul'), (1010, 1660, 300, 'beyaz'),
+    (55, 1700, 330, 'beyaz'), (165, 1885, 300, 'allik'), (930, 1865, 320, 'gul'), (1035, 1685, 300, 'beyaz'),
 ]
 
 
@@ -337,8 +338,8 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
     s = durum(V, evre)
     t = Tuval()
     M = cam.M()
-    Mu = cam.M(0.55)
-    Muu = cam.M(0.3)
+    Mu = mt.ufuk_M(cam, 0.55, UFUK)
+    Muu = mt.ufuk_M(cam, 0.3, UFUK)
     sal = math.sin(V * 1.7) * 0.25 + s['ruzgar'] * (0.6 + 0.4 * math.sin(V * 5.3))
 
     # --- en önde: simgeler (lezzet, ücret, mükâfat) ---
@@ -368,9 +369,12 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
 
     # --- toprak kesiti ve kökler (sabır) ---
     if s['kesit'] > 0.01:
-        with t.gorunurluk(1.0, acilma_radyal(s['kesit'], AGAC_X, AGAC_Y + 40, 800, dalga=0.2, tohum=7), M=M):
+        acik = s['kesit'] if V < T_KUVVET else 1.0
+        alfa = 1.0 if V < T_KUVVET else s['kesit']
+        with t.gorunurluk(alfa, acilma_radyal(0.62 * acik, AGAC_X + 50, AGAC_Y + 175, 360, dalga=0.22, tohum=7),
+                          M=M):
             Ma = M @ M_yerlestir(AGAC_X, AGAC_Y, AGAC_OLCEK)
-            doga.ciz_kokler(t, Ma, s['agac'], derinlik=s['kok'], tohum=2)
+            doga.ciz_kokler(t, Ma, 0.42 + 0.58 * s['agac'], derinlik=s['kok'], tohum=2)
             doga.ciz_toprak_kesiti(t, M, -400, 1500, AGAC_Y + 25, 2600, tohum=3)
 
     # --- adam (ve elindeki ibrik), suyu, seccade ---
@@ -404,8 +408,9 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
 
     # --- uzak: kubbe, ağaç sırası, tepeler ---
     if s['kubbe'] > 0.01:
-        Mk = Mu @ M_yerlestir(830, UFUK + 4, 0.36)
-        with t.gorunurluk(1.0, acilma_radyal(s['kubbe'], 0, -300, 900, dalga=0.2, tohum=11), M=Mk):
+        Mk = mt.ufuk_M(cam, 0.45, UFUK) @ M_yerlestir(890, UFUK + 4, 0.36)
+        with t.gorunurluk(1.0 - 0.45 * s['koyuluk'], acilma_radyal(s['kubbe'], 0, -300, 900, dalga=0.2, tohum=11),
+                          M=Mk):
             mimari.ciz_kubbe_cami(t, Mk, nur=0.5 * s['kubbe'], tohum=2)
     el.uzak_agac_sirasi(t, Mu, -900, 2000, UFUK + 4, yuk=46, renk_=el.karistir('#A5B8B0', '#8F8DA3',
                                                                                s['koyuluk'] * 0.6), yog=0.42,
@@ -446,7 +451,7 @@ def ciz_adam(t, V, s, M):
 
 def ciz_gok_bahce(t, V, s, cam):
     k = s['koyuluk']
-    Mg = cam.M(0.35)
+    Mg = mt.ufuk_M(cam, 0.35, UFUK)
     # fırtına bulutları (önce: gök onların arkasında)
     if s['firtina_gelis'] > 0.01:
         g = s['firtina_gelis']

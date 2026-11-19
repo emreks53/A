@@ -281,7 +281,7 @@ class Malzeme:
         b.l(rough_s, bs.inputs["Roughness"])
         b.l(normal_s, bs.inputs["Normal"])
         bs.inputs["Specular IOR Level"].default_value = 0.45
-        bs.inputs["Coat Weight"].default_value = cfgG.get("deri_cila", 0.32) if not kuran else 0.30
+        bs.inputs["Coat Weight"].default_value = cfgG.get("deri_cila", 0.38) if not kuran else 0.30
         bs.inputs["Coat Roughness"].default_value = cfgG.get("deri_cila_p", 0.30)
         bs.inputs["Sheen Weight"].default_value = 0.12
         bs.inputs["Sheen Roughness"].default_value = 0.4
@@ -793,7 +793,7 @@ class Malzeme:
 
 
 # ===================================================================== kitap
-RENK_DERI = srgb("#B08676")       # cok acik, solgun gul-taba (acik kahveye kayan) deri; render'da kalibre edildi
+RENK_DERI = srgb("#AC8373")       # cok acik, solgun gul-taba (acik kahveye kayan) deri; render'da kalibre edildi
 RENK_KOYU = srgb("#865D4F")       # bas/kuyruk ve kenar asinmasi
 # Birkac kitabin derisi digerlerinden cok az farkli (ayri parti deri / yillanma): dogrusal RGB carpimsal sapma
 TON = {
@@ -1281,8 +1281,8 @@ def isiklar(cfg):
     alan("dolgu", (1.3, -0.6, 0.55), (0.0, 0.2, 0.25), 1.2, 1.0, cfg.get("dolgu_guc", 0.8), kelvin(5600))
     alan("kart", (0.95, -1.45, 0.45), (0.0, 0.15, 0.25), 1.0, 1.0, cfg.get("kart_guc", 1.0), kelvin(5800))
     # kameranin arkasindaki acik renkli oda (duvar/tavan yansimasi): golgeleri notr ve yumusak doldurur
-    if cfg.get("on_guc", 50) > 0:
-        on = alan("on", (0.35, -3.2, 1.0), (0.0, 0.1, 0.25), cfg.get("on_en", 2.6), cfg.get("on_boy", 1.6), cfg.get("on_guc", 50),
+    if cfg.get("on_guc", 55) > 0:
+        on = alan("on", (0.35, -3.2, 1.0), (0.0, 0.1, 0.25), cfg.get("on_en", 2.6), cfg.get("on_boy", 1.6), cfg.get("on_guc", 55),
                   kelvin(cfg.get("on_k", 7000)))
         if cfg.get("on_duvar_haric", True):
             # arka duvar bu dolgudan pay almaz: duvardaki gunes lekeleri ile golge arasi oran gercekci kalir
@@ -1291,6 +1291,12 @@ def isiklar(cfg):
                 if o.type == "MESH" and o.name != "duvar":
                     col.objects.link(o)
             on.light_linking.receiver_collection = col
+            # duvar icin ayni yonden zayif (notr) pay: golgeler camurlasmasin ama desen kaybolmasin
+            od = alan("on_duvar", (0.35, -3.2, 1.0), (0.0, 0.1, 0.25), cfg.get("on_en", 2.6), cfg.get("on_boy", 1.6),
+                      cfg.get("on_guc", 55) * cfg.get("on_duvar_oran", 0.35), kelvin(cfg.get("on_k", 7000)))
+            cd_ = bpy.data.collections.new("on_duvar_alici")
+            cd_.objects.link(bpy.data.objects["duvar"])
+            od.light_linking.receiver_collection = cd_
 
     # sabah gunesi: sol pencereden alcak acida giren tek gunes (isik baglama yok): duvara, kaideye,
     # kitaplara ve masaya kasa/kayit ve tul perde golgeleriyle (yari golgeli) duser.
@@ -1496,6 +1502,7 @@ def maske_modu():
     """Olcum maskesi: her kitabin sirt derisi kendi gri seviyesinde (8 bit PNG'de 15*(k+1)), digerleri siyah.
     Isiklar kapali, DOF yok, piksel basina tek ornek (kenar karisimi yok)."""
     sc = bpy.context.scene
+    sc.view_layers[0].material_override = None
     sirali = A.UST_SIRA + A.ALT_SIRA + [A.YATAN]
 
     def emis(ad, v):

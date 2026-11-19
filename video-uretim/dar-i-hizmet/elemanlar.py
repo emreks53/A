@@ -90,7 +90,7 @@ def gok(t: Tuval, M, bulutlar=(), ust='#5F8FC4', orta='#8DB2D7', alt='#EAD6CB', 
     if ek_maske is not None:
         gm = gm * ek_maske
     t.degrade_lavi([(0.0, ust, 1.0), (0.42, orta, 0.85), (ufuk, alt, alt_yog), (1.0, alt, alt_yog * 0.8)],
-                   yog=yog, gran=gran, akis=0.10, M=M, tohum=tohum, maske=gm, kirp=k)
+                   yog=yog, gran=gran, akis=0.10, M=M, tohum=tohum, maske=gm, kirp=k, dunya_y=True)
     # bulutların altına lila gölge
     for (p, cx, cy, g, y, s) in alt_golge:
         def yf(X, Y, cy=cy, y=y):

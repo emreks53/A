@@ -169,7 +169,8 @@ def _hex(c):
 
 def sirt_olc(img_path, mask_path, erode=1, yaz=True):
     """Sirt derisi piksellerinin (yaldiz ve cevresi haric) golge / orta / parlak tonlari.
-    Parlaklik yuzdeliklerine gore: golge P5-P15, orta P40-P60, parlak P90-P98 bandlarinin ortalama rengi."""
+    Parlaklik yuzdeliklerine gore: golge P5-P15, orta P40-P60, gunesli orta P55-P80 (gunes alan sirtlarin
+    orta tonu; dikme golgesindeki kitaplar dagilimin alt ceyreginde kalir), parlak P90-P98 bandlarinin ortalamasi."""
     import colorsys
     import cv2
     import numpy as np
@@ -205,11 +206,11 @@ def sirt_olc(img_path, mask_path, erode=1, yaz=True):
         c = im[sel].mean(0)
         h, s_, v = colorsys.rgb_to_hsv(*c)
         return dict(hex=_hex(c), h=round(h * 360, 1), s=round(s_, 3), v=round(v, 3), n=int(sel.sum()))
-    out = dict(golge=bant(tum, 5, 15), orta=bant(tum, 40, 60), parlak=bant(tum, 90, 98),
+    out = dict(golge=bant(tum, 5, 15), orta=bant(tum, 40, 60), gunesli=bant(tum, 55, 80), parlak=bant(tum, 90, 98),
                piksel=int(tum.sum()), kitap=kitap,
                en_parlak_kanal=float(np.percentile(im[tum].max(1), 99.9)))
     if yaz:
-        for k in ("golge", "orta", "parlak"):
+        for k in ("golge", "orta", "gunesli", "parlak"):
             print(f"SIRT {k:7s} {out[k]['hex']}  h={out[k]['h']:5.1f}  s={out[k]['s']:.3f}  v={out[k]['v']:.3f}")
         print("SIRT kitap medyanlari", json.dumps(kitap, ensure_ascii=False))
     return out
@@ -270,6 +271,10 @@ def main():
         dep = px.reshape(h, w, 4)[::-1, :, 0].copy()
         np.save(os.path.join(A.SCRATCH, "kare1_derinlik.npy"), dep)
         print("DERINLIK", dep.min(), np.median(dep), dep.max(), f"{time.time() - t0:.1f}s")
+        # olcum maskesi (ayni kamera/cozunurluk): hareket.py bunu 1. kareye tasiyip renkleri olcer
+        sc.view_layers[0].material_override = None
+        maske_render(os.path.join(A.SCRATCH, "kare1_maske.png"))
+        sirt_olc(os.path.join(A.SCRATCH, "kare1_buyuk.png"), os.path.join(A.SCRATCH, "kare1_maske.png"), erode=2)
         json.dump(dict(cfg_b, pay=pay, kadraj=k, sure=dt), open(os.path.join(A.SCRATCH, "kare1_bilgi.json"), "w"), indent=1)
         print(f"KARE1 {dt:.1f}s")
     if cmd in ("son", "hepsi"):

@@ -588,11 +588,14 @@ class Tuval:
 
     # -- tam ekran degrade lavi (gök) ---------------------------------------------------------------------------
     def degrade_lavi(self, duraklar, yog=1.0, gran=0.12, akis=0.10, M=None, tohum=0, maske=None, eksen='y',
-                     kirp=None):
+                     kirp=None, dunya_y=False):
         """duraklar: [(konum 0..1 ekran boyunca, renk, yoğunluk), ...]. maske: (h,w) saklama (1=boya)."""
         k = kirp or Kirp(0, 0, W, H)
         ys = (np.arange(k.y0, k.y0 + k.h, dtype=np.float32) + 0.5) / H
         xs = (np.arange(k.x0, k.x0 + k.w, dtype=np.float32) + 0.5) / W
+        if dunya_y and M is not None:
+            # degrade dünyaya bağlı: ekran satırının dünya y'si (dönmesiz kamera varsayımı)
+            ys = ((ys * H - M[1, 2]) / M[1, 1]) / H
         konum = ys if eksen == 'y' else xs
         ks = np.array([d[0] for d in duraklar], np.float32)
         cs = np.stack([renk(d[1]) for d in duraklar])
@@ -851,3 +854,13 @@ def gecis_boya(Ra, Rb, ilerleme, yon=(0.0, 1.0), dalga=0.10, on=0.06, kenar_koyu
 def gecis_soluk(Ra, Rb, ilerleme):
     t = min(1.0, max(0.0, ilerleme))
     return Ra * (1 - t) + Rb * t
+
+
+def ufuk_M(cam: 'Kamera', derinlik, ufuk_y):
+    """Uzak katman matrisi: katman ufuk çizgisine yapışık kalır (kubbe, tepeler, gök yerden kopmaz); yatay
+    kaymada ve zumda daha az hareket eder (paralaks)."""
+    ana = cam.M(1.0)
+    hy = float((ana @ np.array([cam.x, ufuk_y, 1.0]))[1])
+    zd = 1.0 + (cam.zum - 1.0) * derinlik if cam.zum >= 1 else cam.zum ** derinlik
+    cx = W / 2 + (cam.x - W / 2) * derinlik
+    return np.array([[zd, 0.0, W / 2 - zd * cx], [0.0, zd, hy - zd * ufuk_y], [0, 0, 1.0]], np.float64)

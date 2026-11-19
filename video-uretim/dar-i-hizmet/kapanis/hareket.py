@@ -19,6 +19,7 @@ import json
 import math
 import os
 import sys
+import zlib
 
 import cv2
 import numpy as np
@@ -77,24 +78,20 @@ def hazirla(dep):
 SS = 2   # 2x ust-ornekleme ile yeniden ornekle, sonra alan ortalamasiyla kucult (zum titresimini onler)
 
 
-def kare_uret(i, bilgi, src, dep, post=True, salinim=True, ss=SS):
-    Hs, Ws = src.shape[:2]
+def koordinat(i, bilgi, dep, Hs, Ws, salinim=True, ss=SS, olcek=1.0):
+    """i. cikti karesinin (ss kat ust-ornekli) her pikseli icin kaynak goruntudeki (us, vs) koordinatlari."""
     lens, sens, pay = bilgi["lens"], 36.0, bilgi["pay"]
     f_src = (lens / pay) / sens * Hs
     f_out = lens / sens * H_OUT
     cxs, cys = (Ws - 1) / 2.0, (Hs - 1) / 2.0
     cxo, cyo = (W_OUT - 1) / 2.0, (H_OUT - 1) / 2.0
     p = ilerleme(i)
-    D = bilgi["dolly"] * bilgi["mesafe"] * p           # ileri hareket (m)
-    kv = bilgi.get("kaydir_v", 0.006) * p              # kamera yukari kaymasi (m)
-    t_sn = i / 30.0
-    dx, dy, rl = _salinim(t_sn) if salinim else (0.0, 0.0, 0.0)
-
-    # ust-ornekli cikti izgarasi (piksel merkezleri cikti koordinatlarinda)
+    D = bilgi["dolly"] * bilgi["mesafe"] * p
+    kv = bilgi.get("kaydir_v", 0.006) * p
+    dx, dy, rl = _salinim(i / 30.0) if salinim else (0.0, 0.0, 0.0)
     g = (np.arange(H_OUT * ss, dtype=np.float32) + 0.5) / ss - 0.5
     h = (np.arange(W_OUT * ss, dtype=np.float32) + 0.5) / ss - 0.5
     yy, xx = np.meshgrid(g, h, indexing="ij")
-    # el salinimi: cikti koordinatlarina kucuk kayma + donme (merkez etrafinda)
     if salinim:
         a = math.radians(rl)
         ca, sa = math.cos(a), math.sin(a)
@@ -102,37 +99,37 @@ def kare_uret(i, bilgi, src, dep, post=True, salinim=True, ss=SS):
         yr = (xx - cxo) * sa + (yy - cyo) * ca + cyo + dy
     else:
         xr, yr = xx, yy
+    ap = (xr - cxo) / (f_out * olcek)
+    bp = (cyo - yr) / (f_out * olcek)
+    us = cxs + f_src * ap
+    vs = cys - f_src * bp
+    for _ in range(5):
+        d = _bilinear(dep, us, vs)
+        dpr = np.maximum(d - D, 0.05)
+        us = cxs + f_src * (ap * dpr / d)
+        vs = cys - f_src * ((bp * dpr + kv) / d)
+    return us.astype(np.float32), vs.astype(np.float32)
 
-    def esle(olcek):
-        # olcek: renk sapmasi icin kanal bazli cok kucuk buyutme
-        ap = (xr - cxo) / (f_out * olcek)
-        bp = (cyo - yr) / (f_out * olcek)
-        # ilk tahmin: hareketsiz izdusum
-        us = cxs + f_src * ap
-        vs = cys - f_src * bp
-        for _ in range(5):
-            d = _bilinear(dep, us, vs)
-            dpr = np.maximum(d - D, 0.05)
-            X_d = ap * dpr / d
-            Y_d = (bp * dpr + kv) / d
-            us = cxs + f_src * X_d
-            vs = cys - f_src * Y_d
-        return us, vs
 
+def maske_kare(i, bilgi, mask, dep):
+    """Olcum maskesini i. cikti karesine en-yakin komsu ile yeniden izdusur (1080x1920)."""
+    us, vs = koordinat(i, bilgi, dep, mask.shape[0], mask.shape[1], ss=1)
+    return cv2.remap(mask, us, vs, cv2.INTER_NEAREST, borderMode=cv2.BORDER_REPLICATE)
+
+
+def kare_uret(i, bilgi, src, dep, post=True, salinim=True, ss=SS):
+    Hs, Ws = src.shape[:2]
+    cxs, cys = (Ws - 1) / 2.0, (Hs - 1) / 2.0
+    us1, vs1 = koordinat(i, bilgi, dep, Hs, Ws, salinim=salinim, ss=ss)
     if post:
         big = np.empty((H_OUT * ss, W_OUT * ss, 3), np.float32)
-        us1, vs1 = esle(1.0)
         for c, olc in ((0, 1.00035), (1, 1.0), (2, 0.99965)):
-            if olc == 1.0:
-                us, vs = us1, vs1
-            else:
-                # renk sapmasi: kanal koordinatlarini merkeze gore cok az olcekle
-                us = (us1 - cxs) * olc + cxs
-                vs = (vs1 - cys) * olc + cys
+            # renk sapmasi: kanal koordinatlarini merkeze gore cok az olcekle
+            us = us1 if olc == 1.0 else ((us1 - cxs) * olc + cxs).astype(np.float32)
+            vs = vs1 if olc == 1.0 else ((vs1 - cys) * olc + cys).astype(np.float32)
             big[..., c] = cv2.remap(src[..., c], us, vs, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
     else:
-        us, vs = esle(1.0)
-        big = cv2.remap(src, us, vs, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+        big = cv2.remap(src, us1, vs1, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
     out = cv2.resize(big, (W_OUT, H_OUT), interpolation=cv2.INTER_AREA) if ss > 1 else big
     out = np.clip(out, 0, 1)
     if post:
@@ -141,6 +138,30 @@ def kare_uret(i, bilgi, src, dep, post=True, salinim=True, ss=SS):
 
 
 _VIN = None
+_PUS = None
+# Gunes huzmesinde cok hafif pus (ucuz sahte): sol ustten gelen, ~20 derece egimle saga-asagi inen,
+# pencere kayitlariyla bolunmus yumusak bantlar. Yalnizca ust bolgede; altyazi bandina (y > ~0.62 H) inmez.
+PUS = 0.022
+PUS_EGIM = math.radians(19.5)       # gunes isinlarinin ekrandaki dogrultusu (kaybolma noktasi sag-asagida)
+PUS_RENK = np.array([1.0, 0.86, 0.69], np.float32)
+
+
+def _pus(H, W):
+    global _PUS
+    if _PUS is None or _PUS.shape[:2] != (H, W):
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        # isin dogrultusuna dik koordinat (piksel)
+        n = -xx * math.sin(PUS_EGIM) + yy * math.cos(PUS_EGIM)
+        u = n / H
+        bant = (np.exp(-((u - 0.10) / 0.075) ** 2) + 0.8 * np.exp(-((u - 0.27) / 0.06) ** 2)
+                + 0.55 * np.exp(-((u - 0.43) / 0.05) ** 2))
+        # isin boyunca: pencereye (sola) yakin daha yogun
+        boy = 0.55 + 0.45 * np.clip(1.0 - xx / W, 0, 1)
+        dusey = np.clip(1.0 - (yy / H - 0.30) / 0.32, 0, 1) ** 1.5
+        a = (PUS * bant * boy * dusey).astype(np.float32)
+        a = cv2.GaussianBlur(a, (0, 0), 25)
+        _PUS = a[..., None] * PUS_RENK[None, None, :]
+    return _PUS
 
 
 def son_islem(img, i):
@@ -157,6 +178,8 @@ def son_islem(img, i):
     hi = np.clip(lum - 0.62, 0, None)[..., None] * lin
     glow = cv2.GaussianBlur(hi, (0, 0), 18) * 0.10 + cv2.GaussianBlur(hi, (0, 0), 5) * 0.05
     lin = lin + glow
+    if PUS > 0:
+        lin = 1.0 - (1.0 - lin) * (1.0 - _pus(H, W))
     img = np.where(lin <= 0.0031308, lin * 12.92, 1.055 * np.power(np.maximum(lin, 0), 1 / 2.4) - 0.055)
     # film greni (karede degisen), golgelerde biraz daha belirgin
     rng = np.random.default_rng(1000 + i)
@@ -172,10 +195,14 @@ def son_islem(img, i):
 
 
 def kaydet(img, path):
-    rng = np.random.default_rng(abs(hash(path)) % (2 ** 32))
+    rng = np.random.default_rng(zlib.crc32(os.path.basename(path).encode()))
     d = rng.uniform(-0.5, 0.5, img.shape[:2])[..., None]
     a = np.clip(np.round(img * 255.0 + d), 0, 255).astype(np.uint8)
     cv2.imwrite(path, a[..., ::-1], [cv2.IMWRITE_PNG_COMPRESSION, 3])
+
+
+def _hx(c):
+    return "#%02X%02X%02X" % tuple(int(round(float(x) * 255)) for x in c)
 
 
 def main():
@@ -193,14 +220,36 @@ def main():
             ad = "onizleme.png" if k == 1 else "onizleme_son.png"
             kaydet(out, os.path.join(A.SCRATCH, ad))
         print(k, flush=True)
+    # olcum: sirt derisi renkleri son (yayinlanan) karede - maske ayni izdusumle 1. kareye tasinir
+    mpath = os.path.join(A.SCRATCH, "kare1_maske.png")
+    if os.path.exists(mpath) and (not secim or 1 in kareler):
+        import kapanis
+        mk = cv2.imread(mpath, cv2.IMREAD_GRAYSCALE)
+        cikti = os.path.join(A.SCRATCH, "onizleme_maske.png")
+        cv2.imwrite(cikti, maske_kare(0, bilgi, mk, dep))
+        print("OLCUM onizleme.png (son islemli 1. kare):")
+        kapanis.sirt_olc(os.path.join(A.SCRATCH, "onizleme.png"), cikti, erode=2)
+        on = cv2.imread(os.path.join(A.SCRATCH, "onizleme.png"))[..., ::-1].astype(np.float32) / 255.0
+        bant = on[1344:1652]
+        lum = bant @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+        gy, gx = np.gradient(cv2.GaussianBlur(lum, (0, 0), 2))
+        print(f"ALTYAZI BANDI y1344-1651: ort {_hx(bant.reshape(-1, 3).mean(0))}  parlaklik std {lum.std():.4f}  "
+              f"min/max {lum.min():.3f}/{lum.max():.3f}  egim P99 {np.percentile(np.hypot(gx, gy), 99):.4f}")
     # dogrulama: hareket sonu (salinimsiz, son islemsiz) -> gercek son kare render'i ile kiyas
     gercek = os.path.join(A.SCRATCH, "son_kare_render.png")
     if os.path.exists(gercek) and not secim:
         a = kare_uret(N_KARE - 1, bilgi, src, dep, post=False, salinim=False)
         kaydet(a, os.path.join(A.SCRATCH, "son_kare_25d_ham.png"))
         g = cv2.imread(gercek)[..., ::-1].astype(np.float32) / 255.0
-        fark = np.abs(a - g).mean()
-        print(f"DOGRULAMA ortalama mutlak fark (0-1): {fark:.4f}")
+        d = np.abs(a - g)
+        fark = d.mean()
+        dl = d.mean(2)
+        # yirtilma/esneme kontrolu: yerel (31 px) ortalama farkin en buyugu
+        yerel = cv2.blur(dl, (31, 31))
+        print(f"DOGRULAMA ortalama mutlak fark (0-1): {fark:.4f}  P99 {np.percentile(dl, 99):.4f}  "
+              f"yerel(31px) en buyuk {yerel.max():.4f}")
+        os.makedirs(A.TEST, exist_ok=True)
+        cv2.imwrite(os.path.join(A.TEST, "fark.png"), np.clip(dl * 8 * 255, 0, 255).astype(np.uint8))
 
 
 if __name__ == "__main__":
