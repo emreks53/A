@@ -608,8 +608,25 @@
     pnt.restore();
   }
 
+  // Into the ending: the darkness washes out to bare paper before the photograph of the Külliyat and the
+  // Kur'an fades in, so none of the torment imagery is ever superimposed on them.
+  function drawWithTail(L, lt, t, shot) {
+    draw(L, lt, t, shot);
+    const k = E.ep(lt, shot.dur - 0.22, shot.dur + 0.26, 'inOutSine');
+    if (k <= 0) return;
+    for (const c of [L.paint, L.ink, L.light]) {
+      c.save();
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.globalAlpha = k;
+      if (c === L.paint) { c.globalCompositeOperation = 'source-over'; c.fillStyle = '#ffffff'; }
+      else { c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; }
+      c.fillRect(0, 0, E.W, E.H);
+      c.restore();
+    }
+  }
+
   E.scene('s20', {
-    draw,
+    draw: drawWithTail,
     wc: [1.05, 1.1, 3, 0.6],
     sfx() {
       // heartbeats synced to the heart prop's own beat (phase (t·0.8) mod 1 = 0.12)
