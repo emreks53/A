@@ -61,7 +61,7 @@
   function times(shot) {
     const w = (i) => E.T(i) - shot.start;
     const T = { on: w(82), ci: w(83), es: w(85), in: w(86), ed: w(87) };
-    T.tilt0 = T.in - 0.12; T.tilt1 = T.in + 1.02;     // camera rises with the heart
+    T.tilt0 = T.in - 0.2; T.tilt1 = T.in + 1.1;     // camera rises with the heart
     T.rise0 = T.in - 0.08; T.rise1 = T.in + 0.92;     // the heart rises up the column
     T.dis0 = T.rise1 - 0.02; T.dis1 = T.rise1 + 0.33; // ...and dissolves into the light before the bleed (3.0)
     return T;
@@ -250,7 +250,7 @@
   function reflected(L, lt, gx, gy, a) {
     if (a <= 0.002) return;
     const c = scratch(L);
-    const beams = [[-1.05, 0.09, 0.8], [-0.62, 0.07, 1], [-0.25, 0.06, 0.7], [0.25, 0.06, 0.7], [0.62, 0.07, 1], [1.05, 0.09, 0.8], [2.25, 0.08, 0.45], [-2.25, 0.08, 0.45], [PI, 0.06, 0.3]];
+    const beams = [[-1.1, 0.08, 0.6], [-0.62, 0.065, 1], [-0.24, 0.05, 0.6], [0.24, 0.05, 0.6], [0.62, 0.065, 1], [1.1, 0.08, 0.6]];
     beams.forEach(([ang, w, s], i) => {
       const a0 = -PI / 2 + ang + 0.02 * Math.sin(lt * 0.7 + i);
       const r0 = GR * 0.9, r1 = GR * (2.1 + 0.35 * (i % 2));
@@ -271,7 +271,7 @@
     ag.addColorStop(1, 'rgba(255,246,226,0)');
     c.fillStyle = ag;
     c.fillRect(gx - GR * 1.7, gy - GR * 1.7, GR * 3.4, GR * 3.4);
-    layDown(L, [[L.paint, 'source-over', 0.42 * a], [L.light, 'lighter', 0.22 * a]]);
+    layDown(L, [[L.paint, 'source-over', 0.3 * a], [L.light, 'lighter', 0.15 * a]]);
   }
 
   // ---------------------------------------------------------------- the mirror (same as s09's)
@@ -424,7 +424,7 @@
       const cam = camAt(lt, T);
       const light = ep(lt, T.on - 0.15, T.on + 1.0, 'inOutSine');
       const fieldA = ep(lt, T.on - 0.1, T.in + 0.6, 'inOutSine');
-      const front = lerp(-1100, GY + GR + 60, ep(lt, T.on - 0.12, T.ci + 0.05, 'inOutSine'));
+      const front = lerp(-480, GY + GR + 60, ep(lt, T.on - 0.12, T.ci + 0.05, 'inOutSine'));
       const flare = ep(lt, T.ci - 0.05, T.ci + 0.25, 'outCubic') * (1 - 0.45 * ep(lt, T.ci + 0.4, T.in + 0.4, 'inOutSine'));
       const lit = ep(lt, T.ci - 0.05, T.es + 0.5, 'inOutSine');      // how much of the ornament carries the light
       const k = cam.k;                                                 // tilt progress
@@ -486,12 +486,12 @@
         if (hit > 0) {
           E.save(L);
           E.each(L, (c) => c.clip(disc));
-          rlift(L.paint, gx, gy - GR * 0.62, GR * 0.85, 0.5 * hit * light, [[0, 0.9], [0.5, 0.5], [1, 0]]);
+          rlift(L.paint, gx, gy - GR * 0.62, GR * 0.85, 0.3 * hit * light, [[0, 0.9], [0.5, 0.5], [1, 0]]);
           E.restore(L);
         }
       }
       construction(L, gx, gy, 0.135 * (1 - ep(lt, T.on, T.ci + 0.3, 'inOutSine')));
-      E.props.nakis(L, gx, gy, RN, { reveal: 1, t: lt + 8, glow: 0.5 + 0.45 * lit, clip: disc });
+      E.props.nakis(L, gx, gy, RN, { reveal: 1, t: lt + 8, glow: 0.5 + 0.3 * lit, clip: disc });
       // gleam on the glass over the gold
       E.save(L);
       E.each(L, (c) => c.clip(disc));
@@ -520,7 +520,7 @@
         for (const sc2 of LYRES) {
           const n = Math.max(2, Math.round(sc2.length * head));
           const pts = sc2.slice(0, n).map(([x, y]) => [gx + x * s, gy + y * s]);
-          thread(Lc, pts, 0.75 * fadeS, { w: 0.8, tailPow: 2.2 });
+          thread(Lc, pts, 0.6 * fadeS, { w: 0.8, tailPow: 2.2 });
           if (head > 0 && head < 1) E.glow(Lc, pts[pts.length - 1][0], pts[pts.length - 1][1], 20, '#FFEBC0', 0.55);
         }
         // esmaya: a soft wave of light expanding to the border, then the ornament's own glow
@@ -568,11 +568,11 @@
       if (k > 0.01) {
         E.resetCamera(L);
         const p = L.paint;
-        const yTop = lerp(1920, 560, E.ease.inOutSine(k));
+        const yTop = lerp(1920, 560, k);
         const hg = p.createLinearGradient(0, yTop, 0, Math.min(1920, yTop + 900));
         hg.addColorStop(0, 'rgba(255,253,246,0)');
-        hg.addColorStop(0.45, `rgba(255,251,240,${0.75 * k})`);
-        hg.addColorStop(1, `rgba(255,250,238,${0.95 * k})`);
+        hg.addColorStop(0.45, `rgba(255,251,240,${0.75 * Math.pow(k, 1.3)})`);
+        hg.addColorStop(1, `rgba(255,250,238,${0.95 * Math.pow(k, 1.3)})`);
         p.save();
         p.fillStyle = hg;
         p.fillRect(0, yTop, E.W, 1920 - yTop);

@@ -358,7 +358,9 @@
     for (let i = 0; i <= nW; i++) { const W = wrapAt(i / nW); pts.push(W.p); z.push(W.z); }
     return { pts, z };
   }
-  function drawVine(L, v, V, p, front, a) {
+  const layerOf = (zz) => (zz > 0 ? 2 : zz < -1 ? 0 : 1); // 0: back strand of the braid, 1: behind the heart, 2: in front
+  function drawVine(L, v, V, p, layer, a) {
+    const front = layer === 2;
     const { pts, z } = V;
     const n = pts.length - 1, last = Math.min(n, Math.floor(p * n));
     if (last < 2 || a <= 0.01) return;
@@ -368,9 +370,9 @@
     P.globalAlpha *= a;
     let i = 0;
     while (i < last) {
-      if ((z[i] > 0) !== front) { i++; continue; }
+      if (layerOf(z[i]) !== layer) { i++; continue; }
       let j = i;
-      while (j + 1 <= last && (z[j + 1] > 0) === front) j++;
+      while (j + 1 <= last && layerOf(z[j + 1]) === layer) j++;
       const i0 = Math.max(0, i - 1), i1 = Math.min(last, j + 1);
       const A = [], B = [], rimL = [];
       for (let k = i0; k <= i1; k++) {
@@ -398,7 +400,7 @@
     P.fillStyle = col;
     const r = E.rng(300 + v.seed);
     for (let k = 6; k < last - 3; k += 7) {
-      if ((z[k] > 0) !== front) { r(); continue; }
+      if (layerOf(z[k]) !== layer) { r(); continue; }
       const q = pts[k + 1], o = pts[k - 1];
       const tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1;
       const ux = tx / l, uy = ty / l, side = (k / 7) % 2 < 1 ? 1 : -1;
@@ -559,7 +561,8 @@
       const clip = new Path2D(); clip.rect(-600, -600, 2280, surfY(HX, lt) + 600 + 2);
       E.save(L);
       E.each(L, (c) => c.clip(clip));
-      for (const o of vines) drawVine(L, o.v, o.V, o.p, false, 1);
+      for (const o of vines) drawVine(L, o.v, o.V, o.p, 0, 1);
+      for (const o of vines) drawVine(L, o.v, o.V, o.p, 1, 1);
       const rot = 0.03 * Math.sin(lt * 1.1);
       const r = HR * (1 - 0.04 * tight);
       PR.heartLight(L, HX, hy, r, { t: lt + T0, color: '#8A3048', dark: 0.82 + 0.18 * dark, glow: 0.42 - 0.18 * dark - 0.1 * tight, pulse: 1.3 - 0.6 * tight, rot });
@@ -576,7 +579,7 @@
       pnt.translate(-3, -3);
       pnt.stroke(heartPath(HX, hy, r * 0.985, rot));
       pnt.restore();
-      for (const o of vines) drawVine(L, o.v, o.V, o.p, true, 1);
+      for (const o of vines) drawVine(L, o.v, o.V, o.p, 2, 1);
       E.restore(L);
       E.glow(L.light, HX - r * 0.35, hy - r * 0.45, r * 0.5, '#C9D6FF', 0.08 + 0.25 * fl);
     }

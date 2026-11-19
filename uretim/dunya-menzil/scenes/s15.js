@@ -262,10 +262,10 @@
       const dropA = 1 - 0.85 * E.ep(lt, tm.land + 0.2, tm.land + 0.95, 'inOutSine');
       if (lt >= tm.drop0) PR.dropBloom(L, DROP.x, DROP.y, 330, { p: pDrop, color: '#26314F', seed: 7, fall: 600, dropSize: 11, alpha: dropA });
       // ---- ...and its ink floods the whole paper: night-indigo spreads out from it
-      const fl = E.ease.outQuad(E.seg(lt, tm.flood0, tm.flood0 + 1.45));
+      const fl = E.ease.outQuad(E.seg(lt, tm.flood0, tm.flood0 + 2.1)); // weighty: fast at first, then it slows
       flood(pa, DROP.x, DROP.y, 60 + 1750 * fl, E.clamp(fl * 8));
       // the night closes in from the edges: two organic glazes, each leaving a hard dried inner edge
-      const cl1 = E.ep(lt, tm.flood0 + 0.25, tm.flood0 + 2.1, 'outCubic'), cl2 = E.ep(lt, tm.flood0 + 0.6, tm.flood0 + 2.6, 'outCubic');
+      const cl1 = E.ep(lt, tm.flood0 + 0.45, tm.flood0 + 2.4, 'outCubic'), cl2 = E.ep(lt, tm.flood0 + 0.8, tm.flood0 + 2.9, 'outCubic');
       edgeWash(pa, 540, 812, E.lerp(1500, 690, cl1), E.lerp(2100, 960, cl1), 61, '#56628E', 0.42 * cl1);
       edgeWash(pa, 545, 800, E.lerp(1300, 560, cl2), E.lerp(1800, 830, cl2), 67, '#4E5684', 0.3 * cl2);
       // slow wet-in-wet blooms drifting in the dark (desaturated crimson, slate), lost edges
@@ -312,8 +312,8 @@
         E.save(L);
         const hw = 30 + 480 * fr;
         E.each(L, (cx) => { cx.beginPath(); cx.rect(VC.x - hw, 0, 2 * hw, 1920); cx.clip(); });
-        E.alpha(L, E.clamp(fr * 4));
-        PR.calligraphyFrame(L, VC.x, VC.y + 8, 860, 520, { style: 'rules', night: 1, reveal: 1, t: lt, glow: 0.6 * Math.pow(fr, 4) });
+        E.alpha(L, E.ep(lt, tm.frame0, tm.frame0 + 0.22, 'outQuad'));
+        PR.calligraphyFrame(L, VC.x, VC.y + 8, 860, 520, { style: 'rules', night: 1, reveal: 1, t: lt, glow: 0.6 * fr * fr });
         E.restore(L);
       }
       // slow gold dust
