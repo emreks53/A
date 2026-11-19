@@ -72,22 +72,20 @@ def whoosh(sure=1.0, **k):
     return norm(out * env) * 0.7
 
 def nur(sure=2.2, **k):
-    n = int(SR * (sure + 1.5))
+    # Işık: perdesiz, havalı yumuşak bir hışırtı ve ince parıltılar. Tonal/akor bileşen yok (müzik gibi duyulmasın).
+    sure = min(sure, 1.6)
+    n = int(SR * (sure + 0.5))
     t = np.arange(n) / SR
-    x = np.zeros(n)
-    taban = 392.0 * rng.choice([1.0, 1.122, 1.335])  # Sol / La / Do
-    for i, (h, a) in enumerate([(1, 1.0), (1.5, 0.5), (2, 0.55), (3, 0.25), (4, 0.18), (5.04, 0.08)]):
-        for det in (-0.6, 0.6):
-            x += a * np.sin(2 * np.pi * (taban * h + det) * t + rng.uniform(0, 6))
-    env = np.clip(t / 0.35, 0, 1) * np.exp(-np.clip(t - 0.35, 0, None) / (sure * 0.55))
+    hava = bant(rng.standard_normal(n), 1800, 7000)
+    env = np.clip(t / 0.3, 0, 1) ** 1.5 * np.exp(-np.clip(t - 0.3, 0, None) / (sure * 0.35))
     parilti = np.zeros(n)
-    for j in range(10):
-        s0 = int(SR * rng.uniform(0.1, sure))
-        m = int(SR * 0.25)
+    for j in range(8):
+        s0 = int(SR * rng.uniform(0.05, sure))
+        m = int(SR * 0.2)
         if s0 + m < n:
             tt = np.arange(m) / SR
-            parilti[s0:s0 + m] += np.sin(2 * np.pi * rng.uniform(2500, 4800) * tt) * np.exp(-tt / 0.06) * 0.25
-    return norm(x * env + parilti * env) * 0.75
+            parilti[s0:s0 + m] += np.sin(2 * np.pi * rng.uniform(3000, 5200) * tt) * np.exp(-tt / 0.04) * 0.22
+    return norm(hava * env * 0.55 + parilti * env) * 0.6
 
 def parilti(**k):
     n = int(SR * 0.9)

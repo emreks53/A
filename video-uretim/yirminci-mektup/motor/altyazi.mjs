@@ -26,7 +26,8 @@ export const GRUPLAR = (() => {
   const ogeler = SOZLUK.map((g) => {
     const k = kelime(g.kelime, g.kac);
     const sonK = KELIMELER[k.i + g.uzunluk - 1];
-    return { mana: g.mana, i0: k.i, i1: sonK.i, bas: k.bas - ONCE, son: sonK.son, virgul: /,$/.test(sonK.yazi), ayri: !!g.ayri };
+    // Cormorant'ın 'fi/fl' bağ harfi i'nin noktasını yutar ('fiilen' → 'fıilen' okunur): araya ZWNJ girer
+    return { mana: g.mana.replace(/f(?=[iıl])/g, 'f\u200C'), i0: k.i, i1: sonK.i, bas: k.bas - ONCE, son: sonK.son, virgul: /,$/.test(sonK.yazi), ayri: !!g.ayri };
   }).sort((a, b) => a.bas - b.bas);
   const gruplar = [];
   let g = null;
