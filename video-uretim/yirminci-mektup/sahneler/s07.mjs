@@ -148,11 +148,34 @@ function ustKaristir(p, h, w) {
  *  k: dönüşün başlangıcı (0..1: omuzlar ve gövde dönüşe hazırlanır) */
 function sagPoz(t, k = 0) {
   const p0 = S6.adamPoz06(t);
-  const el = an(t, T.onu - 0.1, 0.32, ease.inOutSine); // göğüsteki el iner
-  // el inerken dirsek geriye kaçar, ön kol dirsekten aşağı döner: el gövdeye yakın iner, öne uzanmaz
-  const kol = kolIndir({ o: p0.omuz[1], d: p0.dirsek[1] }, { o: 0.06, d: 0.18 }, el, 5);
-  return { ...p0, bas: lerp(p0.bas, 0.08, an(t, T.onu - 0.08, 0.32)), govde: p0.govde + 0.03 * k,
-    omuz: [p0.omuz[0] - 0.07 * k, kol.o + 0.1 * k], dirsek: [p0.dirsek[0], kol.d], el: [p0.el?.[0] || 0, lerp(p0.el?.[1] || 0, 0, el)] };
+  // göğüsteki el iner (0,30 sn; görünüş arkaya dönerken (u = ARKA_U[0]) kol sarkmış olur). w = 0'da poz s06'nınkiyle aynı.
+  const el = an(t, T.onu - 0.104, 0.3, ease.inOutSine);
+  const kol = elIndir({ o: p0.omuz[1], d: p0.dirsek[1], el: p0.el?.[1] || 0 }, { o: 0.06, d: 0.18, el: 0 }, el);
+  const p = { ...p0, bas: lerp(p0.bas, 0.08, an(t, T.onu - 0.08, 0.32)), govde: p0.govde + 0.03 * k,
+    omuz: [p0.omuz[0] - 0.07 * k, kol.o + 0.1 * k], dirsek: [p0.dirsek[0], kol.d], el: [p0.el?.[0] || 0, kol.el] };
+  if (kol.k < 1 || kol.ek < 1) { p.onkolK = kol.k; p.elK = kol.ek; }
+  return p;
+}
+/** Göğüsteki elin inişi (öndeki kol; a, b: { o, d, el }, w: 0..1). Bilek göğüsten gövdenin önüne yakın, aşağı kayar;
+ *  dirsek gövdenin yanında kalır (hafifçe geri gelir, sırt çizgisine varmaz) ve açılır. Ön kol bu sırada göğsün
+ *  önünden yana döner: yandan bakışta bu, ön kolun görünen boyunun kısalmasıdır (k = dirsek–bilek uzaklığı / ön kol).
+ *  El öne fırlamaz: gevşek el düzelir, inerken hafifçe sarkar (ek: elin görünen boy oranı). */
+function elIndir(a, b, w) {
+  if (w <= 0) return { o: a.o, d: a.d, el: a.el, k: 1, ek: 1 };
+  if (w >= 1) return { o: b.o, d: b.d, el: b.el, k: 1, ek: 1 };
+  const W0 = bilekYeri(a), W1 = bilekYeri(b);
+  const tepe = Math.sin(Math.PI * w) ** 2;
+  const o = lerp(a.o, b.o, smooth(0.1, 1, w)) - 0.03 * Math.sin(Math.PI * w);
+  const ex = OLCU.kol * Math.sin(o), ey = OLCU.kol * Math.cos(o); // dirsek (omuza göre)
+  // bilek: başta el göğüsten kalkar (ön kol dirsekten tam boy döner; devir teslimde s06 karesindeki adamla aynı),
+  // sonra gövdenin önüne yakın aşağı kayar
+  const pa = lerp(a.o + a.d, b.o + b.d, w);
+  const g = smooth(0.04, 0.35, w);
+  const bx = lerp(ex + OLCU.onkol * Math.sin(pa), lerp(W0[0], W1[0], w) + 8 * Math.sin(Math.PI * w), g);
+  const by = lerp(ey + OLCU.onkol * Math.cos(pa), lerp(W0[1], W1[1], w), g);
+  const a2 = Math.atan2(bx - ex, by - ey);
+  const k = Math.min(1, Math.hypot(bx - ex, by - ey) / OLCU.onkol);
+  return { o, d: a2 - o, el: lerp(a.el, b.el, smooth(0, 0.35, w)) - 0.9 * tepe, k, ek: 1 - 0.4 * tepe };
 }
 const ARKA_POZ = { ...ON_DURUS, kol: [0.1, 0.1], bas: 0.04 };
 // Dönüşte arka görünüş u ∈ ARKA_U (≈ 0,18 sn). Genişlik sürekli: arka görünüşün gövdesi yan görünüşün gövde
@@ -287,6 +310,7 @@ function adamCiz(g, d) {
   g.translate(-d.X, 0);
   let r;
   if (d.mod === 'arka') r = insanOn(g, d.X, ZEMIN, d.poz, { s: S, olcek: 1.5, arka: true });
+  else if (d.poz.onkolK !== undefined) r = Y.insanYanK(g, d.X, ZEMIN, d.poz, { s: S, yon: d.yon, olcek: 1.5, onkolK: d.poz.onkolK, elK: d.poz.elK });
   else r = insanYan(g, d.X, ZEMIN, d.poz, { s: S, yon: d.yon, olcek: 1.5 });
   g.restore();
   return r;

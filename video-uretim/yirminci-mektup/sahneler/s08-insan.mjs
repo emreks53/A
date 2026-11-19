@@ -6,6 +6,7 @@
 //    bükülür). Gövdenin x'i önceden "basan ayağa kilitlenerek" tümlenir (yuruyenPlan), böylece basan ayak yerinde kalır.
 //  - pozlar: DIZ_COK (diz çökmüş, çökük), BUZUL (yere büzülmüş oturuş), SIPER (kolunu yüzüne siper eder), TAHT (tahtta),
 //    yerdeOturus(t) (s08 sonu ve s09 başı: kalça ve iki taban yerde, kollar baldırlara dolanmış).
+//  - cokusPlani(t0): "âciz, miskin" anı: siperden çömelip yere büzülerek oturuş (ters kinematik, basan ayak kaymaz).
 import { OLCU, DURUS, pozKaristir } from '../motor/insan.mjs';
 import { clamp, lerp, TAU, rng } from '../motor/temel.mjs';
 
@@ -101,6 +102,136 @@ export function yerdeOturus(t = 0) {
   };
 }
 
+// ---------------------------------------------------------------- çöküş ("âciz, miskin"): ayaktan yere büzülüp oturuş
+// Hareket kartezyen kurulur, açılar iki eklemli ters kinematikle bulunur: kalça (ileri x, yerden yükseklik),
+// bilekler (x, yükseklik, ayak açısı), gövde ve baş açısı, el hedefleri. Önce arka ayak küçük bir adımla öne gelir ve
+// adam çömelir (iki taban yerde, ağırlık tabanların üstünde, gövde öne eğik); akışı kesmeden kalça topukların
+// arkasına, yere iner (gövde hafifçe dikleşir); en son ayaklar biraz öne süzülür, gövde öne kıvrılır, kollar
+// incikleri sarar, baş eğilir. Basan ayak kaymaz; kalça yere hızı sıfırlanarak değer (sekme, gömülme yok).
+// x: kalçanın ayakta durduğu yere göre ileri (+) kayması (adam birimi; ekranda yon ile çevrilir).
+function bacakIK(dx, dy, a3 = 0) {
+  const L = OLCU.uyluk; // uyluk = baldır
+  const d = Math.min(Math.hypot(dx, dy), 2 * L - 0.5);
+  const phi = Math.atan2(dx, dy), al = Math.acos(d / (2 * L));
+  const a1 = phi + al, a2 = phi - al;
+  return { kalca: a1, diz: a2 - a1, bilek: a3 - a2, a1, a2 };
+}
+// tekdüze kübik Hermite (Fritsch–Carlson): K = [[t, v], ...]; uçlarda eğim 0, ara anahtarlarda aşma yok (C1)
+function egri(K, t) {
+  const n = K.length;
+  if (t <= K[0][0]) return K[0][1];
+  if (t >= K[n - 1][0]) return K[n - 1][1];
+  let i = 0;
+  while (t > K[i + 1][0]) i++;
+  const m = (k) => {
+    if (k === 0 || k === n - 1) return 0;
+    const h0 = K[k][0] - K[k - 1][0], h1 = K[k + 1][0] - K[k][0];
+    const d0 = (K[k][1] - K[k - 1][1]) / h0, d1 = (K[k + 1][1] - K[k][1]) / h1;
+    if (d0 * d1 <= 0) return 0;
+    const w1 = 2 * h1 + h0, w2 = h1 + 2 * h0;
+    return (w1 + w2) / (w1 / d0 + w2 / d1);
+  };
+  const h = K[i + 1][0] - K[i][0], u = (t - K[i][0]) / h, u2 = u * u, u3 = u2 * u;
+  return (2 * u3 - 3 * u2 + 1) * K[i][1] + (u3 - 2 * u2 + u) * h * m(i) + (-2 * u3 + 3 * u2) * K[i + 1][1] + (u3 - u2) * h * m(i + 1);
+}
+const BILEK_H = 12; // taban yerdeyken bilek ekleminin yerden yüksekliği (yereOturt ayakTemas)
+const yumusak = (u) => { u = clamp(u); return u * u * (3 - 2 * u); };
+// büzülmüş oturuş: kalça yerde (eklem OTUR_KALCA yüksekte), iki taban yerde; ayak bilekleri kalçanın X önünde
+const BZ = {
+  X: [100, 108], hx: -56, // yerleşince bileklerin kalçaya göre ileri uzaklığı; kalçanın ayakta durduğu yere göre kayması
+  govde: 0.4, basA: 0.46, // gövde eğimi, başın mutlak eğimi (gövdeden az fazla: boyun omuzdan başa doğal uzanır)
+  elS: 36, elF: 19, // el bileği hedefi: incik üstünde dizden elS aşağıda, inciğin elF önünde (kollar inciği sarar)
+};
+// zaman çizelgesi (çöküşün başından saniye)
+const CK = {
+  adim: [0.04, 0.3], adimYuk: 13, // arka ayağın öne adımı ve yerden kalkışı
+  comel: 0.48, hSq: 72, hxSq: -20, // çömelme dibi: kalça eklemi yüksekliği, kalçanın geri kayması
+  otur: 0.76, // kalça yere değer
+  kay: [0.72, 1.04], // yerleşme: ayaklar öne süzülür
+  govde: [[0, 0.16], [0.48, 0.56], [0.76, 0.27], [1.08, BZ.govde]],
+  basA: [[0, 0.376], [0.48, 0.6], [0.76, 0.36], [1.1, BZ.basA]],
+  in: [0.04, 0.74], // siper kolu iner: eller omuza göre siper yerinden dizlerin önüne
+  sar: [0.48, 1.04], // eller dizlerin önünden inciklere
+};
+function elHedef(b, sar) {
+  // b: bacak (diz, bilek yerel; y aşağı); dizin önünde sarkan el → inciği saran el
+  const ux = Math.sin(b.a2), uy = Math.cos(b.a2), nx = Math.cos(b.a2), ny = -Math.sin(b.a2);
+  const dizOn = [b.diz[0] + 6, b.diz[1] + 28];
+  const sarili = [b.diz[0] + ux * BZ.elS + nx * BZ.elF, b.diz[1] + uy * BZ.elS + ny * BZ.elF];
+  return [lerp(dizOn[0], sarili[0], sar), lerp(dizOn[1], sarili[1], sar)];
+}
+const omuzYer = (govde, i) => [Math.sin(govde) * OLCU.govde + (i === 0 ? -2 : 2), -Math.cos(govde) * OLCU.govde];
+// kol ters kinematiği (oturKol gibi; hedef kalça eklemine göre, y aşağı): erişim yumuşak sınırlanır, kol tam
+// gerilmeye yaklaşırken dirsek açısı sıçramaz (hedef erişilmezse el, hedef doğrultusunda kalır)
+function kolIK(govde, i, hx, hy) {
+  const [sx, sy] = omuzYer(govde, i);
+  const dx = hx - sx, dy = hy - sy, A = OLCU.kol, B = OLCU.onkol, L = A + B - 1, dk = 0.84 * L;
+  let d = Math.hypot(dx, dy);
+  if (d > dk) d = dk + (L - dk) * Math.tanh((d - dk) / (L - dk));
+  const yon = Math.atan2(dx, dy);
+  const a1 = yon - Math.acos(clamp((A * A + d * d - B * B) / (2 * A * d), -1, 1));
+  const ex = sx + Math.sin(a1) * A, ey = sy + Math.cos(a1) * A;
+  const a2 = Math.atan2(sx + Math.sin(yon) * d - ex, sy + Math.cos(yon) * d - ey);
+  // açılar poz kuralındaki aralıkta (karışımda kol tam tur dönmesin): dirsek ~[-π/2, 3π/2), omuz (-π, π]
+  const sar = (v, alt) => v - TAU * Math.floor((v - alt) / TAU);
+  return { omuz: sar(a1 - govde, -Math.PI), dirsek: sar(a2 - a1, -Math.PI / 2) };
+}
+/**
+ * Çöküş planı: t0'da siper pozundan başlar. plan(t, { tit, egil }) → { poz (zemine oturtulmuş, serbest), x }.
+ * tit: gövde titremesi (radyan), egil: başın ek eğilmesi; eller incikte yerinde kalır (kol açıları her karede
+ * ters kinematikle bulunur).
+ */
+export function cokusPlani(t0, siper = SIPER) {
+  const z0 = yereOturt(siper), k0 = kin(siper);
+  const h0 = OLCU.kalca + z0.zipla;
+  const ayak0 = k0.b.map((b) => ({ x: b.bilek[0], h: z0.zipla - b.bilek[1], a3: b.a3 }));
+  const onX = ayak0[1].x, arkaHedef = onX - (BZ.X[1] - BZ.X[0]);
+  const son = BZ.X.map((X, i) => BZ.hx + KX[i] + X);
+  // siper kollarında el bileklerinin omuza göre yeri (gövdeyle birlikte döner)
+  const siperEl = [0, 1].map((i) => {
+    const a1 = siper.govde + siper.omuz[i], a2 = a1 + siper.dirsek[i];
+    return [Math.sin(a1) * OLCU.kol + Math.sin(a2) * OLCU.onkol, Math.cos(a1) * OLCU.kol + Math.cos(a2) * OLCU.onkol];
+  });
+  const plan = (t, { tit = 0, egil = 0 } = {}) => {
+    const u = t - t0;
+    const hx = egri([[0, 0], [CK.comel, CK.hxSq], [CK.otur, BZ.hx]], u);
+    const hh = egri([[0, h0], [CK.comel, CK.hSq], [CK.otur, OTUR_KALCA]], u);
+    const kay = yumusak((u - CK.kay[0]) / (CK.kay[1] - CK.kay[0]));
+    // ayaklar: arka ayak adım atar (kavisle kalkar, burnu hafifçe aşağı), ön ayak basılı; sonra ikisi öne süzülür
+    const a = yumusak((u - CK.adim[0]) / (CK.adim[1] - CK.adim[0]));
+    const kalk = Math.sin(Math.PI * a);
+    const ayak = [
+      { x: lerp(lerp(ayak0[0].x, arkaHedef, a), son[0], kay), h: lerp(ayak0[0].h, BILEK_H, a) + CK.adimYuk * kalk, a3: lerp(ayak0[0].a3, 0, a) - 0.3 * kalk },
+      { x: lerp(onX, son[1], kay), h: lerp(ayak0[1].h, BILEK_H, a), a3: lerp(ayak0[1].a3, 0, a) },
+    ];
+    const govde = egri(CK.govde, u) + tit;
+    const basA = egri(CK.basA, u) + egil;
+    const B = ayak.map((f, i) => bacakIK(f.x - (hx + KX[i]), hh - f.h, f.a3));
+    // eller (kalça eklemine göre hedef, ters kinematik): siper yerinden (omuza bağlı) dizlerin önüne, oradan
+    // inciklere; böylece kollar siper açılarından sıçramadan, el yolu yumuşak bir eğriyle iner
+    const sar = yumusak((u - CK.sar[0]) / (CK.sar[1] - CK.sar[0]));
+    const win = yumusak((u - CK.in[0]) / (CK.in[1] - CK.in[0]));
+    const dG = govde - siper.govde, c = Math.cos(dG), sn = Math.sin(dG);
+    const kol = B.map((b, i) => {
+      const diz = [KX[i] + Math.sin(b.a1) * OLCU.uyluk, Math.cos(b.a1) * OLCU.uyluk]; // kalça eklemine göre
+      const bil = [diz[0] + Math.sin(b.a2) * OLCU.baldir, diz[1] + Math.cos(b.a2) * OLCU.baldir];
+      const [sx, sy] = omuzYer(govde, i), [rx, ry] = siperEl[i];
+      const siperH = [sx + rx * c + ry * sn, sy - rx * sn + ry * c];
+      const [ex, ey] = elHedef({ diz, bilek: bil, a2: b.a2 }, sar);
+      return kolIK(govde, i, lerp(siperH[0], ex, win), lerp(siperH[1], ey, win));
+    });
+    const el = [0, 1].map((i) => lerp(siper.el?.[i] ?? 0, 0.8, win));
+    const poz = {
+      govde, bas: basA - 0.6 * govde,
+      kalca: [B[0].kalca, B[1].kalca], diz: [B[0].diz, B[1].diz], bilek: [B[0].bilek, B[1].bilek],
+      omuz: [kol[0].omuz, kol[1].omuz], dirsek: [kol[0].dirsek, kol[1].dirsek], el,
+      zipla: hh - OLCU.kalca, serbest: true,
+    };
+    return { poz, x: hx };
+  };
+  plan.sure = CK.basA[CK.basA.length - 1][0];
+  return plan;
+}
 export { pozKaristir };
 
 // ---------------------------------------------------------------- ayak kaymayan yürüyüş

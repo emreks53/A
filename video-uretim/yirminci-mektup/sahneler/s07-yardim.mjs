@@ -626,3 +626,155 @@ export function otOge(boy, tohum, kuru = false, olcek = 1.2) {
     kontur: P.kontur, konturKal: 1.9, titreme: 0.4,
   });
 }
+
+// ---------------------------------------------------------------- yan insan: ön kolu derinliğe dönebilen kopya
+// motor/insan.mjs insanYan'ın birebir kopyası (parçalar da aynı tanım, aynı önbellek anahtarı); tek fark: öndeki kolun
+// ön kolu ve eli boyuna kısalabilir (onkolK, elK). Göğüsteki el inerken ön kol göğsün önünden yana açılır; yandan
+// bakışta bu dönüş ön kolun kısalması olarak görünür (dirsek gövdenin yanında kalır, el öne fırlamaz).
+// onkolK = elK = 1 iken çizim motorun insanYan'ıyla piksel piksel aynıdır.
+import { ogeCiz as ogeCizK } from '../motor/kalem.mjs';
+import { elips as elipsK } from '../motor/sekil.mjs';
+import { RENK as RENK_I, DURUS as DURUS_I } from '../motor/insan.mjs';
+
+const kapsul = (r0, L, r1) => svg(`M${-r0} 0A${r0} ${r0} 0 0 1 ${r0} 0L${r1} ${L}A${r1} ${r1} 0 0 1 ${-r1} ${L}Z`);
+const kapsulKontur = (r0, L, r1) => svg(`M${r0} 0L${r1} ${L}A${r1} ${r1} 0 0 1 ${-r1} ${L}L${-r0} 0`).map((p) => ({ ...p, kapali: false }));
+
+function parca(ad, sekil, renk, olcek, { kontur = null, yon = Math.PI / 2, aralik = 3.1, boy = [18, 46], tonF = null, esik = [0.12, 0.5, 0.78], ek = null } = {}) {
+  const b = sekil.length ? sekil : sekil;
+  const xs = sekil.flatMap((p) => p.pts.map((q) => q[0]));
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  return oge({
+    ad: 'insan-' + ad, sekil, olcek, arka: renk.arka, arkaAlfa: 0.8, arkaBulanik: 4,
+    tarama: { ton: tonF || TON.gurultulu(TON.silindir(x0, x1), 0.06, 0.05, ad.length), renkler: renk.tara, yon, aralik, boy, kal: 1.15, alfa: 0.5, esikler: esik, minUc: 4 },
+    kontur: kontur ? null : renk.kontur, konturKal: 2.0, titreme: 0.3,
+    detay: (ctx, api) => {
+      if (kontur) kontur.forEach((p) => api.cizgi(p.pts, { renk: renk.kontur, kal: 2.0, titreme: 0.3 }));
+      if (ek) ek(ctx, api);
+    },
+  });
+}
+
+const RENK = RENK_I;
+const R = (ad) => ({
+  gomlek: { arka: RENK.gomlekArka, tara: RENK.gomlekTara, kontur: RENK.gomlekKontur },
+  pantolon: { arka: RENK.pantolonArka, tara: RENK.pantolonTara, kontur: RENK.pantolonKontur },
+  ten: { arka: RENK.tenArka, tara: RENK.tenTara, kontur: RENK.tenKontur },
+  sac: { arka: RENK.sac, tara: RENK.sacTara, kontur: RENK.sacKontur },
+  ayakkabi: { arka: RENK.ayakkabi, tara: RENK.ayakkabiTara, kontur: RENK.ayakkabiKontur },
+}[ad]);
+
+const parcalarK = new Map();
+function yanParcalar(olcek) {
+  const k = 'yan' + olcek;
+  if (parcalarK.has(k)) return parcalarK.get(k);
+  const P = {};
+  P.uyluk = parca('uyluk', kapsul(19, OLCU.uyluk, 13.5), R('pantolon'), olcek, { kontur: kapsulKontur(19, OLCU.uyluk, 13.5) });
+  P.baldir = parca('baldir', svg(`M-13.5 0A13.5 13.5 0 0 1 13.5 0L12 ${OLCU.baldir}L-12.5 ${OLCU.baldir}Z`), R('pantolon'), olcek, {
+    kontur: svg(`M13.5 0L12 ${OLCU.baldir}L-12.5 ${OLCU.baldir}L-13.5 0`).map((p) => ({ ...p, kapali: false })),
+  });
+  P.ayak = parca('ayak', svg('M-13 -6C-13 -12 -4 -14 6 -12C14 -10 22 -4 31 0C38 3 40 9 37 13L-12 13C-15 13 -16 10 -15 6Z'), R('ayakkabi'), olcek, { yon: 0, aralik: 2.8, boy: [8, 20] });
+  P.kol = parca('kol', kapsul(12, OLCU.kol, 9.8), R('gomlek'), olcek, { kontur: svg(`M-12 0A12 12 0 0 1 12 0L9.8 ${OLCU.kol}A9.8 9.8 0 0 1 -9.8 ${OLCU.kol}L-12 0`).map((p) => ({ ...p, kapali: false })) });
+  P.onkol = parca('onkol', svg(`M-9.8 0A9.8 9.8 0 0 1 9.8 0L8.8 ${OLCU.onkol}L-8.8 ${OLCU.onkol}Z`), R('gomlek'), olcek, {
+    kontur: svg(`M9.8 0L8.8 ${OLCU.onkol}L-8.8 ${OLCU.onkol}L-9.8 0`).map((p) => ({ ...p, kapali: false })),
+  });
+  P.el = parca('el', svg('M-7 -2C-8 6 -8 14 -5.5 19C-3 23 3 24 6 21C9 17 9 9 8 2C6 -2 -5 -3 -7 -2Z'), R('ten'), olcek, { aralik: 2.6, boy: [6, 14] });
+  P.kalca = parca('kalca', svg('M-20 -36C-22 -22 -25 -8 -23 4C-21 13 -11 16 0 15C10 14 17 11 19 2C20 -10 20 -24 21 -36Z'), R('pantolon'), olcek, { aralik: 3, boy: [14, 34] });
+  P.govde = parca('govde', svg('M-20 -30C-23 -60 -24 -95 -21 -116C-19 -128 -8 -133 2 -133C14 -133 22 -127 24 -114C27 -96 27 -72 23 -52C21 -42 21 -36 21 -30C10 -27 -8 -27 -20 -30Z'), R('gomlek'), olcek, { aralik: 3.1, boy: [20, 60],
+    ek: (ctx, api) => { api.cizgi([[-4, -131], [3, -124], [11, -128]], { renk: RENK.gomlekKontur, kal: 1.5, alfa: 0.7 }); } });
+  P.boyun = parca('boyun', svg('M-8 2L-7 -16C-3 -18 4 -18 8 -16L9 2Z'), R('ten'), olcek, { aralik: 2.6, boy: [6, 12] });
+  P.bas = parca('bas', svg('M-12 -2C-20 -8 -24 -22 -24 -34C-24 -52 -12 -62 2 -62C16 -62 25 -52 25 -38C25 -33 26 -30 29 -25C30 -23 29 -22 27 -21C27 -17 26 -12 22 -9C18 -6 12 -4 6 -2C0 -1 -6 -1 -12 -2Z'), R('ten'), olcek, { aralik: 2.7, boy: [10, 26], tonF: TON.kure(4, -34, 34, { lx: 0.4, ly: -0.5 }) });
+  P.sac = parca('sac', svg('M-23 -28C-27 -44 -20 -62 0 -65C18 -67 28 -56 27 -42C24 -47 18 -50 10 -50C2 -50 -4 -46 -8 -40C-10 -36 -11 -31 -13 -26C-15 -22 -19 -21 -23 -28Z'), R('sac'), olcek, { yon: -0.6, aralik: 2.4, boy: [10, 24], tonF: TON.kure(2, -50, 30) });
+  P.kulak = parca('kulak', elipsK(0, 0, 4, 6.2), R('ten'), olcek, { aralik: 2.4, boy: [5, 10] });
+  parcalarK.set(k, P);
+  return P;
+}
+
+const rotK = (x, y, a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
+
+/** insanYan (motor) ile aynı; onkolK: öndeki ön kolun görünen boy oranı, elK: öndeki elin görünen boy oranı */
+export function insanYanK(ctx, x, y, poz = DURUS_I, { s = 1, yon = 1, olcek = 1, alfa = 1, onkolK = 1, elK = 1 } = {}) {
+  const P = yanParcalar(olcek);
+  const p = { ...DURUS_I, ...poz };
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s * yon, s);
+  ctx.globalAlpha *= alfa;
+  const kalca = [0, -OLCU.kalca - p.zipla];
+  const bacak = (i) => {
+    const a1 = p.govde * 0.0 + p.kalca[i];
+    const diz = [kalca[0] + Math.sin(a1) * OLCU.uyluk, kalca[1] + Math.cos(a1) * OLCU.uyluk];
+    const a2 = a1 + p.diz[i];
+    const bilek = [diz[0] + Math.sin(a2) * OLCU.baldir, diz[1] + Math.cos(a2) * OLCU.baldir];
+    const a3 = a2 + p.bilek[i];
+    return { a1, a2, a3, diz, bilek };
+  };
+  const B = [bacak(0), bacak(1)];
+  const tabanY = (p.zemin === 0 || p.zemin === 1 ? B[p.zemin].bilek[1] : Math.max(B[0].bilek[1], B[1].bilek[1])) + OLCU.bilek;
+  const dy = poz.serbest ? 0 : -tabanY;
+  const kx = [-3, 3];
+  const govdeA = p.govde;
+  const omuz = [kalca[0] + Math.sin(govdeA) * OLCU.govde, kalca[1] - Math.cos(govdeA) * OLCU.govde];
+  const kolCiz = (i) => {
+    const a1 = govdeA + p.omuz[i];
+    const sx = omuz[0] + (i === 0 ? -2 : 2), sy = omuz[1] + dy;
+    ogeCizK(ctx, P.kol, sx, sy, { r: -a1 });
+    const dirsek = [sx + Math.sin(a1) * OLCU.kol, sy + Math.cos(a1) * OLCU.kol];
+    const a2 = a1 + p.dirsek[i];
+    const kk = i === 1 ? Math.min(1, onkolK) : 1, ke = i === 1 ? elK : 1;
+    const ux = Math.sin(a2), uy = Math.cos(a2);
+    const bil = [dirsek[0] + ux * OLCU.onkol * kk, dirsek[1] + uy * OLCU.onkol * kk];
+    ogeCizK(ctx, P.el, bil[0] - ux * 3, bil[1] - uy * 3, { r: -(a2 + (p.el?.[i] || 0)), sx: 1, sy: ke });
+    if (kk >= 1) ogeCizK(ctx, P.onkol, dirsek[0], dirsek[1], { r: -a2 });
+    else {
+      // ön kol derinliğe döner: tam boy parça dirsekten geriye kayar, manşet bilekte kalır; dirseğin gerisinde kalan
+      // kısmı kırpılır (dirseğin ilerisi ∪ dirsekte yarım disk): ön kol, normal çizimdeki gibi üst kolun üstünde ve
+      // dirsek ucu yine yuvarlak (ölçekleyerek kısaltmak dirsek ucunu basıklaştırırdı). kay → 0 iken normal çizim.
+      const kay = OLCU.onkol * (1 - kk), R0 = 9.8, L = 400;
+      const qx = -uy, qy = ux; // dirsekte ön kola dik; -u, q'nun +90° dönmüşü
+      const [ex, ey] = dirsek, th = Math.atan2(qy, qx);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(ex + qx * L, ey + qy * L);
+      ctx.lineTo(ex + qx * R0, ey + qy * R0);
+      ctx.arc(ex, ey, R0, th, th + Math.PI, false);
+      ctx.lineTo(ex - qx * L, ey - qy * L);
+      ctx.lineTo(ex - qx * L + ux * L, ey - qy * L + uy * L);
+      ctx.lineTo(ex + qx * L + ux * L, ey + qy * L + uy * L);
+      ctx.closePath();
+      ctx.clip();
+      ogeCizK(ctx, P.onkol, ex - ux * kay, ey - uy * kay, { r: -a2 });
+      ctx.restore();
+    }
+    return { omuz: [sx, sy], dirsek, el: bil };
+  };
+  const bacakCiz = (i) => {
+    const b = B[i];
+    const hx = kalca[0] + kx[i], hy = kalca[1] + dy;
+    const diz = [hx + Math.sin(b.a1) * OLCU.uyluk, hy + Math.cos(b.a1) * OLCU.uyluk];
+    const bil = [diz[0] + Math.sin(b.a2) * OLCU.baldir, diz[1] + Math.cos(b.a2) * OLCU.baldir];
+    ogeCizK(ctx, P.uyluk, hx, hy, { r: -b.a1 });
+    ogeCizK(ctx, P.ayak, bil[0], bil[1] - 2, { r: -(b.a3) + 0 });
+    ogeCizK(ctx, P.baldir, diz[0], diz[1], { r: -b.a2 });
+    return { kalca: [hx, hy], diz, bilek: bil };
+  };
+  const eklem = {};
+  eklem.arkaKol = kolCiz(0);
+  eklem.arkaBacak = bacakCiz(0);
+  ogeCizK(ctx, P.kalca, kalca[0], kalca[1] + dy, { r: govdeA * 0.5 });
+  eklem.onBacak = bacakCiz(1);
+  ogeCizK(ctx, P.govde, kalca[0], kalca[1] + dy, { r: govdeA });
+  const boyunTaban = [kalca[0] + Math.sin(govdeA) * (OLCU.govde + 10) + 2, kalca[1] - Math.cos(govdeA) * (OLCU.govde + 10) + dy];
+  const basA = govdeA * 0.6 + p.bas;
+  ogeCizK(ctx, P.boyun, boyunTaban[0], boyunTaban[1] + 4, { r: basA * 0.6 });
+  const basTaban = [boyunTaban[0] + Math.sin(basA) * 14, boyunTaban[1] - Math.cos(basA) * 14];
+  ogeCizK(ctx, P.bas, basTaban[0], basTaban[1], { r: basA });
+  ogeCizK(ctx, P.sac, basTaban[0], basTaban[1], { r: basA });
+  const kul = rotK(-3, -30, basA);
+  ogeCizK(ctx, P.kulak, basTaban[0] + kul[0], basTaban[1] + kul[1], { r: basA + 0.2 });
+  eklem.onKol = kolCiz(1);
+  eklem.gogus = [kalca[0] + Math.sin(govdeA) * 85 + 8, kalca[1] - Math.cos(govdeA) * 85 + dy];
+  eklem.bas = [basTaban[0] + Math.sin(basA) * 32, basTaban[1] - Math.cos(basA) * 32];
+  ctx.restore();
+  const dunya = ([px, py]) => [x + px * s * yon, y + py * s];
+  return { gogus: dunya(eklem.gogus), bas: dunya(eklem.bas), el: dunya(eklem.onKol.el), arkaEl: dunya(eklem.arkaKol.el) };
+}

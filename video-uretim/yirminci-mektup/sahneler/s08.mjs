@@ -17,7 +17,7 @@ import { insanYan, insanOn, DURUS, ON_DURUS, OLCU } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import * as D from './s08-dunya.mjs';
 import * as SV from './s08-servet.mjs';
-import { yereOturt, pozKaristir, DIZ_COK, BUZUL, SIPER, TAHT, AYAKTA, kalabalikKur, yerdeOturus, OTUR_TEMAS } from './s08-insan.mjs';
+import { yereOturt, pozKaristir, DIZ_COK, BUZUL, SIPER, TAHT, AYAKTA, kalabalikKur, yerdeOturus, OTUR_TEMAS, cokusPlani } from './s08-insan.mjs';
 
 const T = {
   bas: 67.2,
@@ -325,11 +325,16 @@ function kalcaYuk(b) {
   const f = clamp(b) * 40, i = Math.min(39, Math.floor(f));
   return lerp(KALCA_TABLO[i], KALCA_TABLO[i + 1], f - i);
 }
-// verilen kalça yüksekliğini veren karışım (tablo tekdüze artar)
+// verilen kalça yüksekliğini veren karışım: yere büzülmüş oturuştan (çöküş planının son pozu) tahta (tablo artar)
+const KALCA_TABLO_C = [];
 function kalcaKarisim(h) {
-  kalcaYuk(0);
-  if (h <= KALCA_TABLO[0]) return 0;
-  for (let k = 1; k <= 40; k++) if (KALCA_TABLO[k] >= h) return (k - 1 + (h - KALCA_TABLO[k - 1]) / (KALCA_TABLO[k] - KALCA_TABLO[k - 1])) / 40;
+  const T = KALCA_TABLO_C;
+  if (!T.length) {
+    const baz = COKUS(COK.t0 + COKUS.sure + 1).poz;
+    for (let k = 0; k <= 40; k++) { const z = yereOturt(pozKaristir(baz, TAHT, k / 40)); T.push(OLCU.kalca + z.zipla - 16); }
+  }
+  if (h <= T[0]) return 0;
+  for (let k = 1; k <= 40; k++) if (T[k] >= h) return (k - 1 + (h - T[k - 1]) / (T[k] - T[k - 1])) / 40;
   return 1;
 }
 // Taht toza dönerken iniş: kalçanın altında kalan (henüz dağılmamış) en üst katı yüzey dağılma ilerlemesiyle aşağı
@@ -534,25 +539,36 @@ function plakaB(ctx, t) {
 }
 
 // ---------------------------------------------------------------- çizim: C/D
+// çöküş ("âciz, miskin"): siperden çömelip yere büzülerek oturur (s08-insan.mjs cokusPlani: basan ayak kaymaz, kalça
+// yere değer, kollar incikleri sarar). COK.gecis'ten önceki kareler eski akışla aynıdır; oradan kısa bir yumuşak
+// karışımla plana geçilir. Kalça oturunca ayakta durduğu yerin biraz gerisindedir (COKUS.x): taht büyürken tahtın
+// oturağına (OVA.adamX) taşınır.
+const COK = { t0: T.aciz - 0.2, gecis: 77.3, gecisSure: 0.2 };
+const COKUS = cokusPlani(COK.t0, SIPER);
 function adamPozu(t) {
-  // ayakta → başını kaldırır → siper → büzülür → (taç) → tahtta → iner, büzülür
+  // ayakta → başını kaldırır → siper → çöker, yere büzülür → (taç) → tahtta → iner, yerde oturur
   let p = AYAKTA;
   const bak = an(t, T.sahip + 0.5, 0.6);
   p = { ...AYAKTA, bas: lerp(AYAKTA.bas, -0.12, bak) };
   const siper = an(t, T.hami - 0.02, 0.45, ease.outCubic);
   if (siper > 0) p = pozKaristir(p, SIPER, siper);
+  const gec = t <= COK.gecis ? 0 : ease.inOutSine(clamp((t - COK.gecis) / COK.gecisSure));
   const cok = an(t, T.aciz - 0.32, 0.8, ease.inOutCubic);
-  if (cok > 0) p = pozKaristir(p, BUZUL, cok);
-  // titreme (yağmurda)
-  if (cok > 0.5 && t < SVT.yigin) {
-    const tit = Math.sin(t * 23) * 0.012 * (1 - an(t, T.butun - 0.3, 0.4));
-    p = { ...p, govde: p.govde + tit, bas: p.bas + tit * 0.8 + an(t, T.miskin, 0.5) * 0.06 };
-  }
-  // taç gelince başını hafifçe kaldırır
+  if (cok > 0 && gec < 1) p = pozKaristir(p, BUZUL, cok);
+  // taç gelince başını hafifçe kaldırır (gövde de az dikleşir; eller incikte kalır)
   const kalk = an(t, SVT.tac + 0.1, 0.35) * (1 - an(t, SVT.yigin, 0.3));
-  if (kalk > 0) p = { ...p, bas: p.bas - 0.25 * kalk };
-  // taht büyürken kalça oturak yüksekliğine çıkar (oturak yüksekliği taht ölçeğiyle büyür)
+  let kay = 0;
+  if (gec > 0) {
+    // yağmurda titreme; "miskin"de baş biraz daha eğilir
+    const tit = Math.sin(t * 23) * 0.011 * an(t, COK.t0 + 0.95, 0.3) * (1 - an(t, T.butun - 0.3, 0.4));
+    const egil = 0.04 * an(t, T.miskin + 0.15, 0.6) + tit * 0.8 - 0.11 * kalk;
+    const c = COKUS(t, { tit: tit - 0.05 * kalk, egil });
+    p = gec >= 1 ? c.poz : pozKaristir(p, c.poz, gec);
+    kay = c.x * gec;
+  }
+  // taht büyürken kalça oturak yüksekliğine çıkar (oturak yüksekliği taht ölçeğiyle büyür), kalça oturağa taşınır
   const tb = tahtBuyume(t);
+  kay *= 1 - tb;
   const taht = tb <= 0 ? 0 : kalcaKarisim(96 * tb);
   if (taht > 0) p = pozKaristir(p, TAHT, taht);
   const gurur = an(t, T.sultan, 0.4) * (1 - an(t, T.kac, 0.25));
@@ -560,7 +576,7 @@ function adamPozu(t) {
   // taht toza dönünce iner: kalça yere, dizler yukarı, kollar baldırlara (yerde oturuş; nefes yerdeOturus'ta)
   const in0 = inis(t);
   if (in0 > 0) p = pozKaristir(p, yerdeOturus(t), in0);
-  return p;
+  return { poz: p, kay };
 }
 // dağılan yüzeyle birlikte iniş (0 tahtta, 1 yerde)
 function inis(t) {
@@ -682,7 +698,7 @@ function plakaD(ctx, t) {
     sikkeler(g, t);
   }, 1);
   // adam
-  const ham = adamPozu(t);
+  const { poz: ham, kay } = adamPozu(t);
   const temas = inisTemas(inis(t));
   const poz = yereOturt(ham, temas);
   let adamY = OVA.adamY;
@@ -694,7 +710,7 @@ function plakaD(ctx, t) {
   }
   let bas = null;
   katman(ctx, (g) => kameraIle(g, cam, (gg) => {
-    const e = insanYan(gg, OVA.adamX, adamY, poz, { s: OVA.S, yon: -1, olcek: 1.2 });
+    const e = insanYan(gg, OVA.adamX - kay * OVA.S, adamY, poz, { s: OVA.S, yon: -1, olcek: 1.2 });
     bas = e.bas;
   }, 1), { filtre: GRI });
   // taç

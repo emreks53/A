@@ -31,8 +31,14 @@ const POZ = {
   yagmur: { ...DURUS, govde: -0.06, bas: -0.5, omuz: [-0.3, 0.62], dirsek: [0.3, 0.75], el: [0, -0.5] },
   sayvan: { ...DURUS, govde: -0.03, bas: -0.46, omuz: [-0.08, 0.1], dirsek: [0.15, 0.2] },
   duz: { ...DURUS, govde: 0.0, bas: -0.05 },
-  yaslan: { ...DURUS, govde: -0.2, bas: -0.2, kalca: [0.24, 0.34], diz: [-0.04, -0.16], bilek: [-0.2, -0.18], omuz: [-0.42, -0.3], dirsek: [0.36, 0.44] },
+  // kayaya yaslanma: gövde geriye (-0,24); sırt (kürek kemikleri) ve kalça kayanın sağ yüzüne değer, ayaklar kayadan
+  // ~yarım adım önde, düz basar. Kollar gövdenin yanında rahatça iner, dirsekler hafif bükük, eller uyluğun yanında.
+  // (insanYan'da kolun mutlak açısı = govde + omuz; geriye eğik gövdede kolu sarkık tutmak için omuz ≈ -govde + 0,1.)
+  // Değerler kayanın biçimine göre ölçüldü: sırtla kaya arası 0..1,5 px (konturlar birbirine değer, iç içe geçmez).
+  yaslan: { ...DURUS, govde: -0.24, bas: -0.18, kalca: [0.232, 0.332], diz: [-0.04, -0.16], bilek: [-0.2, -0.18], omuz: [0.32, 0.39], dirsek: [0.18, 0.25] },
 };
+// kayanın yeri bu (ilk) bacak duruşuna göre bir kez belirlenmiştir; yaslanma pozu inceltilirken kaya yerinden oynamaz
+const KAYA_REF = { kalca: [0.24, 0.34], diz: [-0.04, -0.16] };
 let yuru1, yuru2;
 
 function adamDurumu(t) {
@@ -58,8 +64,8 @@ function adamDurumu(t) {
   const d = an(t, T.ist + 0.02, DONUS.sure, ease.inOutSine);
   const w = an(t, T.ist + 0.22, 0.55, ease.inOutCubic);
   const p = pozKaristir(POZ.duz, POZ.yaslan, w);
-  // arka ayak yerinde kalsın: kalça geriye (kayaya) kayar
-  const dx = (bilekX(p, 0) - bilekX(POZ.duz, 0)) * S_ADAM;
+  // arka ayak yerinde kalsın: kalça geriye (kayaya) kayar (figür ON_DY derinliğinde çizildiği ölçekle)
+  const dx = (bilekX(p, 0) - bilekX(POZ.duz, 0)) * S_ADAM * (1 + onDy(t) / 360);
   const nefes = Math.sin(t * 2.2) * 0.012 * w;
   const r = { x: x0 - dx, poz: { ...p, govde: p.govde + nefes }, yon: d < 0.5 ? -1 : 1, s: S_ADAM, k: 1, dy: onDy(t) };
   if (d > 0 && d < 1) {
@@ -383,7 +389,7 @@ export default {
     // gövdenin önünden geçip kayaya üç adım
     yuru2 = yurumePlani({ t0: T.kud - 0.34, t1: T.ist + 0.02, n: 3, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
     // kaya, adamın yaslanacağı yere: kalça hizasında sırtı kayanın sağ yüzüne değsin
-    D.kayaDx = yuru2.x1 - (bilekX(POZ.yaslan, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
+    D.kayaDx = yuru2.x1 - (bilekX(KAYA_REF, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
     // bahçede keyifle yürüyüş (sepetli): soldan girer, çarşıya doğru
     yuru3 = yurumePlani({ t0: T.ten + 0.3, t1: 111.6, n: 12, s: 0.7, yon: 1, x0: -10, sabitHiz: true, kol: 0.3, egim: 0.03,
       pozF: (p) => ({ ...p, bas: -0.1, omuz: [p.omuz[0], 0.06 + 0.05 * p.omuz[0]], dirsek: [p.dirsek[0], 0.22] }) });
