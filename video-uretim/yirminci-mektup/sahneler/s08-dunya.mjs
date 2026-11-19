@@ -559,12 +559,19 @@ export function ruzgarYolu(x0, y0, L, { genlik = 18, kivrim = true, tohum = 1 } 
     pts.push([x0 + u * L, y0 + Math.sin(u * 5 + f) * genlik * (0.4 + u * 0.6)]);
   }
   if (kivrim) {
-    const [ex, ey] = pts[pts.length - 1];
+    // Kıvrım çizginin ucundan TEĞET ve sıfır eğrilikle başlar (dik çubuk / köşe yok), eğriliği doğrusal artarak
+    // yukarı, içe doğru daralan yumuşak bir sarmal çizer (Euler sarmalı; ~0,95 tur): harfe değil girdaba benzer.
+    let [x, y] = pts[pts.length - 1];
+    const [px, py] = pts[pts.length - 2];
+    const th0 = Math.atan2(y - py, x - px);
     const R = genlik * 1.6;
-    for (let k = 1; k <= 24; k++) {
-      const a = -Math.PI / 2 + (k / 24) * TAU * 0.85;
-      const rr = R * (1 - k / 40);
-      pts.push([ex + Math.cos(a) * rr, ey - R + Math.sin(a) * rr + R * 0]);
+    const PHI = 0.95 * TAU; // toplam dönüş
+    const N = 48, ds = (R * PHI) / N; // yay uzunluğu R·PHI: sarmalın boyu eski halkayla aynı ölçüde
+    for (let k = 1; k <= N; k++) {
+      const s = (k - 0.5) / N;
+      const th = th0 - PHI * s * s; // eğrilik ∝ s (başta 0)
+      x += Math.cos(th) * ds; y += Math.sin(th) * ds;
+      pts.push([x, y]);
     }
   }
   return pts;

@@ -181,7 +181,8 @@ function yanSahne(ctx, t) {
   const [nx, ny, nz] = ekranda(cam, NUR.x, NUR.y, F.nur);
   const nurA = 1 - 0.55 * an(t, T.o, 0.8) + 0.4 * an(t, T.kud, 0.8);
   const nurSon = 1 - an(t, T.o2 - 0.3, 0.45);
-  M.nurKuresi(ctx, nx, ny, NUR.r * nz, t, { guc: clamp(nurA), olcek: 1, alfa: nurSon });
+  // rahmet bulutları gelince disk bulutların ardında kalır (bulutların önünde parlamaz), bulutlar dağılınca yeniden açılır
+  M.nurKuresi(ctx, nx, ny, NUR.r * nz, t, { guc: clamp(nurA), olcek: 1, alfa: nurSon * (1 - 0.94 * S.bulut) });
   const huzmeA = (1 - an(t, T.rah + 0.2, 0.9)) + 0.6 * an(t, T.ist + 0.15, 0.7) * (1 - an(t, T.o2 - 0.4, 0.4));
   if (huzmeA > 0.01) {
     const [hx, hy] = ekranda(cam, S.adam.x, G - 20);
@@ -380,7 +381,7 @@ export default {
     { t: T.vah, tur: 'ruzgar', guc: 0.25, sure: 1.6 },
     { t: T.ten, tur: 'nur', guc: 0.4, sure: 1.8 },
     { t: T.ten + 0.6, tur: 'kus', guc: 0.2 },
-    { t: T.tic, tur: 'pop', guc: 0.24, tekrar: 4, ara: 0.12 },
+    { t: T.tic, tur: 'pop', guc: 0.24, tekrar: 4, ara: 0.32 },
     { t: T.olur, tur: 'parilti', guc: 0.3 },
   ],
   hazirla() {

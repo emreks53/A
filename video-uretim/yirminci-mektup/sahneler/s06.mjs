@@ -24,13 +24,25 @@ const T = {
   ya: kb('ya'), kuvve: kb('bilkuvve'), veya: kb('veya'), fiil: kb('bilfiil'), mazhar: kb('mazhardır'), son: 57.4,
 };
 
-// bilfiil: gövde filizin ucundan (tohumdan yüzeye çıktığı an) dal yolları boyunca büyür
-const BUY = { t0: T.fiil + 0.18, sure: 0.74 };
-const KUME_SURE = 0.32, MEYVE_SURE = 0.25;
+// bilfiil: filiz tohumdan yüzeye çıkar (FILIZ), oradan ince, sivri uçlu bir sürgün olarak yükselir; boy (λ, BUY) ve
+// kalınlık (KALIN) birlikte, yumuşak artar; dallar sürgünün farklı yüksekliklerinden sırayla çıkar; yaprak kümeleri
+// kendi dal noktalarından küçükten büyüğe (~0,8 sn'ye yayılarak) taçı doldurur, meyveler kümeleri oturunca gelir
+const FILIZ = { t0: T.fiil - 0.02, sure: 0.24 };
+const BUY = { t0: T.fiil + 0.2, sure: 0.72 };
+const KALIN = { t0: T.fiil + 0.2, sure: 0.95, k0: 0.18 };
+const KUME_SURE = 0.46, MEYVE_SURE = 0.25;
 /** büyüme boyu (λ) t'de */
 const buyumeBoyu = (t, Ltop) => Ltop * an(t, BUY.t0, BUY.sure, ease.inOutSine);
 /** λ'ya ulaşılan an (buyumeBoyu'nun tersi) */
 const buyumeAni = (lm, Ltop) => BUY.t0 + (BUY.sure * Math.acos(clamp(1 - (2 * lm) / Ltop, -1, 1))) / Math.PI;
+/** gövde ve dalların kalınlığı (son kalınlığa oranı) */
+const kalinlik = (t) => lerp(KALIN.k0, 1, an(t, KALIN.t0, KALIN.sure, ease.inOutSine));
+/** kök genişlemesi: gövde kalınlaştıkça belirir */
+const kokYayvan = (k) => ease.inOutSine(clamp((k - 0.4) / 0.6));
+/** filizin kabuğa dönüşü (0: taze yeşil filiz, 1: kahverengi kabuk / kazık kök) */
+const kabuk = (t) => an(t, T.fiil + 0.2, 0.65, ease.inOutSine);
+/** yaprak kümesinin ölçeği: küçükten büyüğe, yumuşak oturuş */
+const kumeOlcek = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : 1 - Math.pow(1 - u, 2.6));
 
 // ---------------------------------------------------------------- dünya yerleşimi (nötr görünüş = geniş plan)
 const { PERS } = Y;
@@ -251,9 +263,31 @@ export default {
     // bilfiil: organik büyüme modeli; her yaprak kümesi bağlı olduğu dal noktası açıldıktan sonra oradan çıkar, her
     // meyve kendi kümesi oturduktan sonra (en erken "mazhardır"da) belirir
     AGM = Y.agacBuyumeModeli(A, { boy: AG.boy, tohum: AG.tohum });
-    kumeT = AGM.kumeBag.map(([, , lm], i) => buyumeAni(lm, AGM.Ltop) + 0.04 + (i % 3) * 0.025);
-    meyveT = A.meyveler.map((m, i) => Math.max(T.mazhar + 0.08 + (i % 5) * 0.04, kumeT[AGM.meyveKume[i]] + KUME_SURE * 0.75));
-    agacBitis = Math.max(BUY.t0 + BUY.sure, ...kumeT.map((v) => v + KUME_SURE), ...meyveT.map((v) => v + MEYVE_SURE));
+    // küme, pivotu açılınca büyümeye başlar (pivotu yaprak kütlesine alınmış küme, komşuları biraz büyüdükten sonra)
+    // En erken, çatal açılıp yan dallar çıktıktan sonra (dalların sürgünün farklı yüksekliklerinden çıkışı görünsün); o ana
+    // yığılanlar sırayla açılır
+    {
+      const enErken = buyumeAni(-AGM.catal[1], AGM.Ltop) + 0.1;
+      const sira = AGM.kumeBag.map((b, i) => i).sort((a, b) => AGM.kumeBag[a][2] - AGM.kumeBag[b][2]);
+      kumeT = [];
+      let j = 0;
+      for (const i of sira) {
+        const [, , lm, kay] = AGM.kumeBag[i];
+        let tk = buyumeAni(lm, AGM.Ltop) + 0.01 + (i % 3) * 0.015 + (kay ? 0.06 : 0);
+        if (tk < enErken) tk = enErken + j++ * 0.035;
+        kumeT[i] = tk;
+      }
+    }
+    // uç dallar: üst dalın ucu açıldıktan ve kendilerini örten küme yarı büyüdükten sonra, yaprakların altında uzar
+    for (const d of AGM.dallar) {
+      if (!d.uc) continue;
+      const ust = d.ust ? buyumeAni(d.ust.bas + d.ust.gec + d.ust.L, AGM.Ltop) : BUY.t0;
+      d.tBas = Math.max(ust, kumeT[d.ortu] + KUME_SURE * 0.5);
+      d.sure = 0.3;
+    }
+    meyveT = A.meyveler.map((m, i) => Math.max(T.mazhar + 0.06 + (i % 5) * 0.035, kumeT[AGM.meyveKume[i]] + KUME_SURE * 0.55));
+    agacBitis = Math.max(BUY.t0 + BUY.sure, KALIN.t0 + KALIN.sure, ...kumeT.map((v) => v + KUME_SURE), ...meyveT.map((v) => v + MEYVE_SURE),
+      ...AGM.dallar.filter((d) => d.uc).map((d) => d.tBas + d.sure));
     fener = Y.fenerOge(3);
     // kökler (tohumdan aşağı ve yanlara; kesit penceresinin içinde)
     const kr = rng(77);
@@ -439,10 +473,10 @@ export default {
             konturCiz(g, k.pts, { renk: '#EAD5AC', kal: 2.0, alfa: 0.95 * acil, kapali: false, cizim: u * 0.985, tohum: 9 });
           }
         }
-        // filiz: tohumdan yüzeye kalın, görünür bir sap; ağaç büyüdükçe kalınlaşıp gövdenin dibine bağlanan kahverengi
-        // bir kazık köke döner (ağaç tohumdan çıkar)
-        const fz = an(t, T.fiil - 0.02, 0.24, ease.inOutSine);
-        if (fz > 0) filizCiz(g, fz, an(t, T.fiil + 0.2, 0.65, ease.inOutSine), acil);
+        // filiz: tohumdan yüzeye ince, sivri uçlu yeşil bir sürgün; yüzeyde gövdenin dibine aynı genişlikte bağlanır, ağaç
+        // büyüdükçe kalınlaşıp kahverengi bir kazık köke döner (ağaç tohumdan çıkar)
+        const fz = an(t, FILIZ.t0, FILIZ.sure, ease.inOutSine);
+        if (fz > 0) filizCiz(g, fz, t, acil);
         // tohum ve içindeki saklı ışık
         const ta = an(t, 54.15, 0.35, ease.outCubic) * acil;
         if (ta > 0) {
@@ -452,20 +486,24 @@ export default {
           ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.9, r: -0.12, alfa: ta });
         }
       }
-      // gerçek ağaç (bilfiil): gövde filizin ucundan yuvarlak uçlu bir sürgün gibi yükselir, çatalda dallara ayrılır,
-      // dallar kendi yolları boyunca uzar (hayalin çizgilerini doldurur); yaprak kümeleri kendi dal noktalarından çıkar,
-      // meyveler kümeleri oturduktan sonra gelir. Bitince M.agacCiz'in tam ağacına dikişsiz devredilir.
-      if (t >= agacBitis) M.agacCiz(g, A, AG.x, AG.y, { buyume: 1, yaprak: 1, meyveA: 1, t, meyveOge: meyveK, salinim: 0.8 });
-      else if (t > BUY.t0) {
-        Y.agacBuyuyerekCiz(g, A, AG.x, AG.y, AGM, buyumeBoyu(t, AGM.Ltop), { t, salinim: 0.8, meyveOge: meyveK,
-          kumeU: (i) => an(t, kumeT[i], KUME_SURE, ease.lin), meyveU: (i) => an(t, meyveT[i], MEYVE_SURE, ease.lin) });
-      }
-      // kesik çizgili hayal (bi'l-kuvve)
+      // kesik çizgili hayal (bi'l-kuvve): gerçek ağacın arkasında; büyüyen ağaç hayalin çizgilerinin içini doldurdukça
+      // onları örter, taç dolunca hayal söner
       const hy = an(t, T.kuvve + 0.1, 0.95, ease.inOutSine);
-      const hs = 1 - an(t, T.fiil + 0.45, 0.6, ease.inOutSine);
+      const hs = 1 - an(t, T.fiil + 0.68, 0.72, ease.inOutSine);
       if (hy > 0 && hs > 0) {
         Y.isikNokta(g, AG.x, AG.y - AG.boy * 0.62, 330, 0.16 * hy * hs);
         Y.acarakCiz(g, hayal, AG.x, AG.y, hy, { mod: 'sil', yon: -Math.PI / 2, alfa: hs * (0.85 + 0.15 * Math.sin(t * 4)) });
+      }
+      // gerçek ağaç (bilfiil): ince, sivri uçlu filiz olarak yükselir, boyla birlikte kalınlaşır; dallar sürgünün farklı
+      // yüksekliklerinden sırayla çıkıp kendi yolları boyunca uzar (hayalin çizgilerini doldurur); yaprak kümeleri kendi
+      // dal noktalarından küçükten büyüğe çıkar, meyveler kümeleri oturduktan sonra gelir. Bitince M.agacCiz'in tam
+      // ağacına dikişsiz devredilir.
+      if (t >= agacBitis) M.agacCiz(g, A, AG.x, AG.y, { buyume: 1, yaprak: 1, meyveA: 1, t, meyveOge: meyveK, salinim: 0.8 });
+      else if (t > BUY.t0) {
+        const k = kalinlik(t);
+        Y.agacBuyuyerekCiz(g, A, AG.x, AG.y, AGM, { lam: buyumeBoyu(t, AGM.Ltop), k, f: kokYayvan(k), yesil: 1 - kabuk(t) }, {
+          t, salinim: 0.8, meyveOge: meyveK,
+          kumeS: (i) => kumeOlcek(clamp((t - kumeT[i]) / KUME_SURE)), meyveU: (i) => an(t, meyveT[i], MEYVE_SURE, ease.lin) });
       }
       // mazhardır: yukarıdan inen nur (adamın arkasında; adam ışıkta okunur kalır)
       const ni = an(t, T.mazhar, 0.6, ease.outCubic);
@@ -550,18 +588,27 @@ function cicekCiz(g, t, ac = 0) {
     ogeCiz(g, cc.oge, cc.x, cc.y, { s: cc.s * (0.35 + 0.65 * k), r: Math.sin(t * 1.3 + cc.x) * 0.05, alfa: Math.min(1, k * 1.6) });
   }
 }
-/** Filiz → kazık kök: u filizin boyu (tohumdan yüzeye), k kalınlaşma ve kahverengiye dönme, a görünürlük */
-function filizCiz(g, u, k, a) {
+/** Filiz → kazık kök: u filizin boyu (tohumdan yüzeye), t zaman (gövdenin kalınlığı ve büyüme boyu; kabuğa dönme),
+ *  a görünürlük. Filiz gövdeyle tek sürgündür: ucu sivri; yüzeyde gövdenin dibiyle aynı genişlikte ve aynı sivrilmeyle
+ *  birleşir (yüzeyin üstünde ve altında kalınlık sıçraması yok) */
+function filizCiz(g, u, t, a) {
   const y0 = TOH.y - 9, y1 = AG.y + 1;
-  const n = 14;
+  const n = 16;
+  const k = kabuk(t);
+  const kal = kalinlik(t);
+  const lam = t > BUY.t0 ? buyumeBoyu(t, AGM.Ltop) : 0;
+  const Ls = y1 - y0;
+  const uc = u * Ls + lam; // sanal ucun tohumdan uzaklığı
+  const ust = Math.min(Y.govdeTabani(AGM, kal, kokYayvan(kal)), lerp(4.5, 24, k)); // yüzeydeki yarı genişlik
   const L = [], R = [], M0 = [];
-  const m = Math.max(1, Math.round(n * u));
+  const m = Math.max(1, Math.ceil(n * u));
   for (let i = 0; i <= m; i++) {
-    const v = i / n;
+    const v = Math.min(i / n, u);
     const x = TOH.x + lerp(0, AG.x - TOH.x, v) + Math.sin(v * Math.PI) * 4;
     const y = lerp(y0, y1, v);
-    // yarı genişlik: dipte ince, yüzeye doğru kalın; ağaç büyüdükçe gövdenin dibi kadar genişler
-    const hw = lerp(lerp(4, 7.5, v), lerp(7, 24, v * v), k);
+    // yarı genişlik: dipte ince, yüzeye doğru gövdenin dibi kadar; kabuklaştıkça kazık kök biçimine (yüzeye doğru
+    // kalınlaşan) döner; uçta sivri
+    const hw = lerp(lerp(2.6, ust, v), lerp(7, ust, v * v), k) * Y.sivri((uc - v * Ls) / AGM.LtL);
     L.push([x - hw, y]); R.push([x + hw, y]); M0.push([x - hw * 0.35, y]);
   }
   const govde = (pay) => {
@@ -572,7 +619,8 @@ function filizCiz(g, u, k, a) {
   };
   g.save();
   g.globalAlpha *= a;
-  g.fillStyle = rgba(k < 0.5 ? '#2F4A22' : '#3E2A18', 0.95);
+  // kontur: yeşil filizden kahverengi köke yumuşak geçiş
+  g.fillStyle = `rgba(${Math.round(lerp(0x2F, 0x3E, k))},${Math.round(lerp(0x4A, 0x2A, k))},${Math.round(lerp(0x22, 0x18, k))},0.95)`;
   govde(1.8);
   g.fill();
   const r = Math.round(lerp(0x7E, 0x9C, k)), gg = Math.round(lerp(0xA8, 0x74, k)), b = Math.round(lerp(0x56, 0x48, k));
@@ -751,3 +799,4 @@ export const yolOge06 = () => yolYakin;
 export function nur06(t) {
   return { x: NUR.x, y: lerp(NUR.y0, NUR.y1, an(t, 46.5, 2.0, ease.outCubic)), r: NUR.r, guc: 0.55 + 0.45 * an(t, 46.6, 1.6, ease.inOutSine) };
 }
+export const _f5Debug = () => ({ agacBitis, kumeT, meyveT, Ltop: AGM.Ltop }); // GECICI

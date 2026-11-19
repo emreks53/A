@@ -178,17 +178,22 @@ export function gul(ctx, x, y, R, acilma, t, { olcek = 1, alfa = 1, r = 0 } = {}
   ctx.translate(x, y);
   ctx.rotate(r);
   ctx.globalAlpha *= alfa;
+  // bas: halkada ilk çizilen yaprak. Her yaprak bir öncekinin üstüne biner; halkanın kapandığı tek ek yerde
+  // (bas-1 yaprağı bas'ın üstünde) örtüşme yön değiştirir. Dış ve orta halkada bu ek yer, iki halkanın
+  // yapraklarının neredeyse aynı açıya düştüğü sağ üst yana (saat 2–3) konur: orada dış yaprağın üst kenarı orta
+  // yaprağın kenarıyla birleşip uzun, düz yatay bir çizgi oluşturuyordu; ek yerinde bu kenar komşunun altında kalır.
   const halkalar = [
-    { n: 9, L: R * 1.0, W: R * 0.62, a0: 0.1, koyu: false, gec: 0.45 },
-    { n: 7, L: R * 0.78, W: R * 0.55, a0: 0.5, koyu: false, gec: 0.3 },
-    { n: 6, L: R * 0.58, W: R * 0.48, a0: 0.2, koyu: true, gec: 0.15 },
-    { n: 5, L: R * 0.4, W: R * 0.42, a0: 0.9, koyu: true, gec: 0.0 },
+    { n: 9, L: R * 1.0, W: R * 0.62, a0: 0.1, koyu: false, gec: 0.45, bas: 2 },
+    { n: 7, L: R * 0.78, W: R * 0.55, a0: 0.5, koyu: false, gec: 0.3, bas: 1 },
+    { n: 6, L: R * 0.58, W: R * 0.48, a0: 0.2, koyu: true, gec: 0.15, bas: 0 },
+    { n: 5, L: R * 0.4, W: R * 0.42, a0: 0.9, koyu: true, gec: 0.0, bas: 0 },
   ];
   for (const h of halkalar) {
     const sp = gulYapragi(Math.round(h.L), Math.round(h.W), h.koyu, olcek);
     const u = ease.outBack(clamp((acilma - h.gec) / (1 - h.gec * 0.9)), 1.2);
     if (u <= 0) continue;
-    for (let k = 0; k < h.n; k++) {
+    for (let j = 0; j < h.n; j++) {
+      const k = (j + h.bas) % h.n;
       const a = h.a0 + (k / h.n) * TAU + Math.sin(t * 0.8 + k) * 0.01;
       // kapalıyken yapraklar içe kıvrık (kısa ve dar görünür)
       const sy = lerp(0.25, 1, u), sx = lerp(0.55, 1, u);

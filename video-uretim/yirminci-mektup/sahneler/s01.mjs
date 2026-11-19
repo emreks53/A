@@ -15,12 +15,70 @@ import * as M from '../motor/motifler.mjs';
 // Motorun ağacı gövdeyi ve dalları iki ayrı sprite olarak tarar; çatal yakasında iki taramanın ve iki buğunun üst
 // üste bindiği yerde yatay bir doku dikişi oluşur. Burada gövde + dallar TEK sprite'ta, tek buğu ve tek taramayla
 // çizilir: tarama çizgileri gövdeden dallara kesintisiz akar, ton her uzvu (gövde, dal) silindir gibi gölgeler ve
-// uzuvlar arasında yumuşakça karışır. Geometri motorun ağacıyla birebir aynıdır (siluet konturu motorunki).
+// uzuvlar arasında yumuşakça karışır. Geometri motorun ağacıyla aynıdır; yalnız sağ çatalın yakası yuvarlatılır
+// (bkz. catalYakasi).
 const kesir = (u) => {
   const v = clamp(u, -1, 1);
   const dif = Math.max(0, v * 0.6 + Math.sqrt(Math.max(0, 1 - v * v)) * 0.75);
   return 1 - 0.15 - dif * 0.85; // TON.silindir ile aynı ışık (sağdan)
 };
+// Çatal yakası: gövdenin üstünü ana dalların diplerine kesintisiz bağlayan dolgu. Motorun yakasının üstü düz bir
+// kenardır; sol çatalda dalların içinde kalır, ama sağ dal geniş açıyla ayrıldığı için sağ çatalda bu düz kenar
+// orta dalla sağ dal arasında açıkta kalıp kutu gibi bir basamak çizer. Burada yakanın sağ üstü, orta dalın sağ
+// kenarıyla sağ dalın üst kenarının kesiştiği köşeye teğet bir kavisle (yuvarlatılmış V) kapanır: iki kenara da
+// teğet olduğundan siluet konturu kırılmadan dal kenarlarından kavise akar.
+function catalYakasi(A, gk, gy, egri, d = 30) {
+  const sol = [egri - gk * 0.55, -gy - gk * 0.75], sag = [egri + gk * 0.55, -gy - gk * 0.75];
+  const kenarlar = [`M${egri - gk * 0.31} ${-gy + gk * 0.9}C${egri - gk * 0.36} ${-gy + gk * 0.2} ${egri - gk * 0.6} ${-gy - gk * 0.35} ${sol[0]} ${sol[1]}`,
+    `C${egri + gk * 0.6} ${-gy - gk * 0.35} ${egri + gk * 0.36} ${-gy + gk * 0.2} ${egri + gk * 0.31} ${-gy + gk * 0.9}Z`];
+  const y0 = -gy + gk * 0.4;
+  const ana = A.dallar.filter((q) => Math.abs(q.x - egri) < 1e-6 && Math.abs(q.y - y0) < 1e-6);
+  const orta = ana.reduce((m, q) => (Math.abs(q.x2 - q.x) < Math.abs(m.x2 - m.x) ? q : m));
+  const sagDal = ana.reduce((m, q) => (q.x2 > m.x2 ? q : m));
+  // dal kenarı (karesel Bézier, alt yolla aynı): yan = +1 normal yönündeki kenar, -1 karşısı
+  const kenarNok = (q, yan) => {
+    const ang = Math.atan2(q.y2 - q.y, q.x2 - q.x);
+    const nx = -Math.sin(ang) * yan, ny = Math.cos(ang) * yan;
+    const p0 = [q.x + nx * q.k0 / 2, q.y + ny * q.k0 / 2], c = [q.bx + nx * (q.k0 + q.k1) / 4, q.by + ny * (q.k0 + q.k1) / 4], p2 = [q.x2 + nx * q.k1 / 2, q.y2 + ny * q.k1 / 2];
+    const pts = [];
+    for (let i = 0; i <= 600; i++) {
+      const s = i / 600, a = (1 - s) * (1 - s), b = 2 * s * (1 - s), e = s * s;
+      pts.push([a * p0[0] + b * c[0] + e * p2[0], a * p0[1] + b * c[1] + e * p2[1]]);
+    }
+    return { pts, nx };
+  };
+  const yanSec = (q, f) => (f(kenarNok(q, 1).nx) ? 1 : -1);
+  const ok = kenarNok(orta, yanSec(orta, (nx) => nx > 0)).pts; // orta dalın sağ kenarı
+  const sk = kenarNok(sagDal, yanSec(sagDal, (nx) => nx < 0)).pts; // sağ dalın üst (orta dala bakan) kenarı
+  // iki kenarın kesişimi (dipten yukarı ilk kesişim)
+  let X = null, io = 0, is = 0;
+  for (let i = 0; i < ok.length - 1 && !X; i++) {
+    const [ax, ay] = ok[i], [bx, by] = ok[i + 1];
+    for (let j = 0; j < sk.length - 1; j++) {
+      const [cx, cy] = sk[j], [dx, dy] = sk[j + 1];
+      const den = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+      if (Math.abs(den) < 1e-12) continue;
+      const u = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / den;
+      const v = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / den;
+      if (u >= 0 && u <= 1 && v >= 0 && v <= 1) { X = [ax + u * (bx - ax), ay + u * (by - ay)]; io = i; is = j; break; }
+    }
+  }
+  if (!X) return kenarlar[0] + `L${sag[0]} ${sag[1]}` + kenarlar[1];
+  // kesişimden kenar boyunca d birim yukarıdaki nokta
+  const yuru = (pts, i0, bas) => {
+    let kalan = d, p = bas;
+    for (let i = i0 + 1; i < pts.length; i++) {
+      const L = Math.hypot(pts[i][0] - p[0], pts[i][1] - p[1]);
+      if (L >= kalan) return [p[0] + ((pts[i][0] - p[0]) * kalan) / L, p[1] + ((pts[i][1] - p[1]) * kalan) / L];
+      kalan -= L; p = pts[i];
+    }
+    return p;
+  };
+  const P1 = yuru(ok, io, X), P2 = yuru(sk, is, X);
+  // P2 yakanın sağ üst köşesini geçtiyse köşeye dönülmez (geri dönen kenar olmasın)
+  const kose = P2[1] > sag[1] ? `L${sag[0]} ${sag[1]}` : '';
+  return kenarlar[0] + `L${P1[0]} ${P1[1]}Q${X[0]} ${X[1]} ${P2[0]} ${P2[1]}` + kose + kenarlar[1];
+}
 function govdeDalTek(A, boy, tohum, olcek) {
   const gk = boy * 0.075, gy = boy * 0.5;
   const egri = A.dallar[0].x; // ana dallar gövde ekseninin tepesinden çıkar
@@ -31,7 +89,7 @@ function govdeDalTek(A, boy, tohum, olcek) {
     const nx = -Math.sin(ang), ny = Math.cos(ang);
     dalSekil.push(...svg(`M${d.x + nx * d.k0 / 2} ${d.y + ny * d.k0 / 2}Q${d.bx + nx * (d.k0 + d.k1) / 4} ${d.by + ny * (d.k0 + d.k1) / 4} ${d.x2 + nx * d.k1 / 2} ${d.y2 + ny * d.k1 / 2}A${d.k1 / 2} ${d.k1 / 2} 0 0 0 ${d.x2 - nx * d.k1 / 2} ${d.y2 - ny * d.k1 / 2}Q${d.bx - nx * (d.k0 + d.k1) / 4} ${d.by - ny * (d.k0 + d.k1) / 4} ${d.x - nx * d.k0 / 2} ${d.y - ny * d.k0 / 2}Z`));
   }
-  dalSekil.push(...svg(`M${egri - gk * 0.31} ${-gy + gk * 0.9}C${egri - gk * 0.36} ${-gy + gk * 0.2} ${egri - gk * 0.6} ${-gy - gk * 0.35} ${egri - gk * 0.55} ${-gy - gk * 0.75}L${egri + gk * 0.55} ${-gy - gk * 0.75}C${egri + gk * 0.6} ${-gy - gk * 0.35} ${egri + gk * 0.36} ${-gy + gk * 0.2} ${egri + gk * 0.31} ${-gy + gk * 0.9}Z`));
+  dalSekil.push(...svg(catalYakasi(A, gk, gy, egri)));
   const butun = [...govdeSekil, ...dalSekil];
   M.yonDuzelt(butun); // tek dönüş yönü: üst üste binen alt yollar delik açmaz
   // gövdenin sol/sağ kenarı (her y için): gövde tonu kenarlara göre silindir
@@ -82,7 +140,13 @@ function govdeDalTek(A, boy, tohum, olcek) {
     return sw > 1e-6 ? st / sw : 0.5;
   };
   const renk = { arka: '#D3B99A', tara: [[0, '#C29F7A'], [1, PALET.koyuKahve]], kontur: PALET.koyuKahve };
-  return oge({
+  // siluet konturu motorunkiyle aynı (kalınlık, renk, sınır kutusu: açılma ilerlemesi dolguyla eşleşir); yalnız
+  // yakası bu sahnenin yuvarlatılmış çatalını izler
+  const kontur = oge({
+    ad: `s01-govde-dal-kontur-${boy}-${tohum}`, olcek, sekil: butun, zemin: null, arka: null, tarama: null, kontur: null,
+    detay: (c) => M.siluetKontur(c, butun, renk.kontur, 2.1, 0.9),
+  });
+  const dolgu = oge({
     ad: `s01-govde-dal-tek-${boy}-${tohum}`, olcek, sekil: butun, arka: renk.arka, arkaAlfa: 0.85,
     tarama: { ton: TON.gurultulu(tonF, 0.1, 0.03, tohum), renkler: renk.tara, yon: -Math.PI / 2, aralik: 2.8, boy: [16, 60], esikler: [0.15, 0.45, 0.72], alfa: 0.55 },
     kontur: null,
@@ -96,6 +160,7 @@ function govdeDalTek(A, boy, tohum, olcek) {
       }
     },
   });
+  return { dolgu, kontur };
 }
 
 // motorun yaprak kümesi biçimi (motifler.mjs bulutsuKume ile aynı)
@@ -137,7 +202,7 @@ const UFUK = 1480;
 const AGAC = { x: 560, y: 1395, boy: 980 };
 let gok, tepeArka, tepeOrta, tepeOn, A, kirmiziMeyve, altinMeyve, cicekler, gunes, bulutlar, cimenler, yaprakSp, yapraklar;
 let altinYer; // altın meyvenin dünya konumu
-let govdeTek, inceKumeler, meyveler, yaziKutulari;
+let govdeTek, govdeKontur, inceKumeler, meyveler, yaziKutulari;
 // kaba kümeden ince taramalı kümeye geçiş: kamera yakınlaşması (z) bu aralıktan geçerken (hızlı itme sırasında)
 const INCE_Z = [1.52, 2.1];
 
@@ -204,6 +269,29 @@ const kamera = () => kameraYolu([
 ]);
 let kam;
 
+// Meyve → nur dönüşümü: "iman-ı"nın (5,82) başında 6 karelik (0,2 sn) çapraz geçiş. Meyve şişip ışıyarak solar;
+// nur küresi meyvenin ekrandaki boyundan doğar, saydamlıktan belirir ve büyür; ortada kısa bir parıltı dönüşümü
+// örter. Yarıçap meyveninkinden nurun büyüme eğrisine tek tümsekli bir hızla geçer (durgun başlar, ~5,9 sn'de en
+// hızlı, 6,2 sn'de eski eğriye hızıyla birlikte tam oturur): sıçrama ya da ani hız değişimi olmaz; 6,2 sn'den sonrası
+// aynen eskisi gibidir. z: kamera yakınlığı (meyvenin ekrandaki boyu için).
+function nurDonusum(t, z) {
+  const t0 = T.iman - 0.1;
+  const k = an(t, t0, 0.2, ease.lin);
+  const nur = an(t, t0, 1.2, ease.outCubic); // parlaklık ve nurun kendi büyümesi
+  const rNur = lerp(40, 150, nur) * (1 + 0.04 * an(t, T.billah, 1.2, ease.inOutSine));
+  const rMeyve = 22 * z; // altın meyvenin (r = 22) ekrandaki yarıçapı
+  const u = an(t, t0, 0.52, ease.lin);
+  const w = 1 - (1 - u) ** 3 * (1 + 3 * u); // hızı 12u(1-u)²: başta ve sonda sıfır
+  const r = lerp(rMeyve, rNur, w);
+  return {
+    nur, rMeyve, r,
+    rM: lerp(rMeyve, r, 0.8), // meyve nurdan biraz geride şişer: sapı nurun dışına taşmaz
+    nurA: smooth(0, 0.6, k),
+    meyveA: 1 - smooth(0.3, 0.85, k),
+    parilti: Math.sin(Math.PI * k) ** 2,
+  };
+}
+
 // Ağacı çizer (motorun agacCiz'iyle aynı büyüme): gövde+dallar tek sprite, siluet konturu aynı ilerlemeyle açılır;
 // kümeler patlar; ince: 0..1 yakın plan kümelerine geçiş; elmalar yerleşmiş listeden (kendi zamanlamalarıyla).
 function agacCiz(ctx, x, y, { buyume = 1, yaprak = 1, t = 0, ince = 0 } = {}) {
@@ -214,7 +302,7 @@ function agacCiz(ctx, x, y, { buyume = 1, yaprak = 1, t = 0, ince = 0 } = {}) {
     const go = A.govdeOran ?? 0.5;
     const pk = buyume <= 0.55 ? (buyume / 0.55) * go : go + (1 - go) * clamp((buyume - 0.55) / 0.37);
     ogeAcarak(ctx, govdeTek, 0, 0, pk, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.08 });
-    ogeAcarak(ctx, A.konturOge, 0, 0, pk, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.08 });
+    ogeAcarak(ctx, govdeKontur, 0, 0, pk, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.08 });
   }
   A.kumeler.forEach((k, i) => {
     const u = clamp((yaprak - k.t * 0.5) / 0.5);
@@ -250,7 +338,7 @@ export default {
     tepeOrta = M.tepeOge({ w: 1500, h: 1000, tohum: 5, renk: 'yesil', dalga: 90, ad: 's01-tepe-orta', olcek: 1.5 });
     tepeOn = M.tepeOge({ w: 1600, h: 900, tohum: 8, renk: 'koyu', dalga: 60, ad: 's01-tepe-on', olcek: 1 });
     A = M.agac({ boy: AGAC.boy, tohum: 21, olcek: 3.0 }); // taca yakınlaşmada (z 2.5) keskin kalsın
-    govdeTek = govdeDalTek(A, AGAC.boy, 21, 3.0);
+    ({ dolgu: govdeTek, kontur: govdeKontur } = govdeDalTek(A, AGAC.boy, 21, 3.0));
     // yakın planda kadraja giren kümelerin ince taramalı eşleri (kadraj dışındakiler kaba kalır)
     {
       const camI = { x: AGAC.x + A.tepe[0], z: INCE_Z[0] };
@@ -368,12 +456,12 @@ export default {
       const buyume = an(t, T.bil - 0.05, 1.1, ease.outCubic);
       const yaprak = an(t, T.bil + 0.72, 1.0, ease.lin); // dallar tamamlanınca taç patlar
       agacCiz(g, AGAC.x, AGAC.y, { buyume, yaprak, t, ince: smooth(INCE_Z[0], INCE_Z[1], c.z) });
-      // altın meyve: en yüce netice
+      // altın meyve: en yüce netice; "iman-ı"da şişip ışıyarak nura dönüşür (nurDonusum)
       const am = pop(t, T.yuce, 0.7);
-      const parla = an(t, T.iman - 0.1, 0.9, ease.inOutSine);
       if (am > 0) {
+        const nd = nurDonusum(t, cam.z);
         M.hale(g, altinYer[0], altinYer[1], 90 + 60 * am, '#FFE9A6', 0.55 * am);
-        ogeCiz(g, altinMeyve, altinYer[0], altinYer[1], { s: am * (1 - parla * 0.15), alfa: 1 - parla });
+        if (nd.meyveA > 0) ogeCiz(g, altinMeyve, altinYer[0], altinYer[1], { s: (am * nd.rM) / nd.rMeyve, alfa: nd.meyveA });
       }
       for (const cc of cicekler) {
         if (cc.y > UFUK + 120) continue;
@@ -439,7 +527,8 @@ export default {
     }
 
     // iman: altın meyve nura dönüşür (ekran uzayında keskin çizilir)
-    const nur = an(t, T.iman - 0.1, 1.2, ease.outCubic);
+    const nd = nurDonusum(t, cam.z);
+    const nur = nd.nur;
     if (nur > 0) {
       const [sx, sy] = ekranda(cam, altinYer[0], altinYer[1]);
       // sahne hafifçe ışığa boğulur
@@ -448,8 +537,12 @@ export default {
       ctx.fillStyle = `rgba(255,248,226,${0.16 * nur})`;
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
-      const r = lerp(40, 150, nur) * (1 + 0.04 * an(t, T.billah, 1.2, ease.inOutSine));
-      M.nurKuresi(ctx, sx, sy, r, t, { guc: nur, olcek: 1.3 });
+      M.nurKuresi(ctx, sx, sy, nd.r, t, { guc: nur, olcek: 1.3, alfa: nd.nurA });
+      if (nd.parilti > 0.002) {
+        // dönüşüm parıltısı: meyve ışıyıp nura geçerken kısa, yumuşak bir ışık kabarması
+        M.hale(ctx, sx, sy, nd.r * 3.2, '#FFF1C4', 0.4 * nd.parilti);
+        M.hale(ctx, sx, sy, nd.r * 1.3, '#FFFFFF', 0.55 * nd.parilti);
+      }
       M.parcaciklar(ctx, sx - 380, sy - 520, 760, 1040, t, { sayi: 34, alfa: 0.7 * nur, tohum: 9 });
     }
   },

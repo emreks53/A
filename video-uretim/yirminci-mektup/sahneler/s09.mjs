@@ -42,17 +42,32 @@ function devirKamerasi(t) {
   const k = 1 / OLC; // s08 dünyasındaki uzaklık, s09 dünyasında bu kat
   return { x: D.ADAM.x - (DEVIR_ADAM.x - c.x) * k, y: D.ADAM.y - (DEVIR_ADAM.y - c.y) * k, z: c.z * OLC, r: c.r };
 }
-const kamA = kameraYolu([
+const kamGenis = kameraYolu([
   { t: DEVIR_SON, ...KAM_0 },
   { t: T.iste, ...KAM_0, e: ease.lin }, // devirden sonra kısa duruş (s08'in yavaş kayması burada durur)
   { t: T.iste + 1.45, x: 540, y: 975, z: 1.0, e: ease.inOutCubic },
-  { t: T.bu2 - 0.04, x: 566, y: 990, z: 1.045, e: ease.inOutSine },
-  { t: T.bu2 + 0.55, ...KAM_B, e: ease.inOutCubic },
+  { t: T.bu2 - 0.04, x: 566, y: 990, z: 1.045, e: ease.inOutSine }, // geniş yol planında çok yavaş süzülme
+]);
+// geniş plandan yerde oturan adama iniş: "başıboş insanlık" altyazısı solarken başlar (≈85,78), ≈1,04 sn sürer ve
+// "perişan"ın sonunda adamın üstüne oturur ("sonlu" altyazısı gelmeden). İniş, süzülmenin üstüne harmanlanır (öncesi
+// birebir aynı, hız sürekli). Yakınlaşma log uzayında olduğundan ağırlık, ekran ortasındaki kaymanın inOutSine izleyeceği
+// biçimde dönüştürülür: tepe hız ≈ 60 px/kare (eski iniş 0,59 sn'de ≈ 160 px/kare savrulma gibiydi).
+const INIS = { t0: T.bu2 - 0.29, t1: T.bu2 + 0.75 };
+const INIS_R = KAM_B.z / kamGenis(INIS.t0).z;
+const inisAgirlik = (u) => Math.log(1 + (INIS_R - 1) * ease.inOutSine(u)) / Math.log(INIS_R);
+const kamB = kameraYolu([
+  { t: INIS.t1, ...KAM_B },
   { t: DALIS.t0, ...KAM_B, e: ease.lin },
   // silinen boşluğa dalış: sığ ve yumuşak; büyüdükçe çizim beyaza karışır (bitmap büyümesi görünmesin)
   { t: DALIS.t1, x: 775, y: 1830, z: 3.4, e: ease.inOutCubic },
   { t: 100, x: 775, y: 1830, z: 3.4, e: ease.lin },
 ]);
+function kamA(t) {
+  if (t <= INIS.t0) return kamGenis(t);
+  if (t >= INIS.t1) return kamB(t);
+  const a = kamGenis(t), w = inisAgirlik((t - INIS.t0) / (INIS.t1 - INIS.t0));
+  return { x: lerp(a.x, KAM_B.x, w), y: lerp(a.y, KAM_B.y, w), z: Math.exp(lerp(Math.log(a.z), Math.log(KAM_B.z), w)), r: 0 };
+}
 const SIL_BAS = T.dunyada - 0.04; // silgi ilk darbesi ("dünyada")
 const SIL_SON = 87.92;
 
@@ -330,7 +345,7 @@ export default {
 function dunyaKamerasi(t) {
   if (t < DEVIR_SON) return devirKamerasi(t); // s08'in salınımı ve vurguları dahil
   const c = kamA(t);
-  const sw = 1 - an(t, T.bu2 - 0.2, 0.5);
+  const sw = 1 - an(t, INIS.t0, 0.6); // el salınımı iniş boyunca söner (çiçek çerçevesi sabit)
   const sl = salinim(t, 3, 0.3, 14); // s08 ile aynı salınım: devirden sonra kesintisiz sürer
   return { x: c.x + (sl.x * sw) / c.z, y: c.y + (sl.y * sw) / c.z, z: c.z, r: sl.r * sw };
 }

@@ -32,14 +32,16 @@ const T = {
 
 // ---------------------------------------------------------------- yerleşim (dünya = nötr ekran)
 const K = { x: 540, y: 510, R: 205, gul: 64 }; // kaynak: madalyon ve gül
-const IK = [{ x: 172, y: 1072 }, { x: 404, y: 1226 }, { x: 676, y: 1226 }, { x: 908, y: 1072 }];
+// levhalar (LR = 108): dış kenarlar kamera en yakındayken (z 1,08) de ekran kenarından ≥ ~90 px içeride kalır
+// (Shorts arayüzünün sağ düğme sütunu bala binmesin); komşu levhalar arasında ~30 px boşluk
+const IK = [{ x: 234, y: 1054 }, { x: 417, y: 1218 }, { x: 663, y: 1218 }, { x: 846, y: 1054 }];
 // simgelerin oturduğu yay: dört levha merkezinden geçen çember (kaynağın altında bir kâse gibi)
 const YAY = (() => {
   const [a, b] = IK;
   const yc = ((b.x - 540) ** 2 + b.y ** 2 - (a.x - 540) ** 2 - a.y ** 2) / (2 * (b.y - a.y));
   return { x: 540, y: yc, R: Math.hypot(a.x - 540, a.y - yc) };
 })();
-const SIMGE_OLCEK = 1.15;
+const SIMGE_OLCEK = 1.02; // simgeler levhayla aynı oranda (1,15 × 108/122)
 const GIRIS = [T.saadet, T.surur, T.nimet, T.lezzet];
 const LR = Y.LR;
 

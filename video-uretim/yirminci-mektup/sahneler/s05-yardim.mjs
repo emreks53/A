@@ -175,7 +175,7 @@ export function pervazOge() {
 }
 
 // ---------------------------------------------------------------- simge levhası
-export const LR = 122; // levha yarıçapı
+export const LR = 108; // levha yarıçapı (dört levha kadraja iki yanda ~90 px pay bırakarak sığsın)
 export function levhaOge() {
   return oge({
     ad: 's05-levha', olcek: OL, sekil: elips(0, 0, LR, LR), arka: '#F7ECCD', arkaAlfa: 0.75, arkaBulanik: 14, arkaTasma: false,

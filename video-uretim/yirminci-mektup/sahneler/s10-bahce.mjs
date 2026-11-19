@@ -835,7 +835,7 @@ export function bahceCizV(g, cam, t, B) {
   // uzak şehir ve minare (çarşıyla belirir)
   if (B.carsi > 0) {
     g.save(); katman(g, cam, 0.86);
-    acarak(g, V.minare, 1290, 1180, an(B.carsi, 0.18, 0.55, ease.outCubic), { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
+    acarak(g, V.minare, 1290, 1180, an(B.carsi, 0.4, 0.5, ease.outCubic), { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
     g.restore();
   }
   g.save(); katman(g, cam, 1); ogeCiz(g, V.zBahce, 0, 0);
@@ -934,7 +934,8 @@ function fenerZinciri(g, cam, t, B, d, salA) {
 
 // çarşının kuruluş sırası (sn, B.tCarsi'den): önce bina opak bir bütün olarak tabandan yükselir; duvar tamamlanınca
 // kubbeler, tenteler, tezgâhlar, raflar ve fenerler; sonra mallar; en son satıcılar tezgâhın arkasından yükselir.
-export const CARSI = { bina: [0.08, 0.46], kubbe: 0.5, tente: 0.54, tezgah: 0.58, raf: 0.6, fener: 0.66, mal: 0.92, satici: 0.98, terazi: 1.12 };
+// (öğe grupları ~1,7 sn'ye yayılır: izleyici her birini görebilsin, saniyede ikiden fazla yeni fikir girmesin)
+export const CARSI = { bina: [0.08, 0.46], kubbe: 0.62, raf: 0.8, tente: 1.05, tezgah: 1.1, fener: 1.25, mal: 1.45, satici: 1.6, terazi: 1.75, musteri: [1.3, 2.3] };
 const bas = (u, s = 1.4) => (u <= 0 ? 0 : ease.outBack(clamp(u), s));
 function carsiCiz(g, cam, t, B) {
   const { x0, n, aci, ayak, taban, yuk, kemerYuk } = KEMER;
@@ -1059,7 +1060,7 @@ export function alisverisciler(g, cam, t, B) {
   // (önceki karşıdan geçen yaya dükkâncının ve müşterinin üstünden geçiyordu).
   const hedef = x0 + ayak + aci * 1.5 + 118;
   if (!V.musteri) {
-    const p = yurumePlani({ t0: B.tCarsi + 0.85, t1: B.tCarsi + 2.0, n: 5, s: 0.64, yon: -1, x0: 0, kol: 0.3 });
+    const p = yurumePlani({ t0: B.tCarsi + CARSI.musteri[0], t1: B.tCarsi + CARSI.musteri[1], n: 5, s: 0.64, yon: -1, x0: 0, kol: 0.3 });
     V.musteri = { p, dx: hedef - p.x1 };
   }
   const M3 = V.musteri;

@@ -100,9 +100,15 @@ function onParcalar(olcek) {
   });
   P.el = parca('on-el', svg('M-7 -2C-9 6 -9 14 -6 19C-3 23 3 23 6 19C9 14 9 6 7 -2C4 -4 -4 -4 -7 -2Z'), R('ten'), olcek, { aralik: 2.6, boy: [6, 14] });
   P.kalca = parca('on-kalca', svg('M-30 -36C-32 -22 -33 -8 -32 4C-31 10 -20 14 0 12C20 14 31 10 32 4C33 -8 32 -22 30 -36Z'), R('pantolon'), olcek, { aralik: 3, boy: [14, 34] });
-  P.govde = parca('on-govde', svg('M-29 -30C-30 -54 -32 -76 -34 -92C-36 -102 -42 -106 -45 -112C-47 -120 -40 -126 -28 -127C-16 -128 -7 -129 0 -129C7 -129 16 -128 28 -127C40 -126 47 -120 45 -112C42 -106 36 -102 34 -92C32 -76 30 -54 29 -30C12 -27 -12 -27 -29 -30Z'), R('gomlek'), olcek, {
+  const onGovdeYolu = 'M-29 -30C-30 -54 -32 -76 -34 -92C-36 -102 -42 -106 -45 -112C-47 -120 -40 -126 -28 -127C-16 -128 -7 -129 0 -129C7 -129 16 -128 28 -127C40 -126 47 -120 45 -112C42 -106 36 -102 34 -92C32 -76 30 -54 29 -30C12 -27 -12 -27 -29 -30Z';
+  P.govde = parca('on-govde', svg(onGovdeYolu), R('gomlek'), olcek, {
     aralik: 3.1, boy: [20, 60], tonF: TON.gurultulu(TON.silindir(-46, 46), 0.06, 0.05, 4),
     ek: (ctx, api) => { api.cizgi([[-11, -128], [0, -117], [11, -128]], { renk: RENK.gomlekKontur, kal: 1.5, alfa: 0.7 }); },
+  });
+  // arkadan görünüş: önün V yakası yok; ensede boynun altını saran hafif kavisli arka yaka çizgisi
+  P.govdeArka = parca('arka-govde', svg(onGovdeYolu), R('gomlek'), olcek, {
+    aralik: 3.1, boy: [20, 60], tonF: TON.gurultulu(TON.silindir(-46, 46), 0.06, 0.05, 4),
+    ek: (ctx, api) => { api.cizgi(Array.from({ length: 13 }, (_, i) => { const u = i / 6 - 1; return [15 * u, -121 - 7.3 * u * u]; }), { renk: RENK.gomlekKontur, kal: 1.4, alfa: 0.6 }); },
   });
   P.boyun = parca('on-boyun', svg('M-9 0L-8 -18C-3 -20 3 -20 8 -18L9 0Z'), R('ten'), olcek, { aralik: 2.6, boy: [6, 12] });
   P.bas = parca('on-bas', svg('M0 -2C-12 -2 -21 -12 -23 -26C-25 -42 -18 -62 0 -62C18 -62 25 -42 23 -26C21 -12 12 -2 0 -2Z'), R('ten'), olcek, { aralik: 2.7, boy: [10, 26], tonF: TON.kure(4, -34, 32, { lx: 0.45, ly: -0.5 }) });
@@ -289,7 +295,7 @@ export function insanOn(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 1, alfa = 1,
   const kolArkada = (i) => (p.kol[i] > 1.9); // kollar başın üstündeyse ön kol da gövdenin arkasında
   const eller = [null, null];
   [-1, 1].forEach((yon, i) => { ustKol(yon, i); if (kolArkada(i)) eller[i] = altKol(yon, i); });
-  ogeCiz(ctx, P.govde, 0, ky);
+  ogeCiz(ctx, arka ? P.govdeArka : P.govde, 0, ky);
   ogeCiz(ctx, P.boyun, 0, omuzY - 6);
   const basY = omuzY - 18;
   ctx.save();

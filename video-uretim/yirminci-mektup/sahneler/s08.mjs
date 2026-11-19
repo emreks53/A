@@ -40,7 +40,10 @@ function bulanik(kam, t) {
   const a = kam(t - 1 / 60), b = kam(t + 1 / 60);
   const z = (a.z + b.z) / 2;
   const dx = -(b.x - a.x) * z * 0.5, dy = -(b.y - a.y) * z * 0.5;
-  return Math.hypot(dx, dy) > 10 ? [dx, dy] : null;
+  // eşik yok: bulanıklık boyu hızla orantılı, 3→12 px arasında yumuşak rampayla girer/çıkar (tek karede açılıp
+  // kapanan basamak olmasın). Sahnedeki yavaş kaymalar (≤ 3 px) etkilenmez.
+  const k = smooth(3, 12, Math.hypot(dx, dy));
+  return Math.hypot(dx, dy) * k > 0.4 ? [dx * k, dy * k] : null;
 }
 const havuz = [], havuzB = [];
 let derinlik = 0;
@@ -106,7 +109,10 @@ function ruzgarlar(ctx, t, liste, guc = 1) {
   for (const w of liste) {
     const u = (t - w.t0) / w.sure;
     if (u <= 0 || u >= 1.45) continue;
-    D.ruzgarCizgisi(ctx, w.pts, u - 0.45, u, { renk: w.renk || '#F4F2F8', kal: w.kal, alfa: Math.min(0.85, w.alfa * 1.45) * guc, tohum: w.tohum });
+    // kuyruk ucu kıvrıma çekilirken çizgi söner: tek başına kalan kıvrım (yay/hilal) görünmesin
+    const son = 1 - smooth(1.0, 1.32, u);
+    if (son <= 0.003) continue;
+    D.ruzgarCizgisi(ctx, w.pts, u - 0.45, u, { renk: w.renk || '#F4F2F8', kal: w.kal, alfa: Math.min(0.85, w.alfa * 1.45) * guc * son, tohum: w.tohum });
   }
 }
 function ruzgarListesi(tohum, baslar, { y0 = 300, y1 = 1300, L = [500, 900], sure = [1.0, 1.5], kal = [2.0, 3.0], alfa = 0.5 } = {}) {
