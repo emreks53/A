@@ -1,0 +1,1410 @@
+[
+ {
+  "w": "İşte",
+  "rom": "iste",
+  "s": 0.2,
+  "e": 0.42,
+  "score": 0.979,
+  "arabic": false
+ },
+ {
+  "w": "dünya",
+  "rom": "dunya",
+  "s": 0.52,
+  "e": 0.78,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "süslü",
+  "rom": "suslu",
+  "s": 0.94,
+  "e": 1.22,
+  "score": 0.699,
+  "arabic": false
+ },
+ {
+  "w": "bir",
+  "rom": "bir",
+  "s": 1.28,
+  "e": 1.4,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "menzildir",
+  "rom": "menzildir",
+  "s": 1.46,
+  "e": 2.0,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "Her",
+  "rom": "her",
+  "s": 2.74,
+  "e": 2.92,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "birimizin",
+  "rom": "birimizin",
+  "s": 2.98,
+  "e": 3.401,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "hayatı",
+  "rom": "hayati",
+  "s": 3.481,
+  "e": 3.901,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "bir",
+  "rom": "bir",
+  "s": 4.121,
+  "e": 4.241,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "endam",
+  "rom": "endam",
+  "s": 4.381,
+  "e": 4.701,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "âyinesidir",
+  "rom": "ayinesidir",
+  "s": 4.761,
+  "e": 5.321,
+  "score": 0.976,
+  "arabic": false
+ },
+ {
+  "w": "Şu",
+  "rom": "su",
+  "s": 6.121,
+  "e": 6.221,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "dünyadan",
+  "rom": "dunyadan",
+  "s": 6.281,
+  "e": 6.741,
+  "score": 0.888,
+  "arabic": false
+ },
+ {
+  "w": "her",
+  "rom": "her",
+  "s": 6.821,
+  "e": 7.001,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "birimize",
+  "rom": "birimize",
+  "s": 7.061,
+  "e": 7.441,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "birer",
+  "rom": "birer",
+  "s": 7.521,
+  "e": 7.801,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "dünya",
+  "rom": "dunya",
+  "s": 7.841,
+  "e": 8.101,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "var",
+  "rom": "var",
+  "s": 8.201,
+  "e": 8.361,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "birer",
+  "rom": "birer",
+  "s": 8.881,
+  "e": 9.141,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "âlemimiz",
+  "rom": "alemimiz",
+  "s": 9.281,
+  "e": 9.761,
+  "score": 0.97,
+  "arabic": false
+ },
+ {
+  "w": "var",
+  "rom": "var",
+  "s": 9.821,
+  "e": 9.961,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "Fakat",
+  "rom": "fakat",
+  "s": 10.702,
+  "e": 11.002,
+  "score": 1.0,
+  "arabic": false
+ },
+ {
+  "w": "direği",
+  "rom": "diregi",
+  "s": 11.102,
+  "e": 11.462,
+  "score": 0.839,
+  "arabic": false
+ },
+ {
+  "w": "merkezi",
+  "rom": "merkezi",
+  "s": 11.962,
+  "e": 12.502,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "kapısı",
+  "rom": "kapisi",
+  "s": 12.982,
+  "e": 13.442,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "hayatımızdır",
+  "rom": "hayatimizdir",
+  "s": 13.622,
+  "e": 14.362,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "Belki",
+  "rom": "belki",
+  "s": 15.202,
+  "e": 15.482,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "o",
+  "rom": "o",
+  "s": 15.562,
+  "e": 15.582,
+  "score": 0.995,
+  "arabic": false
+ },
+ {
+  "w": "hususi",
+  "rom": "hususi",
+  "s": 15.662,
+  "e": 16.082,
+  "score": 0.823,
+  "arabic": false
+ },
+ {
+  "w": "dünyamız",
+  "rom": "dunyamiz",
+  "s": 16.182,
+  "e": 16.682,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 16.742,
+  "e": 16.802,
+  "score": 0.995,
+  "arabic": false
+ },
+ {
+  "w": "âlemimiz",
+  "rom": "alemimiz",
+  "s": 16.923,
+  "e": 17.443,
+  "score": 0.982,
+  "arabic": false
+ },
+ {
+  "w": "bir",
+  "rom": "bir",
+  "s": 17.583,
+  "e": 17.703,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "sahifedir",
+  "rom": "sahifedir",
+  "s": 17.803,
+  "e": 18.323,
+  "score": 0.923,
+  "arabic": false
+ },
+ {
+  "w": "Hayatımız",
+  "rom": "hayatimiz",
+  "s": 19.043,
+  "e": 19.603,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "bir",
+  "rom": "bir",
+  "s": 19.683,
+  "e": 19.803,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "kalem",
+  "rom": "kalem",
+  "s": 19.863,
+  "e": 20.143,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "onunla",
+  "rom": "onunla",
+  "s": 20.823,
+  "e": 21.163,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "sahife",
+  "rom": "sahife",
+  "s": 21.303,
+  "e": 21.623,
+  "score": 0.89,
+  "arabic": false
+ },
+ {
+  "w": "i",
+  "rom": "i",
+  "s": 21.723,
+  "e": 21.743,
+  "score": 0.336,
+  "arabic": false
+ },
+ {
+  "w": "a'malimize",
+  "rom": "amalimize",
+  "s": 21.843,
+  "e": 22.383,
+  "score": 0.973,
+  "arabic": false
+ },
+ {
+  "w": "geçecek",
+  "rom": "gececek",
+  "s": 22.423,
+  "e": 22.803,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "çok",
+  "rom": "cok",
+  "s": 22.843,
+  "e": 23.043,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "şeyler",
+  "rom": "seyler",
+  "s": 23.103,
+  "e": 23.443,
+  "score": 0.994,
+  "arabic": false
+ },
+ {
+  "w": "yazılıyor",
+  "rom": "yaziliyor",
+  "s": 23.503,
+  "e": 23.984,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "Eğer",
+  "rom": "eger",
+  "s": 25.644,
+  "e": 25.864,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "dünyamızı",
+  "rom": "dunyamizi",
+  "s": 25.944,
+  "e": 26.464,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "sevdikse",
+  "rom": "sevdikse",
+  "s": 26.564,
+  "e": 27.084,
+  "score": 0.994,
+  "arabic": false
+ },
+ {
+  "w": "sonra",
+  "rom": "sonra",
+  "s": 27.664,
+  "e": 27.944,
+  "score": 1.0,
+  "arabic": false
+ },
+ {
+  "w": "gördük",
+  "rom": "gorduk",
+  "s": 28.024,
+  "e": 28.384,
+  "score": 1.0,
+  "arabic": false
+ },
+ {
+  "w": "ki",
+  "rom": "ki",
+  "s": 28.424,
+  "e": 28.524,
+  "score": 0.99,
+  "arabic": false
+ },
+ {
+  "w": "dünyamız",
+  "rom": "dunyamiz",
+  "s": 28.964,
+  "e": 29.424,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "hayatımız",
+  "rom": "hayatimiz",
+  "s": 29.504,
+  "e": 29.984,
+  "score": 0.986,
+  "arabic": false
+ },
+ {
+  "w": "üstünde",
+  "rom": "ustunde",
+  "s": 30.044,
+  "e": 30.365,
+  "score": 0.99,
+  "arabic": false
+ },
+ {
+  "w": "bina",
+  "rom": "bina",
+  "s": 30.405,
+  "e": 30.605,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "edildiği",
+  "rom": "edildigi",
+  "s": 30.705,
+  "e": 31.105,
+  "score": 0.945,
+  "arabic": false
+ },
+ {
+  "w": "için",
+  "rom": "icin",
+  "s": 31.165,
+  "e": 31.385,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "hayatımız",
+  "rom": "hayatimiz",
+  "s": 31.965,
+  "e": 32.505,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "gibi",
+  "rom": "gibi",
+  "s": 32.565,
+  "e": 32.745,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "zâil",
+  "rom": "zail",
+  "s": 32.885,
+  "e": 33.325,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "fâni",
+  "rom": "fani",
+  "s": 33.765,
+  "e": 34.145,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "kararsızdır",
+  "rom": "kararsizdir",
+  "s": 34.405,
+  "e": 35.105,
+  "score": 0.994,
+  "arabic": false
+ },
+ {
+  "w": "hissedip",
+  "rom": "hissedip",
+  "s": 35.265,
+  "e": 35.705,
+  "score": 0.969,
+  "arabic": false
+ },
+ {
+  "w": "bildik",
+  "rom": "bildik",
+  "s": 35.765,
+  "e": 36.125,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "Ona",
+  "rom": "ona",
+  "s": 37.066,
+  "e": 37.226,
+  "score": 0.96,
+  "arabic": false
+ },
+ {
+  "w": "ait",
+  "rom": "ait",
+  "s": 37.326,
+  "e": 37.546,
+  "score": 0.989,
+  "arabic": false
+ },
+ {
+  "w": "muhabbetimiz",
+  "rom": "muhabbetimiz",
+  "s": 37.606,
+  "e": 38.246,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "o",
+  "rom": "o",
+  "s": 38.726,
+  "e": 38.746,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "hususi",
+  "rom": "hususi",
+  "s": 38.826,
+  "e": 39.206,
+  "score": 0.826,
+  "arabic": false
+ },
+ {
+  "w": "dünyamız",
+  "rom": "dunyamiz",
+  "s": 39.286,
+  "e": 39.726,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "âyine",
+  "rom": "ayine",
+  "s": 39.866,
+  "e": 40.126,
+  "score": 0.951,
+  "arabic": false
+ },
+ {
+  "w": "olduğu",
+  "rom": "oldugu",
+  "s": 40.206,
+  "e": 40.526,
+  "score": 0.945,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 40.726,
+  "e": 40.806,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "temsil",
+  "rom": "temsil",
+  "s": 40.906,
+  "e": 41.266,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "ettiği",
+  "rom": "ettigi",
+  "s": 41.326,
+  "e": 41.626,
+  "score": 0.934,
+  "arabic": false
+ },
+ {
+  "w": "güzel",
+  "rom": "guzel",
+  "s": 42.206,
+  "e": 42.486,
+  "score": 1.0,
+  "arabic": false
+ },
+ {
+  "w": "nukuş",
+  "rom": "nukus",
+  "s": 42.546,
+  "e": 42.866,
+  "score": 0.991,
+  "arabic": false
+ },
+ {
+  "w": "u",
+  "rom": "u",
+  "s": 42.926,
+  "e": 42.946,
+  "score": 0.745,
+  "arabic": false
+ },
+ {
+  "w": "esma",
+  "rom": "esma",
+  "s": 43.006,
+  "e": 43.286,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "i",
+  "rom": "i",
+  "s": 43.366,
+  "e": 43.386,
+  "score": 0.531,
+  "arabic": false
+ },
+ {
+  "w": "İlahiyeye",
+  "rom": "ilahiyeye",
+  "s": 43.426,
+  "e": 43.967,
+  "score": 0.772,
+  "arabic": false
+ },
+ {
+  "w": "döner",
+  "rom": "doner",
+  "s": 44.027,
+  "e": 44.307,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "ondan",
+  "rom": "ondan",
+  "s": 44.987,
+  "e": 45.307,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "cilve",
+  "rom": "cilve",
+  "s": 45.507,
+  "e": 45.787,
+  "score": 0.944,
+  "arabic": false
+ },
+ {
+  "w": "i",
+  "rom": "i",
+  "s": 45.867,
+  "e": 45.887,
+  "score": 0.02,
+  "arabic": false
+ },
+ {
+  "w": "esmaya",
+  "rom": "esmaya",
+  "s": 45.927,
+  "e": 46.367,
+  "score": 0.849,
+  "arabic": false
+ },
+ {
+  "w": "intikal",
+  "rom": "intikal",
+  "s": 46.447,
+  "e": 46.847,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "eder",
+  "rom": "eder",
+  "s": 46.887,
+  "e": 47.107,
+  "score": 0.908,
+  "arabic": false
+ },
+ {
+  "w": "Hem",
+  "rom": "hem",
+  "s": 47.947,
+  "e": 48.107,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "o",
+  "rom": "o",
+  "s": 48.287,
+  "e": 48.307,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "hususi",
+  "rom": "hususi",
+  "s": 48.367,
+  "e": 48.767,
+  "score": 0.837,
+  "arabic": false
+ },
+ {
+  "w": "dünyamız",
+  "rom": "dunyamiz",
+  "s": 48.867,
+  "e": 49.367,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "âhiret",
+  "rom": "ahiret",
+  "s": 49.887,
+  "e": 50.287,
+  "score": 0.793,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 50.367,
+  "e": 50.427,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "cennetin",
+  "rom": "cennetin",
+  "s": 50.508,
+  "e": 51.028,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "muvakkat",
+  "rom": "muvakkat",
+  "s": 51.148,
+  "e": 51.608,
+  "score": 0.986,
+  "arabic": false
+ },
+ {
+  "w": "bir",
+  "rom": "bir",
+  "s": 51.668,
+  "e": 51.788,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "fidanlığı",
+  "rom": "fidanligi",
+  "s": 51.828,
+  "e": 52.308,
+  "score": 0.994,
+  "arabic": false
+ },
+ {
+  "w": "olduğunu",
+  "rom": "oldugunu",
+  "s": 52.368,
+  "e": 52.728,
+  "score": 0.983,
+  "arabic": false
+ },
+ {
+  "w": "derk",
+  "rom": "derk",
+  "s": 52.788,
+  "e": 53.028,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "edip",
+  "rom": "edip",
+  "s": 53.068,
+  "e": 53.248,
+  "score": 0.995,
+  "arabic": false
+ },
+ {
+  "w": "ona",
+  "rom": "ona",
+  "s": 53.848,
+  "e": 53.988,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "karşı",
+  "rom": "karsi",
+  "s": 54.048,
+  "e": 54.428,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "şedit",
+  "rom": "sedit",
+  "s": 54.648,
+  "e": 54.968,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "hırs",
+  "rom": "hirs",
+  "s": 55.088,
+  "e": 55.408,
+  "score": 0.967,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 55.748,
+  "e": 55.808,
+  "score": 0.994,
+  "arabic": false
+ },
+ {
+  "w": "talep",
+  "rom": "talep",
+  "s": 55.908,
+  "e": 56.228,
+  "score": 0.989,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 56.408,
+  "e": 56.468,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "muhabbet",
+  "rom": "muhabbet",
+  "s": 56.528,
+  "e": 56.948,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "gibi",
+  "rom": "gibi",
+  "s": 57.008,
+  "e": 57.168,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "hissiyatımızı",
+  "rom": "hissiyatimizi",
+  "s": 57.209,
+  "e": 57.969,
+  "score": 0.864,
+  "arabic": false
+ },
+ {
+  "w": "onun",
+  "rom": "onun",
+  "s": 58.669,
+  "e": 58.889,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "neticesi",
+  "rom": "neticesi",
+  "s": 58.969,
+  "e": 59.549,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 59.889,
+  "e": 59.949,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "semeresi",
+  "rom": "semeresi",
+  "s": 60.069,
+  "e": 60.629,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 60.809,
+  "e": 60.869,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "sümbülü",
+  "rom": "sumbulu",
+  "s": 60.969,
+  "e": 61.329,
+  "score": 0.909,
+  "arabic": false
+ },
+ {
+  "w": "olan",
+  "rom": "olan",
+  "s": 61.389,
+  "e": 61.589,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "uhrevî",
+  "rom": "uhrevi",
+  "s": 61.809,
+  "e": 62.109,
+  "score": 0.941,
+  "arabic": false
+ },
+ {
+  "w": "fevaidine",
+  "rom": "fevaidine",
+  "s": 62.209,
+  "e": 62.749,
+  "score": 0.891,
+  "arabic": false
+ },
+ {
+  "w": "çevirsek",
+  "rom": "cevirsek",
+  "s": 62.809,
+  "e": 63.309,
+  "score": 0.984,
+  "arabic": false
+ },
+ {
+  "w": "o",
+  "rom": "o",
+  "s": 64.05,
+  "e": 64.07,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "vakit",
+  "rom": "vakit",
+  "s": 64.11,
+  "e": 64.39,
+  "score": 0.885,
+  "arabic": false
+ },
+ {
+  "w": "o",
+  "rom": "o",
+  "s": 64.47,
+  "e": 64.49,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "mecazî",
+  "rom": "mecazi",
+  "s": 64.55,
+  "e": 65.01,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "aşk",
+  "rom": "ask",
+  "s": 65.19,
+  "e": 65.39,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "hakiki",
+  "rom": "hakiki",
+  "s": 65.69,
+  "e": 66.07,
+  "score": 0.991,
+  "arabic": false
+ },
+ {
+  "w": "aşka",
+  "rom": "aska",
+  "s": 66.19,
+  "e": 66.43,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "inkılab",
+  "rom": "inkilab",
+  "s": 66.51,
+  "e": 66.89,
+  "score": 0.993,
+  "arabic": false
+ },
+ {
+  "w": "eder",
+  "rom": "eder",
+  "s": 66.93,
+  "e": 67.13,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "Yoksa",
+  "rom": "yoksa",
+  "s": 68.07,
+  "e": 68.41,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "nesullahe",
+  "rom": "nesullahe",
+  "s": 68.81,
+  "e": 69.35,
+  "score": 0.867,
+  "arabic": true
+ },
+ {
+  "w": "feensahum",
+  "rom": "feensahum",
+  "s": 69.45,
+  "e": 70.23,
+  "score": 0.961,
+  "arabic": true
+ },
+ {
+  "w": "enfusehum",
+  "rom": "enfusehum",
+  "s": 70.35,
+  "e": 70.931,
+  "score": 0.884,
+  "arabic": true
+ },
+ {
+  "w": "ulaike",
+  "rom": "ulaike",
+  "s": 71.171,
+  "e": 71.631,
+  "score": 0.94,
+  "arabic": true
+ },
+ {
+  "w": "humul",
+  "rom": "humul",
+  "s": 71.671,
+  "e": 71.931,
+  "score": 0.995,
+  "arabic": true
+ },
+ {
+  "w": "fasikun",
+  "rom": "fasikun",
+  "s": 71.991,
+  "e": 72.591,
+  "score": 0.928,
+  "arabic": true
+ },
+ {
+  "w": "sırrına",
+  "rom": "sirrina",
+  "s": 72.711,
+  "e": 73.031,
+  "score": 0.817,
+  "arabic": false
+ },
+ {
+  "w": "mazhar",
+  "rom": "mazhar",
+  "s": 73.091,
+  "e": 73.451,
+  "score": 0.812,
+  "arabic": false
+ },
+ {
+  "w": "olup",
+  "rom": "olup",
+  "s": 73.491,
+  "e": 73.651,
+  "score": 0.995,
+  "arabic": false
+ },
+ {
+  "w": "nefsini",
+  "rom": "nefsini",
+  "s": 74.231,
+  "e": 74.671,
+  "score": 0.935,
+  "arabic": false
+ },
+ {
+  "w": "unutup",
+  "rom": "unutup",
+  "s": 74.711,
+  "e": 75.091,
+  "score": 0.687,
+  "arabic": false
+ },
+ {
+  "w": "hayatın",
+  "rom": "hayatin",
+  "s": 75.551,
+  "e": 75.991,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "zevalini",
+  "rom": "zevalini",
+  "s": 76.071,
+  "e": 76.531,
+  "score": 0.991,
+  "arabic": false
+ },
+ {
+  "w": "düşünmeyerek",
+  "rom": "dusunmeyerek",
+  "s": 76.571,
+  "e": 77.231,
+  "score": 0.979,
+  "arabic": false
+ },
+ {
+  "w": "hususi",
+  "rom": "hususi",
+  "s": 77.712,
+  "e": 78.152,
+  "score": 0.95,
+  "arabic": false
+ },
+ {
+  "w": "kararsız",
+  "rom": "kararsiz",
+  "s": 78.292,
+  "e": 78.792,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "dünyasını",
+  "rom": "dunyasini",
+  "s": 78.852,
+  "e": 79.432,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "aynı",
+  "rom": "ayni",
+  "s": 80.052,
+  "e": 80.272,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "umumî",
+  "rom": "umumi",
+  "s": 80.392,
+  "e": 80.692,
+  "score": 0.879,
+  "arabic": false
+ },
+ {
+  "w": "dünya",
+  "rom": "dunya",
+  "s": 80.792,
+  "e": 81.052,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "gibi",
+  "rom": "gibi",
+  "s": 81.152,
+  "e": 81.332,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "sabit",
+  "rom": "sabit",
+  "s": 81.472,
+  "e": 81.832,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "bilip",
+  "rom": "bilip",
+  "s": 81.892,
+  "e": 82.112,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "kendini",
+  "rom": "kendini",
+  "s": 82.692,
+  "e": 83.072,
+  "score": 0.999,
+  "arabic": false
+ },
+ {
+  "w": "lâyemut",
+  "rom": "layemut",
+  "s": 83.132,
+  "e": 83.552,
+  "score": 0.868,
+  "arabic": false
+ },
+ {
+  "w": "farz",
+  "rom": "farz",
+  "s": 83.612,
+  "e": 83.852,
+  "score": 0.95,
+  "arabic": false
+ },
+ {
+  "w": "ederek",
+  "rom": "ederek",
+  "s": 83.892,
+  "e": 84.213,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "dünyaya",
+  "rom": "dunyaya",
+  "s": 84.773,
+  "e": 85.173,
+  "score": 0.949,
+  "arabic": false
+ },
+ {
+  "w": "saplansa",
+  "rom": "saplansa",
+  "s": 85.253,
+  "e": 85.833,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "şedit",
+  "rom": "sedit",
+  "s": 86.573,
+  "e": 86.873,
+  "score": 0.997,
+  "arabic": false
+ },
+ {
+  "w": "hissiyat",
+  "rom": "hissiyat",
+  "s": 86.933,
+  "e": 87.393,
+  "score": 0.835,
+  "arabic": false
+ },
+ {
+  "w": "ile",
+  "rom": "ile",
+  "s": 87.433,
+  "e": 87.573,
+  "score": 0.979,
+  "arabic": false
+ },
+ {
+  "w": "ona",
+  "rom": "ona",
+  "s": 87.673,
+  "e": 87.813,
+  "score": 0.991,
+  "arabic": false
+ },
+ {
+  "w": "sarılsa",
+  "rom": "sarilsa",
+  "s": 87.913,
+  "e": 88.373,
+  "score": 0.995,
+  "arabic": false
+ },
+ {
+  "w": "onda",
+  "rom": "onda",
+  "s": 88.893,
+  "e": 89.133,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "boğulur",
+  "rom": "bogulur",
+  "s": 89.233,
+  "e": 89.633,
+  "score": 0.955,
+  "arabic": false
+ },
+ {
+  "w": "gider",
+  "rom": "gider",
+  "s": 89.733,
+  "e": 90.033,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "O",
+  "rom": "o",
+  "s": 90.974,
+  "e": 90.994,
+  "score": 0.993,
+  "arabic": false
+ },
+ {
+  "w": "muhabbet",
+  "rom": "muhabbet",
+  "s": 91.054,
+  "e": 91.554,
+  "score": 0.998,
+  "arabic": false
+ },
+ {
+  "w": "onun",
+  "rom": "onun",
+  "s": 91.794,
+  "e": 91.954,
+  "score": 0.989,
+  "arabic": false
+ },
+ {
+  "w": "için",
+  "rom": "icin",
+  "s": 92.014,
+  "e": 92.234,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "hadsiz",
+  "rom": "hadsiz",
+  "s": 92.434,
+  "e": 92.854,
+  "score": 0.86,
+  "arabic": false
+ },
+ {
+  "w": "bela",
+  "rom": "bela",
+  "s": 92.934,
+  "e": 93.134,
+  "score": 0.996,
+  "arabic": false
+ },
+ {
+  "w": "ve",
+  "rom": "ve",
+  "s": 93.234,
+  "e": 93.314,
+  "score": 0.993,
+  "arabic": false
+ },
+ {
+  "w": "azaptır",
+  "rom": "azaptir",
+  "s": 93.394,
+  "e": 93.874,
+  "score": 0.991,
+  "arabic": false
+ }
+]
