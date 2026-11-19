@@ -480,21 +480,27 @@ function kemerSirasiOge() {
   });
 }
 function kemerIcOge() {
-  // dükkân içleri: sıcak, loş (arkada raflar)
+  // dükkân içleri: sıcak, loş (raflar ayrı sprite: duvar kurulduktan sonra çizilerek gelir)
   const { x0, n, aci, ayak, taban, yuk, kemerYuk } = KEMER;
   const sekil = [];
   for (let i = 0; i < n; i++) sekil.push(...sivriKemer(x0 + ayak + i * aci, taban, aci - ayak, yuk, kemerYuk));
   return oge({
-    ad: 's10-carsi-ic', olcek: 1.0, sekil, arka: '#E7B97E', arkaAlfa: 0.9,
+    ad: 's10-carsi-ic-bos', olcek: 1.0, sekil, arka: '#E7B97E', arkaAlfa: 0.9,
     tarama: { ton: (x, y) => clamp(0.45 + 0.4 * clamp((taban - y) / (yuk + kemerYuk))), renkler: [[0, '#E2A866'], [0.6, '#A7663A'], [1, '#6B3E22']], yon: -Math.PI / 2 + 0.1, aralik: 2.8, boy: [20, 50], kal: 1.15, alfa: 0.55, esikler: [0.25, 0.55, 0.8] },
     kontur: null,
+  });
+}
+/** i. kemerin rafları ve raftaki mallar (yerel koordinat = referans ekran) */
+function rafOge(i) {
+  const { x0, ayak, aci, taban } = KEMER;
+  const bx = x0 + ayak + i * aci, w = aci - ayak;
+  return oge({
+    ad: `s10-carsi-raf-${i}`, olcek: 1.0, sekil: cokgen([[bx + 6, taban - 236], [bx + w - 6, taban - 236], [bx + w - 6, taban - 112], [bx + 6, taban - 112]]),
+    zemin: null, arka: null, tarama: null, kontur: null, pay: 6,
     detay: (c, api) => {
-      for (let i = 0; i < n; i++) {
-        const bx = x0 + ayak + i * aci, w = aci - ayak;
-        for (const yy of [taban - 120, taban - 200]) {
-          api.cizgi([[bx + 10, yy], [bx + w - 10, yy]], { renk: '#5C3820', kal: 2, alfa: 0.7 });
-          for (let x = bx + 18; x < bx + w - 18; x += 22) api.dolgu(yuvarlakDikdortgen(x, yy - 26, 14, 26, 5), ['#C8524A', '#3F8C86', '#E2B23E', '#7D6BA6'][Math.floor((x + yy) / 22) % 4], 0.55);
-        }
+      for (const yy of [taban - 120, taban - 200]) {
+        api.cizgi([[bx + 10, yy], [bx + w - 10, yy]], { renk: '#5C3820', kal: 2, alfa: 0.7 });
+        for (let x = bx + 18; x < bx + w - 18; x += 22) api.dolgu(yuvarlakDikdortgen(x, yy - 26, 14, 26, 5), ['#C8524A', '#3F8C86', '#E2B23E', '#7D6BA6'][Math.floor((x + yy) / 22) % 4], 0.55);
       }
     },
   });
@@ -644,6 +650,7 @@ export function bahceHazirla() {
   V.cesme = cesmeOge();
   V.kemer = kemerSirasiOge();
   V.kemerIc = kemerIcOge();
+  V.raflar = [0, 1, 2].map(rafOge);
   V.kubbe = kubbeOge();
   V.minare = minareOge();
   V.tenteler = [tenteOge('#C8524A', '#F4E9D6', 's10-tente-k'), tenteOge('#3F5E9C', '#F4E9D6', 's10-tente-l'), tenteOge('#3F8C6E', '#F6E7C0', 's10-tente-y')];
@@ -874,32 +881,15 @@ export function bahceCizV(g, cam, t, B) {
 export function bahceOnPlan(g, cam, t, B) {
   const va = (sx, sy) => B.varis(sx, sy);
   const d = V.dev[0];
+  const salA = lerp(0.018, 0.005, an(t, va(150, 900) + 0.3, 1.0));
+  // fener zinciri (ağaçtan önce: ip çiçekli dalın içinden çıkar): dev ağacın sağ uçtaki dalından ilk kubbenin sol
+  // omzundaki çengele, daldan çengele doğru kalemle çizilerek uzanır; fenerler ip geçtikçe taşarak belirir
+  if (B.carsi > 0) fenerZinciri(g, cam, t, B, d, salA);
   g.save(); katman(g, cam, d.f);
   // dallar dalga gövdeye varınca kahverengiye döner; her çiçek kümesi dalga kendisine vardığı an açar
-  cicekliCiz(g, V.cicekDev, d.sx, d.sy, 1, t, clamp((t - va(d.sx + 120, d.sy - 300)) / 0.3), d.faz, lerp(0.018, 0.005, an(t, va(150, 900) + 0.3, 1.0)),
+  cicekliCiz(g, V.cicekDev, d.sx, d.sy, 1, t, clamp((t - va(d.sx + 120, d.sy - 300)) / 0.3), d.faz, salA,
     (k) => va(d.sx + k.x, d.sy + k.y) - 0.04);
   g.restore();
-  // fener zinciri: çiçekli dalın ucundan çarşının damına
-  if (B.carsi > 0) {
-    const zu = an(B.carsi, 0.4, 0.5, ease.outCubic);
-    if (zu > 0) {
-      const [ax, ay] = refEkran(cam, 430, 420, 1.0), [bx, by] = refEkran(cam, 1280, 560, 0.97);
-      const ex = lerp(ax, bx, zu), ey = lerp(ay, by, zu);
-      const pts = [];
-      for (let i = 0; i <= 30; i++) { const u = i / 30; pts.push([lerp(ax, ex, u), lerp(ay, ey, u) + Math.sin(u * Math.PI) * 120 * zu]); }
-      konturCiz(g, pts, { renk: '#7A5212', kal: 1.6, kapali: false, titreme: 0.3, tohum: 5 });
-      const renk = ['#E9A23B', '#C8524A', '#3F8C86', '#E2C23E', '#B5506E'];
-      for (let i = 2; i < 30; i += 3) {
-        const [px, py] = pts[i];
-        const yan = B.fener * (0.8 + 0.2 * Math.sin(t * 6 + i));
-        if (yan > 0) M.hale(g, px, py + 12, 40, '#FFE2A0', 0.55 * yan);
-        g.fillStyle = rgba(renk[(i / 3) % 5 | 0], 0.92);
-        g.beginPath(); g.ellipse(px, py + 12, 8, 11, 0, 0, TAU); g.fill();
-        konturCiz(g, elips(px, py + 12, 8, 11)[0].pts, { renk: '#6E4A20', kal: 1.2, tohum: i });
-        konturCiz(g, [[px, py], [px, py + 2]], { renk: '#6E4A20', kal: 1.2, kapali: false, tohum: i + 50 });
-      }
-    }
-  }
   g.save(); katman(g, cam, 1.15);
   for (const o of V.on) {
     const u = pop(t, va(o.sx, Math.min(o.sy, 1600)) + 0.05, 0.5);
@@ -907,58 +897,120 @@ export function bahceOnPlan(g, cam, t, B) {
   }
   g.restore();
 }
+// zincirin bağlandığı dal ucu (dev ağaç yerel koordinatı, en sağdaki çiçek kümesinin alt kenarı) ve kubbe çengeli
+const ZINCIR = { dal: [671 + 34, -1317 + 66], cengel: [-50, -60] };
+function fenerZinciri(g, cam, t, B, d, salA) {
+  const tc = B.tCarsi;
+  const ciz = ease.inOutSine(clamp((t - tc - (CARSI.kubbe + 0.36)) / 0.42));
+  if (ciz <= 0) return;
+  const sh = sallanma(t, d.faz, salA);
+  const [lx, ly] = ZINCIR.dal;
+  const [ax, ay] = refEkran(cam, d.sx + lx + sh * ly, d.sy + ly, d.f);
+  const { x0, ayak, aci, taban, yuk, kemerYuk } = KEMER;
+  const kx = x0 + ayak + (aci - ayak) / 2 + ZINCIR.cengel[0], ky = taban - yuk - kemerYuk - 70 + 4 + ZINCIR.cengel[1];
+  const [bx, by, bz] = refEkran(cam, kx, ky, 0.97);
+  // ip: iki uç arasında sarkan eğri (sarkma ekran ölçeğinde)
+  const sark = 64 * bz;
+  const N = 40, pts = [];
+  for (let i = 0; i <= N; i++) { const u = i / N; pts.push([lerp(ax, bx, u), lerp(ay, by, u) + Math.sin(u * Math.PI) * sark]); }
+  // kubbe omzundaki çengel (ip oraya varmadan önce de yerinde)
+  konturCiz(g, [[bx - 2 * bz, by - 7 * bz], [bx, by], [bx + 4 * bz, by + 4 * bz], [bx + 8 * bz, by + 1 * bz]], { renk: '#6E4A20', kal: 1.6, kapali: false, titreme: 0.2, tohum: 7, alfa: 0.9 * clamp(ciz * 4) });
+  konturCiz(g, pts, { renk: '#7A5212', kal: 1.6, kapali: false, titreme: 0.3, tohum: 5, cizim: ciz });
+  const renk = ['#E9A23B', '#C8524A', '#3F8C86', '#E2C23E', '#B5506E'];
+  for (let i = 4; i < N - 2; i += 4) {
+    const u = i / N;
+    const v = pop(ciz, u + 0.02, 0.18); // ip fenerin yerini geçince
+    if (v <= 0) continue;
+    const [px, py] = pts[i];
+    const yan = B.fener * (0.8 + 0.2 * Math.sin(t * 6 + i));
+    const rx = 8 * bz * v, ry = 11 * bz * v;
+    if (yan > 0) M.hale(g, px, py + 12 * bz, 40 * bz, '#FFE2A0', 0.55 * yan * clamp(v));
+    konturCiz(g, [[px, py], [px, py + 2 * bz]], { renk: '#6E4A20', kal: 1.2, kapali: false, tohum: i + 50 });
+    g.fillStyle = rgba(renk[(i / 4) % 5 | 0], 0.92);
+    g.beginPath(); g.ellipse(px, py + 2 * bz + ry, rx, ry, 0, 0, TAU); g.fill();
+    konturCiz(g, elips(px, py + 2 * bz + ry, rx, ry)[0].pts, { renk: '#6E4A20', kal: 1.2, tohum: i });
+  }
+}
 
+// çarşının kuruluş sırası (sn, B.tCarsi'den): önce bina opak bir bütün olarak tabandan yükselir; duvar tamamlanınca
+// kubbeler, tenteler, tezgâhlar, raflar ve fenerler; sonra mallar; en son satıcılar tezgâhın arkasından yükselir.
+export const CARSI = { bina: [0.08, 0.46], kubbe: 0.5, tente: 0.54, tezgah: 0.58, raf: 0.6, fener: 0.66, mal: 0.92, satici: 0.98, terazi: 1.12 };
+const bas = (u, s = 1.4) => (u <= 0 ? 0 : ease.outBack(clamp(u), s));
 function carsiCiz(g, cam, t, B) {
   const { x0, n, aci, ayak, taban, yuk, kemerYuk } = KEMER;
-  const c = B.carsi;
+  const tc = B.tCarsi;
+  const at = (s0, d) => clamp((t - tc - s0) / d);
   const ust = taban - yuk - kemerYuk - 70;
+  const x1 = x0 + n * aci + ayak;
   g.save(); katman(g, cam, 0.97);
-  const kur = an(c, 0, 0.5, ease.outCubic);
-  // damdaki kubbeler (kemerlerden sonra yükselir)
+  // damdaki kubbeler (duvar tamamlandıktan sonra, bina arkasından yükselir)
   for (let i = 0; i < n; i++) {
     const cx = x0 + ayak + i * aci + (aci - ayak) / 2;
-    const ku = an(c, 0.32 + i * 0.05, 0.4, ease.outBack);
-    if (ku > 0) ogeCiz(g, V.kubbe, cx, ust + 4, { sy: ku, sx: lerp(0.85, 1, clamp(ku)) });
+    const ku = bas(at(CARSI.kubbe + i * 0.08, 0.4), 1.7);
+    if (ku > 0.002) ogeCiz(g, V.kubbe, cx, ust + 4, { sy: ku, sx: lerp(0.85, 1, clamp(ku)) });
   }
-  acarak(g, V.kemerIc, 0, 0, kur, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
-  acarak(g, V.kemer, 0, 0, kur, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
+  // bina: opak (film zeminli) cephe ve iç, tabandan keskin üst kenarla yükselir, hafif taşıp oturur
+  const bu = at(CARSI.bina[0], CARSI.bina[1]);
+  if (bu > 0) {
+    const sy = bas(bu, 1.15), sx = lerp(0.93, 1, ease.outCubic(bu));
+    const mx = (x0 + x1) / 2;
+    g.save();
+    g.translate(mx, taban);
+    g.scale(sx, sy);
+    g.translate(-mx, -taban);
+    ogeCiz(g, V.kemerIc, 0, 0);
+    // raflar: duvar kurulduktan sonra soldan sağa kalemle çizilir
+    for (let i = 0; i < n; i++) acarak(g, V.raflar[i], 0, 0, at(CARSI.raf + i * 0.08, 0.28), { mod: 'sil', yon: 0, yumusak: 0.05 });
+    ogeCiz(g, V.kemer, 0, 0);
+    g.restore();
+  }
   for (let i = 0; i < n; i++) {
     const cx = x0 + ayak + i * aci + (aci - ayak) / 2;
-    const inis = an(c, 0.36 + i * 0.06, 0.4, ease.outBack);
-    if (inis > 0) {
+    // fener: kemerin tepesindeki çengelden zinciriyle iner (büyüyerek; havada asılı duran tam boy fener yok)
+    const inis = bas(at(CARSI.fener + i * 0.09, 0.45), 1.5);
+    if (inis > 0.002) {
       const tepeY = taban - yuk - kemerYuk + 16;
       const fy = tepeY + 74 * inis;
-      const sal = Math.sin(t * 1.6 + i) * 0.05;
+      const sal = Math.sin(t * 1.6 + i) * 0.05 * clamp(inis);
       const fx = cx + Math.sin(sal) * 74;
       konturCiz(g, [[cx, tepeY], [fx, fy]], { renk: '#7A5212', kal: 1.5, kapali: false, titreme: 0.2, tohum: 40 + i });
       const yan = B.fener * (0.85 + 0.15 * Math.sin(t * 7 + i * 2));
       if (yan > 0) { M.hale(g, fx, fy + 38, 150, '#FFD98A', 0.6 * yan); M.hale(g, fx, fy + 38, 40, '#FFF6D6', 0.75 * yan); }
-      ogeCiz(g, V.fener, fx, fy, { r: sal * 0.5, s: 1.15 });
+      ogeCiz(g, V.fener, fx, fy, { r: sal * 0.5, s: 1.15 * clamp(inis / 0.55) });
     }
-    const tu = an(c, 0.22 + i * 0.07, 0.45, ease.outBack);
-    if (tu > 0) ogeCiz(g, V.tenteler[i], cx, taban - yuk + 14, { sy: tu, sx: lerp(0.8, 1, clamp(tu)) });
+    const tu = bas(at(CARSI.tente + i * 0.09, 0.35), 1.6);
+    if (tu > 0.002) ogeCiz(g, V.tenteler[i], cx, taban - yuk + 14, { sy: tu, sx: lerp(0.8, 1, clamp(tu)) });
   }
   g.restore();
   g.save(); katman(g, cam, 0.98);
+  const tezgahUst = taban + 4 - 74;
   for (let i = 0; i < n; i++) {
     const cx = x0 + ayak + i * aci + (aci - ayak) / 2;
-    const su = an(c, 0.45 + i * 0.08, 0.14);
-    if (su > 0) insanOn(g, cx + (i === 1 ? 26 : -16), taban - 8, { ...ON_DURUS, kol: [0.25, i === 2 ? 0.95 : 0.35], dirsek: [0.9, i === 2 ? 1.3 : 0.85], bas: Math.sin(t * 0.8 + i) * 0.05 }, { s: 0.66, alfa: su });
-    const tu = an(c, 0.3 + i * 0.07, 0.4, ease.outBack);
-    if (tu <= 0) continue;
+    const tu = bas(at(CARSI.tezgah + i * 0.09, 0.35), 1.5);
+    // satıcı: tezgâhın arkasından yükselir (tezgâh üstünün altı kırpılır; saydamlıkla gelmez)
+    const su = at(CARSI.satici + i * 0.11, 0.38);
+    if (su > 0 && tu >= 0.999) {
+      const yuksel = (1 - bas(su, 0.7)) * 230;
+      g.save();
+      g.beginPath(); g.rect(cx - 200, tezgahUst - 400, 400, 400); g.clip();
+      insanOn(g, cx + (i === 1 ? 26 : -16), taban - 8 + yuksel, { ...ON_DURUS, kol: [0.25, i === 2 ? 0.95 : 0.35], dirsek: [0.9, i === 2 ? 1.3 : 0.85], bas: Math.sin(t * 0.8 + i) * 0.05 }, { s: 0.66 });
+      g.restore();
+    }
+    if (tu <= 0.002) continue;
     ogeCiz(g, V.tezgah, cx, taban + 4, { sy: tu });
     const my = taban - 74 + 4;
+    const mt = tc + CARSI.mal + i * 0.09;
     if (i === 0) {
       for (let k = 0; k < 15; k++) {
         const row = k < 8 ? 0 : 1, kk = row ? k - 8 : k;
         const mx = cx - 98 + kk * 28 + (row ? 14 : 0), mmy = my - 9 - row * 16;
-        const u = pop(t, B.tCarsi + 0.5 + k * 0.025, 0.4);
+        const u = pop(t, mt + k * 0.022, 0.4);
         if (u > 0) ogeCiz(g, k % 3 === 2 ? V.portakal : V.nar, mx, mmy, { s: u });
       }
     } else if (i === 1) {
       const renk = ['#C8524A', '#E2B23E', '#3F5E9C', '#3F8C86', '#B5506E', '#7D6BA6', '#E9A23B'];
       for (let k = 0; k < 7; k++) {
-        const u = pop(t, B.tCarsi + 0.55 + k * 0.035, 0.4);
+        const u = pop(t, mt + k * 0.035, 0.4);
         if (u <= 0) continue;
         const kx = cx - 108 + k * 36;
         g.save(); g.translate(kx, my); g.scale(u, u);
@@ -971,7 +1023,7 @@ function carsiCiz(g, cam, t, B) {
     } else {
       const renk = [['#E9A23B', '#B5651D'], ['#C8524A', '#8E2E2B'], ['#7D6BA6', '#4E3F7A'], ['#E2C23E', '#9A7A16']];
       for (let k = 0; k < 4; k++) {
-        const u = pop(t, B.tCarsi + 0.6 + k * 0.05, 0.4);
+        const u = pop(t, mt + k * 0.05, 0.4);
         if (u <= 0) continue;
         const kx = cx - 112 + k * 34;
         g.save(); g.translate(kx, my); g.scale(u, u);
@@ -980,8 +1032,9 @@ function carsiCiz(g, cam, t, B) {
         konturCiz(g, [[-15, 0], [-7, -22], [0, -29], [7, -22], [15, 0]], { renk: renk[k][1], kal: 1.4, kapali: false, tohum: 70 + k });
         g.restore();
       }
-      const tu2 = an(t, B.tCarsi + 0.65, 0.4);
-      if (tu2 > 0) { g.save(); g.globalAlpha *= tu2; teraziCiz(g, cx + 70, my, t, B.terazi); g.restore(); }
+      // terazi: tabanından taşmalı büyüyerek (saydamlıkla değil)
+      const tz = pop(t, tc + CARSI.terazi, 0.4);
+      if (tz > 0) { g.save(); g.translate(cx + 70, my); g.scale(tz, tz); teraziCiz(g, 0, 0, t, B.terazi); g.restore(); }
     }
   }
   g.restore();
@@ -993,10 +1046,15 @@ export function alisverisciler(g, cam, t, B) {
   const { x0, ayak, aci } = KEMER;
   g.save(); katman(g, cam, 0.99);
   // birinci tezgâhta, dükkâncının biraz sağında (üst üste binmez), arkası dönük bir müşteri
-  const a1 = an(B.carsi, 0.5, 0.14);
+  const a1 = pop(t, B.tCarsi + CARSI.satici + 0.05, 0.4);
   const x1 = x0 + ayak + aci * 0.5 + 72;
-  if (a1 > 0) yerGolgesi(g, x1 + 6, 1332, 60, 0.2 * a1);
-  if (a1 > 0) insanOn(g, x1, 1330, { ...ON_DURUS, kol: [0.15, 0.5], dirsek: [0.2, 1.1], bas: Math.sin(t * 1.1) * 0.04 }, { s: 0.64, arka: true, alfa: a1 });
+  if (a1 > 0) {
+    yerGolgesi(g, x1 + 6, 1332, 60 * Math.min(1, a1), 0.2);
+    g.save();
+    g.translate(x1, 1330); g.scale(lerp(0.7, 1, Math.min(1, a1)), a1); g.translate(-x1, -1330);
+    insanOn(g, x1, 1330, { ...ON_DURUS, kol: [0.15, 0.5], dirsek: [0.2, 1.1], bas: Math.sin(t * 1.1) * 0.04 }, { s: 0.64, arka: true });
+    g.restore();
+  }
   // ikinci tezgâha sağdan yürüyerek gelen müşteri: durur, dükkâncıya elini uzatır. Yolu başka figürü kesmez
   // (önceki karşıdan geçen yaya dükkâncının ve müşterinin üstünden geçiyordu).
   const hedef = x0 + ayak + aci * 1.5 + 118;

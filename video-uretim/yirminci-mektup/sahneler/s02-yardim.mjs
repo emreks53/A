@@ -20,7 +20,7 @@ const YALT = 1600; // yapının (bulutlara gömülü) alt ucu
 const TH = 230; // kanat kalınlığı (basamak burun çizgisinden köprü kemerine yatay uzaklık)
 export const Y = (k) => YP + (N + 1 - k) * R; // k. basamağın üst yüzü (N+1: sahanlık)
 export const T = (k) => PX0 - (N + 1 - k) * D; // k. basamağın basış yüzünün sol kenarı
-export const F = (k) => T(k) + 9; // k. basamakta ayak bileğinin x'i (topuk burunda, parmak ucu bir sonraki rıhtı geçmez)
+export const F = (k) => T(k) + 8.3; // k. basamakta ayak bileğinin x'i (taban basamağı doldurur: topuk burunda, burun ucu rıhta değer)
 const ayna = (x) => 2 * AX - x;
 
 export const G = {
@@ -293,24 +293,28 @@ export function nurCiz(ctx, x, y, r, t, { guc = 1, alfa = 1, isin = 1, hale = 1 
 }
 
 // ================================================================ merdiven çıkan adam (ters kinematik)
-const P_ADIM = 0.355; // basamak periyodu
-const SW = 0.29; // salınım süresi
-export const S1 = 8.3; // ilk salınımın başlangıcı
-const kaydir = (j) => S1 + (j - 1) * P_ADIM;
-const AYAK0 = [T(0) + 2, T(0) + 9]; // başlangıçta [uzak, yakın] ayak bileği x
+// Basamak başına bir adım: her ayak ikişer basamak çıkar (yakın ayak 3, uzak 4, yakın 5…). Basan ayak yerinde kalır
+// (bilek sabit; topuk kalkarken burun ucu sabit), salınan ayak basamak burunlarının üstünden geçen ve hedef basamağa
+// dik inen bir yol izler; yol, ayakkabının dış hattı bütün basamak köşelerinin üstünde kalacak biçimde hesaplanır.
+export const K0 = 2; // adamın belirdiği basamak (iki ayağı da bunda)
+const P_ADIM = 0.42; // basamak periyodu (~143 adım/dk: istekli ama telaşsız)
+const SW = 0.33; // salınım süresi (aradaki ~0,09 sn çift destek)
+export const S1 = 8.42; // ilk salınımın başlangıcı (belirme bitince)
+const kaydir = (i) => S1 + i * P_ADIM;
+const AYAK0 = [F(K0) - 1.5, F(K0)]; // başlangıçta [uzak, yakın] ayak bileği x
 const FA = AX + 9, FB = AX - 11; // sahanlıkta son duruş (yakın ayak önde)
 // salınımlar: f: 1 yakın (ön) ayak, 0 uzak (arka) ayak; x0,k0 → x1,k1; s başlangıç, d süre; th: topuk kalkışı
 const SALINIM = [];
-SALINIM.push({ f: 1, x0: AYAK0[1], k0: 0, x1: F(1), k1: 1, s: kaydir(1), d: SW, th: 0.3, lift: 14 });
-SALINIM.push({ f: 0, x0: AYAK0[0], k0: 0, x1: F(2), k1: 2, s: kaydir(2), d: SW, th: 0.42, lift: 12 });
-for (let j = 3; j <= N + 1; j++) SALINIM.push({ f: j % 2, x0: F(j - 2), k0: j - 2, x1: F(j), k1: j, s: kaydir(j), d: SW, th: 0.45, lift: 12 });
+SALINIM.push({ f: 1, x0: AYAK0[1], k0: K0, x1: F(K0 + 1), k1: K0 + 1, s: kaydir(0), d: SW, th: 0.22 });
+SALINIM.push({ f: 0, x0: AYAK0[0], k0: K0, x1: F(K0 + 2), k1: K0 + 2, s: kaydir(1), d: SW, th: 0.5 });
+for (let j = K0 + 3; j <= N + 1; j++) SALINIM.push({ f: (j - K0) % 2, x0: F(j - 2), k0: j - 2, x1: F(j), k1: j, s: kaydir(j - K0 - 1), d: SW, th: 0.5 });
 {
-  const son = SALINIM[SALINIM.length - 1]; // sahanlığa basış (j = N+1, uzak ayak)
-  const s9 = son.s + son.d + 0.06;
-  SALINIM.push({ f: 1, x0: F(N), k0: N, x1: FA, k1: N + 1, s: s9, d: 0.36, th: 0.38, lift: 12 });
-  SALINIM.push({ f: 0, x0: F(N + 1), k0: N + 1, x1: FB, k1: N + 1, s: s9 + 0.36 + 0.02, d: 0.32, th: 0.24, lift: 8 });
+  const son = SALINIM[SALINIM.length - 1]; // sahanlığa basış (uzak ayak, sahanlığın kenarı)
+  const s9 = son.s + son.d + (P_ADIM - SW);
+  SALINIM.push({ f: 1, x0: F(N), k0: N, x1: FA, k1: N + 1, s: s9, d: 0.38, th: 0.42, kemer: 5 });
+  SALINIM.push({ f: 0, x0: F(N + 1), k0: N + 1, x1: FB, k1: N + 1, s: s9 + 0.38 + 0.07, d: 0.34, th: 0.3, kemer: 3 });
 }
-const HR = 0.12; // topuk kalkışı penceresi
+const HR = 0.11; // topuk kalkışı penceresi (salınımdan önce)
 export const ADAM = {
   gorun: 8.16, // belirme
   inis: SALINIM.map((s) => s.s + s.d), // ayak basma anları
@@ -321,39 +325,147 @@ export const ADAM = {
 for (const s of SALINIM) if (ADAM.basamakInis[s.k1] === undefined) ADAM.basamakInis[s.k1] = s.s + s.d;
 ADAM.dur = SALINIM[SALINIM.length - 1].s + SALINIM[SALINIM.length - 1].d;
 
+// ayakkabının dış hattı (insan.mjs'teki ayak parçası; çizim noktası bilek - (0, 2)), alt yarısı
+const AYAK_HAT = svg('M-13 -6C-13 -12 -4 -14 6 -12C14 -10 22 -4 31 0C38 3 40 9 37 13L-12 13C-15 13 -16 10 -15 6Z', 1.2)[0].pts.filter(([, y]) => y > -4);
+const UC = [36.5, 13]; // topuk kalkarken dönülen burun noktası (tabanın ön ucu)
+const rotP = ([x, y], a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
+/** Topuğu θ kadar kalkmış ayağın bilek noktası (dünya) */
+function topukKalkik(x, k, th) {
+  const toe = [x + UC[0] * S, Y(k) - 13 * S + UC[1] * S]; // burun ucu basamağın üstünde sabit
+  const q = rotP(UC, th);
+  return [toe[0] - q[0] * S, toe[1] - q[1] * S + 2 * S]; // ayak parçası bilekten 2 birim yukarıda çizilir
+}
+/** Bilek (ax, ay), ayak açısı a3 iken ayakkabı dış hattının dünya noktaları */
+export function ayakHatti(ax, ay, a3) {
+  return AYAK_HAT.map((p) => { const q = rotP(p, -a3); return [ax + q[0] * S, ay - 2 * S + q[1] * S]; });
+}
+/** Bilek ax'te, açı a3 iken ayakkabının hiçbir noktası basamağa girmesin diye bileğin en alçak y'si */
+function gerekY(ax, a3) {
+  let m = Infinity;
+  for (const p of AYAK_HAT) {
+    const q = rotP(p, -a3);
+    m = Math.min(m, yuzey(ax + q[0] * S) - (q[1] - 2) * S);
+  }
+  return m;
+}
+// salınımda ayak açısı (yatay ilerlemeye bağlı): burun aşağıda kalkar, ortada burun hafif yukarı, düz basar
+const salAci = (s, v) => (v < 0.45 ? lerp(-s.th, 0.12, ease.inOutSine(v / 0.45)) : lerp(0.12, 0, ease.inOutSine(clamp((v - 0.45) / 0.45))));
+// salınım yolu: önce dik yüksel (bir üst basamağın burnunu aş), basamaklara paralel ilerle, hedefin üstünden dik in
+const PAY = 3.5; // ayakkabı ile basamak köşesi arasındaki en küçük açıklık
+function yolKur(s) {
+  const [xs, ys] = topukKalkik(s.x0, s.k0, s.th);
+  const xe = s.x1, ye = Y(s.k1) - ANK;
+  const n = Math.max(10, Math.round(Math.abs(xe - xs) / 2));
+  const ax = [], req = [];
+  for (let i = 0; i <= n; i++) {
+    const v = i / n, x = lerp(xs, xe, v);
+    ax.push(x);
+    req.push(gerekY(x, salAci(s, v)) - PAY);
+  }
+  // aşındır ve yumuşat: sonuç her noktada gereksinimin üstünde (daha küçük y) kalır
+  const W_ = 5, ix = (i) => Math.max(0, Math.min(n, i));
+  const er = req.map((_, i) => { let m = Infinity; for (let d = -W_; d <= W_; d++) m = Math.min(m, req[ix(i + d)]); return m; });
+  const bl = er.map((_, i) => { let t = 0; for (let d = -W_; d <= W_; d++) t += er[ix(i + d)]; return t / (2 * W_ + 1); });
+  let pts = [[xs, ys]];
+  for (let i = 0; i <= n; i++) pts.push([ax[i], Math.min(bl[i], lerp(ys, ye, i / n)) - (s.kemer || 2) * Math.sin(Math.PI * i / n)]);
+  pts.push([xe, ye]);
+  // köşeleri yumuşat (Chaikin), uçlar sabit
+  for (let it = 0; it < 2; it++) {
+    const q = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      if (i > 0) q.push([0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]]);
+      if (i < pts.length - 2) q.push([0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]]);
+    }
+    q.push(pts[pts.length - 1]);
+    pts = q;
+  }
+  const L = [0];
+  for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  s.yol = { pts, L, xs, ys, xe, ye };
+}
+for (const s of SALINIM) yolKur(s);
+function yolNokta(s, q) {
+  const { pts, L } = s.yol;
+  const h = q * L[L.length - 1];
+  let i = 1;
+  while (i < L.length - 1 && L[i] < h) i++;
+  const u = (h - L[i - 1]) / Math.max(1e-9, L[i] - L[i - 1]);
+  return [lerp(pts[i - 1][0], pts[i][0], u), lerp(pts[i - 1][1], pts[i][1], u)];
+}
+// salınımın zaman eğrisi: topuk kalkışının hızıyla sürer, ayak basamağa yavaşlayarak ama süzülmeden oturur
+const salZaman = (u) => 0.6 * ease.inOutSine(u) + 0.2 * ease.outCubic(u) + 0.2 * u;
+
 // ayakların t anındaki duruş konumu (salınımda değilken)
 function ayakYer(f, t) {
-  let x = AYAK0[f], k = 0;
+  let x = AYAK0[f], k = K0;
   for (const s of SALINIM) if (s.f === f && t >= s.s + s.d) { x = s.x1; k = s.k1; }
   return { x, k };
 }
-// kalça anahtarları: her basışta arka (destek) ayak üzerinden
-const ETA = 0.955, BETA = 0.45;
+/** t anında f ayağının durumu: { x, y (bilek), a3 (ayak açısı; - topuk kalkık) } */
+export function ayak(f, t) {
+  let x = AYAK0[f], k = K0;
+  for (const s of SALINIM) {
+    if (s.f !== f) continue;
+    if (t < s.s - HR) break;
+    if (t < s.s) {
+      const th = s.th * ease.inSine((t - (s.s - HR)) / HR);
+      const [bx, by] = topukKalkik(s.x0, s.k0, th);
+      return { x: bx, y: by, a3: -th };
+    }
+    if (t < s.s + s.d) {
+      const [bx, by] = yolNokta(s, salZaman((t - s.s) / s.d));
+      const v = clamp((bx - s.yol.xs) / (s.yol.xe - s.yol.xs));
+      return { x: bx, y: by, a3: salAci(s, v) };
+    }
+    x = s.x1; k = s.k1;
+  }
+  return { x, y: Y(k) - ANK, a3: 0 };
+}
+/** Ayağın taban noktaları (dünya), denetim için */
+export function ayakTabani(f, t) {
+  const a = ayak(f, t);
+  return ayakHatti(a.x, a.y, a.a3);
+}
+
+// kalça anahtarları: her basışta arka (destek) ayak üzerinden; aradaki yükseliş tek ayak desteğinde yoğunlaşır
+const ETA = 0.988, BETA = 0.45;
 const KALCA = [];
 {
   const x0 = (AYAK0[0] + AYAK0[1]) / 2;
-  const yDur = Y(0) - ANK - 0.99 * LEG;
+  const yDur = Y(K0) - ANK - 0.99 * LEG;
   KALCA.push({ t: 7.0, x: x0, y: yDur });
-  KALCA.push({ t: S1 - 0.2, x: x0, y: yDur });
-  KALCA.push({ t: S1 - 0.02, x: x0 + 3, y: Y(0) - ANK - 0.975 * LEG });
+  KALCA.push({ t: S1 - 0.3, x: x0, y: yDur });
+  KALCA.push({ t: S1 - 0.02, x: x0 + 4, y: Y(K0) - ANK - 0.972 * LEG });
   const sonIki = SALINIM.length - 2;
-  SALINIM.forEach((s, j) => {
-    if (j >= sonIki) return;
+  const anahtar = (j) => {
+    const s = SALINIM[j];
     const tb = s.s + s.d;
     const destek = ayakYer(1 - s.f, tb);
     const hx = destek.x + BETA * D;
     const dx = hx - destek.x;
-    KALCA.push({ t: tb, x: hx, y: Y(destek.k) - ANK - Math.sqrt((ETA * LEG) ** 2 - dx * dx) });
-  });
+    return { t: tb, x: hx, y: Y(destek.k) - ANK - Math.sqrt((ETA * LEG) ** 2 - dx * dx) };
+  };
+  for (let j = 0; j < sonIki; j++) {
+    const a = anahtar(j);
+    KALCA.push(a);
+    // bir sonraki basışa kadar: arka ayak itip kalkarken kalça az yükselir, öndeki bacak gerilirken çok
+    if (j + 1 < sonIki) {
+      const b = anahtar(j + 1);
+      const ara = (u, w) => ({ t: lerp(a.t, b.t, u), x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, w) });
+      KALCA.push(ara(0.5, 0.6));
+    }
+  }
   // sahanlıkta son iki adım: kalça iki ayağın arasında, arka ayak kalkmadan yükselmez
   const s9 = SALINIM[sonIki], s10 = SALINIM[sonIki + 1];
   const yuk = (dx, oran) => YP - ANK - Math.sqrt((oran * LEG) ** 2 - dx * dx);
   const m9 = (s9.x1 + s10.x0) / 2;
+  KALCA.push({ t: s9.s + s9.d * 0.5, x: lerp(KALCA[KALCA.length - 1].x, m9, 0.5), y: lerp(KALCA[KALCA.length - 1].y, yuk(Math.abs(s9.x1 - s10.x0) / 2, 0.965), 0.6) });
   KALCA.push({ t: s9.s + s9.d, x: m9, y: yuk(Math.abs(s9.x1 - s10.x0) / 2, 0.965) });
-  const xm = lerp(m9, (FA + FB) / 2, 0.45);
-  KALCA.push({ t: s10.s + s10.d * 0.5, x: xm, y: yuk(Math.abs(FA - xm), 0.965) });
-  KALCA.push({ t: s10.s + s10.d, x: (FA + FB) / 2 + 1, y: yuk(Math.abs(FA - FB) / 2, 0.97) });
-  KALCA.push({ t: s10.s + s10.d + 0.45, x: (FA + FB) / 2 + 1, y: YP - ANK - 0.99 * LEG });
+  const xm = lerp(m9, (FA + FB) / 2, 0.5);
+  KALCA.push({ t: s10.s + s10.d * 0.5, x: xm, y: yuk(Math.abs(FA - xm), 0.968) });
+  KALCA.push({ t: s10.s + s10.d, x: (FA + FB) / 2 + 1, y: yuk(Math.abs(FA - FB) / 2, 0.975) });
+  KALCA.push({ t: s10.s + s10.d + 0.5, x: (FA + FB) / 2 + 1, y: YP - ANK - 0.99 * LEG });
   KALCA.push({ t: 30, x: (FA + FB) / 2 + 1, y: YP - ANK - 0.99 * LEG });
 }
 // zaman düğümlü Catmull-Rom (Hermite)
@@ -380,50 +492,6 @@ export function kalcaTaban(t) {
   return { x: z.x, y: z.y };
 }
 
-// ayak tabanı noktaları (ayak sprite'ının yerel koordinatı; çizim noktası bil - (0,2))
-const TABAN = [[-13, 13], [8, 13], [33, 12.5], [39, 8]];
-const UC = [31, 13]; // topuk kalkarken dönülen burun noktası
-const rotP = ([x, y], a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
-/** Topuğu θ kadar kalkmış ayağın bilek noktası (dünya) */
-function topukKalkik(x, k, th) {
-  const toe = [x + UC[0] * S, Y(k) - 13 * S + UC[1] * S];
-  const q = rotP(UC, th);
-  return [toe[0] - q[0] * S, toe[1] - q[1] * S];
-}
-/** t anında f ayağının durumu: { x, y (bilek), a3 (ayak açısı; - topuk kalkık) } */
-export function ayak(f, t) {
-  const liste = SALINIM.filter((s) => s.f === f);
-  let x = AYAK0[f], k = 0;
-  for (const s of liste) {
-    if (t < s.s - HR) break;
-    if (t < s.s) {
-      const th = s.th * ease.inOutSine((t - (s.s - HR)) / HR);
-      const [bx, by] = topukKalkik(s.x0, s.k0, th);
-      return { x: bx, y: by, a3: -th };
-    }
-    if (t < s.s + s.d) {
-      const u = (t - s.s) / s.d;
-      const [xs, ys] = topukKalkik(s.x0, s.k0, s.th);
-      const xe = s.x1, ye = Y(s.k1) - ANK;
-      // önce yüksel (ara basamağın ve hedef basamağın burnunu aş), sonra ilerle, en sonda basamağa dik in:
-      // parmak ucu hiçbir an basamağın içinden geçmez, ayak havada sarkmaz
-      const yTop = Math.min(ys, ye) - s.lift;
-      const ex = ease.inOutSine(clamp((u - 0.12) / 0.76));
-      const bx = lerp(xs, xe, ex);
-      const by = u < 0.5 ? lerp(ys, yTop, ease.outCubic(u / 0.5)) : lerp(yTop, ye, ease.inOutSine((u - 0.5) / 0.5));
-      const a3 = u < 0.4 ? lerp(-s.th, 0.1, ease.inOutSine(u / 0.4)) : lerp(0.1, 0, ease.inOutSine((u - 0.4) / 0.6));
-      return { x: bx, y: by, a3 };
-    }
-    x = s.x1; k = s.k1;
-  }
-  return { x, y: Y(k) - ANK, a3: 0 };
-}
-/** Ayağın taban noktaları (dünya), denetim için */
-export function ayakTabani(f, t) {
-  const a = ayak(f, t);
-  const r = -a.a3;
-  return TABAN.map((p) => { const q = rotP(p, r); return [a.x + q[0] * S, a.y - 2 * S + q[1] * S]; });
-}
 const L1 = 92;
 function ik(hx, hy, ax, ay) {
   const dx = ax - hx, dy = ay - hy;
@@ -440,14 +508,10 @@ export const zamanEgri = (t, noktalar) => {
   }
   return noktalar[noktalar.length - 1][1];
 };
+const ayrilma = (t) => clamp((ayak(1, t).x - ayak(0, t).x) / (2.2 * D), -1, 1);
 /** t anında adamın çizim parametreleri: insanYan(ctx, x, y, poz, { s: S }) */
 export function adamDurum(t) {
   const h = kalcaTaban(t);
-  // basamaklarda duruş ortasında hafif yükselme
-  const L = ADAM.inis;
-  for (let j = 0; j < L.length - 1; j++) {
-    if (t > L[j] && t < L[j + 1]) { h.y -= 2.2 * Math.sin(Math.PI * (t - L[j]) / (L[j + 1] - L[j])); break; }
-  }
   const ox = h.x, oy = h.y + 196 * S; // figür kökü (kalça yerelde (0,-196))
   const kx = [-3, 3];
   const poz = { serbest: true, zipla: 0, kalca: [0, 0], diz: [0, 0], bilek: [0, 0] };
@@ -462,15 +526,20 @@ export function adamDurum(t) {
     poz.bilek[i] = a.a3 - s.a2;
     maxOran = Math.max(maxOran, s.oran);
   }
-  const t1 = S1 - 0.1, t2 = ADAM.dur;
-  const yuru = zamanEgri(t, [[t1, 0], [t1 + 0.3, 1], [t2 - 0.35, 1], [t2 + 0.1, 0]]);
-  const ayr = clamp((ayaklar[1].x - ayaklar[0].x) / (2.2 * D), -1, 1);
-  const kolOn = lerp(0.06, 0.05 - 0.34 * ayr, yuru), kolArka = lerp(-0.05, 0.02 + 0.34 * ayr, yuru);
+  const t1 = S1 - 0.15, t2 = ADAM.dur;
+  const yuru = zamanEgri(t, [[t1, 0], [t1 + 0.35, 1], [t2 - 0.4, 1], [t2 + 0.15, 0]]);
+  // kollar bacaklarla zıt fazda; ayakların ayrılmasını biraz gecikmeli ve yumuşak izler
+  const ayr = (ayrilma(t - 0.13) + 2 * ayrilma(t - 0.07) + ayrilma(t - 0.01)) / 4;
+  const kolOn = lerp(0.06, 0.04 - 0.36 * ayr, yuru), kolArka = lerp(-0.05, 0.03 + 0.36 * ayr, yuru);
   poz.omuz = [kolArka, kolOn];
-  poz.dirsek = [lerp(0.12, 0.22 + 0.3 * Math.max(0, kolArka), yuru), lerp(0.16, 0.22 + 0.3 * Math.max(0, kolOn), yuru)];
+  poz.dirsek = [lerp(0.12, 0.26 + 0.32 * Math.max(0, kolArka), yuru), lerp(0.16, 0.26 + 0.32 * Math.max(0, kolOn), yuru)];
   const nefes = 0.006 * Math.sin(t * 2.2);
-  poz.govde = zamanEgri(t, [[S1 - 0.2, -0.02], [S1 + 0.15, 0.17], [t2 - 0.75, 0.17], [t2 - 0.2, 0.05], [t2 + 0.25, 0.0], [t2 + 0.6, -0.035]]) + nefes;
-  poz.bas = zamanEgri(t, [[8.2, -0.16], [S1 + 0.2, 0.04], [t2 - 0.6, 0.04], [t2 - 0.1, -0.06], [t2 + 0.25, -0.06], [t2 + 0.75, -0.38]]);
+  // gövde hafif öne eğik; her basışın ardından (itişte) biraz daha eğilir
+  const itis = 0.016 * Math.cos(TAU * (t - (S1 + SW + 0.06)) / P_ADIM) * yuru;
+  poz.govde = zamanEgri(t, [[S1 - 0.3, -0.02], [S1 + 0.15, 0.2], [t2 - 0.8, 0.2], [t2 - 0.2, 0.05], [t2 + 0.25, 0.0], [t2 + 0.6, -0.035]]) + nefes + itis;
+  // baş: dünyaya göre sabit açı (ileri, merdivenin yukarısına bakar); sonda nura kalkar
+  const basDunya = zamanEgri(t, [[8.2, -0.17], [S1 + 0.25, 0.03], [t2 - 0.5, 0.03], [t2 + 0.1, -0.05], [t2 + 0.15, -0.05], [t2 + 0.65, -0.4]]);
+  poz.bas = basDunya - 0.6 * poz.govde;
   poz.el = [0, 0];
   return { x: ox, y: oy, poz, maxOran, ayaklar };
 }

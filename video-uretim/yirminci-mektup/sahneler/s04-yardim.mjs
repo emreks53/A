@@ -91,6 +91,113 @@ export function tepe({ w, ad, renk = 'cayir', olcek = 1, X0 = 0, Yalt = 2300, si
 /** Yumuşak tümsekler toplamı: taban - Σ yükseklik·çan(x) */
 export const tumsekler = (taban, liste) => (x) => taban - liste.reduce((s, [cx, yuk, gen]) => s + yuk * Math.exp(-Math.pow((x - cx) / gen, 2)), 0);
 
+/** Ot sapı: tabanı geniş, ucu sivri kalem darbesi (pts tabandan uca) */
+function otSapi(ctx, pts, kal) {
+  const n = pts.length;
+  const sol = [], sag = [];
+  for (let i = 0; i < n; i++) {
+    const i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1);
+    let tx = pts[i1][0] - pts[i0][0], ty = pts[i1][1] - pts[i0][1];
+    const tl = Math.hypot(tx, ty) || 1;
+    tx /= tl; ty /= tl;
+    const u = i / (n - 1);
+    const h = (kal / 2) * Math.pow(1 - u, 0.85) * (0.55 + 0.45 * Math.min(1, u / 0.12));
+    sol.push([pts[i][0] - ty * h, pts[i][1] + tx * h]);
+    sag.push([pts[i][0] + ty * h, pts[i][1] - tx * h]);
+  }
+  ctx.beginPath();
+  ctx.moveTo(sol[0][0], sol[0][1]);
+  for (let i = 1; i < n; i++) ctx.lineTo(sol[i][0], sol[i][1]);
+  for (let i = n - 1; i >= 0; i--) ctx.lineTo(sag[i][0], sag[i][1]);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * Uzun otlu çayır katmanı (ön planda: adam bunun içinde durur; arkada: adamın arkasında süren çayır). Gövdenin üst
+ * kenarı konturlu bir sırt DEĞİL: tırtıklı ot öbekleri silueti; üstüne gövdenin içinden yükselen ot sapları (tabanı
+ * geniş, ucu sivri kalem darbeleri; arka sıra kısa ve koyu, ön sıra uzun ve açık uçlu) biner; sapların arasından
+ * arkadaki görünür. taban(x): dünya x'inde gövde üst kenarının dünya y'si. k: sap boylarının ölçeği.
+ * Döner: { oge, ust(x), X0, Y0 } (çizim: ogeCiz(ctx, oge, X0, Y0)).
+ */
+export function otluCayir({ w, ad, X0 = 0, Yalt = 2200, taban, olcek = 1.3, tohum = 3, k = 1, soluk = 0, aralik = 3.4 }) {
+  const r0 = rng(tohum * 17 + 5);
+  // tırtıklı üst kenar: sık, düzensiz ot öbekleri (sivri tepeler)
+  const sivri = [];
+  for (let x = -6; x < w + 6; x += r0.ara(4, 9)) sivri.push([x, r0.ara(6, 26) * k, r0.ara(3.5, 8)]);
+  const tepeH = (x) => { let m = 0; for (const [xc, hc, wc] of sivri) { const d = Math.abs(x - xc); if (d < wc) m = Math.max(m, hc * Math.pow(1 - d / wc, 1.3)); } return m; };
+  const xs = [];
+  for (let x = 0; x <= w; x += 2) xs.push(x);
+  const ys = xs.map((x) => taban(x + X0) - tepeH(x));
+  const Y0 = Math.min(...ys);
+  const pts = xs.map((x, i) => [x, ys[i] - Y0]);
+  const h = Yalt - Y0;
+  pts.push([w, h], [0, h]);
+  const P = soluk
+    ? { arka: '#CFE6B8', tara: [[0, '#C6E2AE'], [0.55, '#A2CC8C'], [1, '#76A970']] }
+    : { arka: '#BFE0A2', tara: [[0, '#B5DA98'], [0.55, '#86BE74'], [1, '#4F8E55']] };
+  const ust = (x) => taban(x + X0) - Y0; // yerel
+  const o = oge({
+    ad, olcek, sekil: cokgen(pts), arka: P.arka, arkaAlfa: 0.85, arkaTasma: false, arkaBulanik: 2, pay: 140,
+    tarama: [
+      // gövde: dikine, hafif eğik kısa ot taraması; üst kenarın hemen altı otların gölgesinde, derine doğru hafif koyulaşır
+      { ton: TON.gurultulu((x, y) => { const d = y - ust(x); return clamp(0.28 + 0.3 * clamp(d / 700) + 0.32 * Math.exp(-Math.max(0, d) / 46)); }, 0.16, 0.012, tohum), renkler: P.tara, yon: -Math.PI / 2 + 0.16, aralik, boy: [14, 40], kal: 1.15, esikler: [0.25, 0.52, 0.78], alfa: 0.48 },
+    ],
+    kontur: null,
+    detay: (ctx) => {
+      const r = rng(tohum * 53 + 11);
+      const RENKLER = soluk ? ['#5F9663', '#6EA46A', '#7FB375', '#93C284', '#AED59A', '#C3E1AE'] : ['#3B7444', '#4A8A51', '#5E9A5E', '#6EA964', '#84BC72', '#A3CF88'];
+      // üç sıra: arka (kısa, koyu, kenarda), orta, ön (uzun, açık uçlu, gövdenin daha içinden çıkar)
+      const SIRA = [
+        { adim: [1.6, 3.2], boy: [16, 40], derin: [-4, 8], renk: [0, 2], alfa: [0.78, 0.95], kal: [1.8, 2.6] },
+        // taban örtüsü: kenarın hemen altından çıkan sık, opak orta boy saplar (arkadakinin alt sınırı seçilmesin)
+        { adim: [1.4, 2.8], boy: [22, 48], derin: [4, 14], renk: [0, 3], alfa: [0.82, 0.97], kal: [2.0, 2.9] },
+        { adim: [1.9, 3.8], boy: [28, 66], derin: [6, 18], renk: [1, 4], alfa: [0.72, 0.94], kal: [1.9, 2.8] },
+        { adim: [3.0, 6.5], boy: [44, 96], derin: [16, 34], renk: [2, 5], alfa: [0.7, 0.95], kal: [2.1, 3.0] },
+      ];
+      for (const s of SIRA) {
+        for (let x = 1; x < w - 1; x += r.ara(...s.adim)) {
+          const boy = r.ara(...s.boy) * k * (r() < 0.12 ? 1.3 : 1);
+          const y0 = ust(x) + r.ara(...s.derin) * k;
+          const egim = r.ara(-0.42, 0.42), kivrim = r.ara(-0.12, 0.12);
+          const sap = [];
+          for (let i = 0; i <= 9; i++) {
+            const u = i / 9;
+            sap.push([x + egim * boy * u * u + kivrim * boy * Math.sin(u * Math.PI), y0 - boy * u * (1 - 0.12 * Math.abs(egim) * u)]);
+          }
+          ctx.fillStyle = rgba(RENKLER[r.tam(s.renk[0], s.renk[1])], r.ara(...s.alfa));
+          otSapi(ctx, sap, r.ara(...s.kal) * Math.sqrt(k));
+        }
+      }
+    },
+  });
+  return { oge: o, ust: taban, X0, Y0 };
+}
+
+/** Saplı kır çiçeği (canlı çizim, dünya koordinatında): taban (x, y), sap boyu, eğim (rad), salınım açısı */
+export function sapliCicek(ctx, c, t) {
+  const sal = c.egim + 0.05 * Math.sin(t * 1.15 + c.faz) + 0.02 * Math.sin(t * 2.3 + c.faz * 1.7);
+  const ux = Math.sin(sal), uy = -Math.cos(sal);
+  const bx = c.x + ux * c.boy, by = c.y + uy * c.boy;
+  // sap: hafif kavisli, tabanda kalın, başa doğru incelir
+  const kv = c.kivrim * c.boy;
+  const pts = [];
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10;
+    pts.push([c.x + ux * c.boy * u - uy * kv * Math.sin(u * Math.PI), c.y + uy * c.boy * u + ux * kv * Math.sin(u * Math.PI)]);
+  }
+  ctx.fillStyle = rgba('#4A8A51', 0.92);
+  otSapi(ctx, pts, 3.2);
+  // sapın ortasından çıkan tek yaprak
+  const m = pts[4];
+  const yy = c.yaprakYon;
+  const yp = [];
+  for (let i = 0; i <= 8; i++) { const u = i / 8; yp.push([m[0] + yy * 22 * u + ux * 10 * u, m[1] - 14 * u * u + uy * 6 * u]); }
+  ctx.fillStyle = rgba('#5E9A5E', 0.9);
+  otSapi(ctx, yp, 5.5);
+  ogeCiz(ctx, c.oge, bx, by, { s: c.s, sy: c.s * 0.82, r: sal * 0.8 });
+}
+
 // ---------------------------------------------------------------- önden erkek figür (insanOn kopyası + baş kaldırma)
 const kapsul = (r0, L, r1) => svg(`M${-r0} 0A${r0} ${r0} 0 0 1 ${r0} 0L${r1} ${L}A${r1} ${r1} 0 0 1 ${-r1} ${L}Z`);
 const kapsulKontur = (r0, L, r1) => svg(`M${r0} 0L${r1} ${L}A${r1} ${r1} 0 0 1 ${-r1} ${L}L${-r0} 0`).map((p) => ({ ...p, kapali: false }));

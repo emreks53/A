@@ -25,18 +25,16 @@ function s09Kamera(t) {
   const e = clamp((t - b.t) / (c.t - b.t));
   return { x: SON.x, y: SON.y, z: Math.exp(lerp(Math.log(b.z), Math.log(c.z), e)), r: Math.PI / 2 };
 }
+// s09 sonunda adam ~18 px; s10 başlar başlamaz kamera adama yaklaşır (Z_ODAK'ta ~45 px), böylece "Eğer sahibini"de
+// inen ışık görünür bir adamın üstüne iner. "bulsa"dan sonra (ilk itme bitmeden, duraksamadan) ışığa dalış.
+const Z_ODAK = 0.27, Z_DALIS = 0.5;
 function kamera(t, Z) {
   if (t <= 96.5) return s09Kamera(t);
-  // yavaş itme, "bulsa"dan sonra adama hızlanan dalış (hafif dönüşle)
-  const u1 = ease.inOutSine(clamp((t - 96.5) / (Z.bul - 96.5)));
-  let z = Math.exp(lerp(Math.log(0.1105), Math.log(0.123), u1));
-  let r = Math.PI / 2;
-  if (t > Z.bul) {
-    const u2 = ease.inCubic(clamp((t - Z.bul) / (Z.gecis + 0.25 - Z.bul)));
-    z = Math.exp(lerp(Math.log(0.123), Math.log(0.42), u2));
-    r += 0.07 * u2;
-  }
-  return { x: SON.x, y: SON.y, z, r };
+  const u1 = ease.inOutSine(clamp((t - 96.5) / 0.8));
+  const t2 = Z.bul - 0.22;
+  const u2 = ease.inCubic(clamp((t - t2) / (Z.gecis + 0.25 - t2)));
+  const z = Math.exp(Math.log(0.1105) + Math.log(Z_ODAK / 0.1105) * u1 + Math.log(Z_DALIS / Z_ODAK) * u2);
+  return { x: SON.x, y: SON.y, z, r: Math.PI / 2 + 0.07 * u2 };
 }
 
 // adamın s09 sonundaki duruşu (elleri başında, hafifçe sallanır); ışık gelince elleri iner, başı kalkar
@@ -160,12 +158,19 @@ export function labirentCiz(ctx, t, Z) {
   try { sonKareCiz(g, t); } finally { Object.assign(SON_KAMERA, yedek); }
   const inceA = clamp((cam.z - 0.14) / 0.04);
   if (inceA > 0) {
-    LB.seviyeCiz(g, cam, ince, { alfa: inceA });
-    adamCiz(g, cam, t, Z);
-    kenarKarart(g, cam, 1 - isik * 0.6);
-  } else if (t > Z.sah) {
-    adamCiz(g, cam, t, Z); // elleri iner
+    // ince seviye kendi kenar kararmasıyla ayrı tamponda hazırlanır, sonra karışır: tabanın (s09'un zaten kararmış)
+    // karesi ikinci kez kararmaz (geçişte parlaklık çukuru olmaz)
+    const ti = tampon('lab-ince');
+    const gi = ti.getContext('2d');
+    LB.seviyeCiz(gi, cam, ince, { alfa: 1 });
+    kenarKarart(gi, cam, 1 - isik * 0.6);
+    g.save();
+    g.globalAlpha = inceA;
+    g.drawImage(ti, 0, 0);
+    g.restore();
   }
+  // 96,5'ten sonra adam (s10'un, sabit ölçekte) ışığın üstüne ayrıca çizilir (6. adım); tabandaki s09 adamı ondan küçük
+  // ya da eşit kalır ve altında örtülür.
   // ışık geldikçe kenar kararması açılır
   if (isik > 0) {
     g.save();
@@ -232,18 +237,35 @@ export function labirentCiz(ctx, t, Z) {
     for (const sx of [-1, 1]) konturCiz(ctx, [[ax + (sx * yolEn) / 2, ay - 6], [ax + (sx * yolEn) / 2, yolUst + 30]], { renk: '#D9A93F', kal: 1.8, alfa: 0.75 * (1 - an(t, Z.gecis - 0.3, 0.4)), kapali: false, titreme: 0.3, tohum: 30 + sx });
     M.hale(ctx, ax, Math.max(0, yolUst + 30), 100, '#FFF1C4', 0.5 * (1 - yolU * 0.6));
   }
-  // 5) adam ışıkta (silinen alanın üstünde de görünsün)
-  if (Rs > 1 || yolU > 0) adamCiz(ctx, cam, t, Z);
+  // 5) adamın çevresi: s09 bittikten sonra ışık gelmeden önce de göz onu bulsun (çevre hafifçe kararır, adamın
+  // durduğu yer sıcak ve aydınlık bir benek olur)
+  const az = cam.z / 0.1105;
+  const odak = an(t, 96.5, 0.35, ease.inOutSine) * (1 - an(t, Z.bul, 0.5));
+  if (odak > 0.003) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    const R0 = 70 * Math.sqrt(az), R1 = 560 * Math.sqrt(az);
+    const gr = ctx.createRadialGradient(ax, ay, R0, ax, ay, R1);
+    gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(1, `rgba(${255 - 48 * odak},${255 - 50 * odak},${255 - 30 * odak},1)`);
+    ctx.fillStyle = gr;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    M.hale(ctx, ax, ay, 80 * Math.sqrt(az), '#FFDC8E', 0.62 * odak);
+  }
 
-  // 6) huzme ve havuz
+  // 6) huzme ve havuz; adam ışıkta, havuzun üstünde (ışık onu silmez)
   if (isik > 0) {
-    const az = cam.z / 0.1105;
     huzme(ctx, W / 2 + 30, -260, lerp(30, 250, isik), ax, ay, (16 + 10 * sicaklik) * az + 8, isik, {});
     M.hale(ctx, ax, ay, 90 * Math.sqrt(az) * (0.7 + 0.3 * sicaklik), '#FFF0BE', 0.6 * isik);
     M.hale(ctx, ax, ay, 26 * Math.sqrt(az), '#FFFFFF', 0.5 * isik);
     M.isinlar(ctx, ax, ay, 14 * Math.sqrt(az), 60 * Math.sqrt(az) * (0.6 + 0.4 * sicaklik), t, { sayi: 22, alfa: 0.45 * isik * sicaklik, kal: Math.max(1.4, 1.6 * Math.sqrt(az)), tohum: 5, renk: '#E2B44C' });
-    zerreler(ctx, ax - 120, ay - 900, 240, 900, t, { sayi: 22, alfa: 0.7 * isik, hiz: 60, tohum: 8, boy: 2.6 });
   }
+  if (t > 96.5) {
+    adamCiz(ctx, cam, t, Z);
+    if (isik > 0) M.hale(ctx, ax, ay, 24 * Math.sqrt(az), '#FFF6DA', 0.22 * isik); // adamın üstünde sıcak ışık
+  }
+  if (isik > 0) zerreler(ctx, ax - 120, ay - 900, 240, 900, t, { sayi: 22, alfa: 0.7 * isik, hiz: 60, tohum: 8, boy: 2.6 });
   // 7) erime zerreleri (cepheden yükselen ışık)
   if (Rs > 10 && Rs < 2400) {
     const r = rng(77);

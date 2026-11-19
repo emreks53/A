@@ -370,3 +370,31 @@ export function sisCiz(g, serit, y, t, { hiz = 20, olcek = 1, alfa = 1, xa = -60
 export function sallanma(t, faz, A) {
   return A * (0.62 * Math.sin(t * 1.25 + faz) + 0.38 * Math.sin(t * 2.6 + faz * 1.7 + 0.8));
 }
+
+/**
+ * Kalemle çizilmiş uçan kuş: açık 'V' (martı) biçiminde tek darbe; uçlar incelir, gövde ortada en kalın. Kanatlar
+ * çırpar (k = +1 yukarı V, -1 aşağı). s = 1'de kanat açıklığı ~44 px. Düz dolgu siluet yok.
+ */
+export function kusV(ctx, x, y, s, t, { faz = 0, renk = '#766D90', alfa = 1, hiz = 8.5, kal = 2.6 } = {}) {
+  if (alfa <= 0.01 || s <= 0) return;
+  const k = Math.sin(t * hiz + faz);
+  const govde = [0, 0];
+  const kanat = (sx) => {
+    const dirsek = [sx * 9.5, -4.5 - 6.5 * k], uc = [sx * 21.5, -1 - 14 * k];
+    const kn = [2 * dirsek[0] - (govde[0] + uc[0]) / 2, 2 * dirsek[1] - (govde[1] + uc[1]) / 2];
+    const p = [];
+    for (let i = 0; i <= 7; i++) {
+      const u = i / 7, a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, c = u * u;
+      p.push([a * govde[0] + b * kn[0] + c * uc[0], a * govde[1] + b * kn[1] + c * uc[1]]);
+    }
+    return p;
+  };
+  const sol = kanat(-1).reverse(), sag = kanat(1);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.fillStyle = rgba(renk, 0.92 * clamp(alfa));
+  darbe(ctx, [...sol, ...sag.slice(1)], kal, { incelme: 0.42, sivri: 0.75, dalga: 0 });
+  ctx.beginPath(); ctx.ellipse(0.4, 1.1, 2.4, 1.7, 0, 0, TAU); ctx.fill(); // gövde
+  ctx.restore();
+}

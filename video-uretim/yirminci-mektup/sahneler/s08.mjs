@@ -13,11 +13,11 @@ import { oge, ogeCiz, TON } from '../motor/kalem.mjs';
 import { cokgen, donustur, yaprak } from '../motor/sekil.mjs';
 import { kameraYolu, kameraIle, salinim, ekranda } from '../motor/sahne.mjs';
 import { kb, ks } from '../motor/zaman.mjs';
-import { insanYan, DURUS } from '../motor/insan.mjs';
+import { insanYan, insanOn, DURUS, ON_DURUS, OLCU } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import * as D from './s08-dunya.mjs';
 import * as SV from './s08-servet.mjs';
-import { yereOturt, pozKaristir, DIZ_COK, BUZUL, SIPER, TAHT, AYAKTA, yuruyenPlan, avareBolumler, ADIM_DONGU } from './s08-insan.mjs';
+import { yereOturt, pozKaristir, DIZ_COK, BUZUL, SIPER, TAHT, AYAKTA, kalabalikKur } from './s08-insan.mjs';
 
 const T = {
   bas: 67.2,
@@ -30,7 +30,7 @@ const T = {
   kac: kb('kaç'), para: kb('para'), eder: kb('eder'), son: 82.9,
 };
 // plaka geçişleri
-const GB = { t: T.avare - 0.1, sure: 0.1 }; // sokak → meydan (göğe savrulma, gökte kısa karışım)
+const GB = { t: T.avare - 0.27, sure: 0.27 }; // sokak → meydan (iki plaka aynı yönde, aynı hızla yükselirken çapraz geçiş)
 const GD = { t: T.semere - 0.1, sure: 0.36 }; // meydan → ağaç/ova
 const GRI = 'saturate(0.42) brightness(0.96) contrast(0.95)';
 
@@ -42,7 +42,7 @@ function bulanik(kam, t) {
   const dx = -(b.x - a.x) * z * 0.5, dy = -(b.y - a.y) * z * 0.5;
   return Math.hypot(dx, dy) > 10 ? [dx, dy] : null;
 }
-const havuz = [];
+const havuz = [], havuzB = [];
 let derinlik = 0;
 function katman(ctx, fn, { alfa = 1, filtre = null, hareket = null } = {}) {
   if (alfa <= 0.003) return;
@@ -58,22 +58,38 @@ function katman(ctx, fn, { alfa = 1, filtre = null, hareket = null } = {}) {
   g.setTransform(sc, 0, 0, sc, 0, 0);
   derinlik++;
   try { fn(g); } finally { derinlik--; }
+  let kaynak = b;
+  if (hareket) {
+    // sürekli yönlü bulanıklık (kutu süzgeç): her geçişte iki kaydırılmış kopyanın ortalaması, kayma her geçişte
+    // yarıya iner → 2^n eşit aralıklı örnek (ayrık kopya basamağı / hayalet yok). Katman içeriği opaktır.
+    // Her geçiş AYRI bir tampona yazılır: @napi-rs/canvas tuvalden tuvale çizimi erteleyebildiği için iki tampon
+    // arasında gidiş-dönüş (A → B → A) döngüsü kare kaydedilirken yanlış içerik verir.
+    const hx = hareket[0] * sc, hy = hareket[1] * sc;
+    const L = Math.hypot(hx, hy);
+    const n = Math.max(1, Math.min(5, Math.ceil(Math.log2(L / 1.2))));
+    const zincir = (havuzB[derinlik] ||= []);
+    let src = b, d = 0.5;
+    for (let k = 0; k < n; k++) {
+      let dst = zincir[k];
+      if (!dst || dst.width !== w || dst.height !== h) { dst = tuval(w, h); zincir[k] = dst; }
+      const q = dst.getContext('2d');
+      q.setTransform(1, 0, 0, 1, 0, 0);
+      q.globalCompositeOperation = 'source-over'; q.filter = 'none';
+      q.globalAlpha = 1;
+      q.drawImage(src, 0, 0); // kenar şeritleri için taban
+      q.drawImage(src, -hx * d / 2, -hy * d / 2);
+      q.globalAlpha = 0.5;
+      q.drawImage(src, hx * d / 2, hy * d / 2);
+      src = dst;
+      d /= 2;
+    }
+    kaynak = src;
+  }
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (filtre) ctx.filter = filtre;
-  if (hareket) {
-    // kayma yönünde kopyaların ortalaması (yönlü bulanıklık)
-    const [hx, hy] = hareket;
-    const N = Math.max(2, Math.min(9, Math.ceil((Math.hypot(hx, hy) * sc) / 5)));
-    for (let k = 0; k < N; k++) {
-      const u = k / (N - 1) - 0.5;
-      ctx.globalAlpha = alfa / (k + 1);
-      ctx.drawImage(b, m.e + hx * sc * u, m.f + hy * sc * u);
-    }
-  } else {
-    ctx.globalAlpha = alfa;
-    ctx.drawImage(b, m.e, m.f);
-  }
+  ctx.globalAlpha = alfa;
+  ctx.drawImage(kaynak, m.e, m.f);
   ctx.restore();
 }
 
@@ -103,6 +119,7 @@ function ruzgarListesi(tohum, baslar, { y0 = 300, y1 = 1300, L = [500, 900], sur
 }
 
 // ================================================================ PLAKA A: perişan sokak
+const KY = 700; // geçişte kameranın yükselme hızı (dünya px/sn); iki plakada aynı
 const SOKAK = { yer: 1190, adamX: 540, adamY: 1330, s: 0.8, evS: 1.35 };
 const EV_TANIM = [
   { x: -330, w: 230, h: 300, catiH: 115, egri: 14, sarkma: 12, renk: 2, r: 0.03, pencereler: [{ x: 34, y: 170, w: 44, h: 56, tur: 'kirik' }, { x: 140, y: 170, w: 44, h: 56, tur: 'tahta' }] },
@@ -120,15 +137,19 @@ const kamA = kameraYolu([
   { t: 67.2, x: 622, y: 1105, z: 1.47 },
   { t: T.evet + 0.05, x: 618, y: 1100, z: 1.52, e: ease.inOutSine },
   { t: T.dunyada + 0.55, x: 566, y: 1080, z: 1.08, e: ease.inOutCubic },
-  { t: GB.t - 0.32, x: 576, y: 1070, z: 1.05, e: ease.inOutSine },
-  { t: GB.t + 0.04, x: 586, y: -420, z: 0.96, e: ease.inCubic },
+  // kamera yükselir: ivmelenip geçiş boyunca sabit hızla (≈ 700 px/sn) yukarı kayar
+  { t: GB.t - 0.295, x: 570, y: 1074, z: 1.06, e: ease.inOutSine },
+  { t: GB.t, x: 574, y: 1074 - KY * 0.295 / 2, z: 1.04, e: ease.inQuad },
+  { t: GB.t + GB.sure + 0.03, x: 580, y: 1074 - KY * 0.295 / 2 - KY * (GB.sure + 0.03), z: 1.0, e: ease.lin },
 ]);
 
 // ================================================================ PLAKA B: yüksekten meydan
 const MEYDAN = { cesmeX: 540, cesmeY: 868 };
 const kamB = kameraYolu([
-  { t: GB.t, x: 540, y: -460, z: 1.0 },
-  { t: GB.t + 0.58, x: 545, y: 912, z: 1.07, e: ease.outCubic },
+  // A ile aynı hızla yükselerek gelir (çatıların ardından meydanı açar), sonra yavaşlayıp oturur
+  { t: GB.t, x: 545, y: 1026 + KY * GB.sure, z: 1.04 },
+  { t: GB.t + GB.sure, x: 545, y: 1026, z: 1.055, e: ease.lin },
+  { t: GB.t + GB.sure + (2 * (1026 - 912)) / KY, x: 545, y: 912, z: 1.07, e: ease.outQuad },
   { t: GD.t, x: 566, y: 890, z: 1.0, e: ease.inOutSine },
   { t: GD.t + GD.sure + 0.05, x: 572, y: 880, z: 1.2, e: ease.inCubic },
 ]);
@@ -197,31 +218,9 @@ function hazirlaB() {
   R.meydan = D.meydanOge({ ad: 's08-meydan', x0: -320, x1: 1400, y0: 300, y1: 2050, vx: 560, vy: -1700, olcek: 1.0, tohum: 4 });
   R.cesme = D.kuruCesmeOge(1.4);
   R.onCati = D.onCatiOge({ ad: 's08-oncati', w: 1700, h: 520, olcek: 1.0 });
-  // kalabalık: farklı derinliklerde, rastgele yürüyen, dönüp duran küçük adamlar
-  const r = rng(808);
-  R.kalabalik = [];
-  const N = 27;
-  for (let i = 0; i < N; i++) {
-    let y = lerp(430, 1290, (i + r.ara(0.1, 0.9)) / N);
-    if (y > 755 && y < 990) y = r() < 0.5 ? 752 - r.ara(0, 30) : 992 + r.ara(0, 40);
-    const s = lerp(0.2, 0.4, (y - 430) / 860);
-    const x0 = r.ara(-40, 1120);
-    const yon = r() < 0.5 ? 1 : -1;
-    // sınırlar içinde kalacak bölümler
-    const bol = avareBolumler(1000 + i, 4.2);
-    let x = x0, yy = yon;
-    const duzeltilmis = [];
-    for (const b of bol) {
-      if (b.tur === 'yuru') {
-        const yol = ADIM_DONGU * (b.hiz ?? 1) * Math.max(0, b.sure - 0.22) * s;
-        if ((yy > 0 && x + yol > 1110) || (yy < 0 && x - yol < -30)) { duzeltilmis.push({ tur: 'don', sure: 0.26 }); yy = -yy; }
-        x += yy * yol;
-      } else if (b.tur === 'don') yy = -yy;
-      duzeltilmis.push(b);
-    }
-    const t0 = GB.t - r.ara(0.3, 1.0);
-    R.kalabalik.push({ y, s, yon, plan: yuruyenPlan({ t0, x0, yon, s, bolumler: duzeltilmis }) });
-  }
+  // kalabalık: farklı derinliklerde, rastgele yürüyen, dönüp duran küçük adamlar; aynı derinlikte iç içe geçmezler
+  R.kalabalik = kalabalikKur({ tohum: 808, N: 27, tBas: GB.t, tGor: [GB.t - 0.3, GD.t + GD.sure + 0.1], dyK: 0.9, dxK: 140, engeller: [{ x0: MEYDAN.cesmeX - 250, x1: MEYDAN.cesmeX + 250, y0: 680, y1: MEYDAN.cesmeY }] });
+  const r = rng(809);
   R.savB = [];
   const kagitlar = [0, 1, 2].map((k) => D.kagitOge(k, 2));
   const yapraklar = [0, 1, 2, 3].map((k) => D.kuruYaprakOge(k, 2));
@@ -274,6 +273,7 @@ function hazirlaD() {
   const tam = D.birlestir([{ o: R.yigin.oge, x: OVA.adamX, y: OVA.adamY + 2 }, { o: R.taht, x: OVA.adamX, y: tahtY }], 2.0);
   R.toz = new SV.TozaDagilma({ altin: tam.tuval, x0: -tam.ox, y0: -tam.oy, res: 2.0, tohum: 61, sayi: 5200, sure: SVT.dagSure + 0.3, kum: 0.08, harita: (x, y, n) => 0.68 * y + 0.24 * x + 0.12 * n.fbm(x * 9, y * 9, 3) });
   R.tozB = tam.sinir;
+  inisHazirla();
   // taç tozu: tahttaki baş açısıyla döndürülmüş taç
   const basA = TAHT.govde * 0.6 + TAHT.bas;
   const tacTam = D.birlestir([{ o: R.tac, x: 0, y: 0, r: -basA }], 5);
@@ -307,6 +307,74 @@ function hazirlaD() {
   for (let i = 0; i < 9; i++) R.savD.push({ o: i % 4 === 0 ? rb.sec(kagitlar) : rb.sec(yapraklar), t0: T.hami + i * 0.22 + rb.ara(0, 0.1), x0: -100, y0: rb.ara(300, 1300), hiz: rb.ara(520, 760), faz: rb() * TAU, genlik: rb.ara(30, 80), yuksel: rb.ara(-30, 60), donus: rb.ara(-6, 6), cevir: rb.ara(3, 7), s: rb.ara(0.8, 1.2) });
   for (const p of R.savD) if (p.y0 > 1330 && p.y0 < 1690) p.y0 -= 380;
 }
+// ---------------------------------------------------------------- taht: oturuş ve iniş
+// kalçanın temas yüksekliği (ayak tabanından, adam birimi): BUZUL → TAHT karışımında (b = 0..1)
+const KALCA_TABLO = [];
+function kalcaYuk(b) {
+  if (!KALCA_TABLO.length) for (let k = 0; k <= 40; k++) { const z = yereOturt(pozKaristir(BUZUL, TAHT, k / 40)); KALCA_TABLO.push(OLCU.kalca + z.zipla - 16); }
+  const f = clamp(b) * 40, i = Math.min(39, Math.floor(f));
+  return lerp(KALCA_TABLO[i], KALCA_TABLO[i + 1], f - i);
+}
+// verilen kalça yüksekliğini veren karışım (tablo tekdüze artar)
+function kalcaKarisim(h) {
+  kalcaYuk(0);
+  if (h <= KALCA_TABLO[0]) return 0;
+  for (let k = 1; k <= 40; k++) if (KALCA_TABLO[k] >= h) return (k - 1 + (h - KALCA_TABLO[k - 1]) / (KALCA_TABLO[k] - KALCA_TABLO[k - 1])) / 40;
+  return 1;
+}
+// Taht toza dönerken iniş: kalçanın altında kalan (henüz dağılmamış) en üst katı yüzey dağılma ilerlemesiyle aşağı
+// iner; kalça bu yüzeyi izler. Yüzey eğrisinin ileriye dönük kısa ortalaması alınır: kalça hiçbir karede boşluğun
+// üstünde kalmaz (gerekirse dağılan toza hafifçe gömülür), oturaktan basamağa geçiş de yumuşar.
+const INIS = { hz: 240, sure: 1.3, pencere: 0.03 };
+function inisHazirla() {
+  const tz = R.toz, S = OVA.S;
+  const oturak = R.tahtY - 106 * S; // minder üstünün biraz üstü
+  const py0 = Math.max(0, Math.floor((oturak - tz.y0) * tz.res));
+  const k0 = Math.round((OVA.adamX - 40 - tz.x0) * tz.res), k1 = Math.round((OVA.adamX + 6 - tz.x0) * tz.res);
+  const kalan = (cx, py, u) => { const i = py * tz.w + cx; return tz.A[i * 4 + 3] > 90 && tz.M[i] > u + 0.02; };
+  const destek = new Float32Array(401);
+  for (let n = 0; n <= 400; n++) {
+    const u = n / 400, ys = [];
+    for (let cx = k0; cx <= k1; cx += 2) {
+      let y = OVA.adamY;
+      for (let py = py0; py < tz.h - 5; py++) {
+        if (!kalan(cx, py, u)) continue;
+        // tek tük kalan kum tanesi değil, katı yüzey: altındaki 4 pikselin en az 3'ü de duruyor
+        let say = 0;
+        for (let q = 1; q <= 4; q++) if (kalan(cx, py + q, u)) say++;
+        if (say >= 3) { y = tz.y0 + py / tz.res; break; }
+      }
+      ys.push(Math.min(y, OVA.adamY));
+    }
+    ys.sort((a, b) => a - b);
+    destek[n] = ys[Math.floor(ys.length / 2)];
+  }
+  const destekY = (t) => {
+    const f = clamp((t - SVT.dag) / SVT.dagSure) * 400, i = Math.min(399, Math.floor(f));
+    return lerp(destek[i], destek[i + 1], f - i);
+  };
+  const H0 = R.tahtY - kalcaYuk(1) * S; // tahtta kalça teması
+  const H1 = OVA.adamY - kalcaYuk(0) * S; // yerde büzülmüş kalça teması
+  const pay = H0 - destekY(SVT.dag); // minderde gömülme
+  const N = Math.ceil(INIS.sure * INIS.hz) + 1, P = Math.round(INIS.pencere * INIS.hz);
+  const Sy = new Float32Array(N + P);
+  for (let n = 0; n < N + P; n++) Sy[n] = destekY(SVT.dag + n / INIS.hz) + pay;
+  R.inisH = new Float32Array(N);
+  for (let n = 0; n < N; n++) {
+    let top = 0;
+    for (let q = 0; q <= P; q++) top += Sy[n + q];
+    R.inisH[n] = clamp(top / (P + 1), H0, H1);
+  }
+  R.inisH0 = H0; R.inisH1 = H1;
+}
+// iniş durumu: k (0 tahtta, 1 yerde), kalça teması y
+function inisDurum(t) {
+  if (t < SVT.dag) return { k: 0, H: R.inisH0 };
+  const f = Math.min(R.inisH.length - 1, (t - SVT.dag) * INIS.hz), i = Math.min(R.inisH.length - 2, Math.floor(f));
+  const H = lerp(R.inisH[i], R.inisH[i + 1], f - i);
+  return { k: clamp((H - R.inisH0) / (R.inisH1 - R.inisH0)), H };
+}
+
 function sonYaprakOge() {
   const boy = 26, en = 13;
   return oge({
@@ -385,6 +453,24 @@ function plakaA(ctx, t) {
 }
 
 // ---------------------------------------------------------------- çizim: B
+// kalabalıktan bir adam. Dönüş kâğıt kart gibi daraltılmaz: yan → (önden ya da arkadan) → ters yan; yan pozlar dönüşe
+// yakın yalnız hafifçe (en az 0,7) basılır, figür hiçbir karede çizgiye inmez.
+const ON_KALABALIK = { ...ON_DURUS, kol: [0.1, 0.1], dirsek: [0.12, 0.12], bacak: 0.06 };
+function kalabalikFigur(gg, f, q) {
+  if (q.don >= 0) {
+    const A = 0.34, u = q.don;
+    if (u >= A && u <= 1 - A) {
+      const arka = (f.arka ? 1 : 0) ^ (Math.round(q.donT0 * 10) & 1);
+      insanOn(gg, q.x, f.y, ON_KALABALIK, { s: f.s, olcek: 0.5, arka: !!arka });
+      return;
+    }
+    const e = u < A ? u / A : (1 - u) / A;
+    const yon = u < A ? q.yon0 : -q.yon0;
+    insanYan(gg, q.x, f.y, q.poz, { s: f.s, yon: yon * (1 - 0.3 * e * e), olcek: 0.5 });
+    return;
+  }
+  insanYan(gg, q.x, f.y, q.poz, { s: f.s, yon: q.k >= 0 ? 1 : -1, olcek: 0.5 });
+}
 function plakaB(ctx, t) {
   zeminDoldur(ctx, '#C9C4D3');
   const c = kamB(t);
@@ -414,7 +500,7 @@ function plakaB(ctx, t) {
     let cesme = false;
     for (const { f, q } of durum) {
       if (!cesme && f.y > MEYDAN.cesmeY) { ogeCiz(gg, R.cesme, MEYDAN.cesmeX, MEYDAN.cesmeY); cesme = true; }
-      insanYan(gg, q.x, f.y, q.poz, { s: f.s, yon: q.k, olcek: 0.5 });
+      kalabalikFigur(gg, f, q);
     }
     if (!cesme) ogeCiz(gg, R.cesme, MEYDAN.cesmeX, MEYDAN.cesmeY);
   }, 1), { filtre: GRI });
@@ -441,13 +527,15 @@ function adamPozu(t) {
   // taç gelince başını hafifçe kaldırır
   const kalk = an(t, SVT.tac + 0.1, 0.35) * (1 - an(t, SVT.yigin, 0.3));
   if (kalk > 0) p = { ...p, bas: p.bas - 0.25 * kalk };
-  const taht = an(t, SVT.yigin + 0.05, 0.6, ease.inOutCubic);
+  // taht büyürken kalça oturak yüksekliğine çıkar (oturak yüksekliği taht ölçeğiyle büyür)
+  const tb = tahtBuyume(t);
+  const taht = tb <= 0 ? 0 : kalcaKarisim(96 * tb);
   if (taht > 0) p = pozKaristir(p, TAHT, taht);
   const gurur = an(t, T.sultan, 0.4) * (1 - an(t, T.kac, 0.25));
   if (gurur > 0) p = { ...p, bas: p.bas - 0.1 * gurur, govde: p.govde - 0.03 * gurur };
-  const in0 = t >= SVT.dag ? clamp(inis(t) * 1.15) : 0;
+  const in0 = inis(t);
   if (in0 > 0) p = pozKaristir(p, { ...BUZUL, bas: BUZUL.bas + 0.04 }, in0);
-  if (inis(t) >= 1) {
+  if (in0 >= 1) {
     const nefes = Math.sin(t * 2.0) * 0.01;
     p = { ...p, govde: p.govde + nefes };
   }
@@ -455,12 +543,11 @@ function adamPozu(t) {
 }
 // dağılan yüzeyle birlikte iniş (0 tahtta, 1 yerde)
 function inis(t) {
-  if (t < SVT.dag) return 0;
-  const u = clamp((t - SVT.dag) / SVT.dagSure);
-  const b = R.tozB;
-  const yuzey = b.y0 + b.h * clamp((1.07 * u - 0.19) / 0.68);
-  const k = clamp((yuzey + 46 - R.tahtY) / (OVA.adamY - R.tahtY));
-  return ease.inOutSine(k);
+  return inisDurum(t).k;
+}
+// taht büyümesi (0..1, ölçek taşmasız)
+function tahtBuyume(t) {
+  return t <= SVT.yigin - 0.02 ? 0 : ease.outCubic(clamp((t - (SVT.yigin - 0.02)) / 0.4));
 }
 function yiginDurum(t) {
   const u = clamp((t - SVT.yigin) / SVT.yiginSure);
@@ -468,9 +555,11 @@ function yiginDurum(t) {
   const k = clamp(u / 0.8);
   const sy = u <= 0 ? 0 : (0.12 * ease.outCubic(clamp(u / 0.25)) + 0.88 * ease.inOutCubic(k)) * (1 + 0.06 * Math.sin(Math.PI * clamp((u - 0.55) / 0.45)));
   const sx = u <= 0 ? 0 : lerp(0.45, 1, ease.outCubic(u));
-  const tahtS = pop(t, SVT.yigin - 0.02, 0.38);
+  // taht 0,4 sn'de büyür, hafifçe taşıp oturur (adam aynı eğriyle oturur)
+  const tb = tahtBuyume(t);
+  const tahtS = tb * (1 + 0.05 * Math.sin(Math.PI * clamp((t - (SVT.yigin - 0.02) - 0.2) / 0.3)));
   const tahtY = OVA.adamY + 2 + R.ustY * sy - SV.KAIDE * OVA.S + 3;
-  return { sy, sx, tahtS, tahtY };
+  return { sy, sx, tahtS, tahtY, tb };
 }
 
 function plakaD(ctx, t) {
@@ -563,8 +652,12 @@ function plakaD(ctx, t) {
   // adam
   const poz = yereOturt(adamPozu(t));
   let adamY = OVA.adamY;
-  if (t >= SVT.yigin) adamY = Math.min(OVA.adamY, yd.tahtY);
-  if (t >= SVT.dag) adamY = lerp(R.tahtY, OVA.adamY, inis(t));
+  if (yd.tb > 0) adamY = lerp(OVA.adamY, Math.min(OVA.adamY, yd.tahtY), yd.tb);
+  if (t >= SVT.dag) {
+    // kalça teması dağılan yüzeyi izler; ayak tabanı karışık pozun kalça yüksekliği kadar aşağıda
+    const ind = inisDurum(t);
+    adamY = Math.min(OVA.adamY, ind.H + kalcaYuk(1 - ind.k) * OVA.S);
+  }
   let bas = null;
   katman(ctx, (g) => kameraIle(g, cam, (gg) => {
     const e = insanYan(gg, OVA.adamX, adamY, poz, { s: OVA.S, yon: -1, olcek: 1.2 });
@@ -696,6 +789,12 @@ export default {
     insanYan(c, 0, 0, DURUS, { s: 0.1, olcek: 0.5 });
     insanYan(c, 0, 0, DURUS, { s: 0.1, olcek: 1 });
     insanYan(c, 0, 0, DURUS, { s: 0.1, olcek: 1.2 });
+    insanOn(c, 0, 0, ON_KALABALIK, { s: 0.1, olcek: 0.5 });
+    insanOn(c, 0, 0, ON_KALABALIK, { s: 0.1, olcek: 0.5, arka: true });
+    // katman tamponları (tam çözünürlük; karede tuval ayrılmasın): iki derinlik + bulanıklık zinciri
+    for (let d = 0; d < 2; d++) havuz[d] ||= tuval(W, H);
+    havuzB[0] ||= [];
+    for (let k = 0; k < 5; k++) havuzB[0][k] ||= tuval(W, H);
   },
   ciz(ctx, t) {
     const aB = an(t, GB.t, GB.sure, ease.inOutSine);

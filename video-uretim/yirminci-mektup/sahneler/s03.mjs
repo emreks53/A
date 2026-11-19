@@ -51,7 +51,7 @@ function kamera(t) {
 // paralaks çarpanları
 const F = { gok: 0.5, bulut: 0.45, cin: 0.5, uzak: 0.55, orta: 0.78, yakin: 0.92, on: 1.1 };
 
-let gok, bulutlar, tUzak, tOrta, tYakin, tOn, zeminA, zeminG, aura, cinler, figurler, yapraklar, cicekler, agacSol, agacSag, uzakAgaclar, meyve;
+let gok, bulutlar, tUzak, tOrta, tYakin, tOn, zeminA, zeminG, yikama, aura, cinler, figurler, yapraklar, cicekler, agacSol, agacSag, uzakAgaclar, meyve;
 let katman = [], auraTuval = [], golge = null; // figür satırları için ekran dışı tuvaller
 
 // alev kümesi biçimleri: [dx, boy, en, s1, kv, faz, yön (Y: kümenin yönü), tabanU]
@@ -100,6 +100,7 @@ export default {
       sirt: tumsekler(1712, [[-40, 70, 330], [1150, 64, 330], [560, 14, 200]]) });
     zeminA = zeminOge('altin');
     zeminG = zeminOge('gul');
+    yikama = zeminOge('altin', { tarama: false });
     aura = M.nurAura(170, 1.2);
     meyve = M.meyveOge(8, 1.5, 'kirmizi');
     agacSol = M.agac({ boy: 250, tohum: 33, olcek: 1.3 });
@@ -135,7 +136,7 @@ export default {
       .forEach(([x, s, tip, yon, poz, dy]) => ekle(0, x, tOrta.ust(x) + dy, s, tip, yon, poz));
     // B: yakın tepede orta boy (ayaklar altyazı bandının üstünde); açılan kollar komşuya değmeyecek aralıkta
     [[96, 0.48, 'yan', 1, 'gogus', 1394], [262, 0.5, 'on', 1, 'avuc', 1374], [404, 0.46, 'on', 1, 'V', 1348], [562, 0.52, 'on', 1, 'tek', 1402],
-      [714, 0.48, 'on', 1, 'avuc', 1366], [856, 0.45, 'on', 1, 'V', 1342], [990, 0.5, 'yan', -1, 'uzan', 1390]]
+      [708, 0.48, 'on', 1, 'avuc', 1366], [848, 0.45, 'on', 1, 'V', 1342], [1008, 0.5, 'yan', -1, 'uzan', 1390]]
       .forEach(([x, s, tip, yon, poz, y]) => ekle(1, x, y, s, tip, yon, poz));
     // C: önde, alt köşelerde büyük iki figür (omuz üstü çekim)
     ekle(2, 150, 2090, 1.12, 'on', 1, 'V');
@@ -211,8 +212,10 @@ export default {
     const madalyonGuc = 0.62 * an(t, 16.6, 1.1, ease.inOutSine) + 0.5 * parla + 0.25 * nabiz;
     const saadet = an(t, T.parlak + 0.1, 1.0, ease.inOutSine);
     const sel = an(t, DALIS.bas + 0.22, 0.36, ease.inOutSine); // dalışta ışık seli
-    // ışık zemini manzarayı madalyon ekranı doldurmadan tamamen örter (soluk manzara hayaleti kalmasın)
-    const zeminDalis = an(t, DALIS.bas + 0.2, 0.28, ease.inOutSine);
+    // dalışta manzara önce düz (taramasız) ışığa erir, taramalı ışık zemini ancak ondan sonra gelir: iki dokulu
+    // görüntü üst üste binmez, madalyon ekranı doldurmadan manzaranın soluk hayaleti kalmaz
+    const yika = an(t, DALIS.bas + 0.08, 0.32, ease.inOutSine);
+    const zeminDalis = an(t, DALIS.bas + 0.3, 0.3, ease.inOutSine);
     const zeminAlfa = Math.max(1 - geri, zeminDalis);
     const dunyaGorunur = zeminAlfa < 0.999;
 
@@ -275,6 +278,13 @@ export default {
         gb.addColorStop(1, `rgba(252,244,220,${0.92 * ortu})`);
         ctx.fillStyle = gb;
         ctx.fillRect(0, 0, W, H);
+      }
+      // manzara düz ışık buğusuna erir (ışık zemininin taramasız tabanı)
+      if (yika > 0) {
+        ctx.save();
+        ctx.globalAlpha = yika;
+        ctx.drawImage(yikama, 0, 0);
+        ctx.restore();
       }
       // 9) dalış: madalyondan taşan ışık seli (ışığın içine girilir)
       if (sel > 0) {
@@ -417,10 +427,13 @@ function satirCiz(ctx, cam, t, satir, f, saadet) {
         const h = onHedef(fg.poz, fg);
         const nefes = 0.015 * Math.sin(t * 1.3 + fg.faz);
         const sal = 0.04 * Math.sin(t * 1.7 + fg.faz) * k; // kalkan kollarda hafif sevinç salınımı
+        // başın üstüne kalkan kol dirsekten bükülerek kalkar (ön kol önce yukarı döner, sonra uzanır): kalkış
+        // ortasında kol yatayda tam boy açılıp yandaki figüre değmez
+        const buk = 1.5 * Math.sin(Math.PI * k);
         const poz = {
           ...ON_DURUS,
           kol: [lerp(0.09 + nefes, h.kol[0], k) + sal, lerp(0.09 - nefes, h.kol[1], k) - sal],
-          dirsek: [lerp(0.12, h.dirsek[0], k), lerp(0.12, h.dirsek[1], k)],
+          dirsek: [lerp(0.12, h.dirsek[0], k) - (h.kol[0] > 1.5 ? buk : 0), lerp(0.12, h.dirsek[1], k) - (h.kol[1] > 1.5 ? buk : 0)],
           bacak: 0.055, bas: 0.035 * Math.sin(t * 0.8 + fg.faz) - 0.02,
         };
         insanOn(g, fg.x, fg.y, poz, { s, olcek, alfa, arka: true });
@@ -543,7 +556,7 @@ function yaprakCiz(ctx, cam, p, t, solma) {
   const u = t - p.te;
   if (u <= 0) return;
   const s = pop(t, p.te, 0.38);
-  const alfa = an(t, p.te, 0.14, ease.lin) * solma;
+  let alfa = an(t, p.te, 0.14, ease.lin) * solma;
   // madalyon kenarından dışa: hız sürtünmeyle söner, sonra salınarak aşağı süzülür
   const yol = MR * 1.02 + (p.v0 * (1 - Math.exp(-p.k * u))) / p.k;
   const sal = Math.sin(u * p.frek + p.faz) * p.genlik * clamp(u / 0.6);
@@ -552,6 +565,13 @@ function yaprakCiz(ctx, cam, p, t, solma) {
   const [sx, sy, z] = ekranda(cam, x, y, p.f);
   if (sy < -90 || sy > H + 90 || sx < -90 || sx > W + 90) return;
   const kz = z * s;
+  // dalışta bant örtüsü gelince altyazı bandının (≈1440–1580) içinden geçen yaprak söner
+  const ortu = an(t, DALIS.bas - 0.02, 0.3, ease.inOutSine);
+  if (ortu > 0) {
+    const bantta = clamp((sy - 1370) / 70) * clamp((1650 - sy) / 70);
+    alfa *= 1 - ortu * bantta;
+    if (alfa <= 0.003) return;
+  }
   // ışıltı
   M.hale(ctx, sx, sy, p.boy * 2.4 * kz, p.cicek ? '#FFE7A8' : '#FFE2CF', 0.55 * alfa);
   M.hale(ctx, sx, sy, p.boy * 0.9 * kz, '#FFFBF2', 0.5 * alfa);

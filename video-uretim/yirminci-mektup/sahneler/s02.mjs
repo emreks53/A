@@ -12,7 +12,7 @@ import { kb } from '../motor/zaman.mjs';
 import { insanYan } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import {
-  G, S, FENERLER, GUL_PENCERE, ADAM, yapiOge, kemerOge, kemerGeo, bulutDenizi, nurHazirla, nurCiz, adamDurum,
+  G, S, K0, FENERLER, GUL_PENCERE, ADAM, yapiOge, kemerOge, kemerGeo, bulutDenizi, nurHazirla, nurCiz, adamDurum,
   desenMerkezden, isikZemini, fenerCiz,
 } from './s02-yardim.mjs';
 
@@ -40,7 +40,7 @@ const KAM = kameraYolu([
 const kamOnce = KAM(ITME.t0);
 const nurEkran0 = ekranda(kamOnce, NUR.x, NUR.y);
 
-export function kamera(t) {
+function kamera(t) {
   if (t < ITME.t0) return KAM(t);
   // itme: nurun ekrandaki merkezi (540, 900)'e kayarken yakınlaşma log uzayında artar; ardından yavaş oturma
   const e1 = an(t, ITME.t0, ITME.sure, ease.inOutCubic);
@@ -61,7 +61,7 @@ export default {
     { t: 7.66, tur: 'whoosh', guc: 0.3, sure: 1.0 },
     { t: ADAM.gorun + 0.02, tur: 'parilti', guc: 0.22 },
     { t: +(ADAM.inis[0] - 0.02).toFixed(2), tur: 'adim', guc: 0.14, tekrar: ADAM.inis.length, ara: +((ADAM.inis[ADAM.inis.length - 1] - ADAM.inis[0]) / (ADAM.inis.length - 1)).toFixed(3) },
-    { t: +ADAM.basamakInis[2].toFixed(2), tur: 'parilti', guc: 0.2, tekrar: 3, ara: 0.84 },
+    { t: +ADAM.basamakInis[K0 + 2].toFixed(2), tur: 'parilti', guc: 0.2, tekrar: 3, ara: +((ADAM.basamakInis[K0 + 6] - ADAM.basamakInis[K0 + 2]) / 2).toFixed(3) },
     { t: T_.besEr, tur: 'kalem', guc: 0.4, sure: 0.8 },
     { t: T_.makam, tur: 'nur', guc: 0.4, sure: 1.6 },
     { t: T_.iman, tur: 'whoosh', guc: 0.38, sure: 1.1 },
@@ -169,9 +169,9 @@ function dunyaCiz(ctx, t, cam, nsx, nsy, nr) {
   const yapiA = an(t, 7.68, 0.4, ease.inOutSine); // s01 geçişinde köprü sonradan belirir
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, yapi, 0, 0, { alfa: yapiA });
-    // fenerler: bastığı basamakta yanar
+    // fenerler: bastığı basamakta yanar (belirdiği basamağa kadar olanlar belirirken aşağıdan yukarı sırayla)
     for (const f of FENERLER) {
-      let t0 = f.k === 0 ? ADAM.gorun + 0.25 : ADAM.basamakInis[f.k];
+      let t0 = f.k >= 0 && f.k <= K0 ? ADAM.gorun + 0.06 + 0.09 * f.k : ADAM.basamakInis[f.k];
       if (t0 === undefined) continue;
       fenerCiz(g, f.x, f.y, t, t - t0, { tohum: f.k + 4 });
     }
@@ -233,7 +233,7 @@ function huzmeler(ctx, t, x, y, r) {
 // ---------------------------------------------------------------- kemer (makam)
 function kemerCiz(g, t) {
   const t0 = T_.besEr;
-  const cz = an(t, t0, 0.8, ease.inOutCubic); // altın kontur: iki ayaktan tepeye
+  const cz = an(t, t0, 0.8, ease.inOutCubic); // altın kontur: nurun bulunduğu sivri tepeden iki ayağa doğru iner
   if (cz <= 0) return;
   const { AX, YP } = G;
   // içte ışık nişi (makam): nurun ışığı kemerin içini doldurur
@@ -254,13 +254,13 @@ function kemerCiz(g, t) {
     g.fillRect(AX - 120, NUR.y - 200, 240, YP - NUR.y + 200);
     g.restore();
   }
-  // taş çerçeve: aşağıdan yukarı açılır
-  const tas = an(t, t0 + 0.1, 0.85, ease.inOutCubic);
-  if (tas > 0) ogeAcarak(g, kemer, 0, 0, tas, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.18 });
-  // altın kontur (dış, iç, ince iç çizgi): iki yarı ayrı ayrı tabandan tepeye
+  // taş çerçeve: tepeden aşağı açılır (önce sivri kemer belirir, sonra ayaklar)
+  const tas = an(t, t0 + 0.05, 0.8, ease.inOutCubic);
+  if (tas > 0) ogeAcarak(g, kemer, 0, 0, tas, { mod: 'sil', yon: Math.PI / 2, yumusak: 0.18 });
+  // altın kontur (dış, iç, ince iç çizgi): tepeden iki yana, ayaklara doğru
   const yarim = (pts) => {
     const n = pts.length, m = Math.floor(n / 2);
-    return [pts.slice(0, m + 1), pts.slice(m).reverse()];
+    return [pts.slice(0, m + 1).reverse(), pts.slice(m)];
   };
   const parla = an(t, T_.makam, 0.3, ease.outCubic) * (1 - an(t, T_.makam + 0.4, 1.0, ease.inOutSine));
   for (const [pts, kal, alfa, tohum, gecik] of [[kemerG.dis, 2.6, 0.92, 61, 0], [kemerG.ic, 2.2, 0.85, 63, 0.08], [kemerG.ic2, 1.2, 0.6, 65, 0.16]]) {
@@ -292,24 +292,40 @@ function kemerCiz(g, t) {
 let adamKatman = null;
 function adamCiz(g, t, z = 1) {
   const ol = S * z > 1.6 ? 4 : 1.5; // itmede yüksek çözünürlüklü parçalar
+  // belirme: ayaktan başa doğru, kenarında sıcak bir ışıkla çizilerek gelir (hayalet gibi bütün hâlinde solmaz)
+  const gir = an(t, ADAM.gorun, 0.3, ease.inOutSine);
   // nura dalışta adam ışığa karışarak çekilir (dev boyutta altyazının arkasından geçmez)
-  const gor = an(t, ADAM.gorun, 0.32, ease.inOutSine) * (1 - an(t, ITME.t0 + 0.22, 0.34, ease.inOutSine));
-  if (gor <= 0) return;
+  const cik = 1 - an(t, ITME.t0 + 0.22, 0.34, ease.inOutSine);
+  if (gir <= 0 || cik <= 0) return;
   const d = adamDurum(t);
-  // belirirken arkasında yumuşak bir ışık
-  const isik = an(t, ADAM.gorun, 0.25) * (1 - an(t, ADAM.gorun + 0.3, 0.8, ease.inOutSine));
-  if (isik > 0) M.hale(g, d.x, d.y - 150 * S, 170, '#FFF4D2', 0.5 * isik);
-  if (gor >= 0.999) { insanYan(g, d.x, d.y, d.poz, { s: S, olcek: ol }); return; }
-  // yarı saydamken uzuvlar birbirinin içinden görünmesin: ayrı katmanda çizip bütün olarak soldur
+  const yAlt = d.y + 8, yUst = d.y - 400 * S, yum = 34 * S; // silme kenarı (dünya y) ve yumuşaklığı
+  const yk = lerp(yAlt + yum, yUst - yum, gir);
+  const isik = Math.sin(Math.PI * gir);
+  if (isik > 0.01) {
+    M.hale(g, d.x + 6, d.y - 150 * S, 190, '#FFF4D2', 0.35 * isik);
+    M.hale(g, d.x + 6, yk, 95, '#FFF1C4', 0.6 * isik);
+  }
+  if (gir >= 0.999 && cik >= 0.999) { insanYan(g, d.x, d.y, d.poz, { s: S, olcek: ol }); return; }
+  // ayrı katmanda çiz (yarı saydamken uzuvlar birbirinin içinden görünmesin), silme maskesi ve solma bütün olarak
   if (!adamKatman) adamKatman = tuval(W, H);
   const kc = adamKatman.getContext('2d');
   kc.setTransform(1, 0, 0, 1, 0, 0);
+  kc.globalCompositeOperation = 'source-over';
   kc.clearRect(0, 0, W, H);
   kc.setTransform(g.getTransform());
   insanYan(kc, d.x, d.y, d.poz, { s: S, olcek: ol });
+  if (gir < 0.999) {
+    kc.globalCompositeOperation = 'destination-in';
+    const gr = kc.createLinearGradient(0, yk + yum, 0, yk - yum);
+    gr.addColorStop(0, 'rgba(0,0,0,1)');
+    gr.addColorStop(1, 'rgba(0,0,0,0)');
+    kc.fillStyle = gr;
+    kc.fillRect(d.x - 260, yUst - 2 * yum - 40, 520, yAlt - yUst + 4 * yum + 80);
+    kc.globalCompositeOperation = 'source-over';
+  }
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
-  g.globalAlpha *= gor;
+  g.globalAlpha *= cik;
   g.drawImage(adamKatman, 0, 0);
   g.restore();
 }

@@ -7,7 +7,7 @@ import { kameraYolu, kameraUygula, ekranda, salinim } from '../motor/sahne.mjs';
 import { DURUS, pozKaristir } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import { labirentHazirla, labirentCiz } from './s10-labirent.mjs';
-import { tampon, radyalMaske, isikBas, dalgaHalkasi, huzme, zerreler, yurumePlani, bilekX, yerGolgesi } from './s10-yardim.mjs';
+import { tampon, radyalMaske, isikBas, dalgaHalkasi, huzme, zerreler, yurumePlani, bilekX, yerGolgesi, kusV } from './s10-yardim.mjs';
 import { yanCiz, yagmurCiz, D, G, AGAC, NUR, F } from './s10-dunya.mjs';
 import { bahceHazirla, karanlikCizV, bahceCizV, bahceOnPlan, alisverisciler, katman, refEkran, V, YOL, CV, CESME } from './s10-bahce.mjs';
 import { insanYan } from '../motor/insan.mjs';
@@ -48,7 +48,7 @@ function adamDurumu(t) {
   }
   if (t < T.ist + 0.02) {
     const r = yuru2(t);
-    return { x: r.x, poz: r.poz, yon: -1, s: S_ADAM };
+    return { x: r.x, poz: r.poz, yon: -1, s: S_ADAM, dy: onDy(t) };
   }
   // dönüş (kâğıt kesik gibi sıkışarak) ve kayaya yaslanma
   const x0 = yuru2.x1;
@@ -60,11 +60,17 @@ function adamDurumu(t) {
   // arka ayak yerinde kalsın: kalça geriye (kayaya) kayar
   const dx = (bilekX(p, 0) - bilekX(POZ.duz, 0)) * S_ADAM;
   const nefes = Math.sin(t * 2.2) * 0.012 * w;
-  return { x: x0 - dx, poz: { ...p, govde: p.govde + nefes }, yon, s: S_ADAM, k: Math.max(0.12, k) };
+  return { x: x0 - dx, poz: { ...p, govde: p.govde + nefes }, yon, s: S_ADAM, k: Math.max(0.12, k), dy: onDy(t) };
 }
+// ağaçtan kayaya yürürken adam gövdenin ÖNÜNDEN geçer: ilk adımda zemin çizgisinin biraz önüne (aşağı) çıkar ve
+// hafifçe büyür (derinlik); kayaya da önden yaslanır
+const ON_DY = 18;
+function onDy(t) { return ON_DY * ease.inOutSine(clamp((t - yuru2.t0) / 0.42)); }
 
 // ---------------------------------------------------------------- kamera (yan dünya)
 let kamYan;
+// dağ geniş planı: doruk üstte, ağaç sağda, adam kayada; sol kenarda gök tuvali, sağ kenarda karanlık bölge görünmez
+const GENIS = { x: 10, y: 410, z: 0.48 };
 function kameraKur() {
   kamYan = kameraYolu([
     // yeni dünya açılmaya başlarken kamera zaten yavaşça geri çekiliyor (geçişin ortasında ani hızlanma yok)
@@ -73,12 +79,12 @@ function kameraKur() {
     { t: T.o + 0.1, x: 735, y: 930, z: 1.1, e: ease.inOutSine },
     { t: T.ilt, x: 700, y: 860, z: 0.98, e: ease.inOutCubic },
     { t: T.kud - 0.05, x: 680, y: 880, z: 1.0, e: ease.inOutSine },
-    { t: T.ist + 0.1, x: 40, y: 250, z: 0.5, e: ease.inOutCubic },
-    { t: T.ist + 0.3, x: 50, y: 270, z: 0.51, e: ease.lin },
-    { t: T.eder2 + 0.5, x: 560, y: 1010, z: 1.08, e: ease.inOutCubic },
-    { t: T.o2 - 0.32, x: 566, y: 1004, z: 1.12, e: ease.outSine },
-    { t: T.o2 + 0.12, x: 1000, y: 860, z: 0.78, e: ease.inCubic },
-    { t: T.vah + 0.55, x: CV.x, y: CV.y, z: 0.96, e: ease.outCubic },
+    // "kudretine istinad eder": tek yönlü, yavaş (1,3 sn) geri çekiliş ve yükseliş; adam kayaya yürüyüp yaslanırken
+    // heybetli dağ bütünüyle açılır (zemin altyazı bandının üstünde kalır). Dağ planında kalınır (yavaş süzülme),
+    // geri yaklaşılmaz; "O vahşetgâh"ta kamera tek bir kayışla sağa, ormana gider.
+    { t: T.kud + 1.25, x: GENIS.x, y: GENIS.y, z: GENIS.z, e: ease.inOutSine },
+    { t: T.o2 - 0.42, x: GENIS.x - 4, y: GENIS.y - 5, z: GENIS.z * 0.988, e: ease.lin },
+    { t: T.vah + 0.55, x: CV.x, y: CV.y, z: 0.96, e: ease.inOutSine },
     { t: T.ten, x: CV.x + 10, y: CV.y + 12, z: 1.05, e: ease.inOutSine },
     { t: T.ve, x: CV.x + 40, y: CV.y + 4, z: 1.02, e: ease.inOutSine },
     { t: T.olur + 0.5, x: 2060, y: 890, z: 0.95, e: ease.inOutCubic },
@@ -194,8 +200,8 @@ function varis(sx, sy) {
 /** V bölgesinin sol sınırı: dünya x 1060..1330 (f = 1) arasında yumuşak geçiş */
 function bolgeMaske(g, cam, t) {
   if (t >= T.vah + 0.55) return true;
-  // sınır, kaydırma başlayana dek yakın çekimin dışında; kaydırmayla sola kayar (E'de tamamen ekran dışı)
-  const sx0 = lerp(1080, 880, an(t, T.o2 - 0.32, 0.6, ease.inOutSine));
+  // sınır, kaydırma başlayana dek dağ geniş planının dışında (sağ kenarın ötesinde); kaydırmayla sola kayar
+  const sx0 = lerp(1150, 880, an(t, T.o2 - 0.32, 0.6, ease.inOutSine));
   const xa = ekranda(cam, sx0, 0)[0], xb = ekranda(cam, sx0 + 290, 0)[0];
   if (xa > W) { g.clearRect(0, 0, W, H); return false; }
   if (xb < 0) return true;
@@ -279,22 +285,29 @@ function adamSepetli(g, cam, t) {
   ogeCiz(g, V.sepet, p.el[0] + 2, p.el[1] - 6, { s: s * 1.35, r: sal });
   g.restore();
 }
+// kuşlar: kalemle açık 'V' kuşlar, gökten bir ton koyu lila-gri; birbirinden en az bir boy aralıklı.
+// Bahçe sürüsü çeşmenin yanından havalanır, çarşı kurulmadan gökyüzünden yukarı çıkar; çarşı sürüsü "olur"dan sonra
+// minarenin tepesinin üstünden, gevşek bir V düzeninde sağdan sola geçer (kubbe ve minareyle kesişmez).
+const KUS_RENK = '#766D90';
+const BAHCE_SURU = [[430, 1180], [505, 1222], [570, 1160], [640, 1205], [712, 1168]];
+const CARSI_SURU = [[0, 0], [72, -32], [74, 36], [146, -60]];
 function kuslar(g, cam, t) {
-  // çarşı kurulunca ikinci bir sürü sağ üstten geçer
-  for (let i = 0; i < 5; i++) {
-    const u = (t - T.olur - i * 0.1) / 2.6;
-    if (u <= 0 || u >= 1) continue;
-    const x = lerp(1180, 380, u) + i * 26, y = 520 - u * 240 - (i % 2) * 34 + Math.sin(u * 8 + i) * 10;
-    M.kus(g, x, y, 0.95 + (i % 3) * 0.12, t, { faz: i * 2.1, yon: -1, alfa: clamp(u * 8) * (1 - clamp((u - 0.85) / 0.15)), renk: '#4A5B7A' });
-  }
   const t0 = T.ten + 0.55;
-  for (let i = 0; i < 6; i++) {
-    const u = (t - t0 - i * 0.12) / 3.2;
-    if (u <= 0 || u >= 1) continue;
-    const [bx, by] = refEkran(cam, 420 + i * 40, 1150 - (i % 3) * 30, 0.9);
-    const x = bx + u * 900 + i * 18, y = by - Math.pow(u, 0.7) * 820 + Math.sin(u * 9 + i) * 14;
-    M.kus(g, x, y, 1.1 + (i % 3) * 0.15, t, { faz: i * 1.7, alfa: clamp(u * 6) * (1 - clamp((u - 0.85) / 0.15)), renk: '#4A5B7A' });
-  }
+  BAHCE_SURU.forEach(([sx, sy], i) => {
+    const u = (t - t0 - i * 0.13) / 2.0;
+    if (u <= 0 || u >= 1) return;
+    const e = Math.pow(u, 0.85);
+    const wx = sx + 520 * e + Math.sin(u * 7 + i * 1.9) * 9, wy = sy - 1350 * e + Math.sin(u * 5 + i) * 7;
+    const [x, y, z] = refEkran(cam, wx, wy, 0.9);
+    kusV(g, x, y, (0.88 + (i % 3) * 0.06) * z * lerp(1.05, 0.92, u), t, { faz: i * 1.7, renk: KUS_RENK, alfa: clamp(u * 10), hiz: 9.5 });
+  });
+  const t1 = T.olur + 0.12;
+  CARSI_SURU.forEach(([ox, oy], i) => {
+    const u = t - t1 - i * 0.05;
+    if (u <= 0) return;
+    const x = 1150 - 255 * u + ox + Math.sin(t * 1.3 + i * 2.2) * 4, y = 236 - 18 * u + oy + Math.sin(t * 1.7 + i * 1.3) * 4;
+    kusV(g, x, y, 0.92, t, { faz: i * 2.3, renk: KUS_RENK, alfa: clamp(u * 6), hiz: 7.5 });
+  });
 }
 
 // ---------------------------------------------------------------- labirent → yan görünüş geçişi
@@ -345,8 +358,10 @@ export default {
     { t: T.olur, tur: 'parilti', guc: 0.3 },
   ],
   hazirla() {
-    yuru1 = yurumePlani({ t0: T.ilt + 0.02, t1: T.ilt + 1.0, n: 2, s: S_ADAM, yon: -1, x0: X0_ADAM, duruA: POZ.yagmur, duruB: POZ.sayvan });
-    yuru2 = yurumePlani({ t0: T.kud - 0.18, t1: T.ist + 0.02, n: 2, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
+    // ağacın altına tek adım: gövdenin sağında durur (eli ve ayağı gövdeye girmez)
+    yuru1 = yurumePlani({ t0: T.ilt + 0.02, t1: T.ilt + 0.74, n: 1, s: S_ADAM, yon: -1, x0: X0_ADAM, duruA: POZ.yagmur, duruB: POZ.sayvan });
+    // gövdenin önünden geçip kayaya üç adım
+    yuru2 = yurumePlani({ t0: T.kud - 0.34, t1: T.ist + 0.02, n: 3, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
     // kaya, adamın yaslanacağı yere: kalça hizasında sırtı kayanın sağ yüzüne değsin
     D.kayaDx = yuru2.x1 - (bilekX(POZ.yaslan, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
     // bahçede keyifle yürüyüş (sepetli): soldan girer, çarşıya doğru

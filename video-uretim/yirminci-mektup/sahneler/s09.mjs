@@ -7,7 +7,7 @@
 // adamı silerek çıplak filme döndürür, kamera silinen boşluğa dalar (dünyada). Boş filmde kuşbakışı adam belirir,
 // çevresinde labirent önce çizgi, sonra tarama olarak çizilir (insan); adam yürür, çıkmaz bir
 // yola girer ve duvara dayanır (sahibini tanımazsa). Çevresinde her yönü gösteren yazısız levhalar biter, adam dönüp
-// durur (mâlikini bulmazsa). Labirent yavaşça döner, levhalar fırıl fırıl; adam ellerini başına koyar (ne kadar
+// durur, çıkmazın ortasına iki adım geri çekilir (mâlikini bulmazsa). Labirent yavaşça döner, levhalar fırıl fırıl; adam ellerini başına koyar (ne kadar
 // bîçare sergerdan). Kamera dönerek çok yükseğe çekilir: uçsuz bucaksız labirentte küçücük bir adam (herkes anlar).
 // Bitiş (s10'a devir): kuşbakışı devasa gri labirent, eksenlere hizalı (dönüş 90°), adam ekranın tam ortasında.
 import { W, H, clamp, lerp, ease, an, pop, rng, TAU, tuval } from '../motor/temel.mjs';
@@ -28,6 +28,7 @@ const T = {
 
 // ---------------------------------------------------------------- bölüm A-B: yan görünüş dünyası
 const KAM_B = { x: 550, y: 1760, z: 1.5 }; // çiçek çerçevesi (silinme boyunca sabit)
+const DALIS = { t0: 87.84, t1: 88.5, sonum: 87.96, sonumSure: 0.46 }; // dalış ve dünyanın beyaza sönüşü (labirente geçişte biter)
 // açılış: s08'in son karesindeki gibi adam ekranın ortasında (540, 1127), ekran ölçeği 0,9
 const KAM_0 = { x: D.ADAM.x, y: D.ADAM.y - (1127.5 - 960) / 1.5, z: 1.5 };
 const kamA = kameraYolu([
@@ -36,24 +37,26 @@ const kamA = kameraYolu([
   { t: T.iste + 1.45, x: 540, y: 975, z: 1.0, e: ease.inOutCubic },
   { t: T.bu2 - 0.04, x: 566, y: 990, z: 1.045, e: ease.inOutSine },
   { t: T.bu2 + 0.55, ...KAM_B, e: ease.inOutCubic },
-  { t: 87.88, ...KAM_B, e: ease.lin },
-  { t: 88.42, x: 775, y: 1830, z: 10, e: ease.inOutQuad }, // silinen boşluğa dalış: ekran çıplak film olur
-  { t: 100, x: 775, y: 1830, z: 10, e: ease.lin },
+  { t: DALIS.t0, ...KAM_B, e: ease.lin },
+  // silinen boşluğa dalış: sığ ve yumuşak; büyüdükçe çizim beyaza karışır (bitmap büyümesi görünmesin)
+  { t: DALIS.t1, x: 775, y: 1830, z: 3.4, e: ease.inOutCubic },
+  { t: 100, x: 775, y: 1830, z: 3.4, e: ease.lin },
 ]);
 const SIL_BAS = T.dunyada - 0.04; // silgi ilk darbesi ("dünyada")
 const SIL_SON = 87.92;
-const SIL_TEMIZ = 88.26; // dalışın sonunda kenarda kalanlar sönsün
 
 // ---------------------------------------------------------------- bölüm C-F: kuşbakışı labirent
 const [JX, JY] = LB.hucreMerkez(60, 60); // kavşak
 const C = LB.HUCRE;
 const P0 = [JX, JY + 0.55 * C];
-const SON_X = 62 * C - C * LB.DUVAR / 2 - 34; // çıkmazda durduğu yer (x)
+const DUVAR_X = 62 * C - C * LB.DUVAR / 2 - 34; // çıkmazın sonunda duvara dayandığı yer (x)
+const SON_X = 61.5 * C; // sonra koridorun ortasına geri çekilir: son karede duvarlardan uzakta, hücrenin ortasında
 const ADAM_SON = [SON_X, JY];
+const GERI = { t0: 91.08, sure: 0.56 }; // yüzünü batıya döndükten sonra iki küçük adım geri
 const YURU = { t0: T.sahibini, t1: 90.3 }; // "sahibini"de yürümeye başlar, "tanımazsa"da çıkmaza döner
 const R_DON = 70;
 const YOL = (() => {
-  const L1 = P0[1] - (JY + R_DON), L2 = (Math.PI / 2) * R_DON, L3 = SON_X - (JX + R_DON);
+  const L1 = P0[1] - (JY + R_DON), L2 = (Math.PI / 2) * R_DON, L3 = DUVAR_X - (JX + R_DON);
   return { L1, L2, L3, L: L1 + L2 + L3 };
 })();
 function yolNokta(s) {
@@ -107,6 +110,14 @@ function adamDurum(t) {
     const dh = Math.abs(bakis(t + 0.03) - bakis(t - 0.03)) / 0.06;
     poz.kipir = 5 * Math.sin(t * 22) * clamp(dh / 4);
     poz.faz = 0;
+    // koridorun ortasına geri adım (bakış yönünde, batıya)
+    const g = an(t, GERI.t0, GERI.sure, ease.inOutSine);
+    if (g > 0) {
+      const m = (DUVAR_X - SON_X) * g;
+      x -= m;
+      poz.faz = g * TAU; // iki kısa adım
+      poz.yuru = Math.max(poz.yuru, 0.75 * Math.sin(Math.PI * g));
+    }
   }
   if (t > T.sergerdan - 0.1) {
     const e = an(t, T.sergerdan - 0.05, 0.42, ease.inOutCubic);
@@ -307,8 +318,17 @@ function dunyaBolumu(ctx, t) {
   ctx.drawImage(hayT, 0, 0);
   ctx.globalAlpha = 1;
   kameraIle(ctx, cam, (g) => D.silgiIzi(g, t, iz), 1);
-  ctx.globalAlpha = 1 - an(t, SIL_TEMIZ, 0.16, ease.inOutSine);
-  ctx.drawImage(dunyaT, 0, 0);
+  ctx.globalAlpha = 1 - an(t, DALIS.sonum, DALIS.sonumSure, ease.inOutSine);
+  const bul = clamp((cam.z / KAM_B.z - 1) * 2.2, 0, 3); // dalışta büyüyen çizim yumuşar (kalın piksel şeritleri olmasın)
+  if (ctx.globalAlpha > 0.002) {
+    if (bul > 0.05) {
+      // bulanıklığın kenardan sızan açık çizgisi görünmesin: resim ortadan hafifçe büyütülerek çizilir
+      const k = 1 + (5 * bul) / W;
+      ctx.filter = `blur(${bul.toFixed(2)}px)`;
+      ctx.drawImage(dunyaT, (W - W * k) / 2, (H - H * k) / 2, W * k, H * k);
+      ctx.filter = 'none';
+    } else ctx.drawImage(dunyaT, 0, 0);
+  }
   ctx.restore();
   kameraIle(ctx, cam, (g) => { D.kirintiCiz(g, t, iz); D.silgiCiz(g, t); }, 1);
 }
@@ -319,7 +339,7 @@ function labirentBolumu(ctx, t) {
   // labirent: adamdan dışa doğru önce çizgiler, sonra taramalar
   const a = adamDurum(t);
   const [ax, ay] = LB.labEkranda(cam, a.x, a.y);
-  const rC = lerp(0, 1750, an(t, T.insan + 0.08, 0.72, ease.inOutSine));
+  const rC = lerp(0, 1750, an(t, T.insan - 0.05, 0.8, (u) => 1 - (1 - u) * (1 - u))); // adamla birlikte hemen yayılmaya başlar
   const dolgu = an(t, T.insan + 0.42, 0.55, ease.inOutSine); // çizgilerden sonra tarama ve gölgeler gelir
   if (dolgu < 1) {
     if (rC > 1) {

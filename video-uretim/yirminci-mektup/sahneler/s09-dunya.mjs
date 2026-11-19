@@ -130,6 +130,35 @@ function durum(p, t) {
   return { x, m, yon: yonG, yuru, yuruyor: s.yuru };
 }
 
+/** Aynı kattaki yürüyenlerden yolları kesişenleri (görünür süre içinde yan yana gelenleri) yolun ön ve arka
+ *  şeritlerine ayırır: iki adam aynı derinlikte birbirinin içinden geçmesin, biri ötekinin arkasından geçsin.
+ *  Kesişme çizgesi iki renge boyanır (+1 arka, -1 ön); kimseyle kesişmeyen kendi derinliğinde kalır. */
+const SERIT = 0.62; // m (yol yarı eni 0,85)
+function seritAta(liste, kat) {
+  const n = liste.length;
+  const kom = liste.map(() => []);
+  for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
+    for (let t = 82.4; t <= 88.6; t += 0.04) {
+      if (Math.abs(durum(liste[a], t).x - durum(liste[b], t).x) < 0.8) { kom[a].push(b); kom[b].push(a); break; }
+    }
+  }
+  const s = new Array(n).fill(0);
+  for (let a = 0; a < n; a++) {
+    if (s[a] || !kom[a].length) continue;
+    s[a] = 1;
+    const q = [a];
+    while (q.length) {
+      const u = q.shift();
+      for (const v of kom[u]) if (!s[v]) { s[v] = -s[u]; q.push(v); }
+    }
+  }
+  liste.forEach((w, i) => {
+    if (!s[i]) return;
+    w.d = kat.d + s[i] * SERIT;
+    w.olc = olcekD(w.d);
+  });
+}
+
 // ---------------------------------------------------------------- sprite'lar ve yerleşim
 let gok, uzakTepe, zemin, yol, agacB, agacK1, agacK2, sonYapraklar, yuruyenler, cicekler, cicekSprite, solgunSprite, tacSprite, yaprakSp, bulutlar, kirintiSp, cimenler, cit;
 // s08'in son karesiyle aynı: adam (s08 kamerasında ekran 540, 1127; ekran ölçeği 0,9), sola bakar, yere büzülmüş
@@ -228,6 +257,7 @@ export function dunyaHazirla() {
       yuruyenler.push({ ...programUret(r, k, tip, 82.0, 90), kat: ki });
     }
   });
+  KAT.forEach((k, ki) => seritAta(yuruyenler.filter((w) => w.kat === ki), k));
   // çiçek sırası (adamın sağında, önde)
   cicekler = [];
   const cr = rng(66);
@@ -341,7 +371,7 @@ export function dunyaCiz(ctx, kamIle, t) {
       } });
     }
     ogeler.push({ y: AGAC.y, ciz: () => M.agacCiz(g, agacB, AGAC.x, AGAC.y, { s: 1, t, salinim: 0 }) });
-    ogeler.push({ y: ADAM.y, ciz: () => insanYan(g, ADAM.x, ADAM.y, oturus(t), { s: ADAM.s, yon: -1, olcek: 1.2 }) });
+    ogeler.push({ y: ADAM.y, ciz: () => { const al = adamSilAlfa(t); if (al > 0.003) insanYan(g, ADAM.x, ADAM.y, oturus(t), { s: ADAM.s, yon: -1, olcek: 1.2, alfa: al }); } });
     ogeler.sort((a, b) => a.y - b.y);
     for (const o of ogeler) o.ciz();
     for (const c of cimenler) if (c.y >= 1700) cimenCiz(g, c);
@@ -645,6 +675,14 @@ export function silgiCiz(g, t) {
   g.restore();
   ogeCiz(g, sp.govde, u.x, u.y, { r: u.a });
   ogeCiz(g, sp.kilif, u.x, u.y, { r: u.a });
+}
+/** Oturan adamın silinişi: silgi üzerinden geçerken adam (şeridin kenarından taşan saçı, dizi dahil) tümüyle söner */
+function adamSilAlfa(t) {
+  if (!silgi || t < silgi.t0) return 1;
+  const p = yolParca(silgi.z, silIlerleme(t));
+  const x = p[p.length - 1][0];
+  // adam silginin gövdesi onu tümüyle örterken söner (x ≈ ADAM.x − 30 … − 14: 87,70–87,73 sn)
+  return 1 - ease.inOutSine(clamp((x - (ADAM.x - 30)) / 16));
 }
 export const silgiVar = () => !!silgi;
 export const silgiSonu = () => (silgi ? silgi.t1 : 0);

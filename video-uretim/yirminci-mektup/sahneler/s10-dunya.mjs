@@ -299,7 +299,11 @@ function tasOge(w, h, tohum) {
 // ---------------------------------------------------------------- ağaç: çıplak dallar + rahmetle açan yaprak kümeleri
 export function agacCiz2(g, x, y, yaprak, cicekA, t) {
   const A = D.agac, B = D.agacCiplak;
-  ogeCiz(g, B.dallarOge, x, y);
+  // kuru dallar: tacın içinde kalanlar hep çizilir; tacın dışına taşan uçlar yapraklar dolarken söner (yeşil tacın
+  // dışında kahverengi çubuk kalmaz)
+  const son = ease.inOutSine(clamp((yaprak - 0.5) / 0.45));
+  ogeCiz(g, D.dalIc, x, y);
+  if (son < 1) ogeCiz(g, D.dalDis, x, y, { alfa: 1 - son });
   ogeCiz(g, B.govde, x, y);
   A.kumeler.forEach((k, i) => {
     const u = clamp((yaprak - k.t * 0.55) / 0.45);
@@ -399,6 +403,7 @@ export function yakinHazirla() {
   D.zKuru = zeminOge('s10-zemin-kuru', PAL.kuru, true);
   D.zYesil = zeminOge('s10-zemin-yesil', PAL.yesil, false);
   D.agac = M.agac({ boy: AGAC.boy, tohum: 33, yaprakli: true, meyve: true, olcek: 1.25 });
+  dallariAyir();
   D.meyve = M.cicekOge(13, 1.6, 'beyaz');
   D.bulutlar = [
     { o: M.bulutOge(560, 5, 1.0), x: 80, y: 300, gir: -1 },
@@ -438,6 +443,35 @@ export function yakinHazirla() {
     D.kuruOt.push({ x: r.ara(-1000, 1450), y, s: (0.6 + (y - G) / 500) * r.ara(0.8, 1.2), o: r.sec(kuru) });
   }
   D.kuruOt.sort((a, b) => a.y - b.y);
+}
+
+/**
+ * Kuru ağacın dal sprite'ını ikiye ayırır (bir kez): yeşil tacın kümeleri altında (ya da gövde yakasında) kalan kısım
+ * ve tacın dışına taşan uçlar. Maske kümelerin iç elipsleridir (küme konturundan küçük: dışarıda kalan çubuk kalmaz).
+ */
+function dallariAyir() {
+  const o = D.agacCiplak.dallarOge, S = o.olcek;
+  const maske = (c) => {
+    c.save();
+    c.scale(S, S);
+    c.translate(o.ox, o.oy);
+    c.beginPath();
+    for (const k of D.agac.kumeler) c.ellipse(k.x, k.y - 30, k.R * 0.8, k.R * 0.7, 0, 0, TAU);
+    c.rect(-2000, -330, 4000, 2000); // gövde ve çatal yakası
+    c.fillStyle = '#000';
+    c.fill('nonzero');
+    c.restore();
+  };
+  const parca = (mod) => {
+    const c = tuval(o.tuval.width, o.tuval.height);
+    const g = c.getContext('2d');
+    g.drawImage(o.tuval, 0, 0);
+    g.globalCompositeOperation = mod;
+    maske(g);
+    return { ...o, tuval: c };
+  };
+  D.dalIc = parca('destination-in');
+  D.dalDis = parca('destination-out');
 }
 
 /** Yeşerme lekesinin (x, y) noktasına varış zamanı (göreli) */
@@ -583,7 +617,7 @@ export function yagmurCiz(ctx, t, guc, { zeminY = 1380, siper = null, tohum = 9,
 }
 
 // ---------------------------------------------------------------- çizim
-import { insanYanSikis, yerGolgesi } from './s10-yardim.mjs';
+import { insanYanSikis, yerGolgesi, kusV } from './s10-yardim.mjs';
 
 /** Dağın belinde yavaşça sürüklenen sis kuşağı (sağ ucu gökte yumuşakça biter); kudret anında sıcak ışık alır */
 function dagSisi(g, cam, t, S) {
@@ -666,7 +700,8 @@ export function yanCiz(g, cam, t, S) {
   for (let i = 0; i < 3; i++) {
     const a = t * 0.32 + i * 2.1;
     const bx = -400 + Math.cos(a) * 170 + i * 70, by = -600 + Math.sin(a) * 44 + i * 56;
-    M.kus(g, bx, by, 1.1 + i * 0.12, t * 0.45 + i, { faz: i * 1.3, yon: Math.sin(a) > 0 ? -1 : 1, renk: '#565B84', alfa: 0.85 });
+    const kb = 1.0 + i * 0.1; // ekranda kalem kalınlığı ~2 px kalsın (geniş planda incelmesin)
+    kusV(g, bx, by, kb, t * 0.6 + i, { faz: i * 1.3, renk: '#4F4B70', alfa: 0.85, kal: 2.1 / (kb * Math.min(1, cam.z)) });
   }
   ogeCiz(g, D.zKuru, 0, 0);
   for (const k of D.kuruOt) ogeCiz(g, k.o, k.x, k.y, { s: k.s, r: Math.sin(t * 1.3 + k.x) * 0.04 });
@@ -703,9 +738,10 @@ export function yanCiz(g, cam, t, S) {
   bitki(false);
   if (S.adam) {
     const a = S.adam;
-    if (S.adamIsik > 0.003) M.hale(g, a.x, G - 150, 260, '#FFF0C0', 0.35 * S.adamIsik);
-    yerGolgesi(g, a.x + 8, G + 2, 70);
-    insanYanSikis(g, a.x, G, a.poz, { s: a.s, yon: a.yon, k: a.k ?? 1, olcek: 1.2 });
+    const dy = a.dy || 0; // derinlik: zemin çizgisinin önüne çıkış (ağacın önünden geçerken)
+    if (S.adamIsik > 0.003) M.hale(g, a.x, G + dy - 150, 260, '#FFF0C0', 0.35 * S.adamIsik);
+    yerGolgesi(g, a.x + 8, G + dy + 2, 70);
+    insanYanSikis(g, a.x, G + dy, a.poz, { s: a.s * (1 + dy / 360), yon: a.yon, k: a.k ?? 1, olcek: 1.2 });
   }
   bitki(true);
   g.restore();

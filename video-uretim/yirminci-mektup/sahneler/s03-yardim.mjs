@@ -198,8 +198,8 @@ export function tacYapragi(L, olcek = 1) {
 }
 
 // ---------------------------------------------------------------- ışık zeminleri (tam ekran, ekran uzayında)
-/** tur: 'altin' (soluk altın-krem) | 'gul' (soluk pembe-krem). Merkez (540, 900) */
-export function zeminOge(tur) {
+/** tur: 'altin' (soluk altın-krem) | 'gul' (soluk pembe-krem). Merkez (540, 900). tarama: false → yalnız buğu tabanı */
+export function zeminOge(tur, { tarama = true } = {}) {
   const c = tuval(W, H);
   const ctx = c.getContext('2d');
   ctx.fillStyle = FILM;
@@ -216,6 +216,7 @@ export function zeminOge(tur) {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
   ctx.restore();
+  if (!tarama) return c;
   // yumuşak ışınsal kalem taraması (merkezden dışa), merkez çıplak
   tara(ctx, {
     x0: 0, y0: 0, x1: W, y1: H, yonF: (x, y) => Math.atan2(y - 900, x - 540), aralik: 3.6, boy: [60, 180], kal: 1.15, alfa: 0.2,

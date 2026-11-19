@@ -1,10 +1,11 @@
 // 4. cümle: "Ve ruh-u beşer için en hâlis sürur ve kalb-i insan için en safi sevinç, o muhabbetullah içindeki
 // lezzet-i ruhaniyedir."
 // s03'ün gülü (540, 900, R 300) pembe-krem buğuda. "Ve ruh-u beşer": buğu bir adamın göğsüne toplanır, gül küçülerek
-// göğsüne yerleşir ve yumuşak bir ışığa (ruh) döner; kamera geri çekilir: sabah ışığında çayırda duran, önden, belden
-// yukarı büyük plan bir adam. "en hâlis sürur": göğüsteki ışık nabız gibi parlar, arkasından ince ışık çizgileri
-// yayılır; adam başını hafifçe kaldırır, kollarını hafifçe açar. "kalb-i insan": kamera göğse dalar, göğüste stilize
-// bir kalp belirir ve göğüsten açılan ışık penceresiyle ekrana yerleşir. "en safi sevinç": kalbin içi berrak suyla
+// göğsüne yerleşir ve yumuşak bir ışığa (ruh) döner; kamera geri çekilir: sabah ışığında, uzun otlu çiçekli bir
+// çayırın içinde duran (bacakları önündeki otların ve saplı çiçeklerin ardında), önden büyük plan bir adam. "en hâlis
+// sürur": göğüsteki ışık nabız gibi parlar, arkasından ince ışık çizgileri yayılır; adam başını hafifçe kaldırır,
+// kollarını hafifçe açar. "kalb-i insan": kamera göğse dalar, göğüste stilize bir kalp belirir; göğüsten yayılan ışık
+// figürü doldurur ve dünya kenarsız bir geçişle gül buğusuna döner, kalp ekrana yerleşir. "en safi sevinç": kalbin içi berrak suyla
 // dolar (dalgalanan yüzey, ışıltılar, kabarcıklar, halkacıklar). "o muhabbetullah": kalbin içinde gül yeniden açar,
 // kamera gülün merkezine iner. "içindeki": ışık zerreleri merkezde toplanıp altın bir nektar damlası olur.
 // "lezzet-i ruhaniyedir": damla parlar ve düşer; altın halkalar yayılarak ekranı doldurur. Bitiş: altın halkalar
@@ -17,7 +18,7 @@ import { salinim, kameraIle, ekranda } from '../motor/sahne.mjs';
 import { kb } from '../motor/zaman.mjs';
 import { ON_DURUS } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
-import { zeminGul, zeminKrem, tepe, tumsekler, insanHazirla, insanOnBuyuk, kalpOge, kalpIc, suOge, isikHalkasi, altinHalka, isilti } from './s04-yardim.mjs';
+import { zeminGul, zeminKrem, tepe, otluCayir, sapliCicek, tumsekler, insanHazirla, insanOnBuyuk, kalpOge, kalpIc, suOge, isikHalkasi, altinHalka, isilti } from './s04-yardim.mjs';
 
 const T = {
   s03muh: kb('muhabbetullahtır'),
@@ -29,7 +30,8 @@ const T = {
 const Z = {
   toplan: T.ve - 0.02, // buğu göğse toplanmaya başlar
   itis: T.kalb, // kamera göğse dalar
-  iris: T.kalb + 0.16, // göğüsten ışık penceresi açılır
+  iris: T.kalb + 0.16, // kalp göğüsten ekran ortasına kaymaya başlar
+  yayil: T.kalb + 0.1, // göğüsten yayılan ışık adam dünyasını gül buğusuna çevirir (yumuşak, kenarsız)
   zum: T.muh + 0.04, // kamera gülün merkezine iner
   dus: T.lezzet + 0.2, // damla düşmeye başlar
   carp: T.ruhani, // damla yere değer, halkalar başlar
@@ -39,10 +41,10 @@ const Z = {
 const GX = 540, GY = 900;
 const S = 2.8; // figür ölçeği
 const AYAK = GY + 274 * S; // insanOnBuyuk'te göğüs, ayak tabanından 274 birim yukarıda
-const F = { gok: 0.3, bulut: 0.35, uzak: 0.55, orta: 0.8, on: 1.12 };
+const F = { gok: 0.3, bulut: 0.35, uzak: 0.55, orta: 0.8, arka: 0.92, on: 1.06 };
 const ADAM_OLCEK = [4, 6];
 
-let zG, zK, gok, bulutlar, tUzak, tOrta, tOn, cicekler, agaclar, kalpB, suB, katman, maske, ic, gecici, hR;
+let zG, zK, gok, bulutlar, tUzak, tOrta, tArka, tOn, cicekler, arkaCicek, sapli, agaclar, kalpB, suB, katman, maske, gecici, hR;
 
 // kamera yakınlığı (adam dünyası)
 function zAdam(t) {
@@ -100,16 +102,20 @@ export default {
       sirt: tumsekler(1160, [[-120, 120, 260], [250, 70, 200], [620, 40, 260], [950, 105, 210], [1300, 140, 230]]) });
     tOrta = tepe({ w: 1620, ad: 's04-tepe-orta', renk: 'ada', X0: -280, Yalt: 2050, olcek: 1.6, tohum: 8,
       sirt: tumsekler(1215, [[-60, 60, 330], [400, 18, 220], [1150, 70, 360]]) });
-    tOn = tepe({ w: 1560, ad: 's04-tepe-on', renk: 'cayir', X0: -240, Yalt: 2150, olcek: 1.3, tohum: 3, ot: 1,
-      sirt: tumsekler(1290, [[-80, 70, 300], [540, 46, 330], [1180, 80, 300]]) });
+    // adamın içinde durduğu uzun otlu çayır: arkasında süren soluk kısım (adamın arkasında) ve önündeki uzun otlar
+    // (ön plan; üst kenarı konturlu sırt değil, bacakların önüne düşen ot sapları ve saplı çiçekler)
+    tArka = otluCayir({ w: 1500, ad: 's04-arka-cayir', X0: -210, Yalt: 1650, olcek: 1.3, tohum: 6, k: 0.55, soluk: 1,
+      taban: tumsekler(1214, [[-100, 22, 260], [330, 10, 200], [760, 14, 240], [1200, 26, 260]]) });
+    tOn = otluCayir({ w: 1560, ad: 's04-on-cayir', X0: -240, Yalt: 2150, olcek: 1.3, tohum: 3,
+      taban: tumsekler(1262, [[-80, 40, 300], [540, 30, 330], [1180, 50, 300]]) });
     // ağaçlar ve orta tepe göğse dalışta da (z^0.8 ≈ 1.9) bulanıklaşmasın diye daha yüksek olcekle
     agaclar = [{ A: M.agac({ boy: 200, tohum: 51, olcek: 2 }), x: 175, f: F.orta }, { A: M.agac({ boy: 165, tohum: 57, olcek: 2 }), x: 930, f: F.orta }];
     agaclar.forEach((a) => { a.y = tOrta.ust(a.x) + 18; });
-    // çiçekler: ön çayırın sırtında ve alt köşelerde (altyazı bandının ortası boş)
+    // çiçekler: ön çayırın otları arasında ince bir sıra; bant yanlarında birkaç; altta (ekranın alt şeridi) daha büyükler
+    // (altyazı bandının ortası boş)
     const r = rng(404);
     cicekler = [];
-    // (x, sırta göre derinlik): sırtta ince bir sıra; bant yanlarında birkaç; altta (ekranın alt şeridi) daha büyükler
-    // [x, derinlik, ölçek]; en öndeki büyükler ekranın alt kenarından taşar
+    // [x, üst kenara göre derinlik, ölçek]; en öndeki büyükler ekranın alt kenarından taşar
     const yer = [[120, 6, 1], [206, 14, 1], [300, 4, 0.9], [388, 22, 1], [700, 20, 1], [782, 6, 0.9], [872, 16, 1], [962, 8, 1], [60, 18, 1], [1030, 14, 1],
       [176, 118, 1.05], [150, 178, 1.1], [906, 128, 1.05], [935, 186, 1.1],
       [160, 236, 1.0], [262, 318, 1.2], [372, 258, 0.9], [488, 336, 1.15], [618, 268, 0.95], [742, 326, 1.2], [858, 250, 0.95],
@@ -117,9 +123,21 @@ export default {
     for (const [x, dy, k] of yer) {
       const renk = r.sec(['beyaz', 'beyaz', 'pembe', 'sari', 'beyaz', 'lila']);
       const buyuk = dy > 200;
-      cicekler.push({ x, y: tOn.ust(x) + dy, s: k * r.ara(0.92, 1.08) * (buyuk ? 1.22 : 1), faz: r() * TAU, oge: M.cicekOge(buyuk ? 26 : 22, buyuk ? (k > 1.4 ? 2.6 : 1.9) : 1.6, renk) });
+      // otların arasındaki sıra, sap uçları hizasında (gövde kenarının biraz üstünde) durur
+      const yy = tOn.ust(x) + (dy < 30 ? dy - 30 : dy);
+      cicekler.push({ x, y: yy, s: k * r.ara(0.92, 1.08) * (buyuk ? 1.22 : 1), faz: r() * TAU, oge: M.cicekOge(buyuk ? 26 : 22, buyuk ? (k > 1.4 ? 2.6 : 1.9) : 1.6, renk) });
     }
     cicekler.sort((a, b) => a.y - b.y);
+    // arkadaki çayırda küçük, soluk çiçekler (uzakta)
+    arkaCicek = [[40, 8], [150, 16], [262, 6], [372, 14], [700, 12], [812, 5], [915, 15], [1020, 9]].map(([x, dy], i) => ({
+      x, y: tArka.ust(x) + dy - 6, s: r.ara(0.85, 1.05), faz: r() * TAU, oge: M.cicekOge(13, 1.6, ['beyaz', 'lila', 'beyaz', 'sari'][i % 4]),
+    }));
+    // ön plandaki saplı kır çiçekleri: bacakların önünde iki tane, yanlarda birkaç (ellerin geçtiği yerlerde kısa)
+    sapli = [[494, 30, 72, -0.05, 'beyaz'], [590, 34, 58, 0.07, 'beyaz'], [74, 26, 70, -0.1, 'pembe'], [1008, 30, 78, 0.12, 'sari'],
+      [262, 20, 30, 0.1, 'lila'], [818, 22, 34, -0.08, 'beyaz']].map(([x, d, boy, egim, renk], i) => ({
+      x, y: tOn.ust(x) + d, boy, egim, kivrim: (i % 2 ? 0.06 : -0.06), faz: r() * TAU, yaprakYon: i % 2 ? -1 : 1, s: r.ara(0.9, 1.0),
+      oge: M.cicekOge(20, 1.6, renk),
+    }));
     // figür parçaları iki çözünürlükte: duruşta olcek 4, göğse dalışta 6 (ekran ölçeği / olcek ≤ ~1,15 kalsın)
     for (const o of ADAM_OLCEK) insanHazirla(o);
     kalpB = kalpOge(300, 2);
@@ -127,7 +145,6 @@ export default {
     hR = M.nektarDamla(26, 2.4);
     katman = tuval(W, H);
     maske = tuval(W, H);
-    ic = tuval(W, H);
     gecici = tuval(W, H);
     // gül sprite'larını ısıt (s03 ile aynı olcek 1; kalpteki için olcek 1.6)
     const sc = tuval(8, 8).getContext('2d');
@@ -142,12 +159,11 @@ export default {
     const cam = { x: GX + sl.x / z, y: GY + (960 - GY) / z + sl.y / z, z, r: sl.r * 0.5 };
     const [gsx, gsy] = ekranda(cam, GX, GY, 1);
 
-    // ışık penceresi (göğüsten açılır) ve gül buğusunun göğse toplanması
-    const irisU = an(t, Z.iris, 0.78, ease.inOutCubic);
-    const irisR = 1400 * irisU;
+    // gül buğusunun göğse toplanması ve sonda göğüsten yayılan ışık: ikisi de kenarsız, geniş ve yumuşak geçiş
+    // (sert kenarlı bir disk figürü parçalamasın: örtü her yerde birlikte azalır/artar, merkez biraz önde)
     const toplan = an(t, Z.toplan, 1.0, ease.inOutSine);
-    const buguR = lerp(1500, 0, toplan);
-    const dunyaVar = t >= Z.toplan && irisR < 1250 && t < 29.2;
+    const yayU = an(t, Z.yayil, 0.62, ease.inOutSine);
+    const dunyaVar = t >= Z.toplan && yayU < 1;
 
     if (dunyaVar) adamDunyasi(ctx, t, cam, gsx, gsy);
 
@@ -155,10 +171,8 @@ export default {
     if (t < Z.toplan + 1.3) {
       const kk = lerp(1, 34 / 300, toplan);
       const gx = lerp(540, gsx, toplan), gy = lerp(900, gsy, toplan);
-      if (buguR > 1) {
-        if (buguR >= 1400) ctx.drawImage(zG, 0, 0);
-        else maskeli(ctx, zG, gx, gy, buguR, 340);
-      }
+      if (toplan <= 0) ctx.drawImage(zG, 0, 0);
+      else if (toplan < 1) maskeli(ctx, zG, gx, gy, 1 - toplan, 1100, 1.0);
       const gulA = 1 - an(t, Z.toplan + 0.72, 0.5, ease.inOutSine);
       if (gulA > 0) {
         M.hale(ctx, gx, gy, 600 * kk, '#FFE6EA', 0.5);
@@ -172,51 +186,46 @@ export default {
       }
     }
 
-    // 2) kalp: göğüste belirir, ışık penceresi açılır, kalp ekrana yerleşir; sonra su, gül, damla, halkalar
+    // 2) kalp: göğüste belirir, göğüsten ışık yayılır (adam dünyası gül buğusuna döner), kalp ekrana yerleşir; sonra
+    // su, gül, damla, halkalar
     if (t >= T.kalb) {
-      if (irisR < 1250) {
-        const icc = ic.getContext('2d');
-        icc.setTransform(1, 0, 0, 1, 0, 0);
-        icc.globalCompositeOperation = 'source-over';
-        icc.drawImage(zG, 0, 0);
-        icc.globalCompositeOperation = 'destination-in';
-        pencereMaskesi(icc, gsx, gsy, irisR, 170);
-        icc.globalCompositeOperation = 'source-over';
-        ctx.drawImage(ic, 0, 0);
-        // pencere kenarında sıcak ışık
-        isikHalkasi(ctx, gsx, gsy, Math.max(0, irisR - 70), 110, '#FFF1DE', 0.55 * clamp(irisU * 6) * (1 - irisU), 'screen');
+      if (yayU < 1) {
+        maskeli(ctx, zG, gsx, gsy, yayU, 1000, 0.35);
+        // yayılan ışığın sıcak göbeği
+        M.hale(ctx, gsx, gsy, 760, '#FFF1DE', 0.38 * Math.sin(Math.PI * yayU));
       } else {
         kalpDunyasi(ctx, t, 'zemin');
       }
-      kalpDunyasi(ctx, t, 'on', irisR < 1250 ? [gsx, gsy] : null);
+      kalpDunyasi(ctx, t, 'on', [gsx, gsy]);
     }
   },
 };
 
 // ---------------------------------------------------------------- maskeler
-/** Görüntüyü (cx, cy) merkezli yumuşak kenarlı bir daireyle maskeleyerek çizer */
-function maskeli(ctx, kaynak, cx, cy, R, yumusak) {
+/**
+ * Görüntüyü (cx, cy) merkezli, kenarsız bir ışık yayılımı maskesiyle çizer. u 0..1 (1: her yer tam örtülü).
+ * Örtü: a(d) = (1 + e)·u − e·d/RB (d: merkeze uzaklık), yumuşatılmış. e küçükse örtü her yerde neredeyse eşit
+ * (çapraz geçiş), büyükse merkezden dışa yayılır; hiçbir u değerinde sert bir kenar oluşmaz.
+ */
+function maskeli(ctx, kaynak, cx, cy, u, RB, e) {
+  if (u <= 0) return;
+  if (u >= 1) { ctx.drawImage(kaynak, 0, 0); return; }
   const mc = maske.getContext('2d');
   mc.setTransform(1, 0, 0, 1, 0, 0);
   mc.globalCompositeOperation = 'source-over';
   mc.clearRect(0, 0, W, H);
   mc.drawImage(kaynak, 0, 0);
   mc.globalCompositeOperation = 'destination-in';
-  pencereMaskesi(mc, cx, cy, R, yumusak);
+  const g = mc.createRadialGradient(cx, cy, 0, cx, cy, RB);
+  for (let i = 0; i <= 12; i++) {
+    const v = i / 12;
+    const a = clamp((1 + e) * u - e * v);
+    g.addColorStop(v, `rgba(0,0,0,${(a * a * (3 - 2 * a)).toFixed(4)})`);
+  }
+  mc.fillStyle = g;
+  mc.fillRect(0, 0, W, H);
   mc.globalCompositeOperation = 'source-over';
   ctx.drawImage(maske, 0, 0);
-}
-function pencereMaskesi(c, cx, cy, R, yumusak) {
-  const Rr = Math.max(1, R);
-  const g = c.createRadialGradient(cx, cy, 0, cx, cy, Rr);
-  const ici = clamp(Rr / yumusak);
-  const e = clamp((Rr - yumusak) / Rr);
-  g.addColorStop(0, `rgba(0,0,0,${ici})`);
-  if (e > 0) g.addColorStop(e, `rgba(0,0,0,${ici})`);
-  g.addColorStop(Math.min(1, e + (1 - e) * 0.55), `rgba(0,0,0,${0.3 * ici})`);
-  g.addColorStop(1, 'rgba(0,0,0,0)');
-  c.fillStyle = g;
-  c.fillRect(0, 0, W, H);
 }
 
 // ---------------------------------------------------------------- adam sahnesi
@@ -301,6 +310,11 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
       g.restore();
     });
   });
+  // adamın arkasında süren çayır (soluk, uzak; küçük çiçekler)
+  katmanda(ctx, cam, t, F.arka, (g) => {
+    ogeCiz(g, tArka.oge, tArka.X0, tArka.Y0);
+    for (const c of arkaCicek) ogeCiz(g, c.oge, c.x, c.y, { s: c.s, sy: c.s * 0.8, r: Math.sin(t * 1.1 + c.faz) * 0.05 });
+  });
   // adamın arkasından yayılan ışık: geniş sıcak buğu + ince ışık çizgileri
   const zz = cam.z;
   M.hale(ctx, gsx, gsy, 520 * zz * (0.6 + 0.4 * ruhA + 0.25 * sur), '#FFEBD2', (0.25 * ruhA + 0.25 * sur) * (1 + 0.5 * nb));
@@ -340,10 +354,28 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
     lc.fillRect(0, 0, W, H);
     lc.restore();
   }
+  // göğse dalışta göğüsten aşağı akan ışık: kalça ve bacaklar sıcak kreme açılır (koyu kot konturları altyazı bandına
+  // girerken sert kontrast kalmasın)
+  const dv = an(t, T.kalb - 0.02, 0.5, ease.inOutSine);
+  if (dv > 0) {
+    lc.save();
+    lc.globalCompositeOperation = 'source-atop';
+    const g = lc.createLinearGradient(0, gsy + 150, 0, gsy + 480);
+    g.addColorStop(0, 'rgba(255,241,228,0)');
+    g.addColorStop(1, `rgba(255,241,228,${(0.82 * dv).toFixed(3)})`);
+    lc.fillStyle = g;
+    lc.fillRect(0, 0, W, H);
+    // ışık bütün figürü doldurur: gül buğusuna karışmadan önce figür ışıklı bir kreme açılır (saç gibi koyu bir parça
+    // tek başına kalmasın)
+    lc.fillStyle = `rgba(255,243,232,${(0.72 * an(t, T.kalb + 0.12, 0.42, ease.inOutSine)).toFixed(3)})`;
+    lc.fillRect(0, 0, W, H);
+    lc.restore();
+  }
   ctx.drawImage(L, 0, 0);
-  // ön çayır ve çiçekler (adamın belini örter)
+  // ön plan: uzun otlar, saplı kır çiçekleri ve çiçekler (adamın bacaklarının önüne düşer)
   katmanda(ctx, cam, t, F.on, (g) => {
     ogeCiz(g, tOn.oge, tOn.X0, tOn.Y0);
+    for (const c of sapli) sapliCicek(g, c, t);
     for (const c of cicekler) ogeCiz(g, c.oge, c.x, c.y, { s: c.s, r: Math.sin(t * 1.2 + c.faz) * 0.05 });
   });
   // nabız dalgaları: hâlis ve sürur vuruşlarında göğüsten havaya yayılan yumuşak ışık (çizgisiz)
@@ -398,10 +430,21 @@ function kalpDunyasi(ctx, t, katmanAdi, gogus = null) {
   if (gulU > 0) {
     const gulA = 1 - an(t, Z.dus + 0.08, 0.28, ease.inQuad);
     if (gulA > 0) {
-      const k = 0.5 * zh * atisK * lerp(0.45, 1, ease.outCubic(an(t, T.muh, 0.8))) * lerp(1, 1.9, dalis);
-      M.hale(ctx, gx, gy, 330 * k * 1.6, '#FFE9EE', 0.45 * gulU * gulA);
+      // kalp görünürken gül kalbin iç boşluğuna sığar (merkezi kalbin ortasında, yaprak uçları altın pervazın içinde);
+      // kalp solarken büyüyüp dalış merkezine (gx, gy) kayar
+      const v = smooth(0.35, 1, 1 - kalpA);
+      const k = lerp(0.41, 0.5, v) * zh * atisK * lerp(0.45, 1, ease.outCubic(an(t, T.muh, 0.8))) * lerp(1, 1.9, dalis);
+      const rx = gx, ry = lerp(cy, gy, v);
+      M.hale(ctx, rx, ry, 330 * k * 1.6, '#FFE9EE', 0.45 * gulU * gulA);
       katmanla(ctx, gulA, (g) => {
-        g.translate(gx, gy);
+        if (kalpA > 0.002) {
+          // güvenlik: kalbin iç hattıyla kırp (kalp solarken kırpma hattı dışa açılır)
+          const ks = sc * (1 + 3 * (1 - kalpA));
+          g.beginPath();
+          for (const p of SU_YOL) { g.moveTo(cx + p.pts[0][0] * ks, cy + p.pts[0][1] * ks); for (const q of p.pts) g.lineTo(cx + q[0] * ks, cy + q[1] * ks); g.closePath(); }
+          g.clip();
+        }
+        g.translate(rx, ry);
         g.scale(k, k);
         M.gul(g, 0, 0, 300, gulU, t, { olcek: 1.6, r: 0.2 * (1 - gulU) + 0.02 * (t - T.muh) });
       });

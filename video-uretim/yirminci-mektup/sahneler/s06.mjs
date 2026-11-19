@@ -30,11 +30,16 @@ const VP = [PERS.vx, PERS.hy];
 const ZM = 4.6; // adamın ve ağacın derinliği
 const ZEMIN = PERS.hy + PERS.k / ZM; // onların bastığı yer (y)
 const ADAM = { x: 546, y: ZEMIN, s: (PERS.F * 1.78) / (ZM * 384) };
-const AG = { x: 220, y: ZEMIN + 1, boy: 600, tohum: 37 };
-const TOH = { x: AG.x + 3, y: ZEMIN + 62 };
-const KESIT = { cx: 236, y0: ZEMIN, rx: 236, ry: 172 };
+// ağaç, tohum ve toprak kesiti yolun solunda, çimenin üstünde (kesit yola taşmaz: yolun sol kenarı ZEMIN'de x≈354,
+// 40 px altında ≈305, 120 px altında ≈240)
+// ağaç adamın biraz gerisinde (s07'de adam sola yürürken ağacın önünden geçer, içinden değil)
+const AG = { x: 112, y: ZEMIN - 24, boy: 600, tohum: 37 };
+const TOH = { x: AG.x + 3, y: AG.y + 57 };
+const KESIT = { cx: 105, y0: AG.y, rx: 175, ry: 150 };
+/** (x, y) toprak kesiti penceresinin içinde mi (pay: kenardan dışarı tolerans, px) */
+const kesitte = (x, y, pay = 0) => y > KESIT.y0 - pay && ((x - KESIT.cx) / (KESIT.rx + pay)) ** 2 + ((y - KESIT.y0) / (KESIT.ry + pay)) ** 2 < 1;
 const NUR = { x: VP[0], y0: 990, y1: 765, r: 78 };
-const KAPILAR = [[-44, 1.0], [76, 1.12], [196, 1.0]];
+const KAPILAR = [[-50, 1.18], [76, 1.32], [202, 1.18]];
 const KAPI_Y = 886;
 const YOL_NOKTA = [[-0.45, 1.3], [-0.85, 3.0], [-0.95, 4.1], [-0.6, 4.9], [0.35, 5.6], [1.6, 6.9], [2.1, 9.5], [1.7, 13], [0.4, 19], [-1.3, 30], [0.4, 50], [1.4, 90]];
 
@@ -42,21 +47,33 @@ const YOL_NOKTA = [[-0.45, 1.3], [-0.85, 3.0], [-0.95, 4.1], [-0.6, 4.9], [0.35,
 const F = { gok: 0.92, dag: 0.96, tepe: 0.98, ova: 1, on: 1.08 };
 
 // kamera: tek, akıcı yolculuk (hız anahtarlarda sürekli)
+// envara → esrara → bi'l-kuvve: gidip dönen savrulma yok. Kamera geniş plandan sola, kapılara doğru yavaşça kayıp
+// hafifçe yaklaşır (adam kadrajın sağında kalır), sonra kapıların hemen altındaki toprağa, tohuma doğru aşağı süzülür
+// (her hareket ≥ 1,2 sn, yumuşak giriş/çıkış).
 const KAM = Y.puruzsuzYol([
   { t: 46.4, x: 612, y: 1112, z: 1.28 },
   { t: 47.8, x: 614, y: 1106, z: 1.31 },
   { t: 48.95, x: 618, y: 1100, z: 1.36 },
   { t: 50.5, x: 610, y: 992, z: 0.95 },
   { t: 51.75, x: 618, y: 968, z: 0.99 },
-  { t: 52.35, x: 620, y: 908, z: 0.94 },
-  { t: 53.15, x: 86, y: 778, z: 2.3 },
-  { t: 53.7, x: 80, y: 783, z: 2.4 },
-  { t: 54.35, x: 383, y: 1222, z: 1.3 },
-  { t: 55.4, x: 385, y: 1216, z: 1.36 },
-  { t: 56.05, x: 389, y: 1210, z: 1.34 },
-  { t: 57.4, x: 455, y: 1130, z: 1.14 },
+  { t: 52.1, x: 620, y: 930, z: 0.95 },
+  { t: 53.35, x: 268, y: 990, z: 1.42 },
+  { t: 54.6, x: 300, y: 1216, z: 1.3 },
+  { t: 55.4, x: 302, y: 1212, z: 1.36 },
+  { t: 56.05, x: 306, y: 1208, z: 1.34 },
+  { t: 57.4, x: 415, y: 1130, z: 1.14 },
 ]);
+const SALINIM = (t) => salinim(t, 3, 0.28, 6);
+/** s06'nın kamerası (s07 devir tesliminde aynı kareyi kurmak için dışa açık) */
+export function kamera06(t) {
+  const c = KAM(t);
+  const sl = SALINIM(t);
+  return { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z, r: sl.r };
+}
+export const kamera06Ham = (t) => KAM(t);
+export const salinim06 = SALINIM;
 
+let hazir = false;
 let gok, bulutlar, dagUzak, dagYakin, seritler, yol, yolYakin, yolUzak, kandilS, kandilY, agacTur, nesneler, kapi, toprak, tohum,
   hayal, A, meyveK, meyveY, cicekler, fener, kokler, zerreler, fenerler, kus0;
 
@@ -85,12 +102,14 @@ export default {
     { t: T.nimet + 0.04, tur: 'pop', guc: 0.24, tekrar: 6, ara: 0.07 },
     { t: T.envar, tur: 'parilti', guc: 0.28, sure: 1.0 },
     { t: T.esrar + 0.06, tur: 'nur', guc: 0.24, sure: 1.2 },
-    { t: 53.68, tur: 'whoosh', guc: 0.32, sure: 0.75 },
+    { t: 53.4, tur: 'whoosh', guc: 0.2, sure: 1.1 },
     { t: T.kuvve, tur: 'kalem', guc: 0.4, sure: 0.9 },
     { t: T.fiil + 0.05, tur: 'firca', guc: 0.35, sure: 0.8 },
     { t: T.mazhar, tur: 'nur', guc: 0.55, sure: 2.4 },
   ],
   hazirla() {
+    if (hazir) return; // s07 de çağırır (devir teslim karesi): bir kez hazırlanır
+    hazir = true;
     // gök: şafak (ufukta sıcak gül-şeftali parıltı, yukarıda serin mavi)
     gok = gokTuvali({ w: 2100, h: 1560, olcek: 1.6, ad: 's06-gok', gunes: { x: NUR.x + 500, y: NUR.y1 + 620, r: 95 },
       ust: '#5D76B8', orta: '#93AEDC', alt: '#EDC9BE', parilti: '#FBDDB0', arkaUst: '#B6C7EA', arkaAlt: '#F6DCC8', tohum: 61 });
@@ -196,7 +215,7 @@ export default {
       const pts = [];
       for (let q = 0; q <= 10; q++) {
         const u = q / 10;
-        pts.push([TOH.x + Math.cos(a) * L * u * 1.4 + Math.sin(u * 5 + i) * 4, TOH.y + 4 + Math.sin(a) * L * u * 0.55 + u * u * 8]);
+        pts.push([TOH.x + Math.cos(a) * L * u * 1.15 + Math.sin(u * 5 + i) * 4, TOH.y + 4 + Math.sin(a) * L * u * 0.55 + u * u * 8]);
       }
       kokler.push({ pts, t0: T.fiil + 0.06 + i * 0.05 });
     }
@@ -213,7 +232,7 @@ export default {
       { x: 140, y: 1890, s: 0.9, renk: 'beyaz', on: true },
       { x: 1000, y: 1800, s: 1.05, renk: 'beyaz', on: true },
       { x: 1075, y: 1880, s: 1.15, renk: 'sari', on: true },
-    ].map((c) => ({ ...c, oge: M.cicekOge(26, 1.9, c.renk) }));
+    ].map((c) => ({ ...c, oge: M.cicekOge(26, 1.9, c.renk), kesitte: kesitte(c.x, c.y, 16) }));
 
     // envar: kandillerden ve bütün ovadan göğe yükselen ışık zerreleri, fenerler
     const zr = rng(515);
@@ -241,10 +260,9 @@ export default {
     kus0 = { t0: 46.9, t1: 50.6 };
   },
 
-  ciz(ctx, t) {
-    const c = KAM(t);
-    const sl = salinim(t, 3, 0.28, 6);
-    const cam = { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z, r: sl.r };
+  // ops.poz(t): adam pozu yerine geçer (s07, devir teslimde kendi adamını bu karenin içine koyar)
+  ciz(ctx, t, ops = {}) {
+    const cam = kamera06(t);
     const z = cam.z;
     const nurA = an(t, 46.5, 2.0, ease.outCubic);
     const nurY = lerp(NUR.y0, NUR.y1, nurA);
@@ -332,7 +350,7 @@ export default {
       const acil0 = an(t, 54.0, 0.5, ease.inOutCubic), kapan = 1 - an(t, 56.35, 0.6, ease.inOutSine);
       const acil = acil0 * kapan;
       if (acil > 0) {
-        Y.acarakCiz(g, toprak, KESIT.cx, KESIT.y0, acil0, { mod: 'daire', merkez: [TOH.x - KESIT.cx, TOH.y - KESIT.y0], yumusak: 0.05, alfa: kapan });
+        Y.acarakCiz(g, toprak, KESIT.cx, KESIT.y0, acil0, { mod: 'daire', merkez: [TOH.x - KESIT.cx, TOH.y - KESIT.y0], yumusak: 0.012, alfa: kapan });
         // kökler
         for (const k of kokler) {
           const u = an(t, k.t0, 0.7, ease.outCubic);
@@ -341,9 +359,10 @@ export default {
             konturCiz(g, k.pts, { renk: '#EAD5AC', kal: 2.0, alfa: 0.95 * acil, kapali: false, cizim: u * 0.985, tohum: 9 });
           }
         }
-        // filiz (tohumdan yüzeye)
-        const fz = an(t, T.fiil, 0.3, ease.inOutSine);
-        if (fz > 0) konturCiz(g, [[TOH.x, TOH.y - 6], [TOH.x - 3, TOH.y - 26], [TOH.x + 1, AG.y - 2]], { renk: '#4E7A3A', kal: 4.2, alfa: acil, kapali: false, cizim: fz, tohum: 3 });
+        // filiz: tohumdan yüzeye kalın, görünür bir sap; ağaç büyüdükçe kalınlaşıp gövdenin dibine bağlanan kahverengi
+        // bir kazık köke döner (ağaç tohumdan çıkar)
+        const fz = an(t, T.fiil - 0.02, 0.24, ease.inOutSine);
+        if (fz > 0) filizCiz(g, fz, an(t, T.fiil + 0.2, 0.65, ease.inOutSine), acil);
         // tohum ve içindeki saklı ışık
         const ta = an(t, 54.15, 0.35, ease.outCubic) * acil;
         if (ta > 0) {
@@ -353,10 +372,21 @@ export default {
           ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.9, r: -0.12, alfa: ta });
         }
       }
-      // gerçek ağaç (bilfiil)
-      const bu = an(t, T.fiil + 0.12, 0.75, ease.outCubic);
+      // gerçek ağaç (bilfiil): gövde ve dallar filizin ucundan yukarı keskin bir kenarla açılır (yumuşak silme lekesi
+      // yok); yapraklar ve meyveler kendi zamanlarında
+      const bu = an(t, T.fiil + 0.21, 0.75, ease.outCubic);
       if (bu > 0) {
-        M.agacCiz(g, A, AG.x, AG.y, { buyume: bu, yaprak: an(t, T.fiil + 0.38, 0.6, ease.lin), meyveA: an(t, T.mazhar + 0.08, 0.5, ease.lin), t, meyveOge: meyveK, salinim: 0.8 });
+        const ya = an(t, T.fiil + 0.42, 0.6, ease.lin), ma = an(t, T.mazhar + 0.08, 0.5, ease.lin);
+        if (bu < 1) {
+          const on = AG.y + 4 - bu * (AG.boy * 1.02 + 40);
+          g.save();
+          g.beginPath();
+          g.rect(AG.x - 800, on, 1600, AG.y + 300 - on);
+          g.clip();
+          M.agacCiz(g, A, AG.x, AG.y, { buyume: 1, yaprak: 0, meyveA: 0, t, meyveOge: null, salinim: 0.8 });
+          g.restore();
+          M.agacCiz(g, A, AG.x, AG.y, { buyume: 0, yaprak: ya, meyveA: ma, t, meyveOge: meyveK, salinim: 0.8 });
+        } else M.agacCiz(g, A, AG.x, AG.y, { buyume: 1, yaprak: ya, meyveA: ma, t, meyveOge: meyveK, salinim: 0.8 });
       }
       // kesik çizgili hayal (bi'l-kuvve)
       const hy = an(t, T.kuvve + 0.1, 0.95, ease.inOutSine);
@@ -368,10 +398,10 @@ export default {
       // mazhardır: yukarıdan inen nur (adamın arkasında; adam ışıkta okunur kalır)
       const ni = an(t, T.mazhar, 0.6, ease.outCubic);
       if (ni > 0) nurSutunu(g, t, ni);
-      // çiçekler
-      for (const cc of cicekler) if (!cc.on) ogeCiz(g, cc.oge, cc.x, cc.y, { s: cc.s, r: Math.sin(t * 1.3 + cc.x) * 0.05 });
+      // çiçekler (kesit açıkken penceresine düşenler toprağa çekilir: toprağın içinde çiçek durmaz)
+      cicekCiz(g, t, acil);
       // adam
-      const poz = adamPoz(t);
+      const poz = ops.poz ? ops.poz(t) : adamPoz(t);
       adamEk = insanYan(g, ADAM.x, ADAM.y + 1, poz, { s: ADAM.s, olcek: 1.7 });
       // göğüsteki sıcak ışık (ve seven)
       const gl = an(t, T.seven + 0.25, 0.6, ease.outCubic);
@@ -439,6 +469,49 @@ function tohumHale(g, x, y, R, a) {
   g.fillStyle = gr;
   g.fillRect(x - R, y - R, R * 2, R * 2);
 }
+/** Sırt üstündeki (ön plan olmayan) çiçekler; ac: toprak kesitinin açıklığı (0..1) */
+function cicekCiz(g, t, ac = 0) {
+  for (const cc of cicekler) {
+    if (cc.on) continue;
+    const k = cc.kesitte ? 1 - ac : 1;
+    if (k <= 0.01) continue;
+    ogeCiz(g, cc.oge, cc.x, cc.y, { s: cc.s * (0.35 + 0.65 * k), r: Math.sin(t * 1.3 + cc.x) * 0.05, alfa: Math.min(1, k * 1.6) });
+  }
+}
+/** Filiz → kazık kök: u filizin boyu (tohumdan yüzeye), k kalınlaşma ve kahverengiye dönme, a görünürlük */
+function filizCiz(g, u, k, a) {
+  const y0 = TOH.y - 9, y1 = AG.y + 1;
+  const n = 14;
+  const L = [], R = [], M0 = [];
+  const m = Math.max(1, Math.round(n * u));
+  for (let i = 0; i <= m; i++) {
+    const v = i / n;
+    const x = TOH.x + lerp(0, AG.x - TOH.x, v) + Math.sin(v * Math.PI) * 4;
+    const y = lerp(y0, y1, v);
+    // yarı genişlik: dipte ince, yüzeye doğru kalın; ağaç büyüdükçe gövdenin dibi kadar genişler
+    const hw = lerp(lerp(4, 7.5, v), lerp(7, 24, v * v), k);
+    L.push([x - hw, y]); R.push([x + hw, y]); M0.push([x - hw * 0.35, y]);
+  }
+  const govde = (pay) => {
+    g.beginPath();
+    L.forEach(([x, y], i) => (i ? g.lineTo(x - pay, y) : g.moveTo(x - pay, y)));
+    for (let i = R.length - 1; i >= 0; i--) g.lineTo(R[i][0] + pay, R[i][1]);
+    g.closePath();
+  };
+  g.save();
+  g.globalAlpha *= a;
+  g.fillStyle = rgba(k < 0.5 ? '#2F4A22' : '#3E2A18', 0.95);
+  govde(1.8);
+  g.fill();
+  const r = Math.round(lerp(0x7E, 0x9C, k)), gg = Math.round(lerp(0xA8, 0x74, k)), b = Math.round(lerp(0x56, 0x48, k));
+  g.fillStyle = `rgb(${r},${gg},${b})`;
+  govde(0);
+  g.fill();
+  // ışık tarafı (ince açık çizgi)
+  g.fillStyle = rgba('#F1E2B8', 0.55);
+  if (M0.length > 1) darbe(g, M0, 1.6, { incelme: 0.3 });
+  g.restore();
+}
 function kusYeri(t) {
   const u = (t - 46.9) / 3.7;
   return [lerp(-90, 1180, u), 655 - 120 * u + Math.sin(u * 9) * 14];
@@ -481,7 +554,7 @@ function baglantilar(ctx, cam, t, ip, nur) {
   // kuş (ipliğin kaynağı; ışıkla birlikte görünür)
 }
 
-function nurSutunu(g, t, ni) {
+function nurSutunu(g, t, ni, alfa = 1) {
   const x = ADAM.x + 6, yAlt = ADAM.y;
   const yUst = -760;
   const yBas = lerp(yUst, yAlt + 10, ni);
@@ -497,7 +570,7 @@ function nurSutunu(g, t, ni) {
   g.filter = 'blur(22px)';
   for (const [k, a, kar] of [[1.15, 0.3, 'source-over'], [1.0, 0.5, 'screen'], [0.5, 0.5, 'screen']]) {
     g.globalCompositeOperation = kar;
-    g.globalAlpha = a * nefes * ni;
+    g.globalAlpha = a * nefes * ni * alfa;
     g.beginPath();
     g.moveTo(x - gen0 * k, yUst);
     g.lineTo(x + gen0 * k, yUst);
@@ -518,12 +591,12 @@ function nurSutunu(g, t, ni) {
     const a0 = r.ara(0.0, 0.25), a1 = r.ara(0.55, 0.95);
     const pts = [];
     for (let q = 0; q <= 10; q++) { const v = lerp(a0, a1, q / 10); pts.push([lerp(x0, x1, v), yUst + L * v]); }
-    g.fillStyle = rgba('#EDBE55', 0.55 * ni * (0.6 + 0.4 * Math.sin(t * 1.7 + i * 1.3)));
+    g.fillStyle = rgba('#EDBE55', 0.55 * ni * alfa * (0.6 + 0.4 * Math.sin(t * 1.7 + i * 1.3)));
     darbe(g, pts, 2.6, { incelme: 0.4, sivri: 0.6 });
   }
   g.restore();
 }
-function nurIsik(g, t, ni, adamEk) {
+function nurIsik(g, t, ni, adamEk, alfa = 1) {
   const x = ADAM.x + 6, yAlt = ADAM.y;
   const yUst = -760;
   const yBas = lerp(yUst, yAlt + 10, ni);
@@ -532,8 +605,8 @@ function nurIsik(g, t, ni, adamEk) {
   // yerde ve adamın çevresinde ışık (kenar ışığı gibi, yumuşak)
   const yak = an(t, T.mazhar + 0.3, 0.7, ease.outCubic);
   if (adamEk) {
-    M.hale(g, adamEk.bas[0], adamEk.bas[1] - 10, 120, '#FFF2CC', 0.22 * yak);
-    M.hale(g, x, yAlt + 4, 170, '#FFE9B4', 0.36 * yak);
+    M.hale(g, adamEk.bas[0], adamEk.bas[1] - 10, 120, '#FFF2CC', 0.22 * yak * (adamEk.basAlfa ?? 1) * alfa);
+    M.hale(g, x, yAlt + 4, 170, '#FFE9B4', 0.36 * yak * alfa);
   }
   // inen ışık zerreleri
   for (let i = 0; i < 20; i++) {
@@ -542,7 +615,7 @@ function nurIsik(g, t, ni, adamEk) {
     const yy = yUst + 500 + ((((faz * 1150 + (t - T.mazhar) * hiz) % 1150) + 1150) % 1150);
     if (yy > yBas) continue;
     const xx = x + (r() - 0.5) * gen1 * 1.5 + Math.sin(t * 1.5 + i) * 8;
-    Y.isikNokta(g, xx, yy, 5 + r() * 6, 0.8 * ni * Math.sin(clamp((yy - yUst - 500) / 1150) * Math.PI));
+    Y.isikNokta(g, xx, yy, 5 + r() * 6, 0.8 * ni * alfa * Math.sin(clamp((yy - yUst - 500) / 1150) * Math.PI));
   }
 }
 
@@ -585,4 +658,24 @@ function kivilcim(ctx, cam, t) {
     if (k === 0) { Y.yildizcik(ctx, sx, sy, 26, son); Y.isikNokta(ctx, sx, sy, 60, 0.6 * son); }
     else Y.isikNokta(ctx, sx, sy, 34 - k * 3, (0.7 - k * 0.08) * son);
   }
+}
+
+// ---------------------------------------------------------------- devir teslim (s07) için dışa açık parçalar
+// s07, s06'nın son karesini birebir sürdürür: aynı kamera (benzerlik dönüşümüyle), aynı ağaç, çiçekler, yol, nur ve adam.
+export const GEO06 = { ADAM, AG, NUR, ZEMIN, ADAM_OLCEK: 1.7 };
+export const adamPoz06 = adamPoz;
+/** Sırttaki çiçekler (dünya s06) ve onları s06'daki gibi çizen işlev */
+export const cicekler06 = () => cicekler.filter((c) => !c.on);
+export const cicekCiz06 = (g, t) => cicekCiz(g, t, 0);
+/** Tam büyümüş, meyveli ağaç (s06'daki son hâli) */
+export const agac06 = () => ({ A, meyveK, salinim: 0.8 });
+export const nurSutunu06 = nurSutunu;
+export const nurIsik06 = nurIsik;
+/** Yolun yakın parçasının kenarları (s06 dünyası) */
+export const yolKenar06 = (Zmax = 12.6) => Y.yolCokgen(yol, 0, Zmax);
+/** Yolun yakın parçasının sprite'ı (s06 dünyasında (0, 0)'a çizilir) */
+export const yolOge06 = () => yolYakin;
+/** Nur küresinin t'deki yeri, yarıçapı ve gücü (s06 dünyası, paralaks 1) */
+export function nur06(t) {
+  return { x: NUR.x, y: lerp(NUR.y0, NUR.y1, an(t, 46.5, 2.0, ease.outCubic)), r: NUR.r, guc: 0.55 + 0.45 * an(t, 46.6, 1.6, ease.inOutSine) };
 }

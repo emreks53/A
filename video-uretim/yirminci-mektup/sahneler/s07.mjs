@@ -1,5 +1,8 @@
 // 7. cümle: "Onu hakiki tanımayan, sevmeyen nihayetsiz şakavete, âlâma ve evhama manen ve maddeten müptela olur."
-// s06'nın dünyasında başlar: adam (yan, sağa bakar, eli göğsünde) yolun kıyısında, solunda meyveli ağaç, sağda nur,
+// s06'nın dünyasında başlar: devir teslimde (57,0–57,4) s06'nın karesini birebir sürdürür (aynı kamera, aynı çizim);
+// 57,4'ten sonra kendi dünyasına çapraz geçer: adam, ağaç, yol, çiçekler, nur ve nur sütunu s06'daki yerlerinde ve
+// ölçeklerinde kalır (s06 dünyasından benzerlik dönüşümüyle taşınır), yalnız uzak katmanlar karışır.
+// Adam (yan, sağa bakar, eli göğsünde) yolun kıyısında, solunda meyveli ağaç, sağda nur,
 // yukarıdan inen ışığın altında, aydınlık yeşil manzara. "Onu hakiki tanımayan": ışığa sırtını döner, sola yürür; yürüdükçe renk ışığa doğru çekilir, dünya gri-lila
 // olur, tarama koyulaşır, ağır bulutlar toplanır. "sevmeyen": göğsündeki sıcak ışık titreyip söner. "nihayetsiz
 // şakavete": kamera geri çekilir; önünde ufka uzanan sisli, çorak ova, kuru ağaç, ağır bulutlar. "âlâma": ayaklarının
@@ -8,13 +11,14 @@
 // "ve maddeten": üstüne ağır bir bulut çöker, yağmur iner, omuzları düşer. "müptela olur": dizlerinin üstüne çöker;
 // kamera yavaşça yaklaşır. Bitiş: gri, ıssız, loş; diz çökmüş adam.
 import { W, H, clamp, lerp, ease, an, pop, rng, TAU, smooth, tuval, rgba, gurultu2, renkKaristir } from '../motor/temel.mjs';
-import { ogeCiz, gokTuvali, darbe, oge, TON } from '../motor/kalem.mjs';
+import { ogeCiz, gokTuvali, darbe, oge, TON, FILM } from '../motor/kalem.mjs';
 import { kameraIle, ekranda, salinim } from '../motor/sahne.mjs';
 import { kb } from '../motor/zaman.mjs';
-import { insanYan, insanOn, DURUS, ON_DURUS } from '../motor/insan.mjs';
+import { insanYan, insanOn, DURUS, ON_DURUS, OLCU } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
-import { elips } from '../motor/sekil.mjs';
+import { elips, path2d } from '../motor/sekil.mjs';
 import * as Y from './s07-yardim.mjs';
+import S06, * as S6 from './s06.mjs';
 
 const T = {
   bas: 57.0, son: 67.6,
@@ -22,16 +26,23 @@ const T = {
   sakavet: kb('şakavete'), alam: kb('alama'), ve: kb('ve', 13), evham: kb('evhama'), manen: kb('manen'), maddeten: kb('maddeten'),
   muptela: kb('müptela'), olur: kb('olur'),
 };
-const DONUS = { t0: T.onu + 0.04, sure: 0.36 };
+// dönüş: yan (sağa) → 3/4 arka → arka → 3/4 arka → yan (sola); siluet genişliği sürekli (bkz. ARKA_U)
+const DONUS = { t0: T.onu + 0.04, sure: 0.46 };
+// devir teslim: t1'e kadar s06'nın karesi aynen; t1–t2 arasında s06 karesinden s07'nin hizalı karesine geçiş
+export const KOPRU = { t1: 57.4, t2: T.onu + 0.04 };
 const YURU = { t0: DONUS.t0 + 0.3, dur0: 62.12, dur1: 62.84 };
 
 // dünya yerleşimi (nötr görünüşte ekranla aynı)
 const ZEMIN = 1330; // adamın bastığı çizgi
 const S = 0.85; // adam ölçeği (boy ~326)
 const X0 = 470; // başlangıçta adamın yeri
-const AGAC = { x: 172, y: 1304 };
+const AGAC = { x: 172, y: 1304 }; // hazirla'da s06'daki ağacın yerine taşınır
 const F = { gok: 0.3, isik: 0.35, bulut: 0.42, dag: 0.45, uzak: 0.55, sisU: 0.6, orta: 0.75, sisO: 0.88, golge: 0.93, on: 1 };
-const ISIK = { x: 837, y: 629, r: 80 }; // nur (F.isik katmanında; s06'nın sonundaki yerinde)
+const ISIK = { x: 837, y: 629, k: 1 }; // nur (F.isik katmanında); hazirla'da s06'nın son karesindeki yerine oturtulur
+// s06 dünyası → s07 dünyası benzerlik dönüşümü: p7 = (ax + s·x6, ay + s·y6) (adamın ayağı ve boyu eşlenir)
+let PHI = { s: 1, ax: 0, ay: 0 };
+const phi = (x, y) => [PHI.ax + PHI.s * x, PHI.ay + PHI.s * y];
+const s06Uzayi = (c) => { c.translate(PHI.ax, PHI.ay); c.scale(PHI.s, PHI.s); };
 
 const tumsek = (x, c, h, w) => h * Math.exp(-(((x - c) / w) ** 2));
 const pOn = (x) => 1236 + 12 * Math.sin(x * 0.0045 + 0.6) + 7 * Math.sin(x * 0.013 + 2);
@@ -40,9 +51,29 @@ const pDag = (x) => 1110 - tumsek(x, 760, 250, 230) - tumsek(x, 1080, 300, 210) 
 const pUzak = (x) => 1080 + 3 * Math.sin(x * 0.017 + 1) - tumsek(x, 920, 120, 270) - tumsek(x, 390, 74, 250) - tumsek(x, -10, 28, 200);
 
 let sim, gokR, gokG, uzakR, uzakG, ortaR, ortaG, onR, onG, agacR, agacG, cicekR, cicekG, bulutlarR, agirlar, yagmurBulutu;
-let kucukAgacR, kucukAgacG, kuruAgac, uzakKuru, calilar, taslar, golgeler, sisU, sisO, huzme, kamera, onDallar, renkTuval, adamTuval;
+let kucukAgacR, kucukAgacG, kuruAgac, uzakKuru, calilar, taslar, golgeler, sisU, sisO, kamera, onDallar, renkTuval, adamTuval;
 let XDUR; // adamın durduğu yer
 let sisBlob, onPlan, otlar, yolR, yolG, dagR, dagG, XFIN, kucukBulut, golgeSis;
+let yolMaske, yolPoligon, cicek6, kopruTuval, nur6;
+/** Çokgeni yatay bir doğruyla keser: yon 1 → y ≥ c kalır, yon -1 → y ≤ c kalır */
+function yatayKes(P, c, yon) {
+  const ic = (p) => (yon > 0 ? p[1] >= c : p[1] <= c);
+  const out = [];
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], b = P[(i + 1) % P.length];
+    if (ic(a)) out.push(a);
+    if (ic(a) !== ic(b)) { const u = (c - a[1]) / (b[1] - a[1]); out.push([a[0] + (b[0] - a[0]) * u, c]); }
+  }
+  return out;
+}
+function icinde(P, x, y) {
+  let ic = false;
+  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+    const [xi, yi] = P[i], [xj, yj] = P[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + 1e-12) + xi) ic = !ic;
+  }
+  return ic;
+}
 
 // ---------------------------------------------------------------- yardımcılar
 function griKopya(c, { sat = 0.22, parlak = 0.94, tint = '#E4DFEA' } = {}) {
@@ -113,33 +144,75 @@ function ustKaristir(p, h, w) {
   return o;
 }
 
+/** Dönüşten önceki yan poz (sağa bakar): s06'nın son pozu (eli göğsünde, nefes) üzerinden; el iner, gövde döner.
+ *  k: dönüşün başlangıcı (0..1: omuzlar ve gövde dönüşe hazırlanır) */
+function sagPoz(t, k = 0) {
+  const p0 = S6.adamPoz06(t);
+  const el = an(t, T.onu - 0.1, 0.32, ease.inOutSine); // göğüsteki el iner
+  // el inerken dirsek geriye kaçar, ön kol dirsekten aşağı döner: el gövdeye yakın iner, öne uzanmaz
+  const kol = kolIndir({ o: p0.omuz[1], d: p0.dirsek[1] }, { o: 0.06, d: 0.18 }, el, 5);
+  return { ...p0, bas: lerp(p0.bas, 0.08, an(t, T.onu - 0.08, 0.32)), govde: p0.govde + 0.03 * k,
+    omuz: [p0.omuz[0] - 0.07 * k, kol.o + 0.1 * k], dirsek: [p0.dirsek[0], kol.d], el: [p0.el?.[0] || 0, lerp(p0.el?.[1] || 0, 0, el)] };
+}
+const ARKA_POZ = { ...ON_DURUS, kol: [0.1, 0.1], bas: 0.04 };
+// Dönüşte arka görünüş u ∈ ARKA_U (≈ 0,18 sn). Genişlik sürekli: arka görünüşün gövdesi yan görünüşün gövde
+// genişliğinden (≈ 0,5) başlayıp tam arkaya (1) açılır ve yine daralır (3/4 → arka → 3/4); baş ölçeklenmez (yandan
+// ve arkadan baş aynı genişlikte). Görünüş değişimi siluet eşitken olur: sıçrama ve çift görüntü yok.
+const ARKA_U = [0.26, 0.66];
+function arkaDurum(X, u) {
+  const v = clamp((u - ARKA_U[0]) / (ARKA_U[1] - ARKA_U[0]));
+  return { mod: 'arka', X, Xkam: X, yon: 1, sx: 1, govdeSx: 0.5 + 0.5 * Math.sin(Math.PI * v), poz: ARKA_POZ };
+}
+/** Ön kolun (1) yolu: ön kol dirsekten döner, dirsek ortada geriye kaçar; el gövdeye yakın kalır, öne uzanmaz */
+function kolYolu(a, b, w, w2 = w, geri = 0.3) {
+  const b2 = lerp(a.o + a.d, b.o + b.d, w);
+  const b1 = lerp(a.o, b.o, w2) - geri * Math.sin(Math.PI * w);
+  return { o: b1, d: b2 - b1 };
+}
+/** Ön kolun bileği (omuza göre, gövde çerçevesinde; +x ileri, +y aşağı) */
+const bilekYeri = (k) => [OLCU.kol * Math.sin(k.o) + OLCU.onkol * Math.sin(k.o + k.d), OLCU.kol * Math.cos(k.o) + OLCU.onkol * Math.cos(k.o + k.d)];
+/** İki parçalı kol ters kinematiği (dirsek geride): bilek (x, y) → { o: omuz, d: dirsek } */
+function kolIK(x, y) {
+  const L1 = OLCU.kol, L2 = OLCU.onkol;
+  const d = clamp(Math.hypot(x, y), Math.abs(L1 - L2) + 1, L1 + L2 - 0.01);
+  const be = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
+  const o = Math.atan2(x, y) - be;
+  const b2 = Math.atan2(x - L1 * Math.sin(o), y - L1 * Math.cos(o));
+  return { o, d: b2 - o };
+}
+/** maddeten: el göğüsten gövdeye yakın, dümdüz aşağı kayar (dirsek geriye kaçar, ön kol öne açılmaz), sonra kol sarkar */
+function kolIndir(a, b, w, on = 2) {
+  const p0 = bilekYeri(a), p1 = bilekYeri(b);
+  // bilek gövdenin önünden (on px kadar dışarıdan) iner: dirsek aşırı geriye kaçmaz
+  const k = kolIK(lerp(p0[0], p1[0], w) + on * Math.sin(Math.PI * w), lerp(p0[1], p1[1], w));
+  const v = smooth(0.82, 1, w); // uçta hedef poza tam otur
+  return { o: lerp(k.o, b.o, v), d: lerp(k.d, b.d, v) };
+}
+
 /** t anında adamın durumu: { mod: 'yan'|'arka', X, yon, sx, poz (serbest, zipla çözülmüş) } */
 function adamDurum(t) {
   const u = clamp((t - DONUS.t0) / DONUS.sure);
-  const nefes = Math.sin(t * 2.2);
-  if (t < DONUS.t0 + DONUS.sure * 0.66) {
-    if (u < 0.36) {
-      const k = ease.inQuad(u / 0.36);
-      const el = an(t, T.onu - 0.1, 0.32, ease.inOutSine); // göğüsteki el iner
-      // s06'nın son pozu (eli göğsünde); el inerken dirsek hafifçe geriye kaçar, ön kol aşağı düşer
-      const poz = { ...DURUS, bas: lerp(-0.17 + 0.012 * nefes, 0.08, an(t, T.onu - 0.08, 0.32)), govde: -0.015 + 0.01 * nefes + 0.03 * k,
-        omuz: [-0.05 - 0.07 * k, lerp(-0.34, 0.06, el) - 0.22 * Math.sin(Math.PI * el) + 0.1 * k], dirsek: [0.12, lerp(2.82, 0.18, el)], el: [0, lerp(0.32, 0, el)] };
-      return yanPoz({ mod: 'yan', X: X0, yon: 1, sx: 1 - 0.32 * k, poz });
-    }
-    const k = (u - 0.36) / 0.3;
-    return { mod: "arka", X: X0, Xkam: X0, yon: 1, sx: 0.74 + 0.26 * Math.sin(Math.PI * k), poz: { ...ON_DURUS, kol: [0.1, 0.1], bas: 0.04 } };
-  }
+  if (u < ARKA_U[0]) return yanPoz({ mod: 'yan', X: X0, yon: 1, sx: 1, poz: sagPoz(t, ease.inOutSine(u / ARKA_U[0])) });
   const o = sim(t);
+  if (u < ARKA_U[1]) return arkaDurum(o.X, u);
   let poz = Y.yuruyusPozu(o, { S0: 118, kol: 0.22, govde: 0.09, bas: 0.17 });
-  // dönüşün sonu: hafif açılma
-  const sx = u < 1 ? 0.68 + 0.32 * ease.outQuad((u - 0.66) / 0.34) : 1;
+  const sx = 1;
   // duruş ve ruh hâli (yalnız üst gövde)
   poz = ustKaristir(poz, { govde: 0.1, bas: 0.3 }, an(t, 62.35, 0.6, ease.inOutSine));
   poz = ustKaristir(poz, { govde: 0.04, bas: -0.02, omuz: [-0.12, -0.2], dirsek: [0.3, 0.36] }, an(t, T.evham, 0.45, ease.outCubic));
-  poz = ustKaristir(poz, { govde: 0.08, bas: 0.34, omuz: [-0.04, -0.34], dirsek: [0.2, 2.82], el: [0, 0.32] }, an(t, T.manen - 0.02, 0.4, ease.inOutCubic));
-  poz = ustKaristir(poz, { govde: 0.22, bas: 0.52, omuz: [0.05, 0.1], dirsek: [0.06, 0.1], el: [0, 0] }, an(t, T.maddeten + 0.04, 0.55, ease.outCubic));
+  // manen: el göğse gider; maddeten: el göğüsten iner (ön kol dirsekten döner, kol öne uzanmaz), omuzlar çöker
+  let kol = { o: poz.omuz[1], d: poz.dirsek[1] };
+  const wm = an(t, T.manen - 0.02, 0.4, ease.inOutCubic);
+  poz = ustKaristir(poz, { govde: 0.08, bas: 0.34, omuz: [-0.04, -0.34], dirsek: [0.2, 2.82], el: [0, 0.32] }, wm);
+  kol = kolYolu(kol, { o: -0.34, d: 2.82 }, wm);
+  const wd = an(t, T.maddeten + 0.04, 0.5, ease.inOutSine);
+  poz = ustKaristir(poz, { govde: 0.22, bas: 0.52, omuz: [0.0, -0.02], dirsek: [0.06, 0.1] }, an(t, T.maddeten + 0.04, 0.55, ease.outCubic));
+  kol = kolIndir(kol, { o: -0.02, d: 0.12 }, wd); // kol sarkar (gövde öne eğik: kol yere dik kalır, öne açılmaz)
+  poz.omuz = [poz.omuz[0], kol.o];
+  poz.dirsek = [poz.dirsek[0], kol.d];
+  poz.el = [0, 0.32 * wm * (1 - wd)];
   // nefes / omuz inip kalkması
-  poz.govde += 0.012 * nefes * an(t, 62.8, 0.5);
+  poz.govde += 0.012 * Math.sin(t * 2.2) * an(t, 62.8, 0.5);
   let X = o.X;
   const k = an(t, T.muptela + 0.02, DIZ_SURE, ease.inQuad);
   if (k > 0) {
@@ -187,8 +260,27 @@ function yanPoz(d) {
   return d;
 }
 
-/** adamı dünya koordinatında çizer; göğüs konumunu döndürür */
+/** adamı dünya koordinatında çizer; eklem konumlarını (göğüs, baş) döndürür */
 function adamCiz(g, d) {
+  if (d.mod === 'arka' && d.govdeSx !== undefined) {
+    // gövde (boyun altı) govdeSx ile, baş ölçeksiz: iki geçişte, boyun hizasında kırpılarak
+    const yb = ZEMIN - (OLCU.kalca + OLCU.govde + 12) * S;
+    let r;
+    for (const [ust, k] of [[false, d.govdeSx], [true, 1]]) {
+      g.save();
+      g.beginPath();
+      if (ust) g.rect(d.X - 300, yb - 400, 600, 400);
+      else g.rect(d.X - 300, yb, 600, 600);
+      g.clip();
+      g.translate(d.X, 0);
+      g.scale(k, 1);
+      g.translate(-d.X, 0);
+      const q = insanOn(g, d.X, ZEMIN, d.poz, { s: S, olcek: 1.5, arka: true });
+      if (!ust) r = q;
+      g.restore();
+    }
+    return r;
+  }
   g.save();
   g.translate(d.X, 0);
   g.scale(d.sx, 1);
@@ -197,7 +289,28 @@ function adamCiz(g, d) {
   if (d.mod === 'arka') r = insanOn(g, d.X, ZEMIN, d.poz, { s: S, olcek: 1.5, arka: true });
   else r = insanYan(g, d.X, ZEMIN, d.poz, { s: S, yon: d.yon, olcek: 1.5 });
   g.restore();
-  return r.gogus;
+  return r;
+}
+/** Adamı hedefe çizer (gri: gri dünyada figür ayrı katmanda çizilip hafifçe soldurulur); göğüs ve baş konumunu saklar */
+function adamKatman(g, cam, d, gri, durum) {
+  const kaydet = (r) => { durum.gogus = r.gogus; durum.bas = r.bas; };
+  if (!gri) { kameraIle(g, cam, (c) => kaydet(adamCiz(c, d)), F.on); return; }
+  const [px, py] = ekranda(cam, d.X, ZEMIN);
+  const h = 384 * S * cam.z;
+  const bx = Math.max(0, Math.floor(px - h * 0.75)), by = Math.max(0, Math.floor(py - h * 1.2));
+  const bw = Math.min(W, Math.ceil(px + h * 0.75)) - bx, bh = Math.min(H, Math.ceil(py + h * 0.2)) - by;
+  if (bw <= 0 || bh <= 0) return;
+  const ac = adamTuval.getContext('2d');
+  ac.setTransform(1, 0, 0, 1, 0, 0);
+  ac.globalAlpha = 1;
+  ac.globalCompositeOperation = 'source-over';
+  ac.clearRect(bx, by, bw, bh);
+  kameraIle(ac, cam, (c) => kaydet(adamCiz(c, d)), F.on);
+  g.save();
+  g.filter = 'saturate(0.34) brightness(0.97)';
+  g.drawImage(adamTuval, bx, by, bw, bh, bx, by, bw, bh);
+  g.filter = 'none';
+  g.restore();
 }
 /** bacak kemik zinciri (dünya): bilek → diz → uyluğun oran kadarı */
 function bacakZinciri(d, i, oran) {
@@ -215,7 +328,10 @@ function kameraAl(t) {
   const d = adamDurum(t);
   const z = Math.exp(KZ(t) + YAKIN * smooth(62.7, 63.75, t) * (1 - smooth(64.45, 66.0, t)));
   const sx = KS(t), sy = KY(t);
-  const sl = salinim(t, 3, 0.25, 7);
+  // el kamerası salınımı: devir teslimde s06'nınki (kare birebir), sonra yavaşça s07'ninkine geçer
+  const ws = smooth(KOPRU.t2, KOPRU.t2 + 0.7, t);
+  const s6 = S6.salinim06(t), s7 = salinim(t, 3, 0.25, 7);
+  const sl = { x: lerp(s6.x, s7.x, ws), y: lerp(s6.y, s7.y, ws), r: lerp(s6.r, s7.r, ws) };
   const ax = XFIN === null ? d.Xkam : lerp(d.Xkam, XFIN, smooth(T.muptela, T.son - 0.35, t));
   return { x: ax - (sx - 540) / z + sl.x / z, y: ZEMIN - (sy - 960) / z + sl.y / z, z, r: sl.r, d };
 }
@@ -226,6 +342,7 @@ const SUP_EN = 720, SUP_EGIM = 0.25;
 
 // ---------------------------------------------------------------- sahne
 export default {
+  gecis: { tip: 'kesme' }, // 57,0–57,4 arasında bu sahne s06'nın karesini kendisi çizer
   sesler: [
     { t: DONUS.t0, tur: 'whoosh', guc: 0.14, sure: 0.5 },
     { t: YURU.t0 + 0.35, tur: 'adim', guc: 0.16, tekrar: 6, ara: 0.62 },
@@ -241,16 +358,37 @@ export default {
     { t: DIZ_CARPMA, tur: 'toz', guc: 0.22 },
   ],
   hazirla() {
+    // s06 (devir teslim karesi için; bir kez hazırlanır) ve s06 dünyasından s07 dünyasına benzerlik dönüşümü
+    S06.hazirla();
+    const G6 = S6.GEO06;
+    PHI = { s: S / G6.ADAM.s, ax: 0, ay: 0 };
+    PHI.ax = X0 - PHI.s * G6.ADAM.x;
+    PHI.ay = ZEMIN - PHI.s * (G6.ADAM.y + 1);
+    [AGAC.x, AGAC.y] = phi(G6.AG.x, G6.AG.y);
+
     // yürüyüş
     const wF = (t) => (t < YURU.t0 ? 0 : smooth(YURU.t0, YURU.t0 + 0.55, t) * (1 - smooth(YURU.dur0, YURU.dur1, t)));
     const omF = (t) => (t < YURU.t0 ? 0 : (TAU / lerp(1.18, 1.42, smooth(60.3, 61.9, t))) * (0.4 + 0.6 * smooth(YURU.t0, YURU.t0 + 0.4, t)) * (1 - smooth(YURU.dur0, YURU.dur1 + 0.04, t)));
     sim = Y.yuruyusSim({ t0: T.bas - 0.2, t1: T.son + 0.2, x0: X0, yon: -1, s: S, S0: 118, wF, omF, L0: 24 });
     XDUR = sim.sonX;
 
-    // kamera: başta s06'nın son karesi (adam ekranda 615/1195, ölçek 1,05), sonda s08'in ilk karesi (adam 420/1291, 1,18)
-    KS = Y.egri([[57.0, 615], [57.75, 617], [59.4, 650], [60.4, 662], [61.95, 765], [62.5, 760], [64.9, 560], [67.6, 420]]);
-    KY = Y.egri([[57.0, 1195], [58.2, 1202], [60.4, 1290], [61.95, 1290], [62.5, 1290], [64.9, 1300], [67.6, 1291]]);
-    KZ = Y.egri([[57.0, Math.log(1.238)], [57.75, Math.log(1.245)], [60.4, Math.log(1.1)], [61.95, Math.log(0.725)], [62.4, Math.log(0.73)], [63.6, Math.log(0.92)], [64.9, Math.log(1.12)], [65.6, Math.log(1.2)], [67.6, Math.log(1.176 / S)]]);
+    // kamera: başta s06'nın 57,4'teki karesi (s06 kamerasının benzerlik dönüşümü: adam aynı yerde ve ölçekte), sonda
+    // s08'in ilk karesi (adam 420/1291, 1,18)
+    const K6 = S6.kamera06Ham(KOPRU.t1);
+    const sx0 = 540 + (G6.ADAM.x - K6.x) * K6.z, sy0 = 960 + (G6.ADAM.y + 1 - K6.y) * K6.z, z0 = K6.z / PHI.s;
+    KS = Y.egri([[KOPRU.t1, sx0], [57.75, sx0], [59.4, 650], [60.4, 662], [61.95, 765], [62.5, 760], [64.9, 560], [67.6, 420]]);
+    KY = Y.egri([[KOPRU.t1, sy0], [58.2, sy0 + 4], [60.4, 1290], [61.95, 1290], [62.5, 1290], [64.9, 1300], [67.6, 1291]]);
+    KZ = Y.egri([[KOPRU.t1, Math.log(z0)], [57.75, Math.log(z0 * 1.006)], [60.4, Math.log(1.1)], [61.95, Math.log(0.725)], [62.4, Math.log(0.73)], [63.6, Math.log(0.92)], [64.9, Math.log(1.12)], [65.6, Math.log(1.2)], [67.6, Math.log(1.176 / S)]]);
+    // nur: s06'nın 57,4 karesindeki ekran yerine ve boyuna oturt (F.isik katmanında)
+    nur6 = S6.nur06(KOPRU.t1);
+    {
+      const [nx, ny] = ekranda({ x: K6.x, y: K6.y, z: K6.z }, nur6.x, nur6.y, 1);
+      const c7 = { x: X0 - (sx0 - 540) / z0, y: ZEMIN - (sy0 - 960) / z0 };
+      const zf = Math.pow(z0, F.isik);
+      ISIK.x = (nx - 540) / zf + 540 + (c7.x - 540) * F.isik;
+      ISIK.y = (ny - 960) / zf + 960 + (c7.y - 960) * F.isik;
+      ISIK.k = K6.z / zf;
+    }
     XFIN = null;
     XFIN = adamDurum(T.son).X;
 
@@ -293,42 +431,64 @@ export default {
     onR = Y.zeminOge({ ad: 's07-on-r', profil: pOn, x0: -720, x1: 1520, yAlt: 2320, palet: 'yesil', olcek: 1.15, tohum: 8, detay: cimen('#3E7C4F', false) });
     onG = Y.zeminOge({ ad: 's07-on-g', profil: pOn, x0: -1520, x1: 1520, yAlt: 2320, palet: 'gri', olcek: 1.3, tohum: 8, detay: cimen('#655D70', true) });
 
-    // yol (s06'dan): sol alttan adamın ayağının dibinden sağa, nura doğru kıvrılır; gri dünyada kuru, çatlak toprak
-    const yolPts = [];
-    const solK = [[-60, 2360], [40, 1960], [170, 1640], [330, 1450], [520, 1352], [720, 1300], [930, 1268], [1180, 1250], [1530, 1244]];
-    const sagK = [[1530, 1262], [1180, 1276], [960, 1316], [780, 1388], [640, 1500], [540, 1680], [480, 1980], [450, 2360]];
-    const egriNokta = (K) => { const o = []; for (let i = 0; i < K.length - 1; i++) for (let k = 0; k < 8; k++) { const u = k / 8; const p0 = K[Math.max(0, i - 1)], p1 = K[i], p2 = K[i + 1], p3 = K[Math.min(K.length - 1, i + 2)]; const u2 = u * u, u3 = u2 * u; o.push([0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * u + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3), 0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * u + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3)]); } o.push(K[K.length - 1]); return o; };
-    yolPts.push(...egriNokta(solK), ...egriNokta(sagK));
-    yolR = Y.zeminOge({ ad: 's07-yol-r', sekilPts: yolPts, palet: 'yol', olcek: 1.2, tohum: 31, yon: -0.75 });
-    yolG = Y.zeminOge({ ad: 's07-yol-g', sekilPts: yolPts, palet: 'yolGri', olcek: 1.3, tohum: 31, yon: -0.75, detay: (c, api) => {
-      const r = rng(313);
-      for (let i = 0; i < 16; i++) {
-        let x = r.ara(80, 900), y = r.ara(1320, 2100);
-        const pts = [[x, y]];
-        for (let k = 0; k < 4; k++) { x += r.ara(-22, 22); y += r.ara(8, 22); pts.push([x, y]); }
-        api.cizgi(pts, { renk: '#6E6670', kal: 1.3, alfa: 0.5 });
-      }
-    } });
+    // yol: s06'nın yolu (aynı biçim, aynı yer); renkli dünyada s06'nın yol sprite'ı s06 uzayında çizilir, gri dünyada aynı
+    // çokgen kuru, çatlak toprak olur. Sırtın (pOn) ardında kalan kısım çizimde kesilir.
+    yolR = S6.yolOge06();
+    {
+      const { sol, sag } = S6.yolKenar06(14);
+      const uzat = (P) => { // yakın ucu (ekranın altı) aşağı doğru uzat
+        const [a, b] = [P[0], P[4]];
+        const dx = a[0] - b[0], dy = a[1] - b[1], L = Math.hypot(dx, dy);
+        return [[a[0] + (dx * 900) / L, a[1] + (dy * 900) / L], ...P];
+      };
+      let pts = [...uzat(sol).map(([x, y]) => phi(x, y)), ...uzat(sag).reverse().map(([x, y]) => phi(x, y))];
+      pts = yatayKes(yatayKes(pts, 1150, 1), 2450, -1);
+      yolPoligon = pts;
+      yolG = Y.zeminOge({ ad: 's07-yol6-g', sekilPts: pts, palet: 'yolGri', olcek: 1.3, tohum: 31, yon: -0.75, detay: (c, api) => {
+        const r = rng(313);
+        for (let i = 0; i < 26; i++) {
+          let x = r.ara(-300, 1000), y = r.ara(1320, 2300);
+          if (!icinde(pts, x, y)) continue;
+          const q = [[x, y]];
+          for (let k = 0; k < 4; k++) { x += r.ara(-22, 22); y += r.ara(8, 22); q.push([x, y]); }
+          api.cizgi(q, { renk: '#6E6670', kal: 1.3, alfa: 0.5 });
+        }
+      } });
+      const m = [];
+      for (let x = -1800; x <= 1900; x += 8) m.push([x, pOn(x) + 1.2]);
+      m.push([1900, 2700], [-1800, 2700]);
+      yolMaske = path2d([{ pts: m, kapali: true }]);
+    }
 
-    // ağaç (meyveli) ve gri kopyası
-    const A = M.agac({ boy: 470, tohum: 21, olcek: 1.45 });
-    const meyve = M.meyveOge(11, 2, 'kirmizi');
-    const OL = 1.45, AW = 700, AH = 640;
-    const at = tuval(AW * OL, AH * OL);
-    const ag = at.getContext('2d');
-    ag.scale(OL, OL);
-    M.agacCiz(ag, A, AW / 2, AH - 20, { t: 0, meyveOge: meyve });
-    agacR = { tuval: at, ox: AW / 2, oy: AH - 20, olcek: OL };
-    agacG = { ...agacR, tuval: griKopya(at, { sat: 0.18, parlak: 0.9 }) };
+    // ağaç: s06'daki meyveli ağaç (aynı ağaç, aynı yer ve ölçek) ve gri kopyası
+    {
+      const { A: A6, meyveK, salinim: sal6 } = S6.agac06();
+      const OL = 1.6, AW = 840, AH = 820, oy = AH - 40;
+      const at = tuval(AW * OL, AH * OL);
+      const ag = at.getContext('2d');
+      ag.scale(OL, OL);
+      M.agacCiz(ag, A6, AW / 2, oy, { s: PHI.s, buyume: 1, yaprak: 1, meyveA: 1, t: KOPRU.t1 + 0.18, meyveOge: meyveK, salinim: sal6 });
+      agacR = { tuval: at, ox: AW / 2, oy, olcek: OL };
+      agacG = { ...agacR, tuval: griKopya(at, { sat: 0.18, parlak: 0.9 }) };
+    }
+    // s06'nın sırttaki çiçekleri (s07 dünyasında) ve gri kopyaları
+    cicek6 = S6.cicekler06().map((c) => {
+      const [x, y] = phi(c.x, c.y);
+      return { x, y, s: c.s * PHI.s, x6: c.x, faz: (c.x * 0.37 + c.y * 0.11) % TAU, ogeG: griOge(c.oge, { sat: 0.15, parlak: 0.88 }) };
+    });
 
     // çiçekler (renkli dünyada), gri dünyada boyun büken gri kopyaları
     const cr = rng(707);
     cicekR = [];
     for (let i = 0; i < 16; i++) {
       const x = cr.ara(-300, 1260);
-      if (Math.abs(x - X0) < 50 || Math.abs(x - AGAC.x) < 60 || (x > 420 && x < 980)) continue;
+      if (Math.abs(x - X0) < 50 || Math.abs(x - 172) < 60 || (x > 420 && x < 980)) continue;
       const renk = cr.sec(['beyaz', 'beyaz', 'pembe', 'sari']);
-      cicekR.push({ x, y: cr.ara(1262, 1312), s: cr.ara(0.5, 0.8), oge: M.cicekOge(22, 1.5, renk), faz: cr() * TAU });
+      const y = cr.ara(1262, 1312), s0 = cr.ara(0.5, 0.8), faz = cr() * TAU;
+      if (Math.abs(x - AGAC.x) < 60) continue;
+      // yolun üstüne ve s06'dan gelen çiçeklerin dibine düşmesin
+      if (icinde(yolPoligon, x, y) || cicek6.some((c) => Math.hypot(c.x - x, c.y - y) < 55)) continue;
+      cicekR.push({ x, y, s: s0, oge: M.cicekOge(22, 1.5, renk), faz });
     }
     cicekG = cicekR.map((c) => ({ ...c, oge: griOge(c.oge, { sat: 0.15, parlak: 0.88 }) }));
     bulutlarR = [[M.bulutOge(300, 3, 1.15), 120, 300], [M.bulutOge(240, 7, 1.15), 980, 160], [M.bulutOge(260, 12, 1.15), 1260, 420]];
@@ -393,21 +553,6 @@ export default {
     }
     sisO = Y.sisTuvali(2400, 220, 9, '#E8E5EE');
 
-    // nur huzmesi (yumuşak yamuk)
-    huzme = tuval(420, 1000);
-    {
-      const g = huzme.getContext('2d');
-      g.filter = 'blur(26px)';
-      const gr = g.createLinearGradient(0, 0, 0, 1000);
-      gr.addColorStop(0, 'rgba(255,246,214,0.95)');
-      gr.addColorStop(0.6, 'rgba(255,240,196,0.55)');
-      gr.addColorStop(1, 'rgba(255,240,196,0)');
-      g.fillStyle = gr;
-      g.beginPath();
-      g.moveTo(170, 40); g.lineTo(250, 40); g.lineTo(380, 960); g.lineTo(40, 960); g.closePath();
-      g.fill();
-    }
-
     // zeminden fışkıran dikenli dallar (adamın durduğu yerin çevresinde; dz: derinlik, + önde), yan dallarıyla
     const dr = rng(909);
     onDallar = [];
@@ -437,9 +582,12 @@ export default {
 
     renkTuval = tuval(W, H);
     adamTuval = tuval(W, H);
+    kopruTuval = tuval(W, H);
   },
 
   ciz(ctx, t) {
+    // devir teslim: s06'nın karesi aynen (motor 'kesme' ile yalnız bu sahneyi çizer; kare s06'nınkiyle piksel piksel aynı)
+    if (t < KOPRU.t1) { S06.ciz(ctx, t); return; }
     const cam = kameraAl(t);
     const d = cam.d;
     const Fc = CEPHE(t);
@@ -470,6 +618,22 @@ export default {
       ctx.drawImage(renkTuval, 0, 0);
     }
     gogusIsigi(ctx, t, durum);
+    // s06 karesinden s07'nin hizalı karesine geçiş (adam, ağaç, yol, çiçekler, nur aynı yerde; adam s06 karesinde de
+    // s07'nin pozuyla çizilir, çift görüntü olmaz)
+    if (t < KOPRU.t2) {
+      const bc = kopruTuval.getContext('2d');
+      bc.setTransform(1, 0, 0, 1, 0, 0);
+      bc.globalAlpha = 1;
+      bc.globalCompositeOperation = 'source-over';
+      bc.filter = 'none';
+      bc.fillStyle = FILM;
+      bc.fillRect(0, 0, W, H);
+      S06.ciz(bc, t, { poz: (tt) => sagPoz(tt, 0) });
+      ctx.save();
+      ctx.globalAlpha = 1 - ease.inOutSine(clamp((t - KOPRU.t1) / (KOPRU.t2 - KOPRU.t1)));
+      ctx.drawImage(kopruTuval, 0, 0);
+      ctx.restore();
+    }
   },
 };
 
@@ -485,10 +649,12 @@ function dunya(g, t, durum, gri) {
   }, F.gok);
 
   if (!gri) {
-    // nur ve beyaz bulutlar
+    // nur (s06'daki gibi çizilir: aynı yarıçap ve çözünürlük, yalnız F.isik katmanına ölçekle oturtulur) ve beyaz bulutlar
     kameraIle(g, cam, (c) => {
-      const guc = 1 - 0.75 * solma;
-      M.nurKuresi(c, ISIK.x, ISIK.y, ISIK.r, t, { guc, olcek: 1.2 });
+      const guc = nur6.guc * (1 - 0.75 * solma);
+      c.translate(ISIK.x, ISIK.y);
+      c.scale(ISIK.k, ISIK.k);
+      M.nurKuresi(c, 0, 0, nur6.r, t, { guc, olcek: 2.4 });
     }, F.isik);
     kameraIle(g, cam, (c) => {
       for (const [b, x, y] of bulutlarR) ogeCiz(c, b, x + (t - 57) * 5, y);
@@ -534,8 +700,22 @@ function dunya(g, t, durum, gri) {
   kameraIle(g, cam, (c) => {
     ogeCiz(c, gri ? onG : onR, 0, 0);
     const agacSis = gri ? an(t, 60.3, 2.4, ease.inOutSine) : 0; // geride kalan ağaç ve nura giden yol sise gömülür
-    ogeCiz(c, gri ? yolG : yolR, 0, 0, { alfa: 1 - 0.72 * agacSis });
-    ogeCiz(c, gri ? agacG : agacR, AGAC.x, AGAC.y, { r: Math.sin(t * 0.9) * 0.004, alfa: 1 - 0.82 * agacSis });
+    // yol (s06'nın yolu): sırtın ardına geçtiği yerde kesilir (sırt çizgisi yolun üstünde kalır)
+    c.save();
+    c.clip(yolMaske);
+    if (gri) ogeCiz(c, yolG, 0, 0, { alfa: 1 - 0.72 * agacSis });
+    else { c.save(); s06Uzayi(c); ogeCiz(c, yolR, 0, 0); c.restore(); }
+    c.restore();
+    const sallan = smooth(KOPRU.t2, KOPRU.t2 + 0.8, t); // s06 karesinden çıkarken ağaç sabit, sonra hafif salınım
+    ogeCiz(c, gri ? agacG : agacR, AGAC.x, AGAC.y, { r: Math.sin(t * 0.9) * 0.004 * sallan, alfa: 1 - 0.82 * agacSis });
+    if (!gri && solma < 0.99) { c.save(); s06Uzayi(c); S6.nurSutunu06(c, t, 1, 1 - solma); c.restore(); }
+    // s06'nın sırttaki çiçekleri (aynı yerde); gri dünyada boyun büker, çorak ovada kalmaz
+    if (!gri) { c.save(); s06Uzayi(c); S6.cicekCiz06(c, t); c.restore(); }
+    else for (const cc of cicek6) {
+      if (cc.x < 160) continue;
+      const egil = 0.5 + 0.2 * Math.sin(cc.faz);
+      ogeCiz(c, cc.ogeG, cc.x, cc.y, { s: cc.s * 0.9, sy: cc.s * 0.7, r: egil * (cc.faz > 3 ? 1 : -1) + Math.sin(t * 1.3 + cc.x6) * 0.05 });
+    }
     if (agacSis > 0) {
       c.save();
       c.globalAlpha = 0.75 * agacSis;
@@ -570,21 +750,7 @@ function dunya(g, t, durum, gri) {
 
   // adam
   if (gri) {
-    const [px, py] = ekranda(cam, d.X, ZEMIN);
-    const h = 384 * S * cam.z;
-    const bx = Math.max(0, Math.floor(px - h * 0.75)), by = Math.max(0, Math.floor(py - h * 1.2));
-    const bw = Math.min(W, Math.ceil(px + h * 0.75)) - bx, bh = Math.min(H, Math.ceil(py + h * 0.2)) - by;
-    if (bw > 0 && bh > 0) {
-      const ac = adamTuval.getContext('2d');
-      ac.setTransform(1, 0, 0, 1, 0, 0);
-      ac.clearRect(bx, by, bw, bh);
-      kameraIle(ac, cam, (c) => { durum.gogus = adamCiz(c, d); }, F.on);
-      g.save();
-      g.filter = 'saturate(0.34) brightness(0.97)';
-      g.drawImage(adamTuval, bx, by, bw, bh, bx, by, bw, bh);
-      g.filter = 'none';
-      g.restore();
-    }
+    adamKatman(g, cam, d, true, durum);
     kameraIle(g, cam, (c) => {
       dikenler(c, t, d, 1);
       seritler(c, t, 1, d.X);
@@ -594,39 +760,25 @@ function dunya(g, t, durum, gri) {
     onPlanCiz(g, cam, true);
     renkAyari(g, t);
   } else {
-    kameraIle(g, cam, (c) => { durum.gogus = adamCiz(c, d); }, F.on);
-    // nur huzmesi: ağacın ve adamın ilk durduğu yere iner
+    adamKatman(g, cam, d, false, durum);
+    // s06'dan süren ışık: nur sütununun üstteki parıltısı, adamın başında ve yerde ışık, inen zerreler; nurun büyük
+    // halesi. Renk çekildikçe söner.
     const guc = 1 - solma;
     if (guc > 0.01) {
-      const [zx, zy] = ekranda(cam, X0 + 10, ZEMIN + 10, F.on);
-      const ix = zx + 70 * cam.z, iy = -120;
-      const L = Math.hypot(zx - ix, zy - iy);
-      g.save();
-      g.globalCompositeOperation = 'screen';
-      g.globalAlpha = 0.42 * guc;
-      g.translate(ix, iy);
-      g.rotate(Math.atan2(zx - ix, zy - iy) * -1);
-      g.scale(0.75 * cam.z, L / 960);
-      g.drawImage(huzme, -210, -40);
-      g.restore();
-      // huzmede süzülen zerreler
-      const r = rng(55);
-      g.save();
-      g.globalCompositeOperation = 'screen';
-      for (let i = 0; i < 16; i++) {
-        const v = (r() + (t - 57) * r.ara(0.04, 0.09)) % 1;
-        const yan = r.ara(-0.5, 0.5);
-        const x = lerp(ix, zx, v) + yan * lerp(50, 300, v) * cam.z + Math.sin(t * 1.3 + i) * 8;
-        const y = lerp(iy, zy, v);
-        const a = 0.75 * guc * Math.sin(v * Math.PI);
-        const b = r.ara(2.2, 4.5) * cam.z;
-        const gr = g.createRadialGradient(x, y, 0, x, y, b * 3);
-        gr.addColorStop(0, rgba('#FFF4C8', a));
-        gr.addColorStop(1, rgba('#FFF4C8', 0));
-        g.fillStyle = gr;
-        g.fillRect(x - b * 3, y - b * 3, b * 6, b * 6);
-      }
-      g.restore();
+      kameraIle(g, cam, (c) => {
+        let ek = null;
+        if (durum.bas) {
+          const [bx, by] = durum.bas;
+          ek = { bas: [(bx - PHI.ax) / PHI.s, (by - PHI.ay) / PHI.s], basAlfa: clamp(1 - Math.abs(d.X - X0) / 140) };
+        }
+        s06Uzayi(c);
+        S6.nurIsik06(c, t, 1, ek, guc);
+      }, F.on);
+      kameraIle(g, cam, (c) => {
+        c.translate(ISIK.x, ISIK.y);
+        c.scale(ISIK.k, ISIK.k);
+        M.hale(c, 0, 0, 560, '#FFE7BC', 0.26 * nur6.guc * guc);
+      }, F.isik);
     }
     onPlanCiz(g, cam, false);
   }
@@ -676,7 +828,10 @@ const gIsik = gurultu2(41);
 function gogusIsigi(ctx, t, durum) {
   const { cam, d } = durum;
   if (!durum.gogus || d.mod === 'arka' || t > T.sevmeyen + 2) return;
-  const sonum = 1 - an(t, T.sevmeyen + 0.05, 0.62, ease.inQuad);
+  // dönüşte (arka görünüş) ışık göğüsle birlikte görünmez olur: yan görünüşün sonunda söner, sola dönünce yeniden belirir
+  const ud = clamp((t - DONUS.t0) / DONUS.sure);
+  const yuz = 1 - smooth(ARKA_U[0] - 0.14, ARKA_U[0], ud) + smooth(ARKA_U[1], ARKA_U[1] + 0.18, ud);
+  const sonum = (1 - an(t, T.sevmeyen + 0.05, 0.62, ease.inQuad)) * yuz;
   const titre = t > T.sevmeyen ? clamp(0.55 + 0.75 * gIsik(t * 14, 0.3)) * (Math.sin(t * 47) > 0.55 ? 0.35 : 1) : 1;
   const guc = sonum * titre * (0.92 + 0.08 * Math.sin(t * 3.1));
   const [gx, gy] = durum.gogus;
