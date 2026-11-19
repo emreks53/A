@@ -476,6 +476,11 @@
       // ---- the mirror-world
       E.camera(L, camD(cam, 1));
       const [gx, gy] = globeC(lt);
+      // as it sinks out of frame it melts into the rising light (never crowds the subtitle band)
+      const gyS = (gy - cam.y) * cam.zoom + 960;
+      const gA = 1 - 0.88 * ep(gyS, 1020, 1480, 'inOutSine');
+      E.save(L);
+      E.alpha(L, gA);
       const disc = circlePath(gx, gy, GR * 0.985);
       reflected(L, lt, gx, gy, 0.75 * flare + 0.4 * lit * (1 - 0.6 * k));
       E.props.personalWorld(L, gx, gy, GR, { t: lt + 8, kind: 'home', life: 0, dissolve: 0.56, glow: 0.12 + 0.22 * lit, mirror: 1 });
@@ -543,6 +548,8 @@
         const tw = 0.8 + 0.2 * Math.sin(lt * 9 + i * 2);
         glint(Lc, gx + dx * GR, gy + dy * GR, 56 + 26 * (i % 2), 0.85 * kk * tw, 0.2 * i);
       });
+
+      E.restore(L);
 
       // ---- the heart-light
       const H = heartAt(lt, T);

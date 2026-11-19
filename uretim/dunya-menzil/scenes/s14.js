@@ -573,7 +573,7 @@
       E.resetCamera(L);
       const dim = E.ep(lt, tm.dim0, tm.dim1, 'inOutSine');
       if (dim > 0) {
-        E.wash(L.paint, E.rrect(-10, -10, 1100, 1940, 0), '#4F4E78', { alpha: 0.72 * dim, grad: { from: [0, 0], to: [0, 1920], stops: [[0, '#4F4E78'], [0.55, '#5C5A82'], [1, '#3E3C62']] } });
+        E.wash(L.paint, E.rrect(-10, -10, 1100, 1940, 0), '#56557F', { alpha: 0.62 * dim, grad: { from: [0, 0], to: [0, 1920], stops: [[0, '#56557F'], [0.55, '#64628C'], [1, '#46446C']] } });
         L.light.save();
         L.light.globalCompositeOperation = 'destination-out';
         L.light.fillStyle = E.rgba('#000000', 0.85 * dim);

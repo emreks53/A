@@ -251,7 +251,7 @@
       const pa = L.paint;
 
       // ---- the dusky paper at the end of the day (matches s14's dimmed light)
-      E.skyWash(pa, '#9C93B0', '#A598A6', { mid: '#A79DB2', seed: 4, mottle: 0.2 });
+      E.skyWash(pa, '#9086A6', '#978799', { mid: '#9A8EA8', seed: 4, mottle: 0.2 });
       E.wash(pa, E.rrect(-10, -10, 1100, 1940, 0), '#5E587A', { grad: { from: [540, 820], r0: 420, r: 1200, stops: [[0, 'rgba(94,88,122,0)'], [1, 'rgba(94,88,122,0.45)']] } });
 
       E.camera(L, c);
