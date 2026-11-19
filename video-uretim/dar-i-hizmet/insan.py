@@ -1,4 +1,102 @@
-"""(docstring written below, at the end of development)"""
+"""insan.py — ADAM (videodaki tek karakter), dijital suluboya (Atölye S-146) üslubunda, yandan (profil) görünüş.
+
+Sade ve yüzsüz (göz/ağız/kaş yok; yalnız alın-burun-çene silüeti ve küçük kulak), kısa koyu kahve saç ve kısa,
+düzgün sakal silüeti; uzun kollu toz mavisi gömlek (bol, üst uyluğa kadar dışarıda), sıcak gri pantolon, koyu kahve
+ayakkabı. Her parça ayrı saydam lavi + ışıktan uzak yanda ikinci (koyu) sır; çizgi yok, yalnız ıslak kenar pigmenti.
+Önden arkaya boyanır ve her parça bitince saklamaya (resist) yazılır: yakın kol/el -> (elde tutulan nesne) -> baş
+(saç+sakal tek lavi, kulak, deri) -> gömlek -> boyun -> yakın bacak+ayakkabı -> uzak bacak+ayakkabı -> uzak kol+el (uzak
+uzuvlar bir ton koyu) -> zemin gölgesi. Battaniye varsa: baş -> battaniye -> yakın kol ... (kollar battaniyenin altında).
+Sonuçta figürün bütün silüeti saklamadadır (sakla_sonra=False ile çağrı öncesi saklama geri yüklenir).
+Uyluk göğse çekildiğinde (oturma, çömelme) yakın uyluk gövdenin önüne geçer (gömlek maskesi oyulur); ayakta ve
+yürürken gömlek eteği uyluk kökünü örter. Eklem iç köşeleri köprü kapsüllerle yuvarlanır (kırık diz/dirsek yok).
+Sabitler: RENK, YOG (renk/yoğunluk), EL_OLCEK, BAS_OLCEK, DIZ, KALKIS_DX, YURUYUS_ADIM, IBRIK_ALT_EL.
+
+YEREL KOORDİNAT (bütün ölçüler "yerel birim")
+  * köken: ayakta duruşta kalçanın altındaki zemin noktası; y = 0 zemin.  +x = yüzün baktığı yön, y AŞAĞI (ekran).
+  * ayakta boy 600 (saç üstü y≈-600), baş (tepe-çene) ≈ 76 birim, saç ve sakalla ≈ 82 (görsel ~7.3 baş).
+    Kalça eklemi (0, -318), omuz ≈ (-4, -490), boyun kökü ≈ (0, -513), diz ≈ y -171, ayak bileği y -25.
+  * Segment boyları: L_BEL 100 + L_GOG 95 (gövde), L_BOYUN 30, L_UST 112, L_ON 88, L_EL 64*EL_OLCEK,
+    L_UYLUK 147, L_BALDIR 146, AYAK_YUK 25; ayakkabı topuk x -24 .. burun x +80 (ayak çerçevesinde).
+  * Ekrana: M (3x3, yerel->ekran) — örn. M = kamera.M() @ M_yerlestir(x, y, olcek); boy_px = 600 * olcek.
+    yon=-1 figürü x'te aynalar (sola bakar); ışık (isik) EKRAN yönüdür, aynalamadan etkilenmez.
+
+ANA FONKSİYON
+  ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=True, elde=None, nefes=0.0,
+            zemin_golge=0.35, tohum=0, renkler=None, battaniye_alfa=1.0) -> dict
+    t        : motor.Tuval;  M: yerel->ekran;  poz: poz sözlüğü (POZLAR[...], yuruyus(faz), karışımlar ...)
+    isik     : ışığa doğru birim vektör (ekran); (-0.6,-0.8) = sol üstten ışık -> gölge sağ/alt yanlarda.
+    battaniye: 0..1 omuzlardan dökülen yün battaniye (sıcak soluk lavanta, etekte iki ince şerit); değer büyüdükçe
+               etek omuzdan zemine iner (1 = ayaklara kadar sarılı, ayakkabı burnu görünür). oturus_* pozları için
+               tasarlandı. battaniye_alfa 0..1: battaniyenin opaklığı (yumuşak çözülme; altındaki beden belirir).
+    elde     : elde(t, M_el) — yakın elde tutulan nesneyi çizen geri çağrı; M_el = el çerçevesi->ekran:
+               köken = avuç merkezi, +x = parmak yönü, +y = +x'in saat yönünde 90° dönmüşü (yerel birimler,
+               ölçeksiz). Yakın el + yakın koldan SONRA, baş/gövdeden ÖNCE çağrılır (gövdenin önünde, elin arkasında).
+               Nesne kendi silüetini saklamaya yazmalıdır. Yumruk (kivrim≈0.9) kabaca x∈[-24, 32], y∈[-12, 12]
+               kaplar; tutulan sap, x ≈ +4..+16 arasında y boyunca geçen bir çubuk gibi düşünülmeli.
+               'sula' pozunda uzak elin avucu yakın el çerçevesinde IBRIK_ALT_EL = (42, 40)'tadır (ibriğin altı).
+    nefes    : 0..1 nefes fazı (sin): omuzlar ~3, göğüs ~1.6 birim yükselir/genişler (döngü için faz = t/periyot).
+    zemin_golge: 0..1 figürün yere değdiği yerin altına yumuşak lila gölge (figürün arkasında, saklamaya yazılmaz).
+    renkler  : RENK anahtarlarını geçersiz kılmak için sözlük (ör. {'gomlek': '#...'}); YOG yoğunlukları modül düzeyinde.
+    tohum    : doku tohumu (aynı tohum + aynı poz = aynı kare; titreme yok).
+    DÖNÜŞ (ekran koordinatı, np.array([x, y])):
+      'bas' baş merkezi, 'bas_ust' baş tepesi (saç üstü), 'kalp' göğüs/kalp noktası (göğsün önünde),
+      'el_on' / 'el_arka' avuç merkezleri, 'el_on_aci' yakın el ekseninin ekran açısı (derece, atan2(dy, dx)),
+      'diz' / 'diz_arka' diz eklemleri, 'kalca' kalça eklemi (pelvis kökü), 'ayak_on' / 'ayak_arka' taban ortası,
+      'yerel' : aynı noktalar yerel koordinatta (dict), 'iskelet' : Iskelet (bütün eklemler, yerel).
+    Süre: ~500 px boyda 0.03–0.06 sn, ~1000 px 0.1 sn, ~2000 px 0.3 sn (tek çekirdek).
+
+POZ = sözlük (ANAHTARLAR; bos_poz() hepsini 0'la doldurur). Açılar derece:
+  kx, ky       : kalça ekleminin (pelvis kökü) yerel konumu (ayakta 0, -318).
+  bel          : bel (lumbar) mutlak açısı, 0 dik yukarı, + öne eğik.  gogus: göğüs, bele göre (+ öne).
+  bel_kambur   : sırt ortasına ek kamburluk (+).  boyun: boyun, göğse göre.  bas: baş, boyuna göre (+ öne eğilir).
+  omuz_kalk    : omuz silkme (birim).
+  omuz_X       : üst kol, gövdenin aşağı eksenine göre (0 gövdeye paralel sarkık, + öne/yukarı).  X = on (yakın) | ar (uzak)
+  dirsek_X     : dirsek bükülmesi (>= 0, ön kol öne/yukarı döner).  el_bilek_X: el, ön kola göre (+ yukarı/öne).
+  kivrim_X     : 0 açık el .. 1 yumruk.  yan_X: 0 elin sırtı/avucu görünür (geniş eldiven, başparmak önde/üstte),
+                 +1 kenardan, avuç el çerçevesinin +y yanında (ör. yerdeki ya da dizdeki el), -1 avuç -y yanında
+                 (ör. dua: avuç yukarı/yüze).  kisalt_X: 0..1 el boyu kısalması (öne/derinliğe bakan el).
+  kol_kisalt_X, ust_kisalt_X : 0..1 kol (ve yalnız üst kol) perspektif kısalması (secde: dirsekler yana açık).
+  kalca_X      : uyluk mutlak açısı (0 aşağı, + öne).  diz_X: diz bükülmesi (>= 0).
+  ayak_bilek_X : ayak, baldıra göre (0 = baldıra dik; + parmak ucu aşağı).  parmak_X: parmaklar (+ yukarı kıvrık).
+  etek_on, etek_ar, etek_ar_boy : gömlek eteği kanatlarına poz özel düzeltme (açı / ek boy).
+Ters kinematik yardımcıları (poz yazmak için, poz sözlüğünü yerinde değiştirir):
+  bacak_ik(p, 'on'|'ar', ayak_bilegi_xy), kol_ik(p, taraf, bilek_xy, isaret=-1 (dirsek arkada) | +1),
+  el_aci(p, taraf, mutlak_asg_aci), ayak_duz(p, taraf, aci=90 (yere paralel)), kol_mutlak(p, taraf, ust_aci, dirsek).
+iskelet(poz, nefes=0) -> Iskelet: 'kok','N','Hp','S_on','E_on','Wr_on','H_on','K_on','A_on' (ve _ar), 'M_bas',
+  'M_el_on', 'M_ayak_on' (yerel çerçeve matrisleri), 'avuc_on' ...   sinir_kutusu(poz) -> (x0, y0, x1, y1) yerel.
+
+POZLAR (sözlük; hepsi +x'e bakar)
+  ayakta       : rahat duruş.                     ayakta_dik : dimdik, göğüs açık, çene hafif yukarıda (kuvvet).
+  yuru_0..3    : yuruyus(0, .25, .5, .75) anlık görüntüleri.
+  sula         : ~25° öne eğik, iki elle ibrik bel-göğüs hizasında önde (yakın el sapı tutar, uzak el altından
+                 destekler), dökmeye hazır.  sula_dok: bilekler öne dönmüş (ibrik ~40° eğik, döküyor).
+                 Sulama hareketi için sula_pozu(dok) kullanın (dok 0..1; uzak el her değerde ibriğin altına IK ile oturur;
+                 alt_el= ile ibriğin alt noktası değiştirilebilir).
+  kiyam        : namazda ayakta, eller göbek altında bağlı, baş hafif eğik.
+  ruku         : bel yatay, eller dizlerde, baş sırtla bir hizada (ayaklar ayakta ile aynı yerde).
+  secde        : dizler, ayak parmakları, eller ve alın+burun yerde, kalça yukarıda (dirsekler yerden kalkık).
+  oturus_hasta : yerde oturmuş, dizler çekik, kollar dizlere sarılı, sırt yuvarlak, baş eğik (hasta, yorgun).
+  oturus_dik   : aynı oturuş, sırt doğrulmuş, baş dik, sakin (sabır). Bu ikisi poz_karistir ile sorunsuz geçişir.
+  diz_dua      : topuklar üstünde diz çökmüş, sırt dik, ön kollar göğüs önünde kalkık, avuçlar yukarı/yüze (dua, şükür).
+  kalkis_1..4  : oturus_dik -> ayakta_dik ara pozları (kalkis_4 = ayakta_dik, x'te KALKIS_DX=72 öne kaymış).
+  diz_secde_1,2: diz_dua -> secde ara pozları.
+  Aileler ve kökler: AYAKTA ailesi (ayakta, ayakta_dik, sula*, kiyam, ruku): ayaklar x≈±10'da, köken kalçanın altı.
+  OTURMA ailesi: kalça yerde (0, -44), ayaklar x≈+90..+96. DİZ ailesi (diz_dua, secde, ara pozlar): dizler sabit
+  DIZ=(124, -21), ayak parmakları x≈-45..-50'de; köken diz_dua'da kalçanın altı (secde'de kalça x≈+109, alın x≈+311).
+
+HAREKET / GEÇİŞ
+  yuruyus(faz) -> poz : doğal yürüyüş döngüsü, faz 0..1 = bir tam döngü (faz 0 yakın ayak, 0.5 uzak ayak topuk
+                        vuruşu; kollar bacakların tersine sallanır, kalça ~12 birim iner-kalkar). Yerinde yürür:
+                        sahne figürü x += YURUYUS_ADIM (=330) * Δfaz kadar ilerletirse basan ayak zeminde kaymaz.
+  poz_karistir(a, b, t, sabit=None) -> poz : bütün değerler doğrusal; sabit='ayak_on'|'ayak_ar'|'diz_on'|'diz_ar'|
+                        'kalca'|'el_on' verilirse o nokta iki pozdaki yerinin karışımına oturtulur (kök kaydırılır).
+  poz_yolu(pozlar, t, sabit=None, sureler=None) -> poz : poz dizisi boyunca C1-yumuşak (aşmayan Hermite) geçiş.
+  kalkis(t)  : oturus_dik -> ayakta_dik (t 0..1, içeride yumuşatılmış; ayaklar ilk ~%20'de çekilir, sonra yerde sabit;
+               t=1 sonucu ayakta_dik'in KALKIS_DX kadar +x'e kaymışıdır: sonrasında ayakta_dik çizilecekse yerleşimi
+               KALKIS_DX * olcek * yon kadar kaydırın).
+  secdeye(t) : diz_dua -> secde (dizler ve parmaklar sabit); secde -> diz_dua için secdeye(1 - t).
+  Bütün animasyon parametrelerle: aynı girdi = aynı kare. Zaman durumu yok.
+"""
 from __future__ import annotations
 
 import math
@@ -8,7 +106,7 @@ import numpy as np
 import skia
 
 from motor import (M_bilesik, M_oteleme, M_olcek, M_donme, yol_egri, yol_elips, yol_op, maske_ciz, yollar_kirp,
-                   Kirp, renk, karistir, smoothstep, W, H)
+                   karistir, smoothstep)
 
 # =================================================================================================================
 # oranlar (yerel birim; ayakta boy 600 = 7.5 baş, baş 80)
@@ -26,7 +124,8 @@ L_BALDIR = 146.0       # diz -> ayak bileği
 AYAK_YUK = 25.0        # ayak bileği eklemi, taban üstünde (ayakkabıyla)
 KALCA_Y = -(L_UYLUK + L_BALDIR + AYAK_YUK)   # -318: ayakta kalça eklemi
 TOPUK_X, TOP_X, BURUN_X = -20.0, 50.0, 78.0  # ayak çerçevesinde topuk, tarak (top) ve burun x'i
-EL_OLCEK = 0.92        # el biçiminin ölçeği (el boyu L_EL * EL_OLCEK)
+EL_OLCEK = 0.90        # el biçiminin ölçeği (el boyu L_EL * EL_OLCEK)
+BAS_OLCEK = 0.93       # baş biçimlerinin ölçeği (saç ve sakal hacmiyle görsel boy ~7.3 baş)
 AVUC_X = 21.0          # el çerçevesinde avuç merkezi (bilekten, ölçeksiz)
 
 # =================================================================================================================
@@ -126,7 +225,7 @@ ANAHTARLAR = (
     'omuz_ar', 'dirsek_ar', 'el_bilek_ar', 'kivrim_ar', 'yan_ar', 'kisalt_ar', 'kol_kisalt_ar', 'ust_kisalt_ar',
     'kalca_on', 'diz_on', 'ayak_bilek_on', 'parmak_on',
     'kalca_ar', 'diz_ar', 'ayak_bilek_ar', 'parmak_ar',
-    'etek_on', 'etek_ar', 'bel_kambur',
+    'etek_on', 'etek_ar', 'etek_ar_boy', 'bel_kambur',
 )
 
 
@@ -188,7 +287,7 @@ def iskelet(p, nefes=0.0):
     Hp = N + L_BOYUN * _yuk(a_n)
     a_h = a_n + p['bas']
     sk['Hp'], sk['a_n'], sk['a_h'] = Hp, a_n, a_h
-    sk['M_bas'] = _cerceve(Hp, a_h)
+    sk['M_bas'] = M_bilesik(_cerceve(Hp, a_h), M_olcek(BAS_OLCEK))
     sk['nf'] = nf
     # kollar
     for t, ofs in (('on', 0.0), ('ar', 1.0)):
@@ -196,7 +295,7 @@ def iskelet(p, nefes=0.0):
         tu = -a_om + p['omuz_' + t]
         tf = tu + p['dirsek_' + t]
         th = tf + p['el_bilek_' + t]
-        kk = 1.0 - 0.35 * p.get('kol_kisalt_' + t, 0.0)
+        kk = 1.0 - 0.5 * p.get('kol_kisalt_' + t, 0.0)
         ku = 1.0 - 0.65 * p.get('ust_kisalt_' + t, 0.0)
         E = St + L_UST * kk * ku * _asg(tu)
         Wr = E + L_ON * kk * _asg(tf)
@@ -252,7 +351,7 @@ def kol_ik(p, taraf, bilek, isaret=-1):
     sk = iskelet(p)
     St = sk['S_' + taraf]
     Wr = np.asarray(bilek, float)
-    kk = 1.0 - 0.35 * p.get('kol_kisalt_' + taraf, 0.0)
+    kk = 1.0 - 0.5 * p.get('kol_kisalt_' + taraf, 0.0)
     ku = 1.0 - 0.65 * p.get('ust_kisalt_' + taraf, 0.0)
     E = _ik2(St, Wr, L_UST * kk * ku, L_ON * kk, isaret)
     tu = _aci_asg(E - St)
@@ -318,52 +417,46 @@ def _kapsul(*a, **k):
 
 
 # ---- el -------------------------------------------------------------------------------------------------------
+_EL_GENIS = np.array([
+    (-6.0, 9.8), (2.0, 10.8), (12.0, 12.0), (22.0, 12.6), (31.0, 12.4), (40.0, 11.6), (48.0, 10.6), (55.0, 9.0),
+    (60.0, 6.2), (62.6, 2.0), (62.6, -2.4), (60.4, -6.6),
+    (55.0, -9.6), (47.0, -11.4), (39.0, -12.4), (31.0, -12.8), (22.0, -12.6), (12.0, -11.8), (2.0, -10.8),
+    (-6.0, -9.8)])
+_EL_KENAR = np.array([
+    (-6.0, 6.8), (3.0, 8.4), (12.0, 9.6), (20.0, 9.8), (28.0, 8.8), (36.0, 5.8), (44.0, 4.6), (52.0, 4.0),
+    (58.5, 3.2), (61.4, 1.8), (62.2, -0.2), (60.5, -2.2),
+    (56.0, -3.4), (50.0, -4.0), (42.0, -4.6), (33.0, -5.2), (24.0, -6.0), (14.0, -6.6), (4.0, -6.8),
+    (-6.0, -6.6)])
+
+
 def _el_yolu(kivrim, yan):
-    """El çerçevesinde (köken bilek, +x parmaklara, -y başparmak/ön kenar) eldiven biçimi.
-    yan 0: elin sırtı/avucu görünür (geniş), +-1: kenardan (ince; avuç +y (+1) ya da -y (-1) tarafında)."""
+    """El çerçevesinde (köken bilek, +x parmaklara, -y başparmak/ön kenar) eldiven biçimi: tek parça yumuşak gövde
+    + başparmak. yan 0: elin sırtı/avucu görünür (geniş), +-1: kenardan (ince; avuç +y (+1) ya da -y (-1) yanında).
+    kivrim: 0 açık .. 1 yumruk (geniş görünüşte parmaklar kısalır, kenar görünüşte avuca doğru bükülür)."""
     w = min(1.0, abs(yan))
     sg = 1.0 if yan >= 0 else -1.0
     kv = min(1.0, max(0.0, kivrim))
-    xs = np.array([-6.0, 3.0, 13.0, 23.0, 33.0])
-    ust_g = np.array([-9.6, -10.8, -12.3, -12.9, -12.6])
-    alt_g = np.array([9.6, 10.9, 12.3, 12.6, 12.0])
-    ust_k = np.array([-6.6, -6.4, -6.0, -5.6, -5.0])
-    alt_k = np.array([6.6, 7.8, 9.4, 8.6, 6.4])
-    if sg < 0:
-        ust_k, alt_k = -alt_k, -ust_k
-    ust = ust_g + (ust_k - ust_g) * w
-    alt = alt_g + (alt_k - alt_g) * w
-    avuc = [(x, y) for x, y in zip(xs, ust)] + [(x, y) for x, y in zip(xs[::-1], alt[::-1])]
-    p_avuc = _yol(avuc, gerilim=0.5)
-    # parmaklar: eklem hattından (x=31) uzanan yuvarlak uçlu kütle; kenar görünüşte avuca doğru bükülür
-    yc = 0.5 * (ust[-1] + alt[-1])
-    yar = 0.5 * (alt[-1] - ust[-1]) * 0.94
-    uz = (29.0 * (1 - 0.62 * kv)) * (1 - w) + 29.0 * w
-    bukum = math.radians(kv * 82.0 * w) * sg
-    # parmak omurgası: hafif yay
-    pts_om = []
-    for i in range(6):
-        uu = i / 5
-        a = bukum * uu
-        pts_om.append((31.0 + math.sin(a + 1e-9) / (a + 1e-9) * uz * uu if abs(a) > 1e-4 else 31.0 + uz * uu,
-                       yc + (1 - math.cos(a)) / (a + 1e-9) * uz * uu if abs(a) > 1e-4 else yc))
-    pts_om = np.array(pts_om)
-    rb = yar * (0.86 if kv < 0.6 else 0.98)
-    p_par = _kapsul(pts_om[0], pts_om[-1], yar, rb, n=8, nc=9) if abs(bukum) < 0.15 else None
-    if p_par is None:
-        # bükülü parmaklar: iki kapsül
-        m = len(pts_om) // 2
-        p_par = _birlesim(_kapsul(pts_om[0], pts_om[m], yar, yar * 0.95, n=6, nc=7),
-                          _kapsul(pts_om[m], pts_om[-1], yar * 0.95, rb, n=6, nc=7))
+    kenar = _EL_KENAR if sg > 0 else np.stack([_EL_KENAR[:, 0], -_EL_KENAR[:, 1]], 1)[::-1]
+    pts = _EL_GENIS * (1.0 - w) + kenar * w
+    # parmaklar: eklem hattı (x≈31) ötesi kısalır (geniş) ve avuca doğru döner (kenar)
+    x, y = pts[:, 0].copy(), pts[:, 1].copy()
+    wf = smoothstep(24.0, 36.0, x)
+    kis = 1.0 - 0.58 * kv * (1.0 - w)
+    x = 31.0 + (x - 31.0) * (1.0 - wf * (1.0 - kis))
+    th = math.radians(kv * 82.0 * w) * sg * wf
+    piv_y = 2.0 * sg * w
+    dx, dy = x - 31.0, y - piv_y
+    x2 = 31.0 + dx * np.cos(th) - dy * np.sin(th)
+    y2 = piv_y + dx * np.sin(th) + dy * np.cos(th)
+    govde = _yol(np.stack([x2, y2], 1), gerilim=0.5)
     # başparmak
-    b_g0, b_g1 = np.array([7.0, -8.5]), np.array([27.0, -17.5])
-    if kv > 0:
-        b_g1 = b_g1 + (np.array([24.0, -9.0]) - b_g1) * _ss(0.3, 1.0, kv)
-    b_k0, b_k1 = np.array([5.0, 3.5 * sg]), np.array([25.0, 9.5 * sg])
+    b_g0, b_g1 = np.array([6.0, -9.0]), np.array([25.5, -15.2])
+    b_g1 = b_g1 + (np.array([29.0, -10.0]) - b_g1) * _ss(0.35, 1.0, kv)
+    b_k0, b_k1 = np.array([5.0, 4.0 * sg]), np.array([26.0, 8.8 * sg])
     b0 = b_g0 + (b_k0 - b_g0) * w
     b1 = b_g1 + (b_k1 - b_g1) * w
-    p_bas = _kapsul(b0, b1, 6.2 - 1.2 * w, 4.9 - 0.6 * w, n=6, nc=7)
-    return _birlesim(p_avuc, p_par, p_bas)
+    p_bas = _kapsul(b0, b1, 5.8 - 1.0 * w, 4.5 - 0.6 * w, n=6, nc=7)
+    return _birlesim(govde, p_bas)
 
 
 # ---- ayakkabı ---------------------------------------------------------------------------------------------------
@@ -392,20 +485,20 @@ def _ayakkabi_pts(parmak):
 # baş çerçevesi: köken = baş pivotu (atlas), +x yüz yönü, y aşağı; ayakta baş tepesi y≈-59, çene altı y≈+21
 _BAS_DERI = np.array([
     (24.2, -44.0), (27.0, -39.0), (29.4, -33.0), (30.9, -27.4), (31.2, -23.6), (30.1, -20.0), (31.4, -16.6),
-    (33.8, -12.2), (36.0, -8.2), (37.2, -5.8), (36.7, -3.7), (34.6, -2.6), (32.2, -1.8), (32.4, 2.0),
+    (33.6, -12.0), (35.4, -9.4), (36.7, -7.4), (37.2, -5.5), (36.8, -3.9), (35.6, -2.8), (33.6, -2.1), (32.4, 2.0),
     (31.8, 6.0), (31.6, 10.0), (31.2, 14.5), (28.8, 19.0), (23.5, 21.2), (14.0, 19.0), (6.0, 15.5),
     (-6.0, 10.0), (-22.0, 2.0), (-31.0, -4.0), (-36.5, -16.0), (-37.6, -29.0), (-34.6, -43.0), (-25.0, -54.6),
     (-9.0, -59.8), (7.0, -58.6), (17.6, -53.6),
 ])
 _SAC = np.array([
-    (24.2, -44.0), (24.9, -47.6), (23.4, -52.4), (19.0, -57.0), (11.0, -60.8), (0.5, -62.6), (-11.0, -62.4),
-    (-22.0, -59.0), (-31.0, -52.0), (-37.2, -41.5), (-39.6, -29.0), (-39.0, -17.0), (-36.4, -9.0), (-33.0, -4.2),
+    (24.2, -44.0), (24.7, -46.8), (23.2, -50.8), (19.4, -55.0), (12.6, -59.2), (3.0, -61.8), (-9.0, -62.2),
+    (-21.5, -58.8), (-30.8, -51.8), (-37.0, -41.5), (-39.4, -29.0), (-38.8, -17.0), (-36.2, -9.0), (-33.0, -4.2),
     (-30.0, -2.0), (-26.0, -3.4), (-21.5, -7.2), (-18.2, -13.0), (-16.6, -19.5), (-14.6, -24.5), (-10.6, -27.4),
-    (-5.6, -28.2), (-1.6, -27.0), (1.2, -24.0), (2.0, -17.0), (2.4, -11.0), (5.6, -11.0), (6.0, -18.0),
-    (6.4, -26.5), (10.6, -34.0), (17.0, -39.4),
+    (-5.6, -28.2), (-1.6, -27.0), (0.6, -23.5), (1.0, -17.0), (1.2, -10.0), (6.2, -10.0), (6.2, -18.0),
+    (6.8, -25.0), (9.4, -31.2), (13.6, -36.6), (19.0, -40.8),
 ])
 _SAKAL = np.array([
-    (2.2, -17.0), (5.8, -17.0), (6.2, -9.5), (9.0, -3.0), (14.0, 1.2), (19.5, 3.4), (24.0, 4.4),
+    (1.0, -16.0), (6.2, -16.0), (6.2, -9.5), (9.0, -3.0), (14.0, 1.2), (19.5, 3.4), (24.0, 4.4),
     (26.6, 3.4), (27.6, 0.6), (30.0, -1.0), (32.4, -1.5), (34.3, -0.8), (35.0, 1.0), (34.6, 3.2),
     (33.8, 5.4), (34.3, 8.4), (34.9, 12.4), (33.9, 17.4), (30.8, 21.6), (25.0, 23.6), (17.0, 22.2),
     (9.0, 18.4), (2.6, 13.8), (-1.4, 8.6), (-2.0, 2.0), (-0.6, -6.0), (0.6, -12.0),
@@ -426,6 +519,16 @@ def _bas_yollari():
 
 
 _BAS_YOLLARI = None
+_KIL = None
+
+
+def _sac_sakal_yolu():
+    """Saç + sakal tek biçim (favori ekleminde dikiş olmasın)."""
+    global _KIL
+    if _KIL is None:
+        deri, sac, sakal, kulak = bas_yollari()
+        _KIL = _birlesim(sac, sakal)
+    return _KIL
 
 
 def bas_yollari():
@@ -465,22 +568,38 @@ def _gomlek_yolu(sk, p):
     wf0, wb0 = _govde_genislik(s_alt / LT)
     F0a = c0 + f_b * wf0
     L_on, L_ar = 25.0, 26.0
-    phi_g = 0.45 * max(-60.0, min(60.0, phi_govde))      # kumaş gövdeyi kısmen izler, kısmen sarkar
+    phi_g = 0.28 * max(-60.0, min(60.0, phi_govde))      # kumaş gövdeyi kısmen izler, kısmen sarkar
     phi_f = _smax(phi_g, tt_max - 3.0, 10.0) + p.get('etek_on', 0.0)
     F1a = F0a + L_on * _asg(phi_f)
     Hj = sk['H_on'] if tt_on >= tt_ar else sk['H_ar']
     dt = _asg(tt_max)
     nt = np.array([-dt[1], dt[0]])
-    F1b = Hj + dt * 54.0 - nt * 32.5        # uyluğun ön yüzüne yatan etek ucu
+    F1b = Hj + dt * 50.0 - nt * 28.0        # uyluğun üst yüzüne yatan etek ucu (yakın uyluk onu örter)
     F1 = F1a + (F1b - F1a) * wk
     B0 = c0 - f_b * wb0
     phi_b = _smin(phi_g, tt_min + 2.0, 10.0) + p.get('etek_ar', 0.0)
-    B1 = B0 + L_ar * _asg(phi_b)
+    db = _asg(phi_b)
+    Lb = L_ar + p.get('etek_ar_boy', 0.0)
+    batma = B0[1] + Lb * db[1] + 1.5          # >0: kanat zemine giriyor
+    if db[1] > 1e-3 and batma > 0:           # zemine değince orada biter (yerde yatar)
+        Lb = max(0.0, (-1.5 - B0[1]) / db[1])
+    w_yer = _ss(0.0, 9.0, batma)
+    B1 = B0 + Lb * db
     F1[1] = min(F1[1], -1.5)
     B1[1] = min(B1[1], -1.5)
+    # arka kanat kalçanın (oturak) üstünden dolansın: B0-B1 doğrusu oturağı kesiyorsa orta nokta dışarı itilir
+    a_bb = sk['a_b']
+    f_bb, u_bb = _onn(a_bb), _yuk(a_bb)
+    oc = sk['H_on'] - f_bb * 12.0 - u_bb * 9.0
+    orta_b = 0.5 * (B0 + B1)
+    dv = B1 - B0
+    nb = np.array([dv[1], -dv[0]]) / (np.hypot(*dv) + 1e-9)
+    if np.dot(orta_b - sk["kok"], nb) < 0:
+        nb = -nb
+    ihtiyac = (29.0 + 4.0) - float(np.dot(orta_b - oc, nb))
+    Bm = orta_b + nb * max(1.5, ihtiyac)
     orta = 0.5 * (F1 + B1) + _v(0, 2.0)
     orta[1] = min(orta[1], -1.5)
-    # tek kapalı çevre: ön kanat ucu -> ön yüz (yukarı) -> yaka -> arka yüz (aşağı) -> arka kanat -> etek
     on, ar = [], []
     for s in np.linspace(s_on_men, LT, 20):
         c = sk.C(s)
@@ -496,10 +615,53 @@ def _gomlek_yolu(sk, p):
     yaka_on = N + fN * 18.0 - uN * 5.0
     yaka_ar = N - fN * 20.5 + uN * 7.0
     F0 = on[0]
-    cevre = ([F1, 0.55 * F1 + 0.45 * F0] + on + [yaka_on, N + uN * 3.0 + fN * 2.0, yaka_ar] + ar[::-1]
-             + [0.5 * (B0 + B1) - _asg(phi_b + 90.0) * 1.5, B1, 0.6 * B1 + 0.4 * orta, orta, 0.4 * orta + 0.6 * F1])
+    dh = orta - B1
+    dh = dh / (np.hypot(*dh) + 1e-9)
+    df = F1 - orta
+    df = df / (np.hypot(*df) + 1e-9)
+    dF = F1 - F0
+    dF = dF / (np.hypot(*dF) + 1e-9)
+    etek_a = [Bm, B1 - db * 6.0, B1 + dh * 6.0, 0.6 * B1 + 0.4 * orta, orta, 0.4 * orta + 0.6 * F1,
+              F1 - df * 6.5, F1 - dF * 6.5]
+    # etek yerde yatıyor: köşe yuvarlak, kenar zemin boyunca öne (aynı nokta sayısı: sürekli geçiş)
+    B1y = B1 + _v(16.0, 0.0)
+    etek_b = [Bm, B1 + _v(-1.0, -5.0), B1 + _v(4.0, 0.0), B1y, 0.5 * (B1y + F1), 0.25 * B1y + 0.75 * F1,
+              F1 - df * 6.5, F1 - dF * 6.5]
+    etek = [a_ * (1.0 - w_yer) + b_ * w_yer for a_, b_ in zip(etek_a, etek_b)]
+    cevre = ([0.45 * F1 + 0.55 * F0] + on + [yaka_on, N + uN * 3.0 + fN * 2.0, yaka_ar] + ar[::-1] + etek)
     yol = _yol(cevre, gerilim=0.42)
     return yol, dict(F1=F1, B1=B1, F0=F0, B0=B0)
+
+
+def _gomlek_maskesi(sk, gom, Mf, kenar):
+    """Gömlek maskesi; kalça hattının üstünde (gövde yönünde) yakın uyluğun örttüğü yer oyulur: uyluk göğse
+    çekildiğinde (oturma, secde) uyluk gövdenin önünde görünür, ayakta/yürürken etek uyluk kökünü örter."""
+    k = yollar_kirp([gom], Mf, 6 + 3 * kenar)
+    m = maske_ciz([gom], Mf, k)
+    if k.bos():
+        return k, m
+    tt = sk['tt_on']
+    dt = _asg(tt)
+    Hj = sk['H_on']
+    u_b = _yuk(sk['a_b'])
+    kok = sk['kok']
+    # uyluğun kalça hattının üstünde kalan kısmı var mı? (hızlı ret)
+    K = sk['K_on']
+    if float(np.dot(K - kok, u_b)) < -10.0 or tt < 70.0:
+        return k, m
+    Mi = np.linalg.inv(Mf)
+    xs = np.arange(k.x0, k.x0 + k.w, dtype=np.float32) + 0.5
+    ys = np.arange(k.y0, k.y0 + k.h, dtype=np.float32) + 0.5
+    XX, YY = np.meshgrid(xs, ys)
+    X = Mi[0, 0] * XX + Mi[0, 1] * YY + Mi[0, 2]
+    Y = Mi[1, 0] * XX + Mi[1, 1] * YY + Mi[1, 2]
+    t_boy = (X - Hj[0]) * dt[0] + (Y - Hj[1]) * dt[1]
+    h = (X - kok[0]) * u_b[0] + (Y - kok[1]) * u_b[1]
+    w = smoothstep(16.0, 36.0, t_boy) * smoothstep(-4.0, 14.0, h) * _ss(70.0, 105.0, tt)
+    if w.max() < 1e-3:
+        return k, m
+    ml = maske_ciz([_bacak_yolu(sk, 'on')], Mf, k)
+    return k, (m * (1.0 - ml * w)).astype(np.float32)
 
 
 def _yaka_cizgisi(sk):
@@ -510,11 +672,27 @@ def _yaka_cizgisi(sk):
 
 
 # ---- kol / bacak ------------------------------------------------------------------------------------------------
+def _dolgu(A, J, B, r, L0=40.0):
+    """Eklem iç köşesini yuvarlayan köprü kapsül (hafif bükülmede kırık/çentik görünmesin)."""
+    ua = A - J
+    ub = B - J
+    la, lb = float(np.hypot(*ua)), float(np.hypot(*ub))
+    if la < 1e-6 or lb < 1e-6:
+        return None
+    ua, ub = ua / la, ub / lb
+    buk = 180.0 - math.degrees(math.acos(max(-1.0, min(1.0, float(np.dot(ua, ub))))))
+    if buk < 2.0:
+        return None
+    L = L0 * max(0.12, min(1.0, 1.0 - buk / 100.0))
+    L = min(L, 0.45 * la, 0.45 * lb)
+    return _kapsul(J + ua * L, J + ub * L, r, r, n=6, nc=7)
+
+
 def _kol_yolu(sk, t):
     S, E, Wr = sk['S_' + t], sk['E_' + t], sk['Wr_' + t]
     ust = _kapsul(S, E, 20.5, 16.0, bp=1.0, bm=1.5, bu=0.35)
     on = _kapsul(E, Wr, 16.0, 12.6, bp=1.6, bm=1.2, bu=0.25, uc_b='d', ek_b=2.5)
-    return _birlesim(ust, on)
+    return _birlesim(ust, on, _dolgu(S, E, Wr, 15.6, 34.0))
 
 
 def _bacak_yolu(sk, t):
@@ -526,9 +704,9 @@ def _bacak_yolu(sk, t):
     # kalça (oturak) kütlesi pelvis çerçevesinde
     a_b = sk['a_b']
     f_b, u_b = _onn(a_b), _yuk(a_b)
-    c = Hj - f_b * 13.0 - u_b * 9.0
-    otur = yol_elips(float(c[0]), float(c[1]), 31.0, 30.0, a_b)
-    return _birlesim(uy, bal, otur)
+    c = Hj - f_b * 12.0 - u_b * 9.0
+    otur = yol_elips(float(c[0]), float(c[1]), 29.0, 28.5, a_b)
+    return _birlesim(uy, bal, otur, _dolgu(Hj, K, A, 21.0))
 
 
 # =================================================================================================================
@@ -556,10 +734,14 @@ class _Boyaci:
         a.update(kw)
         self.t.lavi(yol, self.Mf if M is None else M, renk_, yog=yog, tohum=self._toh(), **a)
 
-    def golge(self, yol, renk_, yog, d, M=None, sertlik=0.30, islak=0.45):
-        """Işıktan uzak yana ikinci sır: biçim eksi ışığa kaydırılmış biçim (hilal)."""
+    def golge(self, yol, renk_, yog, d, M=None, sertlik=0.30, islak=0.45, carp=None):
+        """Işıktan uzak yana ikinci sır: biçim eksi ışığa kaydırılmış biçim (hilal). carp=(k, m): hazır maske
+        (biçimin örtülmüş hâli) ile çarpılır."""
         M = self.Mf if M is None else M
-        k = yollar_kirp([yol], M, 6 + 3 * self.ed['kenar'] + d * self.s)
+        if carp is not None:
+            k = carp[0]
+        else:
+            k = yollar_kirp([yol], M, 6 + 3 * self.ed['kenar'] + d * self.s)
         if k.bos():
             return
         m = maske_ciz([yol], M, k)
@@ -570,13 +752,15 @@ class _Boyaci:
         sh = cv2.GaussianBlur(sh, (0, 0), sig)
         mm = cv2.GaussianBlur(m, (0, 0), 0.45)
         hil = mm * (1.0 - sh)
+        if carp is not None:
+            hil = hil * np.clip((carp[1] - 0.25) * 2.0, 0.0, 1.0)
         if hil.max() < 1e-3:
             return
         self.t.lavi([], M, renk_, yog=yog, maske=(k, hil), yumusak=0.35, dalga=0.0, islak=islak,
                     islak_gen=self.ed['islak_gen'], gran=0.08, akis=0.07, tohum=self._toh())
 
-    def kat(self, pts, w0, w1, renk_, yog, M=None):
-        """İnce, iki ucu sivri kıvrım darbesi."""
+    def kat(self, pts, w0, w1, renk_, yog, M=None, kirp=None, carp=None):
+        """İnce, iki ucu sivri kıvrım darbesi. kirp: yalnız bu biçimin içinde; carp=(k, m) hazır maskeyle."""
         pts = np.asarray(pts, float)
         n = len(pts)
         if n < 2:
@@ -589,16 +773,35 @@ class _Boyaci:
         sol = pts + nr * wd[:, None]
         sag = pts - nr * wd[:, None]
         yol = _yol(list(sol) + list(sag[::-1]), gerilim=0.45)
+        if kirp is not None:
+            yol = yol_op(yol, kirp, 'kesisim')
+            if yol.isEmpty():
+                return
+        if carp is not None:
+            k, mc = carp
+            if k.bos():
+                return
+            m = maske_ciz([yol], self.Mf if M is None else M, k)
+            m = m * np.clip((mc - 0.3) * 2.0, 0.0, 1.0)
+            if m.max() < 1e-3:
+                return
+            self.t.lavi([], self.Mf if M is None else M, renk_, yog=yog, maske=(k, m.astype(np.float32)),
+                        tohum=self._toh(), kenar=self.ed['kenar'] * 1.2, dalga=0.03, islak=0.5,
+                        islak_gen=self.ed['islak_gen'], gran=0.05, akis=0.1)
+            return
         self.lavi(yol, renk_, yog, M=M, kenar=self.ed['kenar'] * 1.2, islak=0.5, gran=0.05, akis=0.1)
 
-    def sakla(self, yol, M=None, asin=0.6):
+    def sakla(self, yol, M=None, asin=0.6, maske=None):
         """Biçimi saklamaya yazar; kenarı asin px içeri çekilir ki arkadaki lavi hafifçe altına girsin
         (beyaz boşluk değil, ince pigment bindirmesi)."""
         M = self.Mf if M is None else M
-        k = yollar_kirp([yol], M, 4)
-        if k.bos():
+        if maske is not None:
+            k, m = maske
+        else:
+            k = yollar_kirp([yol], M, 4)
+            m = maske_ciz([yol], M, k)
+        if k.bos() or m.size == 0:
             return
-        m = maske_ciz([yol], M, k)
         m = cv2.GaussianBlur(m, (0, 0), 0.7)
         m = np.clip((m - 0.5) / 0.32 + 0.5 - asin * 0.9, 0.0, 1.0)
         self.t.sakla_ekle(None, M, yumusak=0.0, maske=(k, m))
@@ -608,55 +811,167 @@ def _uzak(c, miktar=0.22):
     return karistir(c, RENK['uzak'], miktar)
 
 
+def _battaniye_yolu(sk, b):
+    """Omuzlardan dökülüp oturan bedeni ayaklara kadar saran battaniye; b (0..1) görünen kısım (etek omuzdan
+    zemine iner). Dönüş: (görünen biçim, şerit bandı, etek y fonksiyonu parametreleri) ya da None."""
+    LT = sk['LT']
+    N, aN = sk['N'], sk['a_N']
+    fN, uN = _onn(aN), _yuk(aN)
+    a_om = sk.A(sk['s_om'])
+    S = sk['S_on']
+    K = sk['K_on'] if sk['K_on'][1] < sk['K_ar'][1] else sk['K_ar']
+    A = sk['A_on']
+    # arka: sırt boyunca dışarıda
+    arka = []
+    for s_ in np.linspace(0.97 * LT, -0.08 * LT, 12):
+        c = sk.C(s_)
+        _, wb = _govde_genislik(s_ / LT)
+        arka.append(c - _onn(sk.A(s_)) * (wb + 12.0 + 3.0 * (1 - s_ / LT)))
+    x_arka = min(q[0] for q in arka) - 3.0
+    arka.append(np.array([x_arka - 2.0, -12.0]))
+    arka.append(np.array([x_arka + 6.0, 0.6]))
+    # ön: göğüsten dize, dizden kaval önünden ayağa
+    ts = sk['ts_on']
+    ds = _asg(ts)
+    ns = np.array([-ds[1], ds[0]])           # +: baldır arkası, -: ön (kaval)
+    on_ust = N + fN * 21.0 - uN * 2.0
+    diz_ust = K + _v(6.0, -35.0)
+    sarkma = 0.5 * (on_ust + diz_ust) + _v(4.0, 6.0)
+    kaval1 = K - ns * 40.0 + ds * 34.0
+    kaval2 = A - ns * 33.0 + ds * 4.0
+    ayak_on = np.array([A[0] + 34.0, 0.6])
+    ust = [N - fN * 25.0 + uN * 5.0, S + _yuk(a_om) * 29.0 - _onn(a_om) * 2.0,
+           S + _yuk(a_om) * 27.0 + _onn(a_om) * 15.0, N + fN * 14.0 + uN * 6.0]
+    # eller dizin önündeyse battaniye onları da örter
+    el_x = max(sk['avuc_on'][0], sk['avuc_ar'][0])
+    on_diz = K + _v(38.0, -10.0)
+    on_el = np.array([max(K[0] + 38.0, el_x + 20.0), 0.5 * (on_diz[1] + kaval1[1])])
+    kaval1 = np.array([max(kaval1[0], on_el[0] - 4.0), kaval1[1]])
+    # çevre: üst (boyun arkası -> omuz) -> ön (göğüs -> diz -> kaval -> ayak) -> zemin -> arka (yukarı)
+    cevre = ust + [on_ust, sarkma, diz_ust, on_diz, on_el, kaval1, kaval2, ayak_on] + arka[::-1]
+    tam = _yol(cevre, gerilim=0.42)
+    # etek hattı
+    y_ust = S[1] - 34.0
+    y_alt = 10.0
+    yh = y_ust + (y_alt - y_ust) * b
+    xs = np.linspace(x_arka - 60.0, A[0] + 120.0, 16)
+    xc = 0.5 * (xs[0] + xs[-1])
+
+    def etek_y(x, ek=0.0):
+        return yh + ek - 0.10 * (x - xc) + 3.0 * math.sin(x * 0.045 + 1.3)
+    bolge = [(x, etek_y(x)) for x in xs] + [(xs[-1], -900.0), (xs[0], -900.0)]
+    gorunen = yol_op(tam, _yol(bolge, gerilim=0.3), 'kesisim')
+    bant_pts = [(x, etek_y(x, -21.0)) for x in xs] + [(x, etek_y(x, -31.0)) for x in xs[::-1]]
+    bant = yol_op(gorunen, _yol(bant_pts, gerilim=0.3), 'kesisim')
+    bant2_pts = [(x, etek_y(x, -36.0)) for x in xs] + [(x, etek_y(x, -39.5)) for x in xs[::-1]]
+    bant2 = yol_op(gorunen, _yol(bant2_pts, gerilim=0.3), 'kesisim')
+    kivrim = [[S + _yuk(a_om) * 10.0 - _onn(a_om) * 22.0, sk.C(0.55 * LT) - _onn(sk.A(0.55 * LT)) * 44.0,
+               sk.C(0.15 * LT) - _onn(sk.A(0.15 * LT)) * 50.0],
+              [diz_ust + _v(-6.0, 22.0), K + _v(14.0, 40.0), A + _v(6.0, -20.0)]]
+    return gorunen, bant, bant2, kivrim
+
+
+def _boya_battaniye(B, sk, b, R):
+    gor, bant, bant2, kivrim = _battaniye_yolu(sk, b)
+    if gor.isEmpty():
+        return
+    B.lavi(gor, R['battaniye'], YOG['battaniye'])
+    # aşağıya doğru koyulaşan ikinci, eşiksiz sır (kumaşın ağırlığı / zemine yakın gölge)
+    y_ust = sk['S_on'][1]
+
+    def _asagi(X, Y, y0=y_ust):
+        return smoothstep(y0 + 40.0, 0.0, Y).astype(np.float32)
+    B.lavi(gor, R['battaniye_golge'], 0.16, yog_fn=_asagi, islak=0.2)
+    B.golge(gor, R['battaniye_golge'], 0.30, 16.0)
+    if not bant.isEmpty():
+        B.lavi(bant, R['battaniye_serit'], 0.30, islak=0.6)
+    if not bant2.isEmpty():
+        B.lavi(bant2, R['battaniye_serit2'], 0.32, islak=0.5)
+    for k_ in kivrim:
+        B.kat(k_, 2.2, 1.0, R['battaniye_golge'], 0.20, kirp=gor)
+    B.sakla(gor)
+
+
+def _zemin_golge(B, sk, guc, R):
+    """Figürün yere değdiği yerin altına yumuşak, saydam lila gölge (figürün arkasında kalır)."""
+    pts = []
+    for t_ in ('on', 'ar'):
+        pts += list(_uygula(sk['M_ayak_' + t_], _ayakkabi_pts(sk['tp_' + t_])))
+        pts += [sk['K_' + t_] + _v(0, 22.0), sk['avuc_' + t_] + _v(0, 8.0)]
+    pts += [sk['kok'] + _v(-40.0, 40.0), sk['kok'] + _v(30.0, 40.0)]
+    pts = np.array([q for q in pts if q[1] > -14.0])
+    if len(pts) == 0:
+        return
+    x0, x1 = pts[:, 0].min() - 10.0, pts[:, 0].max() + 10.0
+    yol = yol_elips(0.5 * (x0 + x1), 1.0, 0.5 * (x1 - x0) + 6.0, 7.0)
+    B.lavi(yol, R['zemin_golge'], 0.30 * guc, yumusak=max(2.0, 5.0 * B.s), dalga=0.0, islak=0.0, gran=0.05)
+
+
 def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=True, elde=None, nefes=0.0,
-              zemin_golge=0.35, tohum=0, renkler=None):
+              zemin_golge=0.35, tohum=0, renkler=None, battaniye_alfa=1.0):
     R = dict(RENK)
     if renkler:
         R.update(renkler)
     Mf = M_bilesik(np.asarray(M, np.float64), M_olcek(float(yon), 1.0))
     sk = iskelet(poz, nefes)
     B = _Boyaci(t, Mf, isik, tohum)
-    s = B.s
-    # saklamayı geri almak için kopya
     kayit = None
     if not sakla_sonra:
         kayit = None if t.saklama is None else t.saklama.copy()
-    # ---- 1) yakın kol ---------------------------------------------------------------------------------------------
-    kol_on = _kol_yolu(sk, 'on')
-    B.lavi(kol_on, R['gomlek'], YOG['gomlek'])
-    B.golge(kol_on, R['gomlek_golge'], 0.36, 9.0)
-    B.sakla(kol_on)
-    # ---- 2) yakın el ----------------------------------------------------------------------------------------------
-    el_on = _el_yolu(poz['kivrim_on'], poz['yan_on'])
-    M_el_on = M_bilesik(Mf, sk['M_el_on'])
-    B.lavi(el_on, R['ten'], YOG['ten'] + 0.04, M=M_el_on)
-    B.golge(el_on, R['ten_golge'], 0.30, 5.0, M=M_el_on)
-    B.sakla(el_on, M=M_el_on)
-    # ---- 3) elde tutulan nesne --------------------------------------------------------------------------------------
-    if elde is not None:
-        M_tut = M_bilesik(Mf, M_oteleme(*sk['avuc_on']), M_donme(90.0 - sk['th_on']))
-        elde(t, M_tut)
-    # ---- 4) baş: saç+sakal, deri, kulak -------------------------------------------------------------------------
-    deri, sac, sakal, kulak = bas_yollari()
-    M_bas = M_bilesik(Mf, sk['M_bas'])
-    B.lavi(sakal, R['sac'], YOG['sac'] * 0.88, M=M_bas)
-    B.golge(sakal, R['sac_golge'], 0.26, 5.0, M=M_bas)
-    B.sakla(sakal, M=M_bas)
-    B.lavi(sac, R['sac'], YOG['sac'], M=M_bas)
-    B.golge(sac, R['sac_golge'], 0.26, 7.0, M=M_bas)
-    B.sakla(sac, M=M_bas)
-    B.lavi(kulak, R['kulak'], 0.30, M=M_bas, islak=0.7)
-    B.kat(_KULAK_IC, 1.3, 1.0, R['ten_golge'], 0.32, M=M_bas)
-    B.lavi(deri, R['ten'], YOG['ten'], M=M_bas)
-    B.golge(deri, R['ten_golge'], 0.28, 9.0, M=M_bas)
-    B.sakla(deri, M=M_bas)
-    # ---- 5) gömlek gövde -----------------------------------------------------------------------------------------
+    batt = float(min(1.0, max(0.0, battaniye)))
+    b_alfa = float(min(1.0, max(0.0, battaniye_alfa)))
+    if b_alfa <= 1e-3:
+        batt = 0.0
+
+    def yakin_kol():
+        kol_on = _kol_yolu(sk, 'on')
+        B.lavi(kol_on, R['gomlek'], YOG['gomlek'])
+        B.golge(kol_on, R['gomlek_golge'], 0.36, 9.0)
+        _kol_kivrimi(B, sk, 'on', R)
+        B.sakla(kol_on)
+        el_on = _el_yolu(poz['kivrim_on'], poz['yan_on'])
+        M_el_on = M_bilesik(Mf, sk['M_el_on'])
+        B.lavi(el_on, R['ten'], YOG['ten'] + 0.04, M=M_el_on)
+        B.golge(el_on, R['ten_golge'], 0.30, 5.0, M=M_el_on)
+        B.sakla(el_on, M=M_el_on)
+        if elde is not None:
+            M_tut = M_bilesik(Mf, M_oteleme(*sk['avuc_on']), M_donme(90.0 - sk['th_on']))
+            elde(t, M_tut)
+
+    def bas():
+        deri, sac, sakal, kulak = bas_yollari()
+        M_bas = M_bilesik(Mf, sk['M_bas'])
+        kil = _sac_sakal_yolu()
+        B.lavi(kil, R['sac'], YOG['sac'], M=M_bas)
+        B.golge(kil, R['sac_golge'], 0.26, 6.5, M=M_bas)
+        B.sakla(kil, M=M_bas)
+        B.lavi(kulak, R['kulak'], 0.30, M=M_bas, islak=0.7)
+        B.kat(_KULAK_IC, 1.3, 1.0, R['ten_golge'], 0.32, M=M_bas)
+        B.lavi(deri, R['ten'], YOG['ten'], M=M_bas)
+        B.golge(deri, R['ten_golge'], 0.28, 9.0, M=M_bas)
+        B.sakla(deri, M=M_bas)
+
+    # ---- önden arkaya ----------------------------------------------------------------------------------------
+    if batt > 1e-3:
+        bas()
+        if b_alfa < 0.999:
+            with t.gorunurluk(b_alfa):
+                _boya_battaniye(B, sk, batt, R)
+        else:
+            _boya_battaniye(B, sk, batt, R)
+        yakin_kol()
+    else:
+        yakin_kol()
+        bas()
+    # gömlek gövde
     gom, etek = _gomlek_yolu(sk, poz)
-    B.lavi(gom, R['gomlek'], YOG['gomlek'])
-    B.golge(gom, R['gomlek_golge'], 0.32, 15.0)
-    B.kat(_yaka_cizgisi(sk), 1.4, 1.0, R['gomlek_kat'], 0.30)
-    B.sakla(gom)
-    # ---- 6) boyun -----------------------------------------------------------------------------------------------
+    k_g, m_g = _gomlek_maskesi(sk, gom, Mf, B.ed['kenar'])
+    if not k_g.bos() and m_g.size and m_g.max() > 1e-4:
+        B.lavi([], R['gomlek'], YOG['gomlek'], maske=(k_g, m_g))
+        B.golge(gom, R['gomlek_golge'], 0.32, 15.0, carp=(k_g, m_g))
+        B.kat(_yaka_cizgisi(sk), 1.4, 1.0, R['gomlek_kat'], 0.30)
+        B.sakla(None, maske=(k_g, m_g))
+    # boyun
     N, Hp = sk['N'], sk['Hp']
     boyun = _kapsul(N - (Hp - N) * 0.45, Hp + (Hp - N) * 0.20, 20.0, 18.6, n=8, nc=7)
     B.lavi(boyun, R['ten_boyun'], YOG['ten'] + 0.05)
@@ -667,12 +982,13 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
         return smoothstep(0.15, 1.05, tt).astype(np.float32)
     B.lavi(boyun, R['ten_golge'], 0.34, yog_fn=_boyun_golge, islak=0.3)
     B.sakla(boyun)
-    # ---- 7) yakın bacak + ayakkabı --------------------------------------------------------------------------------
+    # bacaklar: yakın sonra uzak (uzak bir ton koyu)
     for t_, uzak in (('on', False), ('ar', True)):
         bac = _bacak_yolu(sk, t_)
         cp = _uzak(R['pantolon']) if uzak else R['pantolon']
         B.lavi(bac, cp, YOG['pantolon'] * (1.12 if uzak else 1.0))
         B.golge(bac, R['pantolon_golge'], 0.32, 11.0)
+        _bacak_kivrimi(B, sk, t_, R, bac)
         B.sakla(bac)
         M_ay = M_bilesik(Mf, sk['M_ayak_' + t_])
         ay = _yol(_ayakkabi_pts(sk['tp_' + t_]), gerilim=0.45)
@@ -680,7 +996,7 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
         B.lavi(ay, ca, YOG['ayakkabi'] * (1.06 if uzak else 1.0), M=M_ay)
         B.golge(ay, R['ayakkabi_golge'], 0.30, 6.0, M=M_ay)
         B.sakla(ay, M=M_ay)
-    # ---- 8) uzak kol + el -----------------------------------------------------------------------------------------
+    # uzak kol + el
     kol_ar = _kol_yolu(sk, 'ar')
     B.lavi(kol_ar, _uzak(R['gomlek']), YOG['gomlek'] * 1.15)
     B.golge(kol_ar, R['gomlek_golge'], 0.36, 9.0)
@@ -690,9 +1006,43 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
     B.lavi(el_ar, _uzak(R['ten']), YOG['ten'] * 1.15, M=M_el_ar)
     B.golge(el_ar, R['ten_golge'], 0.30, 5.0, M=M_el_ar)
     B.sakla(el_ar, M=M_el_ar)
+    # zemin gölgesi (figürün arkasında; saklamaya yazılmaz)
+    if zemin_golge > 0:
+        _zemin_golge(B, sk, zemin_golge, R)
     if not sakla_sonra:
         t.saklama = kayit
     return _capalar(sk, Mf)
+
+
+# ---- kıvrım darbeleri (1-2 yumuşak iz) ----------------------------------------------------------------------
+def _kol_kivrimi(B, sk, t, R):
+    """Dirsek bükülünce iç tarafta kısa kumaş kıvrımı."""
+    dz = sk['tf_' + t] - sk['tu_' + t]
+    if dz < 25.0:
+        return
+    E, S, Wr = sk['E_' + t], sk['S_' + t], sk['Wr_' + t]
+    du = (S - E) / (np.hypot(*(S - E)) + 1e-9)
+    df = (Wr - E) / (np.hypot(*(Wr - E)) + 1e-9)
+    ic = du + df
+    ic = ic / (np.hypot(*ic) + 1e-9)
+    g = min(1.0, (dz - 25.0) / 50.0)
+    p0 = E + ic * 8.0 + du * 4.0
+    p1 = E + ic * 1.0 - du * 2.0 + df * 4.0
+    p2 = E - ic * 6.0 + df * 14.0
+    B.kat([p0, p1, p2], 1.6, 0.9, R['gomlek_kat'], 0.22 * g)
+
+
+def _bacak_kivrimi(B, sk, t, R, bac):
+    dz = sk['tt_' + t] - sk['ts_' + t]
+    K, Hj, A = sk['K_' + t], sk['H_' + t], sk['A_' + t]
+    if dz > 28.0:   # diz arkasında kıvrım
+        du = (Hj - K) / (np.hypot(*(Hj - K)) + 1e-9)
+        dl = (A - K) / (np.hypot(*(A - K)) + 1e-9)
+        ic = du + dl
+        ic = ic / (np.hypot(*ic) + 1e-9)
+        g = min(1.0, (dz - 28.0) / 60.0)
+        B.kat([K + ic * 14.0 + du * 6.0, K + ic * 7.0, K + ic * 12.0 + dl * 8.0], 1.5, 0.9,
+              R['pantolon_golge'], 0.24 * g, kirp=bac)
 
 
 def _capalar(sk, Mf):
@@ -785,7 +1135,7 @@ def _poz_ayakta_dik():
 IBRIK_ALT_EL = (42.0, 40.0)   # sula pozunda uzak elin avucu, yakın el çerçevesinde (ibriğin altı)
 
 
-def _poz_sula(dok=0.0):
+def sula_pozu(dok=0.0, alt_el=None):
     p = bos_poz()
     p.update(kx=-10.0, ky=KALCA_Y + 7.0, bel=17.0, gogus=9.0, boyun=10.0, bas=8.0,
              kivrim_on=0.92, yan_on=0.0, kivrim_ar=0.15, yan_ar=-1.0)
@@ -798,9 +1148,9 @@ def _poz_sula(dok=0.0):
     el_aci(p, 'on', th)
     sk = iskelet(p)
     Mel = M_bilesik(M_oteleme(*sk['avuc_on']), M_donme(90.0 - th))
-    hedef = _nokta(Mel, IBRIK_ALT_EL)
+    hedef = _nokta(Mel, IBRIK_ALT_EL if alt_el is None else alt_el)
     x = _asg(th)
-    kol_ik(p, 'ar', hedef - x * 21.0)
+    kol_ik(p, 'ar', hedef - x * AVUC_X * EL_OLCEK)
     el_aci(p, 'ar', th)
     return p
 
@@ -808,15 +1158,15 @@ def _poz_sula(dok=0.0):
 def _poz_kiyam():
     p = bos_poz()
     p.update(ky=KALCA_Y + 1.0, bel=1.0, gogus=-1.0, boyun=17.0, bas=2.0,
-             kivrim_on=0.25, yan_on=0.3, kisalt_on=0.55, kivrim_ar=0.3, yan_ar=0.2, kisalt_ar=0.45)
+             kivrim_on=0.25, yan_on=0.3, kisalt_on=0.62, kivrim_ar=0.35, yan_ar=0.2, kisalt_ar=0.5)
     bacak_ik(p, 'on', (7.0, -AYAK_YUK))
     bacak_ik(p, 'ar', (-9.0, -AYAK_YUK))
     ayak_duz(p, 'on')
     ayak_duz(p, 'ar')
-    kol_ik(p, 'on', (25.0, -370.0))
-    el_aci(p, 'on', 80.0)
-    kol_ik(p, 'ar', (33.0, -379.0))
-    el_aci(p, 'ar', 74.0)
+    kol_ik(p, 'on', (21.0, -356.0))
+    el_aci(p, 'on', 66.0)
+    kol_ik(p, 'ar', (28.0, -364.0))
+    el_aci(p, 'ar', 62.0)
     return p
 
 
@@ -857,7 +1207,7 @@ def _bas_yere(p, a_h=104.7, alin=(29.6, -31.0), yuk=-0.6):
     """Secde: baş açısı a_h iken alın yere (y=yuk) değecek boyun açısını çözer (boyun ve bas anahtarları)."""
     sk = iskelet(p)
     N, aN = sk['N'], sk['a_N']
-    ofs = _uygula(M_donme(a_h), [alin])[0]
+    ofs = _uygula(M_bilesik(M_donme(a_h), M_olcek(BAS_OLCEK)), [alin])[0]
     py = yuk - ofs[1]                        # baş pivotunun olması gereken y
     c = (N[1] - py) / L_BOYUN               # -cos(a_n) * L = py - N.y  ->  cos a_n = (N.y - py)/L
     c = max(-1.0, min(1.0, c))
@@ -871,15 +1221,15 @@ def _poz_secde():
     p = bos_poz()
     kok = DIZ - L_UYLUK * _asg(6.0)
     p.update(kx=kok[0], ky=kok[1], bel=122.0, gogus=8.0,
-             kivrim_on=0.0, yan_on=1.0, kivrim_ar=0.0, yan_ar=1.0, kol_kisalt_on=0.75, kol_kisalt_ar=0.75,
-             ust_kisalt_on=0.35, ust_kisalt_ar=0.35)
+             kivrim_on=0.0, yan_on=1.0, kivrim_ar=0.0, yan_ar=1.0, kol_kisalt_on=1.0, kol_kisalt_ar=1.0,
+             ust_kisalt_on=0.66, ust_kisalt_ar=0.66, etek_ar=7.6, etek_ar_boy=75.0)
     _ayak_parmakta(p, 'on')
     _ayak_parmakta(p, 'ar', dx=-3.0)
     _bas_yere(p)
     sk = iskelet(p)
     bx = sk['Hp'][0]
     for t, dx in (('on', 0.0), ('ar', 5.0)):
-        kol_ik(p, t, (bx - 24.0 + dx, -7.6), isaret=-1)
+        kol_ik(p, t, (bx - 12.0 + dx, -7.6), isaret=-1)
         el_aci(p, t, 90.0)
     return p
 
@@ -891,7 +1241,7 @@ def _poz_oturus(dik):
         p.update(kx=0.0, ky=-44.0, bel=-4.0, gogus=3.0, boyun=11.0, bas=-10.0, bel_kambur=0.0,
                  kivrim_on=0.55, yan_on=0.4, kivrim_ar=0.55, yan_ar=0.4)
     else:
-        p.update(kx=0.0, ky=-44.0, bel=-13.0, gogus=40.0, boyun=16.0, bas=10.0, bel_kambur=14.0,
+        p.update(kx=0.0, ky=-44.0, bel=-6.0, gogus=36.0, boyun=16.0, bas=10.0, bel_kambur=18.0,
                  kivrim_on=0.55, yan_on=0.4, kivrim_ar=0.55, yan_ar=0.4)
     bacak_ik(p, 'on', (96.0, -AYAK_YUK))
     bacak_ik(p, 'ar', (88.0, -AYAK_YUK))
@@ -915,24 +1265,33 @@ def _poz_oturus(dik):
 KALKIS_DX = 72.0   # kalkış sonunda figür ayakta_dik'in KALKIS_DX kadar öne kaymış hâlidir
 
 
+def kol_mutlak(p, taraf, ust_aci, dirsek, bilek=0.0):
+    """Kolu mutlak açıyla kurar: ust_aci üst kolun asg açısı (0 aşağı, 90 öne yatay)."""
+    sk = iskelet(p)
+    a_om = sk.A(sk['s_om'])
+    p['omuz_' + taraf] = ust_aci + a_om
+    p['dirsek_' + taraf] = dirsek
+    p['el_bilek_' + taraf] = bilek
+    return p
+
+
 def _poz_kalkis(i):
     p = bos_poz()
-    if i == 1:     # öne eğil, ayakları çek, kollar öne
-        p.update(kx=4.0, ky=-46.0, bel=30.0, gogus=16.0, boyun=4.0, bas=-6.0,
-                 omuz_on=78.0, dirsek_on=22.0, el_bilek_on=-6.0, omuz_ar=70.0, dirsek_ar=24.0, el_bilek_ar=-6.0,
-                 kivrim_on=0.35, kivrim_ar=0.35)
-    elif i == 2:   # kalça yerden kalkar, derin çömelme, ağırlık ayaklarda
-        p.update(kx=34.0, ky=-118.0, bel=46.0, gogus=10.0, boyun=0.0, bas=-8.0,
-                 omuz_on=70.0, dirsek_on=18.0, el_bilek_on=-4.0, omuz_ar=64.0, dirsek_ar=20.0, el_bilek_ar=-4.0,
-                 kivrim_on=0.35, kivrim_ar=0.35)
-    else:          # yarı doğrulmuş
-        p.update(kx=62.0, ky=-246.0, bel=22.0, gogus=2.0, boyun=8.0, bas=-10.0,
-                 omuz_on=24.0, dirsek_on=16.0, el_bilek_on=2.0, omuz_ar=18.0, dirsek_ar=16.0, el_bilek_ar=2.0,
-                 kivrim_on=0.38, kivrim_ar=0.38)
+    if i == 1:     # öne eğil, ayakları çek, kollar öne uzanır (kalça hâlâ yerde)
+        p.update(kx=4.0, ky=-46.0, bel=26.0, gogus=14.0, boyun=4.0, bas=-14.0, kivrim_on=0.3, kivrim_ar=0.3)
+        ua, dz = 62.0, 18.0
+    elif i == 2:   # kalça yerden kalkar, ağırlık ayaklara biner: derin çömelme, kollar öne yatay
+        p.update(kx=22.0, ky=-112.0, bel=40.0, gogus=8.0, boyun=4.0, bas=-22.0, kivrim_on=0.3, kivrim_ar=0.3)
+        ua, dz = 70.0, 14.0
+    else:          # bacaklar iter, kalça yükselir, gövde doğrulur
+        p.update(kx=60.0, ky=-232.0, bel=24.0, gogus=4.0, boyun=8.0, bas=-18.0, kivrim_on=0.35, kivrim_ar=0.35)
+        ua, dz = 26.0, 16.0
     bacak_ik(p, 'on', (6.0 + KALKIS_DX, -AYAK_YUK))
     bacak_ik(p, 'ar', (-10.0 + KALKIS_DX, -AYAK_YUK))
     ayak_duz(p, 'on')
     ayak_duz(p, 'ar')
+    kol_mutlak(p, 'on', ua, dz, -4.0)
+    kol_mutlak(p, 'ar', ua - 6.0, dz + 4.0, -4.0)
     return p
 
 
@@ -949,13 +1308,14 @@ def _diz_secde_ara(i):
         th = 34.0
         kok = DIZ - L_UYLUK * _asg(th)
         p.update(kx=kok[0], ky=kok[1], bel=38.0, gogus=6.0, boyun=6.0, bas=-8.0,
-                 kivrim_on=0.25, yan_on=0.6, kivrim_ar=0.25, yan_ar=0.6, kol_kisalt_on=0.2, kol_kisalt_ar=0.2)
+                 kivrim_on=0.25, yan_on=0.6, kivrim_ar=0.25, yan_ar=0.6, kol_kisalt_on=0.15, kol_kisalt_ar=0.15,
+                 etek_ar=8.0, etek_ar_boy=20.0)
     else:        # eller yere iner
         th = 14.0
         kok = DIZ - L_UYLUK * _asg(th)
         p.update(kx=kok[0], ky=kok[1], bel=96.0, gogus=8.0, boyun=10.0, bas=-14.0,
                  kivrim_on=0.05, yan_on=1.0, kivrim_ar=0.05, yan_ar=1.0, kol_kisalt_on=0.6, kol_kisalt_ar=0.6,
-                 ust_kisalt_on=0.35, ust_kisalt_ar=0.35)
+                 ust_kisalt_on=0.4, ust_kisalt_ar=0.4, etek_ar=18.0, etek_ar_boy=48.0)
     _ayak_parmakta(p, 'on')
     _ayak_parmakta(p, 'ar', dx=-3.0)
     sk = iskelet(p)
@@ -1003,7 +1363,7 @@ def _yur_ayak(f):
         return A, 90.0 - a, a
     # salınım
     A0, a0, p0 = _yur_ayak(_YUR_TO - 1e-6)
-    A1, a1, p1 = _yur_ayak(1.0 - 1e-9 + 1e-9) if False else _yur_ayak(0.0)
+    A1, a1, p1 = _yur_ayak(0.0)
     u = (f - _YUR_TO) / (1.0 - _YUR_TO)
     ue = u * u * (3 - 2 * u)
     x = A0[0] + (A1[0] - A0[0]) * (0.15 * u + 0.85 * ue)
@@ -1136,8 +1496,8 @@ def secdeye(t):
 POZLAR = {}
 POZLAR['ayakta'] = _poz_ayakta()
 POZLAR['ayakta_dik'] = _poz_ayakta_dik()
-POZLAR['sula'] = _poz_sula(0.0)
-POZLAR['sula_dok'] = _poz_sula(1.0)
+POZLAR['sula'] = sula_pozu(0.0)
+POZLAR['sula_dok'] = sula_pozu(1.0)
 POZLAR['kiyam'] = _poz_kiyam()
 POZLAR['ruku'] = _poz_ruku()
 POZLAR['secde'] = _poz_secde()

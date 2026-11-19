@@ -161,7 +161,7 @@ class Malzeme:
         tc = b.n("ShaderNodeTexCoord", (x0, 0))
         oi = b.n("ShaderNodeObjectInfo", (x0, -500))
         mp = b.n("ShaderNodeMapping", (x0 + 200, 0))
-        s = 1.0 / (0.075 if not kuran else 0.11)    # gren olcegi
+        s = 1.0 / (0.075 if not kuran else 0.20)    # gren olcegi
         mp.inputs["Scale"].default_value = (s, s, s)
         b.l(tc.outputs["UV"], mp.inputs["Vector"])
         # rastgele kaydirma (her kitap farkli gren)
@@ -176,7 +176,7 @@ class Malzeme:
         rgh = b.n("ShaderNodeTexImage", (x0 + 400, -200), image=self.lw_rough if kuran else self.leather_rough)
         b.l(mp.outputs["Vector"], disp.inputs["Vector"])
         b.l(mp.outputs["Vector"], rgh.inputs["Vector"])
-        bump = b.n("ShaderNodeBump", (x0 + 700, 100), i_Strength=0.35 if not kuran else 0.25, i_Distance=0.00025)
+        bump = b.n("ShaderNodeBump", (x0 + 700, 100), i_Strength=0.35 if not kuran else 0.45, i_Distance=0.00025)
         b.l(disp.outputs["Color"], bump.inputs["Height"])
         # renk: hafif lekelenme
         nz = b.n("ShaderNodeTexNoise", (x0 + 400, 450), i_Scale=9.0, i_Detail=6.0, i_Roughness=0.55)
@@ -271,8 +271,8 @@ class Malzeme:
         b.l(rough_s, bs.inputs["Roughness"])
         b.l(normal_s, bs.inputs["Normal"])
         bs.inputs["Specular IOR Level"].default_value = 0.45
-        bs.inputs["Coat Weight"].default_value = 0.18 if not kuran else 0.25
-        bs.inputs["Coat Roughness"].default_value = 0.32
+        bs.inputs["Coat Weight"].default_value = cfgG.get("deri_cila", 0.32) if not kuran else 0.30
+        bs.inputs["Coat Roughness"].default_value = cfgG.get("deri_cila_p", 0.30)
         bs.inputs["Sheen Weight"].default_value = 0.12
         bs.inputs["Sheen Roughness"].default_value = 0.4
         bs.inputs["Sheen Tint"].default_value = (1.0, 0.95, 0.9, 1.0)
@@ -629,7 +629,7 @@ RENK_DERI = srgb("#C39282")       # cok acik, solgun gul-taba deri (kalibre edil
 RENK_KOYU = srgb("#946A5E")
 RENK_SAYFA = srgb("#E9DCC3")
 RENK_ARKA_KAGIT = srgb("#EDE2CB")
-RENK_KURAN = srgb("#E9E0CF")       # inci / fildisi beyazi deri
+RENK_KURAN = srgb("#E7DDCA")       # inci / fildisi beyazi deri
 RENK_KURAN_KOYU = srgb("#D9CDB8")
 
 
@@ -954,7 +954,7 @@ def kuran_ve_rahle(M, KU, cfg):
 
     # --- Egik cerceve (L-birimi) yerel uzayi: kitap y in [-T,0] (on yuz -T), z in [0,H]
     lean = math.radians(cfg.get("kuran_egim", 15.0))
-    yaw = math.radians(cfg.get("kuran_yaw", -3.0))
+    yaw = math.radians(cfg.get("kuran_yaw", 4.5))
     m_ahsap = M.ahsap("rahle", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#C4AE9E")), 1.0, rough_mul=0.8, coat=0.3, normal_str=0.5,
                       rot90=True, doygunluk=0.72)
     # L-birimi sinirlari (yerel)
@@ -1009,7 +1009,7 @@ def isiklar(cfg):
     env = nt.nodes.new("ShaderNodeTexEnvironment")
     env.image = bpy.data.images.load(V.yol("brown_photostudio_05", "hdri"), check_existing=True)
     bg = nt.nodes.new("ShaderNodeBackground")
-    bg.inputs["Strength"].default_value = cfg.get("hdri_guc", 0.12)
+    bg.inputs["Strength"].default_value = cfg.get("hdri_guc", 0.08)
     out = nt.nodes.new("ShaderNodeOutputWorld")
     nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
     nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
@@ -1049,13 +1049,13 @@ def isiklar(cfg):
     ya, yb = cfg.get("pencere_y", (-2.0, 0.85))
     za, zb = cfg.get("pencere_z", (0.12, 1.90))
     pen = alan("ana", (SOL_DUVAR_X + 0.09, (ya + yb) / 2, (za + zb) / 2), (5.0, (ya + yb) / 2, (za + zb) / 2),
-               (yb - ya) * 0.98, (zb - za) * 0.98, cfg.get("ana_guc", 260), kelvin(6200))
+               (yb - ya) * 0.98, (zb - za) * 0.98, cfg.get("ana_guc", 340), kelvin(6200))
     pen.rotation_euler = Euler((0.0, math.radians(90.0), 0.0), "XYZ")    # -Z -> +x
     pen.data.size, pen.data.size_y = (zb - za) * 0.98, (yb - ya) * 0.98
     # sag dolgu (krem duvardan yansima gibi)
     alan("dolgu", (1.3, -0.6, 0.55), (0.0, 0.2, 0.25), 1.2, 1.0, cfg.get("dolgu_guc", 5), kelvin(5000))
     # sag-on beyaz yansitici (bounce kart)
-    alan("kart", (0.95, -1.45, 0.45), (0.0, 0.15, 0.25), 1.0, 1.0, cfg.get("kart_guc", 16), kelvin(5600))
+    alan("kart", (0.95, -1.45, 0.45), (0.0, 0.15, 0.25), 1.0, 1.0, cfg.get("kart_guc", 11), kelvin(5600))
     # kamera tarafindan cok hafif on dolgu
     alan("on", (0.25, -2.4, 0.7), (0.0, 0.0, 0.25), 1.4, 0.6, cfg.get("on_guc", 0), kelvin(5200))
 
@@ -1078,7 +1078,7 @@ def isiklar(cfg):
         sun.light_linking.receiver_collection = col
         return sun
     gunes("gunes_duvar", cfg.get("gunes_yon", (0.79, 0.44, -0.40)), cfg.get("gunes_guc", 10.0), ("duvar",))
-    gunes("gunes_kuran", cfg.get("gunes2_yon", (0.92, 0.18, -0.35)), cfg.get("gunes2_guc", 9.0),
+    gunes("gunes_kuran", cfg.get("gunes2_yon", (0.92, 0.18, -0.35)), cfg.get("gunes2_guc", 13.0),
           ("kuran", "rahle_sirt", "rahle_raf", "rahle_dudak"))
     sol_duvar(cfg)
 
@@ -1285,7 +1285,7 @@ def render_ayar(cfg):
     vs = sc.view_settings
     vs.view_transform = "AgX"
     vs.look = cfg.get("look", "AgX - Medium High Contrast")
-    vs.exposure = cfg.get("pozlama", 0.8)
+    vs.exposure = cfg.get("pozlama", 0.65)
     vs.gamma = 1.0
     if hasattr(vs, "use_white_balance"):
         vs.use_white_balance = cfg.get("beyaz_denge", False)

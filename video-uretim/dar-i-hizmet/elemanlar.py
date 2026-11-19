@@ -57,8 +57,8 @@ def bulut_yolu(cx, cy, gen, yuk, tohum=0, lob=6):
     return yol_op(p, kes, 'kesisim')
 
 
-def gok(t: Tuval, M, bulutlar=(), ust='#4F7FB8', orta='#7FA6CF', alt='#EAD3C6', yog=0.85, tohum=1,
-        ufuk=0.78, alt_yog=0.35, kirp=None, ek_maske=None):
+def gok(t: Tuval, M, bulutlar=(), ust='#5F8FC4', orta='#8DB2D7', alt='#EAD6CB', yog=0.82, tohum=1,
+        ufuk=0.78, alt_yog=0.35, kirp=None, ek_maske=None, gran=0.09):
     """Bütün ekranı kaplayan gök lavisi; bulutlar boş kâğıt olarak saklanır (alt kenarları ıslak karışır).
     M: dünya->ekran (bulut konumları için). bulutlar: [(cx, cy, gen, yuk, tohum), ...] dünya biriminde."""
     k = kirp or Kirp(0, 0, W, H)
@@ -90,13 +90,13 @@ def gok(t: Tuval, M, bulutlar=(), ust='#4F7FB8', orta='#7FA6CF', alt='#EAD3C6', 
     if ek_maske is not None:
         gm = gm * ek_maske
     t.degrade_lavi([(0.0, ust, 1.0), (0.42, orta, 0.85), (ufuk, alt, alt_yog), (1.0, alt, alt_yog * 0.8)],
-                   yog=yog, gran=0.16, akis=0.10, M=M, tohum=tohum, maske=gm, kirp=k)
+                   yog=yog, gran=gran, akis=0.10, M=M, tohum=tohum, maske=gm, kirp=k)
     # bulutların altına lila gölge
     for (p, cx, cy, g, y, s) in alt_golge:
         def yf(X, Y, cy=cy, y=y):
             return smoothstep(cy - y * 0.25, cy + y * 0.42, Y)
         t.lavi(p, M, '#BDB6D6', yog=0.30, kenar=2.0, dalga=0.18, islak=0.25, islak_gen=8, gran=0.10, akis=0.2,
-               tohum=s + 5, yog_fn=yf, sakla=False)
+               tohum=s + 5, yog_fn=yf)
 
 
 def uzak_agac_sirasi(t: Tuval, M, x0, x1, taban, yuk=60, renk_='#A5B8B0', yog=0.5, tohum=3, yogunluk=0.9,

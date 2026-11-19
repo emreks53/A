@@ -21,4 +21,4 @@ for ad in ADLAR:
     etik.append(ad if boy >= 300 else '')
     sureler.append(dt)
 print('ort sure', np.mean(sureler), 'max', np.max(sureler))
-pafta(parca, f'pafta_pozlar_{boy}', etik, sutun=int(sys.argv[2]) if len(sys.argv) > 2 else None)
+pafta(parca, f'insan_pafta1_pozlar_{boy}', etik, sutun=int(sys.argv[2]) if len(sys.argv) > 2 else None)

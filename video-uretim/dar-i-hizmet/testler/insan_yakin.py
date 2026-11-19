@@ -3,7 +3,7 @@ import sys; sys.path.insert(0, '/home/user/A/video-uretim/dar-i-hizmet/testler')
 from insan_ortak import *
 adlar = sys.argv[1].split(',')
 boy = int(sys.argv[2]) if len(sys.argv) > 2 else 900
-ad_cikti = sys.argv[3] if len(sys.argv) > 3 else 'yakin'
+ad_cikti = sys.argv[3] if len(sys.argv) > 3 else 'insan_yakin'
 s = boy / 600.0
 parca = []
 for ad in adlar:

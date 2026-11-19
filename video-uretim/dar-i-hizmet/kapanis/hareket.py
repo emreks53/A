@@ -74,7 +74,10 @@ def hazirla(dep):
     return (1.0 / inv).astype(np.float32)
 
 
-def kare_uret(i, bilgi, src, dep, post=True, salinim=True):
+SS = 2   # 2x ust-ornekleme ile yeniden ornekle, sonra alan ortalamasiyla kucult (zum titresimini onler)
+
+
+def kare_uret(i, bilgi, src, dep, post=True, salinim=True, ss=SS):
     Hs, Ws = src.shape[:2]
     lens, sens, pay = bilgi["lens"], 36.0, bilgi["pay"]
     f_src = (lens / pay) / sens * Hs
@@ -87,7 +90,10 @@ def kare_uret(i, bilgi, src, dep, post=True, salinim=True):
     t_sn = i / 30.0
     dx, dy, rl = _salinim(t_sn) if salinim else (0.0, 0.0, 0.0)
 
-    yy, xx = np.mgrid[0:H_OUT, 0:W_OUT].astype(np.float32)
+    # ust-ornekli cikti izgarasi (piksel merkezleri cikti koordinatlarinda)
+    g = (np.arange(H_OUT * ss, dtype=np.float32) + 0.5) / ss - 0.5
+    h = (np.arange(W_OUT * ss, dtype=np.float32) + 0.5) / ss - 0.5
+    yy, xx = np.meshgrid(g, h, indexing="ij")
     # el salinimi: cikti koordinatlarina kucuk kayma + donme (merkez etrafinda)
     if salinim:
         a = math.radians(rl)
@@ -114,13 +120,20 @@ def kare_uret(i, bilgi, src, dep, post=True, salinim=True):
         return us, vs
 
     if post:
-        out = np.empty((H_OUT, W_OUT, 3), np.float32)
+        big = np.empty((H_OUT * ss, W_OUT * ss, 3), np.float32)
+        us1, vs1 = esle(1.0)
         for c, olc in ((0, 1.00035), (1, 1.0), (2, 0.99965)):
-            us, vs = esle(olc)
-            out[..., c] = cv2.remap(src[..., c], us, vs, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+            if olc == 1.0:
+                us, vs = us1, vs1
+            else:
+                # renk sapmasi: kanal koordinatlarini merkeze gore cok az olcekle
+                us = (us1 - cxs) * olc + cxs
+                vs = (vs1 - cys) * olc + cys
+            big[..., c] = cv2.remap(src[..., c], us, vs, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
     else:
         us, vs = esle(1.0)
-        out = cv2.remap(src, us, vs, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+        big = cv2.remap(src, us, vs, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+    out = cv2.resize(big, (W_OUT, H_OUT), interpolation=cv2.INTER_AREA) if ss > 1 else big
     out = np.clip(out, 0, 1)
     if post:
         out = son_islem(out, i)

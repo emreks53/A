@@ -1,7 +1,17 @@
 """Kapanis sahnesi icin CC0 varliklari (Poly Haven) indirir.
 
-Tum varliklar Poly Haven'dan (https://polyhaven.com), CC0 lisansli.
+Tum varliklar Poly Haven'dan (https://polyhaven.com), lisans: CC0 1.0 (kamu mali).
 Her varlik kendi alt klasorune iner: <VARLIK>/<ad>/...
+
+Kullanilan varliklar:
+  - white_oak_veneer      (doku, Jenelle van Heerden)  -> masa ustu (acik, sicak mese)
+  - walnut_veneer_02      (doku, Jenelle van Heerden)  -> iki basamakli kaide + Kur'an rahlesi (ceviz)
+  - plastered_wall_04     (doku, Rob Tuytel)           -> krem siva arka duvar
+  - leather_red_02        (doku, Rob Tuytel)           -> kitap derisi grenli kabartma + puruzluluk
+  - leather_white         (doku, Rob Tuytel)           -> Kur'an cildi deri greni + puruzluluk
+  - brown_photostudio_05  (HDRI, Sergej Majboroda)     -> ortam isigi / yansimalar (dusuk siddet)
+Diger her sey (kitap/cilt geometrisi, sirt yazilari, varak maskeleri, semse, isiklar) kodla uretilir;
+yazi tipi: EB Garamond (OFL), ../fontlar/.
 """
 import json
 import os
@@ -13,7 +23,6 @@ VARLIK = os.path.join(SCRATCH, "varlik")
 
 # ad -> (tur, cozunurluk, haritalar)
 DOKULAR = {
-    "walnut_veneer": ("2k", ["Diffuse", "nor_gl", "Rough"]),        # (deneme) acik ceviz
     "white_oak_veneer": ("2k", ["Diffuse", "nor_gl", "Rough"]),     # masa ustu (acik, sicak mese)
     "walnut_veneer_02": ("4k", ["Diffuse", "nor_gl", "Rough"]),     # basamakli kaide + rahle
     "plastered_wall_04": ("2k", ["Diffuse", "nor_gl", "Rough"]),    # krem siva duvar

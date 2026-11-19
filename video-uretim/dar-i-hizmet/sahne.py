@@ -91,35 +91,67 @@ def meydan_kamera(V):
     if V < 1.80:
         u = ilerle(V, T_DAR, 1.80, lambda x: x ** 2.2)
         z = math.exp(math.log(0.62) + u * math.log(1.0 / 0.62))
-        return Kamera(540.0, lerp(1040.0, 980.0, u), z)
+        return Kamera(540.0, lerp(1040.0, 990.0, u), z)
     u = ilerle(V, 1.80, 3.4, lambda x: x)
-    return Kamera(540.0 + 25 * u, 980.0 + 10 * u, 1.0 + 0.06 * u)
+    return Kamera(540.0 + 30 * u, 990.0 - 20 * u, 1.0 + 0.07 * u)
+
+
+MEYDAN_UFUK = 760
+MEYDAN_YOL = [(640, 2700), (600, 2250), (560, 1990), (520, 1760), (380, 1560), (430, 1380), (610, 1250), (700, 1120), (640, 1000), (600, 900),
+              (680, 800), (760, 700), (800, 610)]
+MEYDAN_DERE = [(-760, 1190), (-400, 1225), (-40, 1210), (180, 1250), (420, 1236), (640, 1262), (860, 1300),
+               (1120, 1290), (1450, 1270), (1800, 1300)]
+
+
+def meydan_adam(V):
+    """Yürüyen adam: yolun ortasından derenin basamak taşlarına ve öteye (uzaklaştıkça küçülür)."""
+    u = ilerle(V, 0.4, 3.4, lambda x: x)
+    yol = [(405, 1470, 0.36), (488, 1338, 0.31), (600, 1257, 0.275), (655, 1185, 0.25), (700, 1120, 0.225)]
+    k = u * (len(yol) - 1)
+    i = min(int(k), len(yol) - 2)
+    f = k - i
+    x = lerp(yol[i][0], yol[i + 1][0], f)
+    y = lerp(yol[i][1], yol[i + 1][1], f)
+    olc = lerp(yol[i][2], yol[i + 1][2], f)
+    return x, y, olc
 
 
 def ciz_meydan(t: Tuval, V, cam: Kamera):
     M = cam.M()
-    Muzak = cam.M(0.6)
-    # önden arkaya: adam, taşlar, dere, yol, çimen, zemin, tepe, uzak dağlar, gök
-    faz = (V * 0.95) % 1.0
-    ax = 330 + (V - 1.2) * 70.0
-    Madam = M @ M_yerlestir(ax, 1585, 0.30)
-    insan.ciz_insan(t, Madam, insan.yuruyus(faz), yon=1, isik=(-0.5, -0.8))
-    doga.ciz_tas(t, M, 820, 1700, 95, tohum=3)
-    doga.ciz_tas(t, M, 905, 1735, 55, tohum=4)
-    doga.ciz_tas(t, M, 250, 1300, 42, tohum=5)
-    doga.ciz_tas(t, M, 640, 1190, 26, tohum=6)
-    doga.ciz_dere(t, M, [(-60, 1420), (300, 1395), (620, 1440), (1140, 1400)], 46, V, tohum=2)
-    doga.ciz_yol(t, M, [(120, 1990), (300, 1700), (560, 1560), (700, 1400), (520, 1260), (560, 1130), (640, 1030)],
-                 190, tohum=1)
-    doga.ciz_cimen(t, M, -40, 1120, 1880, 0.8, math.sin(V * 1.3) * 0.3, tohum=8)
-    t.lavi(yol_dikdortgen(-400, 1000, 1500, 2600), M, '#DCD3B6', yog=0.45, kenar=2, dalga=0.15, islak=0.35,
-           islak_gen=8, gran=0.12, akis=0.14, tohum=11)
-    # dik yokuş (sağda, yol ufka doğru tırmanır)
-    el.tepe_sirasi(t, Muzak, 380, 1400, 1060, 210, '#A8BCA4', yog=0.42, tohum=21, dalga_sayi=1.0, alt=1200)
-    el.uzak_agac_sirasi(t, Muzak, -300, 1400, 1040, yuk=40, renk_='#A5B8B0', yog=0.40, tohum=22)
-    el.tepe_sirasi(t, Muzak, -300, 1500, 1010, 140, '#BFC9D0', yog=0.30, tohum=23, dalga_sayi=2.2, alt=1100)
-    el.gok(t, Muzak, bulutlar=[(230, 330, 300, 105, 31), (820, 520, 250, 85, 32), (520, 760, 210, 70, 33)],
-           ust='#5D8BC0', orta='#8CB0D4', alt='#EED8CB', ufuk=0.55, alt_yog=0.30)
+    Mu = cam.M(0.7)
+    Muu = cam.M(0.45)
+    sal = 0.18 * math.sin(V * 1.4)
+    # önden arkaya: ön çimen, adam, yakın taşlar, dere, yol, orta plan, uzak ağaçlar, yokuş, çayır, tepeler, gök
+    for i, (y, s_) in enumerate([(1900, 1.3), (1830, 1.15), (1700, 1.0)]):
+        doga.ciz_cimen(t, M, -30, 300, y, 1.2, sal, tohum=10 + i, boy=(int(22 * s_), int(46 * s_)))
+        doga.ciz_cimen(t, M, 760, 1110, y + 20, 1.2, sal, tohum=20 + i, boy=(int(22 * s_), int(46 * s_)))
+    ax, ay, aol = meydan_adam(V)
+    faz = (V * 1.05) % 1.0
+    insan.ciz_insan(t, M @ M_yerlestir(ax, ay, aol), insan.yuruyus(faz), yon=1, isik=(-0.5, -0.8))
+    doga.ciz_tas(t, M, 215, 1595, 88, tohum=1)
+    doga.ciz_tas(t, M, 330, 1620, 46, tohum=2)
+    doga.ciz_tas(t, M, 890, 1500, 64, tohum=3)
+    doga.ciz_cimen(t, M, 140, 420, 1625, 1.0, sal, tohum=31, boy=(16, 32))
+    doga.ciz_cimen(t, M, 820, 980, 1510, 1.0, sal, tohum=32, boy=(14, 28))
+    doga.ciz_dere(t, M, MEYDAN_DERE, 70, zaman=V, tohum=1, daralma=0.0, taslar=0.54)
+    doga.ciz_yol(t, M, MEYDAN_YOL, 300, tohum=1, daralma=0.94)
+    doga.ciz_tas(t, M, 820, 1085, 40, tohum=4)
+    doga.ciz_tas(t, M, 870, 1100, 24, tohum=5)
+    doga.ciz_tas(t, M, 470, 985, 30, tohum=6)
+    doga.ciz_tas(t, M, 560, 860, 18, tohum=7)
+    doga.ciz_tas(t, M, 720, 905, 14, tohum=8)
+    for i, (x0, x1, y, s_) in enumerate([(0, 300, 1420, 0.8), (720, 1080, 1400, 0.8), (40, 380, 1150, 0.6),
+                                         (760, 1080, 1180, 0.6), (0, 420, 1000, 0.45), (820, 1080, 990, 0.45)]):
+        doga.ciz_cimen(t, M, x0, x1, y, 1.6, sal, tohum=40 + i, boy=(int(18 * s_), int(40 * s_)))
+    doga.ciz_agac(t, M @ M_yerlestir(170, 905, 0.2), 1.0, tohum=3, sallanma=0.1 + sal * 0.3)
+    doga.ciz_agac(t, M @ M_yerlestir(950, 860, 0.14), 0.9, tohum=4, sallanma=0.1 + sal * 0.3)
+    doga.ciz_agac(t, M @ M_yerlestir(330, 830, 0.1), 0.8, tohum=5, sallanma=0.1 + sal * 0.3)
+    doga.ciz_yokus(t, M, 360, 1750, 1010, 900, 520, tohum=2)
+    doga.ciz_cayir(t, M, -800, MEYDAN_UFUK - 6, 1900, 2800, tohum=1, ufuk_y=MEYDAN_UFUK)
+    el.uzak_agac_sirasi(t, Muu, -400, 1500, MEYDAN_UFUK, yuk=34, renk_='#9DB3A8', yog=0.42)
+    el.tepe_sirasi(t, Muu, -400, 1500, MEYDAN_UFUK - 4, 110, '#B4C3CB', yog=0.32, tohum=4)
+    el.tepe_sirasi(t, Muu, -400, 1500, MEYDAN_UFUK - 30, 150, '#C6CFD8', yog=0.22, tohum=9)
+    el.gok(t, cam.M(0.35), bulutlar=[(260, 300, 300, 110, 1), (820, 200, 240, 90, 2)], ufuk=0.42)
 
 
 def ciz_kapi_sahnesi(V):

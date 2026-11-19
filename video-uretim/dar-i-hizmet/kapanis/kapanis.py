@@ -31,9 +31,9 @@ CFG = {
     "rx": 540,
     "ry": 960,
     "dolly": 0.055,              # hareket boyunca mesafenin %5.5'i kadar yaklas
-    "kaydir_v": 0.006,           # kamera yukari ekseninde 6 mm kayma (cok hafif dikey suruklenme)
-    "hedef_kuran_ust": 0.115,    # kadraj: Kur'an ust kenari (ustten oran)
-    "hedef_lem_alt": 0.668,      # kadraj: Lem'alar on alt kenari
+    "kaydir_v": -0.006,          # kamera kendi yukari ekseninde 6 mm asagi (cok hafif dikey suruklenme)
+    "hedef_kuran_ust": 0.107,    # kadraj: Kur'an ust kenari (ustten oran)
+    "hedef_lem_alt": 0.656,      # kadraj: Lem'alar on alt kenari
 }
 CFG_DOSYA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ayar.json")
 
@@ -174,7 +174,8 @@ def main():
         cfg = cfg_yukle(dict(ek or {}, samples=ek.get("samples", 160) if ek else 160, esik=0.015))
         # 1.25x cozunurluk, %3 genis goruntu alani (hareket/salinim payi)
         pay = 1.03
-        cfg_b = dict(cfg, rx=1350, ry=2400)
+        so = cfg.get("test_olcek", 1.0)
+        cfg_b = dict(cfg, rx=int(round(1350 * so)), ry=int(round(2400 * so)))
         sahne, sc, k = kur(cfg_b)
         sc.camera.data.lens = cfg_b["lens"] / pay
         sc.render.image_settings.color_depth = "16"

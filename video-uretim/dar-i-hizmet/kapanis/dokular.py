@@ -436,10 +436,10 @@ def kuran_kapak(ppm=10):
         outer = skia.Path(); outer.addRect(skia.Rect(inset * s, inset * s, (W - inset) * s, (H - inset) * s))
         inner = skia.Path(); inner.addRect(skia.Rect((inset + t) * s, (inset + t) * s, (W - inset - t) * s, (H - inset - t) * s))
         return _op(outer, inner, D)
-    g = cerceve(10.0, 1.0)
-    g = _op(g, cerceve(12.6, 0.45), U)
+    g = cerceve(9.5, 1.7)
+    g = _op(g, cerceve(12.9, 0.75), U)
     # kosebentler (ic cercevenin icinde)
-    k0 = 13.05
+    k0 = 13.65
     for (kx, ky, dx, dy) in ((k0, k0, 1, 1), (W - k0, k0, -1, 1), (k0, H - k0, 1, -1), (W - k0, H - k0, -1, -1)):
         g = _op(g, _kosebent(kx * s, ky * s, dx, dy, s, R=27.0), U)
     # merkez semse (hafif yukarida degil, tam ortada)
