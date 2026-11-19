@@ -2,7 +2,7 @@
 // yumuşak dalga halkası. motor/ dosyalarına dokunmaz; onların üstüne kurulur.
 import { tuval, W, H, clamp, lerp, ease, smooth, rng, TAU, rgba } from '../motor/temel.mjs';
 import { konturCiz, darbe } from '../motor/kalem.mjs';
-import { DURUS, yuruyus, pozKaristir, OLCU, insanYan } from '../motor/insan.mjs';
+import { DURUS, yuruyus, pozKaristir, OLCU, insanYan, insanOn } from '../motor/insan.mjs';
 import { elips } from '../motor/sekil.mjs';
 
 // ---------------------------------------------------------------- ekran tamponları
@@ -129,12 +129,15 @@ export function yurumePlani({ t0, t1, n, s, yon = 1, x0, kol = 0.34, egim = 0.04
   return f;
 }
 
-/** Yan figürü yatayda sıkıştırarak (kâğıt kesik gibi) çizer: k 0..1 genişlik çarpanı */
+/**
+ * Yan figürü yatayda hafifçe daraltarak çizer: k 0..1 genişlik çarpanı (dönüş sırasında). poz.on verilmişse aynı
+ * yerde önden görünüş (insanOn, o pozla) çizilir: dönüşün orta kareleri için.
+ */
 export function insanYanSikis(ctx, x, y, poz, { s, yon, k = 1, olcek = 1, alfa = 1 }) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(Math.max(0.06, k), 1);
-  const r = insanYan(ctx, 0, 0, poz, { s, yon, olcek, alfa });
+  const r = poz.on ? insanOn(ctx, 0, 0, poz.on, { s, olcek, alfa }) : insanYan(ctx, 0, 0, poz, { s, yon, olcek, alfa });
   ctx.restore();
   return r;
 }

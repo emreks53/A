@@ -6,8 +6,9 @@
 import { tuval, rng, clamp, lerp, ease, an, pop, TAU, W, H, rgba, renkKaristir, renkHex } from '../motor/temel.mjs';
 import { oge, ogeCiz, konturCiz, gokTuvali, TON, PALET } from '../motor/kalem.mjs';
 import { svg, elips, yaprak as yaprakSekli, donustur, cokgen } from '../motor/sekil.mjs';
-import { insanYan, yuruyus, DURUS, pozKaristir, DONGU_YOLU, OLCU } from '../motor/insan.mjs';
+import { insanYan, yuruyus, DURUS, pozKaristir, DONGU_YOLU } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
+import { yereOturt, yerdeOturus, OTUR_TEMAS } from './s08-insan.mjs';
 
 // ---------------------------------------------------------------- perspektif
 export const YH = 430, HC = 11, F = 1000;
@@ -161,38 +162,15 @@ function seritAta(liste, kat) {
 
 // ---------------------------------------------------------------- sprite'lar ve yerleşim
 let gok, uzakTepe, zemin, yol, agacB, agacK1, agacK2, sonYapraklar, yuruyenler, cicekler, cicekSprite, solgunSprite, tacSprite, yaprakSp, bulutlar, kirintiSp, cimenler, cit;
-// s08'in son karesiyle aynı: adam (s08 kamerasında ekran 540, 1127; ekran ölçeği 0,9), sola bakar, yere büzülmüş
+// s08'in son karesiyle aynı: adam (s08 kamerasında ekran 540, 1127; ekran ölçeği 0,9), sola bakar, yerde oturur
 export const ADAM = { x: 760, y: 1878, s: 0.6 };
 export const AGAC = { x: 110, y: 1500, boy: 330 };
 
-// ---------------------------------------------------------------- oturuş (s08-insan.mjs'teki BUZUL ve yereOturt'un kopyası)
-const KX = [-3, 3];
-function kin(poz) {
-  const p = { ...DURUS, ...poz };
-  const hy = -OLCU.kalca;
-  const bacak = (i) => {
-    const a1 = p.kalca[i];
-    const diz = [KX[i] + Math.sin(a1) * OLCU.uyluk, hy + Math.cos(a1) * OLCU.uyluk];
-    const a2 = a1 + p.diz[i];
-    const bilek = [diz[0] + Math.sin(a2) * OLCU.baldir, diz[1] + Math.cos(a2) * OLCU.baldir];
-    return { diz, bilek, a1, a2, a3: a2 + p.bilek[i] };
-  };
-  return { kalca: [0, hy], b: [bacak(0), bacak(1)] };
-}
-function yereOturt(poz, { kalcaTemas = 16, dizTemas = 13, ayakTemas = 12 } = {}) {
-  const k = kin(poz);
-  let m = k.kalca[1] + kalcaTemas;
-  for (const b of k.b) {
-    m = Math.max(m, b.diz[1] + dizTemas, b.bilek[1] + ayakTemas);
-    const uc = [b.bilek[0] + Math.cos(b.a3) * 34, b.bilek[1] - Math.sin(b.a3) * 34];
-    m = Math.max(m, uc[1] + 6);
-  }
-  return { ...DURUS, ...poz, serbest: true, zipla: m };
-}
-const BUZUL = { govde: 0.42, bas: 0.66, kalca: [2.32, 2.42], diz: [-2.2, -2.3], bilek: [-0.12, -0.12], omuz: [-0.42, -0.5], dirsek: [1.7, 1.82], el: [0.2, 0.2] };
+// ---------------------------------------------------------------- oturuş
+// s08'in sonundaki yerde oturuşun aynısı (aynı fonksiyon): kalça ve iki taban yerde, kollar baldırlara dolanmış, baş
+// öne eğik. Devirde (82,5–82,9) iki sahnedeki adam aynı poz, aynı ekran yeri ve ölçekte üst üste düşer.
 export function oturus(t) {
-  const n = 0.018 * Math.sin(t * 1.1); // nefes
-  return yereOturt({ ...BUZUL, govde: BUZUL.govde + n, bas: BUZUL.bas + n * 0.6 });
+  return yereOturt(yerdeOturus(t), OTUR_TEMAS);
 }
 
 /** Solmuş çiçek başı: dar, kıvrık, gri-kahve taç yaprakları */
@@ -286,6 +264,9 @@ export function dunyaHazirla() {
     if (Math.abs(x - ADAM.x) < 110 && Math.abs(y - ADAM.y) < 60) continue;
     cimenler.push({ x, y, s: olcekD(derinlik(y)) / 0.6, n: gr.tam(3, 6), tohum: gr.tam(1, 999) });
   }
+  // oturan adamın çevresi boş: önde çizilen tutamlar onun silüetine (çene altı, incik, ayak) binmesin
+  // (öbür tutamlar yerinde kalır: rastgele dizi değişmez)
+  cimenler = cimenler.filter((c) => !(c.x > ADAM.x - 115 && c.x < ADAM.x + 55 && c.y > ADAM.y - 170 && c.y < ADAM.y + 34));
   // kırık çit: yolun yakın kenarında, sol yarıda
   const ctr = rng(313);
   const dC = derinlik(1384), pm = pxm(dC);
@@ -515,7 +496,7 @@ export function silgiKur({ bolge, adim = 58, en = 100, t0, t1, giris, cikis }) {
   const r = rng(61);
   while (x <= bolge[bolge.length - 1].x1 + 1) {
     const b = bul(x);
-    pts.push([x + r.ara(-4, 4), (ust ? b.yUst : b.yAlt) + r.ara(-6, 6)]);
+    pts.push([x + r.ara(-4, 4), (ust ? b.yUst : b.yAlt) + r.ara(-13, 13)]); // dönüş noktaları düzensiz: iz kenarı dalgalı
     ust = !ust;
     x += adim * r.ara(0.9, 1.1);
   }
@@ -540,7 +521,27 @@ export function silgiKur({ bolge, adim = 58, en = 100, t0, t1, giris, cikis }) {
     const q = yolParca(z, d / z.L).pop();
     kir.push({ s: d, x: q[0] + kr.ara(-0.45, 0.45) * en, y: q[1] + kr.ara(-0.2, 0.2) * en, r0: kr() * TAU, tip: kr.tam(0, 2), vx: kr.ara(20, 70), vy: kr.ara(-35, 10), don: kr.ara(-5, 5), sc: kr.ara(0.6, 0.95) });
   }
-  silgi = { z, en, t0, t1, giris, cikis, kir };
+  // silgi izinin dokusu: tam silinen çekirdek (temas ekseninde kaydırılmış, her biri farklı yükseklikte dönen birkaç
+  // kat: dönüş yerlerinde kenar düzensiz, köşesiz) + çevresinde silgi yönünde kesik kesik lifler (saçaklı kenar) +
+  // kenar kuşağında kısa kalıntı çizgileri (tarama orada yarı yarıya kalır)
+  const lr = rng(5150);
+  const cekirdek = [];
+  for (let k = 0; k < 6; k++) cekirdek.push({ o: lerp(-0.24, 0.24, k / 5) * en + lr.ara(-3, 3), j: lr.ara(-12, 10), w: en * lr.ara(0.5, 0.58) });
+  const lif = [];
+  for (let k = 0; k < 48; k++) {
+    const u = lr.ara(-1, 1), m = Math.abs(u);
+    const dash = [];
+    for (let q = 0; q < 4; q++) dash.push(lr.ara(40, 200), lr.ara(10, 70) * (0.4 + m));
+    lif.push({ o: u * en * 0.64, j: lr.ara(-20, 14), w: lr.ara(1.3, 3.4) * (1.15 - 0.45 * m), a: clamp(lr.ara(0.4, 1) * (1.3 - 0.75 * m)), dash, off: lr.ara(0, 400) });
+  }
+  const kalinti = [];
+  for (let k = 0; k < 16; k++) {
+    const u = (lr() < 0.5 ? -1 : 1) * lr.ara(0.38, 0.5);
+    const dash = [];
+    for (let q = 0; q < 3; q++) dash.push(lr.ara(12, 38), lr.ara(90, 320));
+    kalinti.push({ o: u * en, j: lr.ara(-12, 12), w: lr.ara(1.3, 2.6), a: lr.ara(0.3, 0.6), dash, off: lr.ara(0, 600) });
+  }
+  silgi = { z, en, t0, t1, giris, cikis, kir, cekirdek, lif, kalinti };
   silgiSp = silgiOge(en);
   return silgi;
 }
@@ -597,26 +598,54 @@ function silgiUcu(t) {
 }
 
 const SILGI_ACI = -0.62; // gövde sağ üste yatık
-const IZ_ACI = -0.28; // temas izinin açısı (bileğin hafif dönüşü: iz daha yatay, şeridin kenarları düzgün)
-/** Silinen alanı maskeye çizer (dünya koordinatında; çağıran kamerayı uygular): silginin düz temas izi yol boyunca
- *  damgalanır (yuvarlak leke değil, düz kenarlı şerit) */
+const IZ_ACI = -0.28; // temas kenarının ekseni (bileğin hafif dönüşü): lifler ve sürtme izleri bu eksende kayar
+/** Silinen alanı maskeye çizer (dünya koordinatında; çağıran kamerayı uygular; beyaz = silinen). Kalem silgisi izi:
+ *  silginin zikzak yolu boyunca yuvarlak uçlu çekirdek şerit tam silinir; dönüş noktalarında kenar yuvarlak ve
+ *  dalgalıdır. Çevresinde silgi yönünde, kesik kesik, farklı boy ve güçte lifler kenarı saçaklı ve düzensiz yapar;
+ *  çekirdeğin kenarına yakın birkaç ince çizgide çizim yarı yarıya kalır (yarı silinmiş tarama). Köşe yoktur. */
 export function silgiMaske(g, t) {
   const o = silIlerleme(t);
   if (o <= 0) return;
-  const z = silgi.z, hedef = z.L * o;
-  const w = silgi.en * 0.95, dz = silgi.en * 0.34;
+  const p = yolParca(silgi.z, o);
+  if (p.length < 2) p.push([p[0][0] + 0.5, p[0][1] + 0.5]);
+  const ux = Math.cos(IZ_ACI), uy = Math.sin(IZ_ACI), en = silgi.en;
+  const yol = (dx, dy) => {
+    g.beginPath();
+    for (let i = 0; i < p.length; i++) {
+      const x = p[i][0] + dx, y = p[i][1] + dy;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+  };
   g.save();
-  g.fillStyle = '#fff';
-  let i = 1;
-  for (let d = 0; d <= hedef; d += 2) {
-    while (i < z.s.length - 1 && z.s[i] < d) i++;
-    const k = (d - z.s[i - 1]) / (z.s[i] - z.s[i - 1] || 1);
-    const x = lerp(z.pts[i - 1][0], z.pts[i][0], k), y = lerp(z.pts[i - 1][1], z.pts[i][1], k);
-    g.save();
-    g.translate(x, y);
-    g.rotate(IZ_ACI);
-    g.fillRect(-w / 2, -dz * 0.6, w, dz * 1.2);
-    g.restore();
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  // çekirdek: dar bir yumuşak geçiş kuşağı, sonra tam silinen katlar (her kat dönüşte farklı yükseklikte biter)
+  for (const [ek, a] of [[12, 0.38], [6, 0.62], [0, 1]]) {
+    g.strokeStyle = `rgba(255,255,255,${a})`;
+    for (const c of silgi.cekirdek) {
+      g.lineWidth = c.w + ek;
+      yol(ux * c.o, uy * c.o + c.j);
+      g.stroke();
+    }
+  }
+  // lifler: silgi yönünde (yol boyunca), temas kenarı ekseninde kaydırılmış, kesik kesik
+  for (const l of silgi.lif) {
+    g.setLineDash(l.dash);
+    g.lineDashOffset = l.off;
+    g.strokeStyle = `rgba(255,255,255,${l.a.toFixed(3)})`;
+    g.lineWidth = l.w;
+    yol(ux * l.o, uy * l.o + l.j);
+    g.stroke();
+  }
+  // yarı silinmiş kalıntılar: çekirdeğin kenar kuşağında ince çizgiler boyunca silme zayıflar
+  g.globalCompositeOperation = 'destination-out';
+  for (const l of silgi.kalinti) {
+    g.setLineDash(l.dash);
+    g.lineDashOffset = l.off;
+    g.strokeStyle = `rgba(0,0,0,${l.a.toFixed(3)})`;
+    g.lineWidth = l.w;
+    yol(ux * l.o, uy * l.o + l.j);
+    g.stroke();
   }
   g.restore();
 }
@@ -632,10 +661,12 @@ export function silgiIzi(g, t, alfa = 1) {
   g.lineCap = 'round';
   g.lineJoin = 'round';
   const r = rng(17);
-  for (let q = 0; q < 4; q++) {
-    const off = (q / 3 - 0.5) * silgi.en * 0.75 + r.ara(-3, 3);
-    g.strokeStyle = `rgba(112,104,124,${(alfa * r.ara(0.03, 0.065)).toFixed(3)})`;
+  for (let q = 0; q < 6; q++) {
+    const off = (q / 5 - 0.5) * silgi.en * 0.75 + r.ara(-3, 3);
+    g.strokeStyle = `rgba(112,104,124,${(alfa * r.ara(0.035, 0.07)).toFixed(3)})`;
     g.lineWidth = r.ara(0.8, 2);
+    g.setLineDash([r.ara(18, 50), r.ara(70, 190), r.ara(10, 40), r.ara(110, 260)]);
+    g.lineDashOffset = r.ara(0, 300);
     g.beginPath();
     for (let i = 0; i < p.length; i++) {
       const x = p[i][0] + cx * off, y = p[i][1] + cy * off - silgi.en * 0.12;

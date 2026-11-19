@@ -17,7 +17,7 @@ import { insanYan, insanOn, DURUS, ON_DURUS, OLCU } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import * as D from './s08-dunya.mjs';
 import * as SV from './s08-servet.mjs';
-import { yereOturt, pozKaristir, DIZ_COK, BUZUL, SIPER, TAHT, AYAKTA, kalabalikKur } from './s08-insan.mjs';
+import { yereOturt, pozKaristir, DIZ_COK, BUZUL, SIPER, TAHT, AYAKTA, kalabalikKur, yerdeOturus, OTUR_TEMAS } from './s08-insan.mjs';
 
 const T = {
   bas: 67.2,
@@ -133,14 +133,23 @@ const EV_TANIM = [
 ];
 // sokak dizilişi: evler 1,35 kat büyük çizilir
 const EVLER = EV_TANIM.map((e) => ({ ...e, x: 560 + (e.x - 560) * SOKAK.evS }));
+// başlangıçta duran, bitişteki eğimi m olan ivmelenme (2 ≤ m ≤ 3): e(u) = a·u² + (1 − a)·u³, e'(0) = 0, e'(1) = 3 − a
+const ivmelen = (m) => { const a = clamp(3 - m, 0, 1); return (u) => a * u * u + (1 - a) * u * u * u; };
+// kamera yükselir: geri çekilişin sonunda (A_DUR) bir an durur, oradan TEK bir ivmelenmeyle geçişteki sabit hıza
+// (KY) ulaşır ve geçiş boyunca o hızla yukarı kayar. İvmelenmenin bitiş hızı her kanalda (x, y, log z) sonraki
+// doğrusal parçanın hızına eşittir: arada duraklama ya da hız sıçraması yok.
+const A_DUR = { t: T.dunyada + 0.55, x: 566, y: 1080, z: 1.08 };
+const A_YGB = 1074 - KY * 0.295 / 2; // geçiş başında (GB.t) kameranın y'si
+const A_SON = { t: GB.t + GB.sure + 0.03, x: 580, z: 1.0 };
+A_SON.y = A_YGB - KY * (A_SON.t - GB.t);
+const A_M = KY * (GB.t - A_DUR.t) / (A_DUR.y - A_YGB); // y'de bitiş eğimi (≈ 2,8)
+const A_ARA = (a, b) => { const d1 = GB.t - A_DUR.t, d2 = A_SON.t - GB.t; return (b * d1 + a * A_M * d2) / (d1 + A_M * d2); };
 const kamA = kameraYolu([
   { t: 67.2, x: 622, y: 1105, z: 1.47 },
   { t: T.evet + 0.05, x: 618, y: 1100, z: 1.52, e: ease.inOutSine },
-  { t: T.dunyada + 0.55, x: 566, y: 1080, z: 1.08, e: ease.inOutCubic },
-  // kamera yükselir: ivmelenip geçiş boyunca sabit hızla (≈ 700 px/sn) yukarı kayar
-  { t: GB.t - 0.295, x: 570, y: 1074, z: 1.06, e: ease.inOutSine },
-  { t: GB.t, x: 574, y: 1074 - KY * 0.295 / 2, z: 1.04, e: ease.inQuad },
-  { t: GB.t + GB.sure + 0.03, x: 580, y: 1074 - KY * 0.295 / 2 - KY * (GB.sure + 0.03), z: 1.0, e: ease.lin },
+  { ...A_DUR, e: ease.inOutCubic },
+  { t: GB.t, x: A_ARA(A_DUR.x, A_SON.x), y: A_YGB, z: Math.exp(A_ARA(Math.log(A_DUR.z), Math.log(A_SON.z))), e: ivmelen(A_M) },
+  { ...A_SON, e: ease.lin },
 ]);
 
 // ================================================================ PLAKA B: yüksekten meydan
@@ -159,7 +168,7 @@ const OVA = { ufuk: 985, adamX: 430, adamY: 1235, agacX: 875, agacY: 1120, agacB
 const kamD = kameraYolu([
   { t: GD.t - 0.05, x: 877, y: 932, z: 2.16 },
   { t: GD.t + 0.6, x: 875, y: 935, z: 2.03, e: ease.outCubic },
-  { t: T.bir1 - 0.1, x: 878, y: 930, z: 2.06, e: ease.inOutSine },
+  // geçişten sonra kısa duruş; son yaprak düşerken kamera tek bir yumuşak eğriyle aşağı süzülür
   { t: T.sahip - 0.04, x: 905, y: 985, z: 2.0, e: ease.inOutSine },
   { t: T.hami + 0.36, x: 600, y: 1000, z: 0.95, e: ease.inOutCubic },
   { t: T.aciz - 0.15, x: 520, y: 1060, z: 1.3, e: ease.inOutSine },
@@ -219,7 +228,8 @@ function hazirlaB() {
   R.cesme = D.kuruCesmeOge(1.4);
   R.onCati = D.onCatiOge({ ad: 's08-oncati', w: 1700, h: 520, olcek: 1.0 });
   // kalabalık: farklı derinliklerde, rastgele yürüyen, dönüp duran küçük adamlar; aynı derinlikte iç içe geçmezler
-  R.kalabalik = kalabalikKur({ tohum: 808, N: 27, tBas: GB.t, tGor: [GB.t - 0.3, GD.t + GD.sure + 0.1], dyK: 0.9, dxK: 140, engeller: [{ x0: MEYDAN.cesmeX - 250, x1: MEYDAN.cesmeX + 250, y0: 680, y1: MEYDAN.cesmeY }] });
+  // yigK/yigX: arkadakinin ayakları öndekinin başına teğet hizada yürümesin (üst üste dizilmiş gibi okunmasın)
+  R.kalabalik = kalabalikKur({ tohum: 808, N: 27, tBas: GB.t, tGor: [GB.t - 0.3, GD.t + GD.sure + 0.1], dyK: 0.9, dxK: 140, yigK: 0.35, yigX: 100, engeller: [{ x0: MEYDAN.cesmeX - 250, x1: MEYDAN.cesmeX + 250, y0: 680, y1: MEYDAN.cesmeY }] });
   const r = rng(809);
   R.savB = [];
   const kagitlar = [0, 1, 2].map((k) => D.kagitOge(k, 2));
@@ -323,9 +333,9 @@ function kalcaKarisim(h) {
   return 1;
 }
 // Taht toza dönerken iniş: kalçanın altında kalan (henüz dağılmamış) en üst katı yüzey dağılma ilerlemesiyle aşağı
-// iner; kalça bu yüzeyi izler. Yüzey eğrisinin ileriye dönük kısa ortalaması alınır: kalça hiçbir karede boşluğun
-// üstünde kalmaz (gerekirse dağılan toza hafifçe gömülür), oturaktan basamağa geçiş de yumuşar.
-const INIS = { hz: 240, sure: 1.3, pencere: 0.03 };
+// iner. Kalça bu yüzeyi tek bir yumuşak eğriyle (sure2 sn) izler: yüzeye gömülmez, sarsılmadan yere oturur
+// (yerde oturuş: kalça ve iki taban zeminde).
+const INIS = { hz: 240, sure: 1.3, pencere: 0.03, sure2: 0.6 };
 function inisHazirla() {
   const tz = R.toz, S = OVA.S;
   const oturak = R.tahtY - 106 * S; // minder üstünün biraz üstü
@@ -354,17 +364,31 @@ function inisHazirla() {
     return lerp(destek[i], destek[i + 1], f - i);
   };
   const H0 = R.tahtY - kalcaYuk(1) * S; // tahtta kalça teması
-  const H1 = OVA.adamY - kalcaYuk(0) * S; // yerde büzülmüş kalça teması
+  const H1 = OVA.adamY - kalcaYukPoz(yerdeOturus(SVT.dag), OTUR_TEMAS) * S; // yerde oturuş: kalça teması zeminde
   const pay = H0 - destekY(SVT.dag); // minderde gömülme
   const N = Math.ceil(INIS.sure * INIS.hz) + 1, P = Math.round(INIS.pencere * INIS.hz);
   const Sy = new Float32Array(N + P);
   for (let n = 0; n < N + P; n++) Sy[n] = destekY(SVT.dag + n / INIS.hz) + pay;
-  R.inisH = new Float32Array(N);
+  const ham = new Float32Array(N);
   for (let n = 0; n < N; n++) {
     let top = 0;
     for (let q = 0; q <= P; q++) top += Sy[n + q];
-    R.inisH[n] = clamp(top / (P + 1), H0, H1);
+    ham[n] = clamp(top / (P + 1), H0, H1);
   }
+  // yumuşak iniş: kalça tek bir yumuşak eğriyle (hızlanıp yavaşlayarak) iner ve yere hızı sıfırlanarak oturur. Eğrinin
+  // başlangıcı, kalça henüz dağılmamış oturağa ya da yığına hiçbir karede gömülmeyecek (en çok 3 birim), çöken yüzeyin
+  // de olabildiğince yakınında kalacak biçimde seçilir (ham yüzey eğrisi oturak toza dönünce sıçrar: onu izlemek sarsar)
+  const D = INIS.sure2 * INIS.hz;
+  const egri = (n, a) => H0 + (H1 - H0) * (0.5 - 0.5 * Math.cos(Math.PI * clamp((n - a) / D)));
+  let enIyi = null;
+  for (let a = 0; a < N; a++) {
+    let g = 0, f = 0;
+    for (let n = 0; n < N; n++) { const h = egri(n, a); g = Math.max(g, h - ham[n]); f = Math.max(f, ham[n] - h); }
+    if (g <= 3 && (!enIyi || f < enIyi.f)) enIyi = { a, f };
+  }
+  const a0 = enIyi ? enIyi.a : 0;
+  R.inisH = new Float32Array(N);
+  for (let n = 0; n < N; n++) R.inisH[n] = egri(n, a0);
   R.inisH0 = H0; R.inisH1 = H1;
 }
 // iniş durumu: k (0 tahtta, 1 yerde), kalça teması y
@@ -533,12 +557,9 @@ function adamPozu(t) {
   if (taht > 0) p = pozKaristir(p, TAHT, taht);
   const gurur = an(t, T.sultan, 0.4) * (1 - an(t, T.kac, 0.25));
   if (gurur > 0) p = { ...p, bas: p.bas - 0.1 * gurur, govde: p.govde - 0.03 * gurur };
+  // taht toza dönünce iner: kalça yere, dizler yukarı, kollar baldırlara (yerde oturuş; nefes yerdeOturus'ta)
   const in0 = inis(t);
-  if (in0 > 0) p = pozKaristir(p, { ...BUZUL, bas: BUZUL.bas + 0.04 }, in0);
-  if (in0 >= 1) {
-    const nefes = Math.sin(t * 2.0) * 0.01;
-    p = { ...p, govde: p.govde + nefes };
-  }
+  if (in0 > 0) p = pozKaristir(p, yerdeOturus(t), in0);
   return p;
 }
 // dağılan yüzeyle birlikte iniş (0 tahtta, 1 yerde)
@@ -562,13 +583,24 @@ function yiginDurum(t) {
   return { sy, sx, tahtS, tahtY, tb };
 }
 
-function plakaD(ctx, t) {
-  zeminDoldur(ctx, '#BEB8CA');
+/** Plaka D kamerası (salınım, taç vurgusu ve yığın sarsıntısıyla). s09 açılışta yerde oturan adamı ekranda birebir
+ *  aynı yer ve ölçekte tutmak için de bunu kullanır (DEVIR_ADAM: adamın dünya konumu ve ölçeği). */
+export function kameraD(t) {
   const c = kamD(t);
   const sl = salinim(t, 3, 0.3, 14);
   const bump = 1 + 0.035 * Math.sin(Math.PI * clamp((t - SVT.tac) / 0.45));
   const rr = -0.026 * Math.sin(Math.PI * clamp((t - SVT.yigin) / 1.15));
-  const cam = { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z * bump, r: sl.r + rr };
+  return { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z * bump, r: sl.r + rr };
+}
+export const DEVIR_ADAM = { x: OVA.adamX, y: OVA.adamY, s: OVA.S, olcek: 1.2 };
+/** Toz dağılırken ve sonrasında yerde oturuşa iniş ilerlemesi (0..1); zemine oturtma seçenekleri buna göre */
+function inisTemas(k) { return { kalcaTemas: lerp(16, OTUR_TEMAS.kalcaTemas, k) }; }
+// pozun kalça temas noktasının ayak tabanı hizasından yüksekliği (adam birimi; yereOturt ile)
+function kalcaYukPoz(poz, temas) { return OLCU.kalca + yereOturt(poz, temas).zipla - temas.kalcaTemas; }
+
+function plakaD(ctx, t) {
+  zeminDoldur(ctx, '#BEB8CA');
+  const cam = kameraD(t);
   const firtina = an(t, T.hami - 0.4, 1.1, ease.inOutSine);
   const yagmurG = an(t, T.hami - 0.05, 0.5) * (1 - 0.35 * an(t, T.miskin, 0.6)) * (1 - an(t, T.butun - 0.25, 0.45));
   const gelir = an(t, T.sahip + 0.2, 1.6, ease.outCubic);
@@ -650,13 +682,15 @@ function plakaD(ctx, t) {
     sikkeler(g, t);
   }, 1);
   // adam
-  const poz = yereOturt(adamPozu(t));
+  const ham = adamPozu(t);
+  const temas = inisTemas(inis(t));
+  const poz = yereOturt(ham, temas);
   let adamY = OVA.adamY;
   if (yd.tb > 0) adamY = lerp(OVA.adamY, Math.min(OVA.adamY, yd.tahtY), yd.tb);
   if (t >= SVT.dag) {
-    // kalça teması dağılan yüzeyi izler; ayak tabanı karışık pozun kalça yüksekliği kadar aşağıda
+    // kalça teması dağılan yüzeyi izler; ayak tabanı, o anki pozun kalça yüksekliği kadar aşağıda (zemini geçmez)
     const ind = inisDurum(t);
-    adamY = Math.min(OVA.adamY, ind.H + kalcaYuk(1 - ind.k) * OVA.S);
+    adamY = Math.min(OVA.adamY, ind.H + kalcaYukPoz(ham, temas) * OVA.S);
   }
   let bas = null;
   katman(ctx, (g) => kameraIle(g, cam, (gg) => {

@@ -26,21 +26,27 @@ const NUR = G.NUR;
 const ZEND = 1150 / NUR.r; // nurun içine girildiğinde (ekranı dolduran yarıçap)
 const ITME = { t0: T_.iman, sure: 1.2 }; // kamera nura itilir
 
-// hızlı başlayıp uzun yavaşlayan geri çekilme (Kurzgesagt kamerası)
-function geriCekil(u) { return ease.inOutCubic(Math.pow(u, 0.7)); }
+// geri çekilme: çapraz geçiş bitmeden pek kımıldamaz (nur s01'inkiyle üst üste kalır), yumuşakça hızlanır, en hızlı
+// yerini yolun üçte birinde geçer, uzun ve yumuşak bir yavaşlamayla oturur (savrulma yok; adam kadraja girerken iner).
+// Hız eğrisi u^1.3 (1-u)^2.6 biçiminde: sayısal integrali önceden çıkarılır (belirlenimci).
+const geriCekil = (() => {
+  const N_ = 2000, a = 1.3, b = 2.6, c = [0];
+  for (let i = 1; i <= N_; i++) { const u = (i - 0.5) / N_; c.push(c[i - 1] + Math.pow(u, a) * Math.pow(1 - u, b)); }
+  return (u) => { const x = clamp(u) * N_, i = Math.min(N_ - 1, Math.floor(x)); return (c[i] + (c[i + 1] - c[i]) * (x - i)) / c[N_]; };
+})();
 // kamera (itmeden önce): dünya anahtarları
 const KAM = kameraYolu([
   { t: 7.4, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r }, // s01 devri: nur ekranda (540, 860), r 156
-  { t: 7.6, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r * 0.997, e: ease.inOutSine },
-  { t: 8.5, x: 300, y: 877, z: 1.4, e: geriCekil }, // geri çekilme: merdivenin dibi + nur
-  { t: 9.25, x: 310, y: 868, z: 1.415, e: ease.inOutSine },
+  { t: 7.62, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r * 0.997, e: ease.inOutSine },
+  { t: 8.9, x: 300, y: 877, z: 1.4, e: geriCekil }, // geri çekilme: merdivenin dibi + nur
   { t: 12.55, x: 540, y: 658, z: 1.55, e: ease.inOutSine }, // adamı izler, zirvede kemer ortada
   { t: ITME.t0, x: 540, y: 655, z: 1.57, e: ease.inOutSine },
 ]);
 const kamOnce = KAM(ITME.t0);
 const nurEkran0 = ekranda(kamOnce, NUR.x, NUR.y);
 
-function kamera(t) {
+// (denetim araçları için dışa açık; sahne yalnız default nesneyi kullanır)
+export function kamera(t) {
   if (t < ITME.t0) return KAM(t);
   // itme: nurun ekrandaki merkezi (540, 900)'e kayarken yakınlaşma log uzayında artar; ardından yavaş oturma
   const e1 = an(t, ITME.t0, ITME.sure, ease.inOutCubic);
@@ -58,7 +64,7 @@ let gok, yapi, kemer, kemerG, bdArka, bdOrta, bdOn, zemin, bulutlar, dolguOge, k
 
 export default {
   sesler: [
-    { t: 7.66, tur: 'whoosh', guc: 0.3, sure: 1.0 },
+    { t: 7.7, tur: 'whoosh', guc: 0.3, sure: 1.1 },
     { t: ADAM.gorun + 0.02, tur: 'parilti', guc: 0.22 },
     { t: +(ADAM.inis[0] - 0.02).toFixed(2), tur: 'adim', guc: 0.14, tekrar: ADAM.inis.length, ara: +((ADAM.inis[ADAM.inis.length - 1] - ADAM.inis[0]) / (ADAM.inis.length - 1)).toFixed(3) },
     { t: +ADAM.basamakInis[K0 + 2].toFixed(2), tur: 'parilti', guc: 0.2, tekrar: 3, ara: +((ADAM.basamakInis[K0 + 6] - ADAM.basamakInis[K0 + 2]) / 2).toFixed(3) },
@@ -166,7 +172,7 @@ function dunyaCiz(ctx, t, cam, nsx, nsy, nr) {
   kameraIle(ctx, cam, (g) => ogeCiz(g, bdOrta.oge, -620 - (t - 7.4) * 4, 1225), F.bulutOrta);
 
   // merdiven-köprü, fenerler, kemer, adam
-  const yapiA = an(t, 7.68, 0.4, ease.inOutSine); // s01 geçişinde köprü sonradan belirir
+  const yapiA = an(t, 7.7, 0.5, ease.inOutSine); // s01 geçişinde köprü sonradan belirir
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, yapi, 0, 0, { alfa: yapiA });
     // fenerler: bastığı basamakta yanar (belirdiği basamağa kadar olanlar belirirken aşağıdan yukarı sırayla)

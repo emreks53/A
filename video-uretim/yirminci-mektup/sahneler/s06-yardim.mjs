@@ -3,7 +3,7 @@
 // çizgili hayali, gökte yükselen fenerler ve kamera için pürüzsüz (hız sürekli) yol. Hepsi S-232 tekniğiyle.
 import { tuval, rng, clamp, lerp, ease, TAU, rgba } from '../motor/temel.mjs';
 import { oge, ogeCiz, konturCiz, darbe, TON, PALET } from '../motor/kalem.mjs';
-import { svg, elips, cokgen, sivriKemer, yenidenOrnekle } from '../motor/sekil.mjs';
+import { svg, elips, cokgen, sivriKemer, yenidenOrnekle, path2d } from '../motor/sekil.mjs';
 import * as M from '../motor/motifler.mjs';
 
 // ---------------------------------------------------------------- perspektif
@@ -551,4 +551,173 @@ export function yildizcik(ctx, x, y, R, alfa = 1, renk = '#FFF3C4') {
   ctx.closePath();
   ctx.fill();
   ctx.restore();
+}
+
+// ---------------------------------------------------------------- ağacın organik büyümesi (bilfiil)
+// Gövde ve dallar kendi yolları boyunca uzar: gövdenin ucu yuvarlak bir filiz gibi yükselir, çatalda üç dala ayrılır,
+// her dal ucu yuvarlak olarak uzar, alt dallar üst dalın ucundan çıkar. Doku, M.agac'ın kendi sprite'larından (aynı
+// tarama) büyüyen dış hatla kırpılarak alınır; kontur büyüyen dış hattın siluetidir (iç kesişim çizgisi yok). Büyüme
+// tamamlandığında şekil M.agac'ın gövde+dal şekliyle aynıdır (M.agacCiz'e dikişsiz devredilir).
+const yonlu = (pts) => {
+  let a = 0;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) a += (pts[j][0] - pts[i][0]) * (pts[j][1] + pts[i][1]);
+  return a < 0 ? pts.slice().reverse() : pts;
+};
+/** y'de (tekdüze y'li) çoklu çizginin x'i */
+const xBul = (pts, y) => {
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+    if ((y <= y0 && y >= y1) || (y >= y0 && y <= y1)) return y0 === y1 ? x0 : lerp(x0, x1, (y - y0) / (y1 - y0));
+  }
+  return null;
+};
+/**
+ * Büyüme modeli. λ (lam): gövde dibinden dal yolu boyunca ölçülen büyüme boyu. Gövde λ = yükseklik; ana dallar
+ * çatal noktasından, alt dallar üst dalın ucundan başlar.
+ * Döner: { Hmax, sol, sag (gövde+yaka dış hattı, y → x), dallar: [{..., bas, L}], Ltop, kumeBag: [[x,y,λ]], meyveKume }
+ */
+export function agacBuyumeModeli(A, { boy, tohum }) {
+  const r = rng(tohum);
+  const gk = boy * 0.075, gy = boy * 0.5;
+  const egri = r.ara(-0.04, 0.04) * boy; // M.agac'taki ilk rastgele çağrıyla aynı
+  const solG = svg(`M${-gk * 1.25} 0C${-gk * 0.7} ${-boy * 0.02} ${-gk * 0.55} ${-boy * 0.06} ${-gk * 0.5} ${-boy * 0.12}C${-gk * 0.45 + egri * 0.3} ${-gy * 0.5} ${-gk * 0.36 + egri} ${-gy * 0.8} ${-gk * 0.3 + egri} ${-gy}`)[0].pts;
+  const sagG = svg(`M${gk * 1.3} 0C${gk * 0.7} ${-boy * 0.02} ${gk * 0.55} ${-boy * 0.06} ${gk * 0.5} ${-boy * 0.12}C${gk * 0.45 + egri * 0.3} ${-gy * 0.5} ${gk * 0.36 + egri} ${-gy * 0.8} ${gk * 0.3 + egri} ${-gy}`)[0].pts;
+  const solY = svg(`M${egri - gk * 0.31} ${-gy + gk * 0.9}C${egri - gk * 0.36} ${-gy + gk * 0.2} ${egri - gk * 0.6} ${-gy - gk * 0.35} ${egri - gk * 0.55} ${-gy - gk * 0.75}`)[0].pts;
+  const sagY = svg(`M${egri + gk * 0.31} ${-gy + gk * 0.9}C${egri + gk * 0.36} ${-gy + gk * 0.2} ${egri + gk * 0.6} ${-gy - gk * 0.35} ${egri + gk * 0.55} ${-gy - gk * 0.75}`)[0].pts;
+  const Hmax = gy + gk * 0.75;
+  // gövde ile çatal yakasının birleşiminin dış hattı (her y'de en dıştaki kenar)
+  const sol = [], sag = [];
+  const hler = [];
+  for (let h = 0; h < Hmax - 0.5; h += 2) hler.push(h);
+  hler.push(Hmax);
+  for (const h of hler) {
+    const y = -h;
+    const l = [xBul(solG, y), xBul(solY, y)].filter((v) => v !== null);
+    const rr = [xBul(sagG, y), xBul(sagY, y)].filter((v) => v !== null);
+    sol.push([Math.min(...l), y]);
+    sag.push([Math.max(...rr), y]);
+  }
+  // dallar: üst dal (ucunda başlayan), başlangıç λ'sı ve boyu
+  const dallar = A.dallar.map((d) => ({ ...d, L: Math.hypot(d.x2 - d.x, d.y2 - d.y), ust: null }));
+  dallar.forEach((d) => { d.ust = dallar.find((o) => o !== d && Math.hypot(o.x2 - d.x, o.y2 - d.y) < 0.01) || null; });
+  const basla = (d) => (d.bas !== undefined ? d.bas : (d.bas = d.ust ? basla(d.ust) + d.ust.L : -d.y));
+  dallar.forEach(basla);
+  const Ltop = Math.max(Hmax, ...dallar.map((d) => d.bas + d.L));
+  // yaprak kümeleri: en yakın dal noktasına bağlanır (küme o nokta açıldıktan sonra oradan çıkar)
+  const ornek = [];
+  for (const d of dallar) for (let q = 0; q <= 10; q++) { const [px, py] = dalNokta(d, q / 10); ornek.push([px, py, d.bas + (q / 10) * d.L]); }
+  const kumeBag = A.kumeler.map((k) => ornek.reduce((m, p) => (Math.hypot(p[0] - k.x, p[1] - k.y) < Math.hypot(m[0] - k.x, m[1] - k.y) ? p : m)));
+  const meyveKume = A.meyveler.map(([mx, my]) => A.kumeler.reduce((m, k, i) => (Math.hypot(k.x - mx, k.y - my) < Math.hypot(A.kumeler[m].x - mx, A.kumeler[m].y - my) ? i : m), 0));
+  return { Hmax, sol, sag, dallar, Ltop, kumeBag, meyveKume, renk: PALET.koyuKahve };
+}
+/** Dal orta çizgisinin s'deki noktası (dal şeklinin kenarlarıyla aynı ikinci derece eğri) */
+function dalNokta(d, s) {
+  const a = (1 - s) * (1 - s), b = 2 * s * (1 - s), c = s * s;
+  return [a * d.x + b * d.bx + c * d.x2, a * d.y + b * d.by + c * d.y2];
+}
+/** Gövdenin (çatal yakasıyla) H yüksekliğine kadar büyümüş hâli: yuvarlak uçlu kapalı çokgen */
+function govdeKismi(M0, H) {
+  const Hc = Math.min(H, M0.Hmax);
+  const n = Math.max(1, Math.round(Hc / 2));
+  const sol = M0.sol.slice(0, n), sag = M0.sag.slice(0, n);
+  const yU = -Hc;
+  const xl = xBul(M0.sol, yU), xr = xBul(M0.sag, yU);
+  sol.push([xl, yU]); sag.push([xr, yU]);
+  const xc = (xl + xr) / 2, hw = (xr - xl) / 2;
+  // uç kubbesi: büyürken yuvarlak (filiz ucu); yakanın tepesine varınca düzleşir (tam şekle oturur)
+  const hd = Math.min(hw * 0.85, 22) * (1 - clamp((H - (M0.Hmax - 36)) / 36));
+  const kubbe = [];
+  for (let q = 1; q < 12; q++) { const th = (q / 12) * Math.PI; kubbe.push([xc - hw * Math.cos(th), yU - hd * Math.sin(th)]); }
+  return [...sol, ...kubbe, ...sag.reverse()];
+}
+/** Dalın u'ya kadar büyümüş hâli: kenarlar dal şeklinin kenar eğrileri, ucu yarım daire (u = 1'de dal şekliyle aynı) */
+function dalKismi(d, u) {
+  const ang = Math.atan2(d.y2 - d.y, d.x2 - d.x);
+  const nx = -Math.sin(ang), ny = Math.cos(ang);
+  const fx = Math.cos(ang), fy = Math.sin(ang);
+  const kc = (d.k0 + d.k1) / 4;
+  const kenar = (sg, s) => {
+    const a = (1 - s) * (1 - s), b = 2 * s * (1 - s), c = s * s;
+    return [a * (d.x + sg * nx * d.k0 / 2) + b * (d.bx + sg * nx * kc) + c * (d.x2 + sg * nx * d.k1 / 2),
+      a * (d.y + sg * ny * d.k0 / 2) + b * (d.by + sg * ny * kc) + c * (d.y2 + sg * ny * d.k1 / 2)];
+  };
+  const m = Math.max(2, Math.ceil(u * 14));
+  const L = [], R = [];
+  for (let i = 0; i <= m; i++) { const s = (i / m) * u; L.push(kenar(1, s)); R.push(kenar(-1, s)); }
+  const pL = L[m], pR = R[m];
+  const cx = (pL[0] + pR[0]) / 2, cy = (pL[1] + pR[1]) / 2, rr = Math.hypot(pL[0] - pR[0], pL[1] - pR[1]) / 2;
+  const aL = Math.atan2(pL[1] - cy, pL[0] - cx);
+  // uç yarım dairesi dalın ilerlediği yöne şişer
+  const sg = Math.cos(aL + Math.PI / 2) * fx + Math.sin(aL + Math.PI / 2) * fy > 0 ? 1 : -1;
+  const uc = [];
+  for (let q = 1; q < 10; q++) { const a = aL + sg * (q / 10) * Math.PI; uc.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]); }
+  return [...L, ...uc, ...R.reverse()];
+}
+let konturKat = null, maskeKat = null;
+/** Çokgenlerin birleşiminin dış hattına kalem konturu (M.agac'ın siluet konturuyla aynı yöntem; canlı): birleşimin
+ *  çizgisi çizilir, içi ayrı bir maskeyle silinir (iç kesişim çizgisi kalmaz) */
+function siluetCanli(g, yollar, renk, kal, alfa) {
+  const cv = g.canvas;
+  if (!konturKat || konturKat.width !== cv.width || konturKat.height !== cv.height) {
+    konturKat = tuval(cv.width, cv.height);
+    maskeKat = tuval(cv.width, cv.height);
+  }
+  const T = g.getTransform();
+  const k = konturKat.getContext('2d'), m = maskeKat.getContext('2d');
+  for (const c of [k, m]) {
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
+    c.clearRect(0, 0, cv.width, cv.height);
+    c.setTransform(T);
+  }
+  k.lineJoin = 'round';
+  k.lineCap = 'round';
+  k.strokeStyle = rgba(renk, alfa);
+  k.lineWidth = kal * 2;
+  k.stroke(path2d(yollar.map((pts) => ({ pts, kapali: true }))));
+  m.fillStyle = '#000';
+  for (const pts of yollar) m.fill(path2d([{ pts, kapali: true }])); // her çokgen ayrı: dönüş yönünden bağımsız birleşim
+  k.setTransform(1, 0, 0, 1, 0, 0);
+  k.globalCompositeOperation = 'destination-out';
+  k.drawImage(maskeKat, 0, 0);
+  k.globalCompositeOperation = 'source-over';
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.drawImage(konturKat, 0, 0);
+  g.restore();
+}
+/**
+ * Büyüyen ağacı çizer: lam büyüme boyu (0..M0.Ltop), kumeU(i) / meyveU(i) her küme ve meyvenin 0..1 ilerlemesi.
+ * Kümeler bağlı oldukları dal noktasından çıkıp yerlerine (taşmalı) oturur.
+ */
+export function agacBuyuyerekCiz(g, A, x, y, M0, lam, { t = 0, salinim = 1, kumeU, meyveU, meyveOge = null } = {}) {
+  g.save();
+  g.translate(x, y);
+  if (lam > 0) {
+    const yollar = [yonlu(govdeKismi(M0, lam))];
+    for (const d of M0.dallar) {
+      const u = clamp((lam - d.bas) / d.L);
+      if (u > 0) yollar.push(yonlu(dalKismi(d, u)));
+    }
+    g.save();
+    g.clip(path2d(yollar.map((pts) => ({ pts, kapali: true }))));
+    ogeCiz(g, A.govde, 0, 0);
+    ogeCiz(g, A.dallarOge, 0, 0);
+    g.restore();
+    siluetCanli(g, yollar, M0.renk, 2.1, 0.9);
+  }
+  A.kumeler.forEach((k, i) => {
+    const u = kumeU(i);
+    if (u <= 0) return;
+    const e = ease.outCubic(u);
+    const [bx, by] = M0.kumeBag[i];
+    const sl = Math.sin(t * 1.1 + i) * 0.012 * salinim;
+    ogeCiz(g, k.oge, lerp(bx, k.x, e), lerp(by, k.y, e), { s: ease.outBack(u, 1.4), r: sl });
+  });
+  if (meyveOge) A.meyveler.forEach((m, i) => {
+    const u = meyveU(i);
+    if (u > 0) ogeCiz(g, meyveOge, m[0], m[1], { s: ease.outBack(u, 1.8) });
+  });
+  g.restore();
 }

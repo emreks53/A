@@ -7,15 +7,17 @@
 // adamı silerek çıplak filme döndürür, kamera silinen boşluğa dalar (dünyada). Boş filmde kuşbakışı adam belirir,
 // çevresinde labirent önce çizgi, sonra tarama olarak çizilir (insan); adam yürür, çıkmaz bir
 // yola girer ve duvara dayanır (sahibini tanımazsa). Çevresinde her yönü gösteren yazısız levhalar biter, adam dönüp
-// durur, çıkmazın ortasına iki adım geri çekilir (mâlikini bulmazsa). Labirent yavaşça döner, levhalar fırıl fırıl; adam ellerini başına koyar (ne kadar
-// bîçare sergerdan). Kamera dönerek çok yükseğe çekilir: uçsuz bucaksız labirentte küçücük bir adam (herkes anlar).
-// Bitiş (s10'a devir): kuşbakışı devasa gri labirent, eksenlere hizalı (dönüş 90°), adam ekranın tam ortasında.
+// durur, çıkmazın ortasına iki adım çekilir (mâlikini bulmazsa). Labirent yavaşça döner, levhalar fırıl fırıl; adam ellerini başına koyar (ne kadar
+// bîçare sergerdan). Kamera dönerek yükseğe çekilir (≈5,7 kat), elleri yavaşça iner, bir kez daha sağına soluna bakınır:
+// uçsuz bucaksız labirentte küçücük bir adam (herkes anlar). Yükseliş 96,3'te yumuşakça biter; adam hiçbir karede büyütülmez, koridorun içinde kalır.
+// Bitiş (s10'a devir): kuşbakışı devasa gri labirent (z = 0,24), eksenlere hizalı (dönüş 90°), adam ekranın tam ortasında.
 import { W, H, clamp, lerp, ease, an, pop, rng, TAU, tuval } from '../motor/temel.mjs';
 import { kameraYolu, kameraIle, salinim } from '../motor/sahne.mjs';
 import { KELIMELER, ONCE } from '../motor/zaman.mjs';
 import * as D from './s09-dunya.mjs';
+import { kameraD, DEVIR_ADAM } from './s08.mjs';
 import * as LB from './s09-labirent.mjs';
-import { tepeAdam, levhaCiz, levhaHazirla } from './s09-figur.mjs';
+import { tepeAdam, levhaCiz, levhaHazirla, TEPE } from './s09-figur.mjs';
 
 // bu cümlenin kelimeleri (indeks 137..158)
 const kk = (n, ilk = 137) => KELIMELER.find((k) => k.i >= ilk && k.n === n).bas - ONCE;
@@ -31,9 +33,18 @@ const KAM_B = { x: 550, y: 1760, z: 1.5 }; // çiçek çerçevesi (silinme boyun
 const DALIS = { t0: 87.84, t1: 88.5, sonum: 87.96, sonumSure: 0.46 }; // dalış ve dünyanın beyaza sönüşü (labirente geçişte biter)
 // açılış: s08'in son karesindeki gibi adam ekranın ortasında (540, 1127), ekran ölçeği 0,9
 const KAM_0 = { x: D.ADAM.x, y: D.ADAM.y - (1127.5 - 960) / 1.5, z: 1.5 };
+// devir (82,5–82,95): s08'in kamerası (salınımı dahil) s09 dünyasına çevrilir: yerde oturan adam iki sahnede ekranda
+// birebir aynı yer, ölçek ve açıdadır (çapraz geçişte çift kontur yok). s08 kamerası 82,95'te KAM_0'a denk gelir.
+const DEVIR_SON = 82.95;
+const OLC = DEVIR_ADAM.s / D.ADAM.s; // s09 yakınlaşması = s08 yakınlaşması × OLC
+function devirKamerasi(t) {
+  const c = kameraD(Math.min(t, DEVIR_SON));
+  const k = 1 / OLC; // s08 dünyasındaki uzaklık, s09 dünyasında bu kat
+  return { x: D.ADAM.x - (DEVIR_ADAM.x - c.x) * k, y: D.ADAM.y - (DEVIR_ADAM.y - c.y) * k, z: c.z * OLC, r: c.r };
+}
 const kamA = kameraYolu([
-  { t: 82.3, ...KAM_0 },
-  { t: T.iste, x: KAM_0.x - 2, y: KAM_0.y - 4, z: 1.49, e: ease.lin },
+  { t: DEVIR_SON, ...KAM_0 },
+  { t: T.iste, ...KAM_0, e: ease.lin }, // devirden sonra kısa duruş (s08'in yavaş kayması burada durur)
   { t: T.iste + 1.45, x: 540, y: 975, z: 1.0, e: ease.inOutCubic },
   { t: T.bu2 - 0.04, x: 566, y: 990, z: 1.045, e: ease.inOutSine },
   { t: T.bu2 + 0.55, ...KAM_B, e: ease.inOutCubic },
@@ -49,12 +60,14 @@ const SIL_SON = 87.92;
 const [JX, JY] = LB.hucreMerkez(60, 60); // kavşak
 const C = LB.HUCRE;
 const P0 = [JX, JY + 0.55 * C];
-const DUVAR_X = 62 * C - C * LB.DUVAR / 2 - 34; // çıkmazın sonunda duvara dayandığı yer (x)
-const SON_X = 61.5 * C; // sonra koridorun ortasına geri çekilir: son karede duvarlardan uzakta, hücrenin ortasında
+// çıkmazın sonunda duvarın dibinde durduğu yer (x): yüzü duvara bir karış kalır, dönerken kolları duvara değmez
+const DUVAR_X = 62 * C - C * LB.DUVAR / 2 - 72;
+const SON_X = 61.35 * C; // sonra koridorun ortasına iki adım çekilir: son karede duvarlardan uzakta
 const ADAM_SON = [SON_X, JY];
 const GERI = { t0: 91.08, sure: 0.56 }; // yüzünü batıya döndükten sonra iki küçük adım geri
+const BAKINMA = { t0: 95.72, sure: 1.05, aci: 0.3 }; // elleri indikten sonra sağına soluna bakınma (s10 96,8'de ışığa döndürür)
 const YURU = { t0: T.sahibini, t1: 90.3 }; // "sahibini"de yürümeye başlar, "tanımazsa"da çıkmaza döner
-const R_DON = 70;
+const R_DON = 110; // dönüş yarıçapı: geniş ve yumuşak (basan ayak dönüşte az kayar)
 const YOL = (() => {
   const L1 = P0[1] - (JY + R_DON), L2 = (Math.PI / 2) * R_DON, L3 = DUVAR_X - (JX + R_DON);
   return { L1, L2, L3, L: L1 + L2 + L3 };
@@ -95,50 +108,116 @@ function bakis(t) {
   }
   return BAKIS[BAKIS.length - 1][1];
 }
+// yürüyüş: dört adım (iki döngü); yol, döngü başına L/2. Ayak genliği adım boyuna bağlı: basan ayak yerde kalır, adam
+// durduğunda iki ayak yan yana gelir.
+const ADIM_DONGU = YOL.L / 2;
+const S_ADAM = 1.24;
+// basan ayak dünyada kilitli kalır (dönüşte de kaymaz): her ayağın yere bastığı nokta, o anki gövde konumundan adım
+// genliği kadar öndedir; salınımda bir önceki basış noktasından sonrakine yumuşakça (hızı uçlarda sıfır) geçer.
+function ayakDunyaNominal(sv, kx, ileri) {
+  const p = yolNokta(clamp(sv, 0, YOL.L));
+  const R = p.h + Math.PI / 2, c = Math.cos(R), sn = Math.sin(R);
+  const ly = TEPE.ayakY - ileri;
+  return [p.x + (kx * c - ly * sn) * S_ADAM, p.y + (kx * sn + ly * c) * S_ADAM];
+}
+function kilitliAyaklar(sCur, x, y, h) {
+  const lam = ADIM_DONGU, B = lam / 4 / S_ADAM;
+  const R = h + Math.PI / 2, c = Math.cos(R), sn = Math.sin(R);
+  return [[-1, Math.PI / 2], [1, 1.5 * Math.PI]].map(([yk, off]) => {
+    const kx = yk * TEPE.ayakX;
+    const sOf = (ph) => ((ph - off) / TAU) * lam;
+    const basis = (ph) => {
+      const sv = sOf(ph);
+      if (sv <= 0) return ayakDunyaNominal(0, kx, 0);
+      if (sv >= YOL.L) return ayakDunyaNominal(YOL.L, kx, 0);
+      return ayakDunyaNominal(sv, kx, B);
+    };
+    const phi = (sCur / lam) * TAU + off;
+    const n = Math.floor(phi / TAU), p = phi - n * TAU;
+    let w = basis(n * TAU);
+    if (p > Math.PI) {
+      const b = basis((n + 1) * TAU);
+      const sLo = Math.max(0, sOf(n * TAU + Math.PI)), sNt = Math.min(YOL.L, sOf((n + 1) * TAU));
+      const u = clamp((sCur - sLo) / Math.max(1e-6, sNt - sLo));
+      const e = u * u * (3 - 2 * u);
+      w = [lerp(w[0], b[0], e), lerp(w[1], b[1], e)];
+    }
+    const dx = (w[0] - x) / S_ADAM, dy = (w[1] - y) / S_ADAM;
+    return [dx * c + dy * sn, -dx * sn + dy * c];
+  });
+}
 function adamDurum(t) {
   const { s, v } = yolS(t);
   const p = yolNokta(s);
   let x = p.x, y = p.y, h = p.h;
   const vmax = YOL.L / (YURU.t1 - YURU.t0 - 0.235);
-  const poz = { faz: (s / 262) * TAU, yuru: clamp(v / vmax), eller: 0, sallan: 0, kipir: 0 };
+  const yuruyor = t > YURU.t0 && t < YURU.t1;
+  const poz = { faz: (s / ADIM_DONGU) * TAU, yuru: yuruyor ? 1 : 0, kolYuru: clamp(v / vmax), adim: ADIM_DONGU / 4 / S_ADAM, eller: 0, sallan: 0, kipir: 0, ayakOf: 0 };
+  if (yuruyor) poz.ayaklar = kilitliAyaklar(s, x, y, h);
   if (t > YURU.t1) {
-    // duvara dayanma: küçük geri sekme
+    // duvara dayanma: küçük geri sekme (ayaklar yerinde kalır)
     const u = clamp((t - YURU.t1) / 0.32);
-    x -= 10 * Math.sin(Math.PI * u) * (1 - u * 0.3);
+    const sek = 6 * Math.sin(Math.PI * u) * (1 - u * 0.3);
+    x -= sek;
+    poz.ayakOf = sek / S_ADAM;
     h = bakis(t);
     // dönerken ayaklar kıpırdar
     const dh = Math.abs(bakis(t + 0.03) - bakis(t - 0.03)) / 0.06;
     poz.kipir = 5 * Math.sin(t * 22) * clamp(dh / 4);
     poz.faz = 0;
-    // koridorun ortasına geri adım (bakış yönünde, batıya)
+    // koridorun ortasına iki kısa adım (bakış yönünde, batıya); bir döngü, ayaklar yerde kalır
     const g = an(t, GERI.t0, GERI.sure, ease.inOutSine);
-    if (g > 0) {
+    if (g > 0 && g < 1) {
       const m = (DUVAR_X - SON_X) * g;
       x -= m;
-      poz.faz = g * TAU; // iki kısa adım
-      poz.yuru = Math.max(poz.yuru, 0.75 * Math.sin(Math.PI * g));
-    }
+      poz.faz = g * TAU;
+      poz.yuru = 1;
+      poz.adim = (DUVAR_X - SON_X) / 4 / S_ADAM;
+      poz.kolYuru = 0.25 * Math.sin(Math.PI * g);
+    } else if (g >= 1) x -= DUVAR_X - SON_X;
   }
   if (t > T.sergerdan - 0.1) {
-    const e = an(t, T.sergerdan - 0.05, 0.42, ease.inOutCubic);
+    // ellerini başına koyar ("sergerdan"), sallanır; kamera yükselirken ("herkes anlar") elleri yavaşça iner: uzaktan
+    // da sade bir insan siluetinde kalır
+    // (kolGeo kendi yumuşatmasını uygular: burada doğrusal ilerleme; kalkış ≈0,75 sn, iniş ≈0,8 sn, hiçbir karede sıçrama yok)
+    const e = an(t, T.sergerdan - 0.1, 0.75, ease.lin) * (1 - an(t, T.herkes + 0.08, 0.8, ease.lin));
     poz.eller = e;
     h += e * 0.22 * Math.sin((t - T.sergerdan) * 3.4);
     poz.sallan = e * 2.5 * Math.sin((t - T.sergerdan) * 5.1);
   }
+  // elleri indikten sonra yükseklikte bir kez daha çaresizce sağına soluna bakar (yavaş gövde dönüşü, uçları yumuşak):
+  // en yüksek planda küçücük figür kıpırdayan bir insan olarak okunur, durağan bir simgeye benzemez
+  const ba = clamp((t - BAKINMA.t0) / BAKINMA.sure);
+  if (ba > 0 && ba < 1) h += BAKINMA.aci * Math.sin(TAU * ba) * Math.sin(Math.PI * ba);
   return { x, y, h, poz };
 }
 
 // labirent kamerası
+// "bîçare"ye kadar anahtar kareler; sonrası (labirentin yavaşça dönmesi ve "herkes anlar"daki yükseliş) hız sürekliliği
+// olan Hermite eğrileriyle: dönüş bîçare'de yavaşça başlar, yükselişe hızlanarak devreder; yükseliş (≈5,7 kat) 96,3'te
+// yumuşakça biter ve kamera orada durur (s10 bu yüksekliği korur: ileri-geri "yoyo" olmaz).
+export const Z_SON = 0.24;
 const KAM_L = [
   { t: 88.3, x: P0[0], y: P0[1] - 30, z: 1.26, r: 0 },
   { t: 89.75, x: JX + 70, y: JY + 42, z: 1.08, r: 0, e: ease.inOutSine },
   { t: 90.55, x: JX + 105, y: JY + 15, z: 1.06, r: 0, e: ease.inOutSine },
   { t: T.bicare - 0.02, x: JX + 90, y: JY + 10, z: 1.12, r: 0, e: ease.inOutSine },
-  { t: T.herkes - 0.42, x: ADAM_SON[0], y: ADAM_SON[1], z: 1.34, r: 0.42, e: ease.inOutSine },
-  { t: T.herkes - 0.05, x: ADAM_SON[0], y: ADAM_SON[1], z: 1.36, r: 0.46, e: ease.lin },
-  { t: 96.28, x: ADAM_SON[0], y: ADAM_SON[1], z: 0.113, r: Math.PI / 2, e: ease.inOutCubic },
-  { t: 96.5, x: ADAM_SON[0], y: ADAM_SON[1], z: 0.1105, r: Math.PI / 2, e: ease.lin },
 ];
+const KAM_KONUM = { t: T.herkes - 0.42, x: ADAM_SON[0], y: ADAM_SON[1] };
+// [t, değer, eğim (birim/sn)]
+const KAM_Z = [[T.bicare - 0.02, Math.log(1.12), 0], [T.herkes - 0.05, Math.log(1.36), 0], [96.3, Math.log(Z_SON), 0]];
+const KAM_R = [[T.bicare - 0.02, 0, 0], [T.herkes - 0.05, 0.62, 0.42], [96.3, Math.PI / 2, 0]];
+function hermite(K, t) {
+  if (t <= K[0][0]) return K[0][1];
+  for (let i = 1; i < K.length; i++) {
+    if (t <= K[i][0]) {
+      const [t0, p0, m0] = K[i - 1], [t1, p1, m1] = K[i];
+      const T0 = t1 - t0, u = (t - t0) / T0, u2 = u * u, u3 = u2 * u;
+      return (2 * u3 - 3 * u2 + 1) * p0 + (u3 - 2 * u2 + u) * T0 * m0 + (-2 * u3 + 3 * u2) * p1 + (u3 - u2) * T0 * m1;
+    }
+  }
+  return K[K.length - 1][1];
+}
 function kamL(t) {
   const k = KAM_L;
   if (t <= k[0].t) return { ...k[0] };
@@ -149,9 +228,13 @@ function kamL(t) {
       return { x: lerp(a.x, b.x, e), y: lerp(a.y, b.y, e), z: Math.exp(lerp(Math.log(a.z), Math.log(b.z), e)), r: lerp(a.r, b.r, e) };
     }
   }
-  return { ...k[k.length - 1] };
+  const a = k[k.length - 1];
+  const e = ease.inOutSine(clamp((t - a.t) / (KAM_KONUM.t - a.t)));
+  return { x: lerp(a.x, KAM_KONUM.x, e), y: lerp(a.y, KAM_KONUM.y, e), z: Math.exp(hermite(KAM_Z, t)), r: hermite(KAM_R, t) };
 }
-export const SON_KAMERA = { x: ADAM_SON[0], y: ADAM_SON[1], z: 0.1105, r: Math.PI / 2 };
+/** s10 çapraz geçişte aynı kamerayı kullanır */
+export const labirentKamerasi = kamL;
+export const SON_KAMERA = { x: ADAM_SON[0], y: ADAM_SON[1], z: Z_SON, r: Math.PI / 2 };
 
 // levhalar: direk konumu, ana yön, ölçek, yükseklik (gölge), giriş zamanı, dönüş hızı
 const LEVHALAR = (() => {
@@ -188,7 +271,7 @@ function levhaAci(l, t) {
 // ---------------------------------------------------------------- hazırlık
 let dunyaT, maskeT, hayT, tA, tB, seviyeler, S0;
 function seviyeBolgeleri() {
-  const S = [1, 0.48, 0.23, 0.113];
+  const S = [1, 0.48, 0.23]; // en yüksekte (z = 0,24) 0,23 seviyesi neredeyse birebir çizilir
   const kutular = S.map(() => ({ x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }));
   for (let t = 88.3; t <= 96.52; t += 1 / 90) {
     const cam = kamL(t);
@@ -245,9 +328,10 @@ export default {
 
 // ---------------------------------------------------------------- A-B: yürüyenler, çiçekler, silgi
 function dunyaKamerasi(t) {
+  if (t < DEVIR_SON) return devirKamerasi(t); // s08'in salınımı ve vurguları dahil
   const c = kamA(t);
   const sw = 1 - an(t, T.bu2 - 0.2, 0.5);
-  const sl = salinim(t, 3, 0.3, 9);
+  const sl = salinim(t, 3, 0.3, 14); // s08 ile aynı salınım: devirden sonra kesintisiz sürer
   return { x: c.x + (sl.x * sw) / c.z, y: c.y + (sl.y * sw) / c.z, z: c.z, r: sl.r * sw };
 }
 function dunyaYaz(g, t) {
@@ -309,7 +393,7 @@ function dunyaBolumu(ctx, t) {
   kameraIle(mctx, cam, (g) => D.silgiMaske(g, t), 1);
   dctx.save();
   dctx.globalCompositeOperation = 'destination-out';
-  dctx.filter = 'blur(1.2px)';
+  dctx.filter = 'blur(1.7px)'; // silgi izinin kenarı yumuşak; lifler seçilir kalır
   dctx.drawImage(maskeT, 0, 0);
   dctx.restore();
   const iz = 1 - an(t, 87.9, 0.3, ease.inOutSine); // dalışta hayalet, iz ve kırıntılar söner
@@ -365,12 +449,11 @@ function labirentBolumu(ctx, t) {
   // levhalar ve adam (dünya koordinatında)
   ctx.save();
   LB.labKameraUygula(ctx, cam);
-  // adam, sonra levhalar (levhalar direk boyunda: adamın üstünde kalır)
+  // adam, sonra levhalar (levhalar direk boyunda: adamın üstünde kalır). Adam büyütülmez: her yükseklikte koridorun
+  // içinde kalır, duvarlara binmez (göz onu yükseklikteki kenar kararmasıyla bulur).
   const ap = pop(t, T.insan, 0.42);
-  // çok yükseklerde bile seçilebilsin: ekrandaki boyu yavaşça alt sınıra yaklaşır
-  const buyut = Math.max(1, Math.pow(0.2 / cam.z, 0.55));
-  tepeAdam(ctx, a.x, a.y, a.h, a.poz, { s: 1.24 * ap * buyut, ekranOlcek: cam.z, golgeYon: [11 * buyut, 15 * buyut] });
-  const levhaA = clamp((cam.z - 0.24) / 0.3); // kamera yükselince levhalar söner
+  tepeAdam(ctx, a.x, a.y, a.h, a.poz, { s: S_ADAM * ap, ekranOlcek: cam.z, golgeYon: [11, 15] });
+  const levhaA = clamp((cam.z - 0.3) / 0.3); // kamera yükselince levhalar söner (s10 devrinden önce tamamen)
   for (const l of LEVHALAR) {
     const s = pop(t, l.t0, 0.45) * l.s;
     if (s <= 0 || levhaA <= 0) continue;
@@ -423,21 +506,31 @@ export const SON = {
 };
 let sonSeviye = null;
 export function sonKareHazirla() {
-  if (seviyeler) { sonSeviye = [seviyeler[seviyeler.length - 1]]; return; }
+  // son iki seviye (0,48 ve 0,23): s10'un ışığa doğru yavaş itmesinde de keskin kalsın (labirentCiz karıştırır)
+  if (seviyeler) { sonSeviye = seviyeler.slice(-2); return; }
+  // s09 hazırlanmamışsa aynı seviyeler (tohum 4 ve 5) kendi görüş kutularıyla üretilir
   LB.labirentHazirla();
-  const b = LB.gorusKutusu(SON_KAMERA, 80);
-  sonSeviye = [LB.seviyeOlustur(0.113, b.x0 / C - 1, b.y0 / C - 1, b.x1 / C + 1, b.y1 / C + 1, { tohum: 6 })];
+  const b = LB.gorusKutusu({ ...SON_KAMERA, z: Z_SON * 0.95 }, 120);
+  const b2 = LB.gorusKutusu({ ...SON_KAMERA, z: Z_SON * 1.08 }, 120);
+  sonSeviye = [
+    LB.seviyeOlustur(0.48, b2.x0 / C - 1, b2.y0 / C - 1, b2.x1 / C + 1, b2.y1 / C + 1, { tohum: 4 }),
+    LB.seviyeOlustur(0.23, b.x0 / C - 1, b.y0 / C - 1, b.x1 / C + 1, b.y1 / C + 1, { tohum: 5 }),
+  ];
 }
-/** s09'un 96,28 sn sonrasındaki karesi (labirent + adam + kenar kararması); t yalnız adamın salınımı için */
-export function sonKareCiz(ctx, t = 96.5) {
+/** s09'un adamı (labirentte): s10 onu kendi pozuyla sürdürür */
+export function labirentAdamDurum(t) { return adamDurum(t); }
+export function labirentAdamCiz(ctx, cam, a) {
+  ctx.save();
+  LB.labKameraUygula(ctx, cam);
+  tepeAdam(ctx, a.x, a.y, a.h, a.poz, { s: S_ADAM, ekranOlcek: cam.z, golgeYon: [11, 15] });
+  ctx.restore();
+}
+/** s09'un 96,3 sn sonrasındaki karesi (labirent + adam + kenar kararması); t yalnız adamın salınımı için.
+ *  adam: false ile adam çizilmez (s10 onu kendisi çizer). */
+export function sonKareCiz(ctx, t = 96.5, { adam = true } = {}) {
   if (!sonSeviye) sonKareHazirla();
   const cam = SON_KAMERA;
   LB.labirentCiz(ctx, cam, sonSeviye);
-  const a = adamDurum(Math.max(96.3, t));
-  ctx.save();
-  LB.labKameraUygula(ctx, cam);
-  const buyut = Math.max(1, Math.pow(0.2 / cam.z, 0.55));
-  tepeAdam(ctx, a.x, a.y, a.h, a.poz, { s: 1.24 * buyut, ekranOlcek: cam.z, golgeYon: [11 * buyut, 15 * buyut] });
-  ctx.restore();
+  if (adam) labirentAdamCiz(ctx, cam, adamDurum(Math.max(96.3, t)));
   yukseklikCiz(ctx, t, cam);
 }

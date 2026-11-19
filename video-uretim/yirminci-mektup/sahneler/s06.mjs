@@ -14,7 +14,7 @@ import { W, H, clamp, lerp, ease, an, pop, rng, TAU, rgba } from '../motor/temel
 import { ogeCiz, gokTuvali, konturCiz, darbe, PALET } from '../motor/kalem.mjs';
 import { kameraIle, ekranda, salinim } from '../motor/sahne.mjs';
 import { kb } from '../motor/zaman.mjs';
-import { insanYan, DURUS, pozKaristir } from '../motor/insan.mjs';
+import { insanYan, DURUS, pozKaristir, OLCU } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import * as Y from './s06-yardim.mjs';
 
@@ -23,6 +23,14 @@ const T = {
   nihayet: kb('nihayetsiz'), saadet: kb('saadete'), nimet: kb('nimete'), envar: kb('envara'), esrar: kb('esrara'),
   ya: kb('ya'), kuvve: kb('bilkuvve'), veya: kb('veya'), fiil: kb('bilfiil'), mazhar: kb('mazhardır'), son: 57.4,
 };
+
+// bilfiil: gövde filizin ucundan (tohumdan yüzeye çıktığı an) dal yolları boyunca büyür
+const BUY = { t0: T.fiil + 0.18, sure: 0.74 };
+const KUME_SURE = 0.32, MEYVE_SURE = 0.25;
+/** büyüme boyu (λ) t'de */
+const buyumeBoyu = (t, Ltop) => Ltop * an(t, BUY.t0, BUY.sure, ease.inOutSine);
+/** λ'ya ulaşılan an (buyumeBoyu'nun tersi) */
+const buyumeAni = (lm, Ltop) => BUY.t0 + (BUY.sure * Math.acos(clamp(1 - (2 * lm) / Ltop, -1, 1))) / Math.PI;
 
 // ---------------------------------------------------------------- dünya yerleşimi (nötr görünüş = geniş plan)
 const { PERS } = Y;
@@ -75,18 +83,53 @@ export const salinim06 = SALINIM;
 
 let hazir = false;
 let gok, bulutlar, dagUzak, dagYakin, seritler, yol, yolYakin, yolUzak, kandilS, kandilY, agacTur, nesneler, kapi, toprak, tohum,
-  hayal, A, meyveK, meyveY, cicekler, fener, kokler, zerreler, fenerler, kus0;
+  hayal, A, meyveK, meyveY, cicekler, fener, kokler, zerreler, fenerler, kus0, AGM, kumeT, meyveT, agacBitis;
 
 const POZ_EGIK = { ...DURUS, bas: 0.2, govde: 0.02 };
 const POZ_BAKIS = { ...DURUS, bas: -0.17, govde: -0.015 };
-const POZ_GOGUS = { ...DURUS, bas: -0.17, govde: -0.015, omuz: [-0.05, -0.34], dirsek: [0.12, 2.82], el: [0, 0.32] };
+// el göğüste: dirsek gövdenin yanında (siluetin içinde), ön kol çapraz yukarı, el göğsün üstünde (parmaklar karşı omza)
+const POZ_GOGUS = { ...DURUS, bas: -0.17, govde: -0.015, omuz: [-0.05, -0.12], dirsek: [0.12, 2.84], el: [0, 1.05] };
 const POZ_NUR = { ...POZ_GOGUS, bas: -0.3, govde: -0.03 };
+// göğüs ışığının göğüs noktasına göre yeri (dünya px): göğüs ile elin son yeri arasında (elin altında)
+const GOGUS_ISIK = (() => {
+  const [bx, by] = bilekYeri(POZ_GOGUS.omuz[1], POZ_GOGUS.dirsek[1]);
+  const wx = 2 + bx - 8, wy = -OLCU.govde + by + 85; // insanYan: ön omuz (2, -118), göğüs (8, -85) kalçaya göre
+  return [0.55 * wx * ADAM.s, 0.4 * wy * ADAM.s];
+})();
+
+/** Ön kolun bileği (omuz eklemine göre, gövde çerçevesinde; +x ileri, +y aşağı) */
+function bilekYeri(o, d) {
+  return [OLCU.kol * Math.sin(o) + OLCU.onkol * Math.sin(o + d), OLCU.kol * Math.cos(o) + OLCU.onkol * Math.cos(o + d)];
+}
+/** İki parçalı kol ters kinematiği (dirsek bilek–omuz doğrusunun gerisinde; s07'nin kolIK'siyle aynı dal) */
+function kolIK(x, y) {
+  const L1 = OLCU.kol, L2 = OLCU.onkol;
+  const d = clamp(Math.hypot(x, y), Math.abs(L1 - L2) + 1, L1 + L2 - 0.01);
+  const be = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
+  const o = Math.atan2(x, y) - be;
+  let b2 = Math.atan2(x - L1 * Math.sin(o), y - L1 * Math.cos(o));
+  if (b2 < -0.5) b2 += 2 * Math.PI;
+  return { o, d: b2 - o };
+}
+/** ve seven: bilek gövdenin hemen önünden, hafifçe öne kavis çizerek göğse çıkar; dirsek yanda kalır (geriye kanat
+ *  gibi açılmaz), ön kol bel hizasında döner (göğüs hizasında öne uzanmaz); el yolun ilk yarısında avucu göğse dönecek
+ *  biçimde kıvrılır */
+function kolGogse(w) {
+  const p0 = bilekYeri(DURUS.omuz[1], DURUS.dirsek[1]), p1 = bilekYeri(POZ_GOGUS.omuz[1], POZ_GOGUS.dirsek[1]);
+  const k = kolIK(lerp(p0[0], p1[0], w) + 23 * Math.sin(Math.PI * w), lerp(p0[1], p1[1], w));
+  return { ...k, el: POZ_GOGUS.el[1] * ease.inOutSine(clamp(w / 0.5)) }; // avuç erkenden göğse döner (öne uzanan yumruk değil)
+}
 
 function adamPoz(t) {
   let p = pozKaristir(POZ_EGIK, POZ_BAKIS, an(t, T.taniyan, 0.65, ease.inOutCubic));
   const eg = an(t, T.seven - 0.02, 0.62, ease.inOutCubic);
-  p = pozKaristir(p, POZ_GOGUS, eg);
-  p.omuz[1] -= 0.36 * Math.sin(Math.PI * eg); // dirsek geriye kaçar: el gövdeye yakın yükselir, öne uzanmaz
+  if (eg > 0) {
+    const k = eg < 1 ? kolGogse(eg) : { o: POZ_GOGUS.omuz[1], d: POZ_GOGUS.dirsek[1], el: POZ_GOGUS.el[1] };
+    p = pozKaristir(p, POZ_GOGUS, eg); // baş, gövde ve arka kol
+    p.omuz[1] = k.o;
+    p.dirsek[1] = k.d;
+    p.el[1] = k.el;
+  }
   p = pozKaristir(p, POZ_NUR, an(t, T.mazhar + 0.05, 0.9, ease.inOutSine));
   p.govde += 0.006 * Math.sin(t * 2.0);
   p.bas += 0.008 * Math.sin(t * 2.0 + 0.6);
@@ -205,6 +248,12 @@ export default {
     A = M.agac({ boy: AG.boy, tohum: AG.tohum, olcek: 1.7 });
     hayal = Y.hayalOge(A, { boy: AG.boy, tohum: AG.tohum, olcek: 1.7 });
     meyveK = M.meyveOge(12, 2.2, 'kirmizi');
+    // bilfiil: organik büyüme modeli; her yaprak kümesi bağlı olduğu dal noktası açıldıktan sonra oradan çıkar, her
+    // meyve kendi kümesi oturduktan sonra (en erken "mazhardır"da) belirir
+    AGM = Y.agacBuyumeModeli(A, { boy: AG.boy, tohum: AG.tohum });
+    kumeT = AGM.kumeBag.map(([, , lm], i) => buyumeAni(lm, AGM.Ltop) + 0.04 + (i % 3) * 0.025);
+    meyveT = A.meyveler.map((m, i) => Math.max(T.mazhar + 0.08 + (i % 5) * 0.04, kumeT[AGM.meyveKume[i]] + KUME_SURE * 0.75));
+    agacBitis = Math.max(BUY.t0 + BUY.sure, ...kumeT.map((v) => v + KUME_SURE), ...meyveT.map((v) => v + MEYVE_SURE));
     fener = Y.fenerOge(3);
     // kökler (tohumdan aşağı ve yanlara; kesit penceresinin içinde)
     const kr = rng(77);
@@ -250,12 +299,42 @@ export default {
       const b = clamp((y - 880) / 420, 0.3, 1.1);
       zerreler.push({ x, y, b, t0: T.envar + zr() * 0.55 + (x < 350 ? 0.15 : 0), v: 85 + zr() * 90, faz: zr() * TAU, gen: 8 + zr() * 20 });
     }
+    // fenerler: hiçbiri adamın (başı dâhil) ya da ufuk kapılarının ve büyüyen ağacın taç alanının önünden geçmez.
+    // Her fenerin bütün yolu (yükseliş + salınım) sahne sonuna dek denenir; çakışan aday yeniden seçilir. Soldakiler
+    // kapıların arasındaki ve yanındaki boşluklardan yükselir.
+    const kutular = [
+      { x0: ADAM.x - 52, x1: ADAM.x + 58, y0: ZEMIN - 392, y1: ZEMIN + 10, t0: 0, t1: 99 },
+      ...KAPILAR.map(([x, s]) => ({ x0: x - 25 * s, x1: x + 25 * s, y0: KAPI_Y - 72 * s, y1: KAPI_Y + 8, t0: 0, t1: 54.7 })),
+    ];
+    {
+      const K = A.kumeler;
+      kutular.push({ x0: AG.x + Math.min(...K.map((k) => k.x - k.R * 1.1)), x1: AG.x + Math.max(...K.map((k) => k.x + k.R * 1.1)),
+        y0: AG.y + Math.min(...K.map((k) => k.y - k.R)) - 20, y1: AG.y, t0: 55.75, t1: 99 });
+    }
+    const fenerCakisir = (f) => {
+      for (let tt = f.t0; tt <= T.son + 0.01; tt += 1 / 30) {
+        const d = tt - f.t0;
+        const y = f.y - d * f.v * f.b - d * d * 4;
+        if (an(tt, f.t0, 0.4) * clamp((y + 300) / 400) < 0.03) continue;
+        const x = f.x + Math.sin(d * 0.9 + f.faz) * 14 * f.b;
+        const s = 0.75 + f.b * 1.05, m = 12;
+        for (const k of kutular) {
+          if (tt < k.t0 || tt > k.t1) continue;
+          if (x + 11 * s + m > k.x0 && x - 11 * s - m < k.x1 && y + m > k.y0 && y - 29 * s - m < k.y1) return true;
+        }
+      }
+      return false;
+    };
+    const SOL = [-150, 11, 141, 282, 345]; // kapı boşlukları: (-18, 40), (112, 170), 234'ün sağı
     fenerler = [];
     for (let i = 0; i < 13; i++) {
-      const x = i < 5 ? -200 + i * 120 + zr() * 60 : 400 + (i - 5) * 100 + zr() * 60;
-      const y = i < 5 ? 900 + zr() * 50 : 1010 + zr() * 260;
-      const b = clamp((y - 880) / 380, 0.4, 1.1);
-      fenerler.push({ x, y: y - 40, b, t0: T.envar + 0.02 + zr() * 0.5, v: 95 + zr() * 40, faz: zr() * TAU });
+      for (let deneme = 0; deneme < 40; deneme++) {
+        const x = i < 5 ? SOL[i] + (zr() - 0.5) * 6 : deneme === 0 ? 400 + (i - 5) * 100 + zr() * 60 : 380 + zr() * 800;
+        const y = i < 5 ? 900 + zr() * 50 : 1010 + zr() * 260;
+        const b = clamp((y - 880) / 380, 0.4, 1.1);
+        const f = { x, y: y - 40, b, t0: T.envar + 0.02 + zr() * 0.5, v: 95 + zr() * 40, faz: zr() * TAU };
+        if (!fenerCakisir(f)) { fenerler.push(f); break; }
+      }
     }
     kus0 = { t0: 46.9, t1: 50.6 };
   },
@@ -290,11 +369,12 @@ export default {
       ogeCiz(g, yolYakin, 0, 0);
       ogeCiz(g, yolUzak, 0, 0);
       // ufuk kapıları
-      const kc = an(t, T.esrar - 0.42, 0.42, ease.outCubic) * (1 - an(t, 54.05, 0.6, ease.inOutSine));
+      // kapılar "esrara"nın ilk harfiyle belirmeye başlar (± 0,1 sn), sonra aralanır, içlerinden ışık sızar
+      const kc = an(t, T.esrar - 0.02, 0.36, ease.outCubic) * (1 - an(t, 54.05, 0.6, ease.inOutSine));
       if (kc > 0) KAPILAR.forEach(([x, s], i) => {
         g.save();
         g.globalAlpha *= clamp(1 - an(t, 54.05, 0.6, ease.inOutSine));
-        Y.kapiCiz(g, kapi, x, KAPI_Y, s, { cizim: an(t, T.esrar - 0.42 + i * 0.05, 0.4, ease.outCubic), acik: an(t, T.esrar + 0.02 + i * 0.09, 0.6, ease.inOutCubic), isik: an(t, T.esrar + 0.08 + i * 0.09, 0.7, ease.outCubic), t, tohum: 30 + i });
+        Y.kapiCiz(g, kapi, x, KAPI_Y, s, { cizim: an(t, T.esrar - 0.02 + i * 0.06, 0.34, ease.outCubic), acik: an(t, T.esrar + 0.2 + i * 0.09, 0.6, ease.inOutCubic), isik: an(t, T.esrar + 0.26 + i * 0.09, 0.7, ease.outCubic), t, tohum: 30 + i });
         g.restore();
       });
       // yol boyu nesneler
@@ -372,21 +452,13 @@ export default {
           ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.9, r: -0.12, alfa: ta });
         }
       }
-      // gerçek ağaç (bilfiil): gövde ve dallar filizin ucundan yukarı keskin bir kenarla açılır (yumuşak silme lekesi
-      // yok); yapraklar ve meyveler kendi zamanlarında
-      const bu = an(t, T.fiil + 0.21, 0.75, ease.outCubic);
-      if (bu > 0) {
-        const ya = an(t, T.fiil + 0.42, 0.6, ease.lin), ma = an(t, T.mazhar + 0.08, 0.5, ease.lin);
-        if (bu < 1) {
-          const on = AG.y + 4 - bu * (AG.boy * 1.02 + 40);
-          g.save();
-          g.beginPath();
-          g.rect(AG.x - 800, on, 1600, AG.y + 300 - on);
-          g.clip();
-          M.agacCiz(g, A, AG.x, AG.y, { buyume: 1, yaprak: 0, meyveA: 0, t, meyveOge: null, salinim: 0.8 });
-          g.restore();
-          M.agacCiz(g, A, AG.x, AG.y, { buyume: 0, yaprak: ya, meyveA: ma, t, meyveOge: meyveK, salinim: 0.8 });
-        } else M.agacCiz(g, A, AG.x, AG.y, { buyume: 1, yaprak: ya, meyveA: ma, t, meyveOge: meyveK, salinim: 0.8 });
+      // gerçek ağaç (bilfiil): gövde filizin ucundan yuvarlak uçlu bir sürgün gibi yükselir, çatalda dallara ayrılır,
+      // dallar kendi yolları boyunca uzar (hayalin çizgilerini doldurur); yaprak kümeleri kendi dal noktalarından çıkar,
+      // meyveler kümeleri oturduktan sonra gelir. Bitince M.agacCiz'in tam ağacına dikişsiz devredilir.
+      if (t >= agacBitis) M.agacCiz(g, A, AG.x, AG.y, { buyume: 1, yaprak: 1, meyveA: 1, t, meyveOge: meyveK, salinim: 0.8 });
+      else if (t > BUY.t0) {
+        Y.agacBuyuyerekCiz(g, A, AG.x, AG.y, AGM, buyumeBoyu(t, AGM.Ltop), { t, salinim: 0.8, meyveOge: meyveK,
+          kumeU: (i) => an(t, kumeT[i], KUME_SURE, ease.lin), meyveU: (i) => an(t, meyveT[i], MEYVE_SURE, ease.lin) });
       }
       // kesik çizgili hayal (bi'l-kuvve)
       const hy = an(t, T.kuvve + 0.1, 0.95, ease.inOutSine);
@@ -406,7 +478,7 @@ export default {
       // göğüsteki sıcak ışık (ve seven)
       const gl = an(t, T.seven + 0.25, 0.6, ease.outCubic);
       if (gl > 0) {
-        const gx = lerp(adamEk.gogus[0], adamEk.el[0], 0.55), gy = lerp(adamEk.gogus[1], adamEk.el[1], 0.4) - 4;
+        const gx = adamEk.gogus[0] + GOGUS_ISIK[0], gy = adamEk.gogus[1] + GOGUS_ISIK[1] - 4;
         const nab = 1 + 0.12 * Math.sin(t * 4.2);
         const guc = gl * (0.75 + 0.5 * an(t, T.mazhar + 0.2, 0.8));
         M.hale(g, gx, gy, 70 * nab, '#FFD9A0', 0.55 * guc);

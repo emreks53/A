@@ -4,11 +4,13 @@
 //    hesaplar; ayakta, diz çökmüş ve yere oturmuş pozlar arasında karıştırınca beden yerçekimiyle doğal iner/kalkar.
 //  - adimPozu(faz): ayak kaymayan yürüyüş döngüsü (basma evresinde ayak düz ve bacak geriye süpürülür, salınımda diz
 //    bükülür). Gövdenin x'i önceden "basan ayağa kilitlenerek" tümlenir (yuruyenPlan), böylece basan ayak yerinde kalır.
-//  - pozlar: DIZ_COK (diz çökmüş, çökük), BUZUL (yere büzülmüş oturuş), SIPER (kolunu yüzüne siper eder), TAHT (tahtta).
+//  - pozlar: DIZ_COK (diz çökmüş, çökük), BUZUL (yere büzülmüş oturuş), SIPER (kolunu yüzüne siper eder), TAHT (tahtta),
+//    yerdeOturus(t) (s08 sonu ve s09 başı: kalça ve iki taban yerde, kollar baldırlara dolanmış).
 import { OLCU, DURUS, pozKaristir } from '../motor/insan.mjs';
 import { clamp, lerp, TAU, rng } from '../motor/temel.mjs';
 
 const KX = [-3, 3];
+const OLCU_BOY = 384; // figürün ayak tabanından baş tepesine boyu (s = 1)
 
 /** insanYan kinematiği (zipla = 0, serbest): kalça, dizler, bilekler (yerel; yukarı -y) */
 export function kin(poz) {
@@ -61,6 +63,43 @@ export const TAHT = {
 };
 // ayakta, omuzları düşük
 export const AYAKTA = { ...DURUS, govde: 0.06, bas: 0.18, omuz: [-0.02, 0.04], dirsek: [0.1, 0.12] };
+
+// ---------------------------------------------------------------- yerde oturuş (s08 sonu: taht toza dönünce; s09 başı)
+// Kalça yerde, dizler yukarıda, iki taban yerde (bilek ile kalça aynı zeminde: denge kalçada); kollar baldırlara
+// dolanır, eller incik önünde kavuşur; gövde hafifçe öne, baş öne eğik (boyun omuzdan başa doğal uzanır).
+// Bacak ve kol açıları ters kinematikle bulunur: ayak tabanı ve kalça zemine, eller inciğin önüne tam oturur.
+// s08'in son karesi ile s09'un ilk karesi aynı fonksiyonu çağırır: devirde adam birebir aynı pozdadır.
+const OTUR_KALCA = 19; // kalça ekleminin yerden yüksekliği (uyluk kapsülünün alt yayı zemine değer, gömülmez)
+export const OTUR_TEMAS = { kalcaTemas: OTUR_KALCA };
+function oturBacak(X) {
+  // kalça eklemine göre bilek hedefi (X ileri, OTUR_KALCA − 12 aşağı); diz yukarıda
+  const dx = X, dy = OTUR_KALCA - 12, L = OLCU.uyluk;
+  const d = Math.min(Math.hypot(dx, dy), 2 * L - 0.5);
+  const phi = Math.atan2(dx, dy), al = Math.acos(d / (2 * L));
+  const a1 = phi + al, a2 = phi - al;
+  return { kalca: a1, diz: a2 - a1, bilek: -a2 }; // bilek: taban düz
+}
+function oturKol(govde, i, hx, hy) {
+  // omuzdan el bileğine iki eklemli ters kinematik (kalça eklemine göre hedef, y aşağı); dirsek doğal yönde bükülür
+  const sx = Math.sin(govde) * OLCU.govde + (i === 0 ? -2 : 2), sy = -Math.cos(govde) * OLCU.govde;
+  const dx = hx - sx, dy = hy - sy, A = OLCU.kol, B = OLCU.onkol;
+  const d = Math.min(Math.hypot(dx, dy), A + B - 0.5);
+  const a1 = Math.atan2(dx, dy) - Math.acos(clamp((A * A + d * d - B * B) / (2 * A * d), -1, 1));
+  const a2 = Math.atan2(hx - (sx + Math.sin(a1) * A), hy - (sy + Math.cos(a1) * A));
+  return { omuz: a1 - govde, dirsek: a2 - a1 };
+}
+const OTUR_TANIM = { X: [98, 106], govde: 0.38, bas: 0.38, el: [[94, -44], [99, -41]], elA: [0.8, 0.8] };
+/** Yerde oturuş pozu (t: nefes için). yereOturt(poz, OTUR_TEMAS) ile zemine oturtulur. */
+export function yerdeOturus(t = 0) {
+  const n = 0.012 * Math.sin(t * 1.25); // nefes: gövde hafifçe kalkıp iner, eller incikte yerinde kalır
+  const D = OTUR_TANIM, govde = D.govde + n;
+  const b = D.X.map(oturBacak), k = D.el.map((e, i) => oturKol(govde, i, e[0], e[1]));
+  return {
+    govde, bas: D.bas + n * 0.5,
+    kalca: [b[0].kalca, b[1].kalca], diz: [b[0].diz, b[1].diz], bilek: [b[0].bilek, b[1].bilek],
+    omuz: [k[0].omuz, k[1].omuz], dirsek: [k[0].dirsek, k[1].dirsek], el: [...D.elA],
+  };
+}
 
 export { pozKaristir };
 
@@ -195,9 +234,12 @@ export function yuruyenPlan({ t0, x0, yon = 1, s = 1, bolumler, hz = 240 }) {
  * denenir; öncekilerle çakışmayan (ya da en az çakışan) aday seçilir. engeller: [{x0,x1,y0,y1}] bu derinlik ve
  * x aralığında yürünmez (ör. çeşmenin hemen arkası: adam çanağın üstünde duruyor gibi görünmesin).
  *  çakışma: |Δy| < dyK · 400 · s_ön (öndekinin boyunun dyK katı) ve |Δx| < dxK · s_ort (figür genişliği)
+ *  üst üste dizilme (iç içe değil ama teğet): arkadakinin ayakları öndekinin başının hemen üstünde ya da arkasında
+ *  (Δy, öndekinin boyunun dyK katı ile 1 + yigK katı arasında) ve yatayda hizalı (|Δx| < yigX · s_ort): arkadaki
+ *  öndekinin başına basıyormuş gibi okunur. Daha hafif bir maliyetle o da kaçınılır.
  */
 export function kalabalikKur({ tohum = 808, N = 27, yAralik = [430, 1290], bosluk = [755, 990], sAralik = [0.2, 0.4], xAralik = [-30, 1110],
-  tBas, tGor = [70, 72.7], sure = 4.2, dyK = 0.5, dxK = 125, deneme = 80, gorX = [-20, 1100], engeller = [] } = {}) {
+  tBas, tGor = [70, 72.7], sure = 4.2, dyK = 0.5, dxK = 125, deneme = 80, gorX = [-20, 1100], engeller = [], yigK = 0, yigX = 0 } = {}) {
   const r = rng(tohum);
   const orneklar = [];
   for (let t = tGor[0]; t <= tGor[1] + 1e-6; t += 1 / 30) orneklar.push(t);
@@ -239,7 +281,18 @@ export function kalabalikKur({ tohum = 808, N = 27, yAralik = [430, 1290], boslu
       for (const o of kabul) {
         const dy = Math.abs(o.y - y);
         const sOn = y > o.y ? s : o.s;
-        if (dy >= dyK * 400 * sOn) continue;
+        if (dy >= dyK * 400 * sOn) {
+          // üst üste dizilme: ayak-baş teğet hizası
+          if (!(yigK > 0) || dy >= (1 + yigK) * OLCU_BOY * sOn) continue;
+          const esikY = yigX * (s + o.s) / 2;
+          for (let n = 0; n < xs.length; n++) {
+            const a = xs[n], b = o.xs[n];
+            if ((a < gorX[0] || a > gorX[1]) && (b < gorX[0] || b > gorX[1])) continue;
+            const dx = Math.abs(a - b);
+            if (dx < esikY) maliyet += 0.25 + 0.5 * (esikY - dx) / esikY;
+          }
+          continue;
+        }
         const esik = dxK * (s + o.s) / 2;
         for (let n = 0; n < xs.length; n++) {
           const a = xs[n], b = o.xs[n];

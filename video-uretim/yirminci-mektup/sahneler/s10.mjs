@@ -4,7 +4,7 @@ import { W, H, clamp, lerp, ease, an, smooth, pop } from '../motor/temel.mjs';
 import { ogeCiz } from '../motor/kalem.mjs';
 import { ki } from '../motor/zaman.mjs';
 import { kameraYolu, kameraUygula, ekranda, salinim } from '../motor/sahne.mjs';
-import { DURUS, pozKaristir } from '../motor/insan.mjs';
+import { DURUS, ON_DURUS, pozKaristir } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import { labirentHazirla, labirentCiz } from './s10-labirent.mjs';
 import { tampon, radyalMaske, isikBas, dalgaHalkasi, huzme, zerreler, yurumePlani, bilekX, yerGolgesi, kusV } from './s10-yardim.mjs';
@@ -37,8 +37,10 @@ let yuru1, yuru2;
 
 function adamDurumu(t) {
   if (t < T.ilt + 0.02) {
-    // çökük → başını kaldırır → yağmura yüzünü verir
-    let p = pozKaristir(POZ.cokuk, POZ.bakis, an(t, T.tan - 0.02, 0.75, ease.outBack));
+    // çökük → başını kaldırır (≈0,7 sn, aşmasız: yavaş başlar, yumuşakça yerleşir; önce göğüs dikleşir, baş
+    // hemen ardından kalkar) → yağmura yüzünü verir
+    let p = pozKaristir(POZ.cokuk, POZ.bakis, an(t, T.tan - 0.06, 0.66, basKalkis));
+    p.bas = lerp(POZ.cokuk.bas, POZ.bakis.bas, an(t, T.tan - 0.02, 0.72, basKalkis));
     p = pozKaristir(p, POZ.yagmur, an(t, T.rah + 0.1, 0.6, ease.inOutCubic));
     return { x: X0_ADAM, poz: p, yon: -1, s: S_ADAM };
   }
@@ -50,17 +52,31 @@ function adamDurumu(t) {
     const r = yuru2(t);
     return { x: r.x, poz: r.poz, yon: -1, s: S_ADAM, dy: onDy(t) };
   }
-  // dönüş (kâğıt kesik gibi sıkışarak) ve kayaya yaslanma
+  // dönüş ve kayaya yaslanma. Dönüş, klasik dönüş çizimleri gibi üç görünüşle: profil (sola) → önden → profil
+  // (sağa). Figür görünüş değişirken yalnız hafifçe daralır (en dar %80); kâğıt inceliğine inmez.
   const x0 = yuru2.x1;
-  const d = an(t, T.ist + 0.02, 0.26, ease.inOutSine);
-  const yon = d < 0.5 ? -1 : 1;
-  const k = Math.abs(Math.cos(d * Math.PI));
-  const w = an(t, T.ist + 0.2, 0.55, ease.inOutCubic);
+  const d = an(t, T.ist + 0.02, DONUS.sure, ease.inOutSine);
+  const w = an(t, T.ist + 0.22, 0.55, ease.inOutCubic);
   const p = pozKaristir(POZ.duz, POZ.yaslan, w);
   // arka ayak yerinde kalsın: kalça geriye (kayaya) kayar
   const dx = (bilekX(p, 0) - bilekX(POZ.duz, 0)) * S_ADAM;
   const nefes = Math.sin(t * 2.2) * 0.012 * w;
-  return { x: x0 - dx, poz: { ...p, govde: p.govde + nefes }, yon, s: S_ADAM, k: Math.max(0.12, k), dy: onDy(t) };
+  const r = { x: x0 - dx, poz: { ...p, govde: p.govde + nefes }, yon: d < 0.5 ? -1 : 1, s: S_ADAM, k: 1, dy: onDy(t) };
+  if (d > 0 && d < 1) {
+    const { a, b, dar } = DONUS;
+    if (d < a) r.k = lerp(1, dar, ease.inSine(d / a));
+    else if (d > b) r.k = lerp(dar, 1, ease.outSine((d - b) / (1 - b)));
+    else { r.k = dar + (1 - dar) * Math.sin(Math.PI * (d - a) / (b - a)); r.poz.on = ON_POZ; }
+  }
+  return r;
+}
+// dönüş: süre (sn), önden görünüşün dönüş ilerlemesindeki aralığı [a, b] (≈4 kare) ve en dar genişlik çarpanı
+const DONUS = { sure: 0.32, a: 0.21, b: 0.79, dar: 0.8 };
+const ON_POZ = { ...ON_DURUS, kol: [0.07, 0.07], dirsek: [0.12, 0.12], bacak: 0.04 };
+// baş kaldırma eğrisi: yavaş başlar (smoothstep gibi), uzun ve yumuşak yerleşir (outCubic gibi); aşma yok
+function basKalkis(u) {
+  const a = u * u * (3 - 2 * u), b = 1 - Math.pow(1 - u, 3);
+  return lerp(a, b, u);
 }
 // ağaçtan kayaya yürürken adam gövdenin ÖNÜNDEN geçer: ilk adımda zemin çizgisinin biraz önüne (aşağı) çıkar ve
 // hafifçe büyür (derinlik); kayaya da önden yaslanır
@@ -327,19 +343,23 @@ function gecisCiz(ctx, t) {
   yanSahne(g, t);
   radyalMaske(g, mx, my, [[0, 1], [Math.max(0.5, Rr), 1], [Math.max(1, Rr) + yum, 0]], 'destination-in');
   ctx.drawImage(K, 0, 0);
-  // kenarda sıcak altın ışık kuşağı (screen), içte yumuşak, dışta erime cephesine karışır
+  // kenarda sıcak altın ışık kuşağı (screen), içte yumuşak, dışta erime cephesine karışır. Kuşak ve halkalar, açıklık
+  // adamın çevresinde küçük bir hale gibi durmayacak kadar büyüyünce belirir (ilk anlarda adamı ortalayan halka olmaz).
+  const hk = ease.inOutSine(clamp((Rr - 60) / 240));
   const k0 = Math.max(0, Rr - 60), k1 = Math.max(k0 + 1, Rr + yum + 120);
-  ctx.save();
-  ctx.globalCompositeOperation = 'screen';
-  const gr = ctx.createRadialGradient(mx, my, k0, mx, my, k1);
-  gr.addColorStop(0, 'rgba(255,214,140,0)');
-  gr.addColorStop(0.45, 'rgba(255,212,128,0.42)');
-  gr.addColorStop(0.7, 'rgba(255,226,160,0.3)');
-  gr.addColorStop(1, 'rgba(255,226,160,0)');
-  ctx.fillStyle = gr;
-  ctx.fillRect(0, 0, W, H);
-  ctx.restore();
-  const guc = clamp((Rr + yum) / 300) * (1 - an(t, GECIS.son - 0.16, 0.16));
+  if (hk > 0.002) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    const gr = ctx.createRadialGradient(mx, my, k0, mx, my, k1);
+    gr.addColorStop(0, 'rgba(255,214,140,0)');
+    gr.addColorStop(0.45, `rgba(255,212,128,${0.42 * hk})`);
+    gr.addColorStop(0.7, `rgba(255,226,160,${0.3 * hk})`);
+    gr.addColorStop(1, 'rgba(255,226,160,0)');
+    ctx.fillStyle = gr;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+  const guc = hk * clamp((Rr + yum) / 300) * (1 - an(t, GECIS.son - 0.16, 0.16));
   dalgaHalkasi(ctx, mx, my, Math.max(3, Rr + yum * 0.42), 0.8 * guc, { renk: '#E2AE4E', kal: 2.8, tohum: 91 });
   dalgaHalkasi(ctx, mx, my, Math.max(3, Rr + yum * 0.9), 0.4 * guc, { renk: '#EBC36E', kal: 1.8, tohum: 92 });
 }
