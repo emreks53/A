@@ -167,7 +167,7 @@
    "level": 0.3
   },
   {
-   "t": 3.32,
+   "t": 3.47,
    "type": "water_pour",
    "dur": 0.8,
    "level": 0.3
@@ -451,7 +451,7 @@
    "level": 0.4
   },
   {
-   "t": 41.03,
+   "t": 41.15,
    "type": "candle_out_puff",
    "level": 0.5
   },
@@ -516,7 +516,7 @@
    "level": 0.25
   },
   {
-   "t": 47.27,
+   "t": 47.33,
    "type": "load_thump",
    "level": 0.35
   },

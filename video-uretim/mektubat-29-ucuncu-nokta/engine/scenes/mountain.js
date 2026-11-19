@@ -1243,12 +1243,12 @@ function drawGrumble(ctx, t, head) {
     for (let j = 0; j <= 2; j++) { const idx = (k * 2 + j) % (n * 2); const ang = (idx / (n * 2)) * TAU; pts.push([Math.cos(ang) * R0 * rad[idx] * 1.3, Math.sin(ang) * R0 * rad[idx]]); }
     const rot = tremble + vr * blow;
     const P2 = pts.map(([x, y]) => [cx0 + ox + x * Math.cos(rot) - y * Math.sin(rot), cy0 + oy + x * Math.sin(rot) + y * Math.cos(rot)]);
-    fillG(ctx, rough(P2, { amp: 0.8, seed: k, step: 3 }), '#222634', { tex: 0.3, alpha: a });
+    fillG(ctx, rough(P2, { amp: 0.8, seed: k, step: 3 }), '#AEB3C2', { tex: 0.3, alpha: a });
   }
   if (blow < 0.6) {
     const a = app * app * (1 - blow / 0.6);
     const pts = []; for (let i = 0; i <= 56; i++) { const u = i / 56; pts.push([cx0 - blow * 0.4 * S + Math.sin(u * 27) * R0 * 0.62 + (u - 0.5) * R0 * 0.7, cy0 - blow * 0.15 * S + Math.cos(u * 37) * R0 * 0.42]); }
-    strokeG(ctx, pts, 4, '#7A7F92', { alpha: a, taper: false, wobble: 0.3, seed: 9 });
+    strokeG(ctx, pts, 4.5, '#E6E9F0', { alpha: a, taper: false, wobble: 0.3, seed: 9 });
   }
 }
 function drawGust(ctx, t, head) {
@@ -1463,13 +1463,19 @@ function drawWater(ctx, t, grip, tilt) {
   if (wet > 0) fillG(ctx, rough(ellipsePts(tgt[0] + 4, tgt[1] + 5, 20 * wet, 4.5 * wet, 16), { amp: 1, seed: 8 }), '#2A2438', { tex: 0.3, alpha: 0.55 });
 }
 function drawBundleState(ctx, t, st, r, tc, ta, dawn) {
-  if (t < T_DROP) return;
+  if (t < T_DROP - 0.3) return;
+  const fadeIn = seg(t, T_DROP - 0.3, T_DROP - 0.2, E.linear);
+  ctx.save(); ctx.globalAlpha *= fadeIn;
+  drawBundleStateInner(ctx, t, st, r, tc, ta, dawn);
+  ctx.restore();
+}
+function drawBundleStateInner(ctx, t, st, r, tc, ta, dawn) {
   const th = r.torso;
   const T2W = (x, y) => [r.hip[0] + (Math.cos(th) * x + Math.sin(th) * y) * S, r.hip[1] + (Math.sin(th) * x - Math.cos(th) * y) * S];
   // lands on his back with weight: drops in from above (opaque), squashes, settles
-  const drop = 1 - E.outCubic(seg(t, T_DROP, T_DROP + 0.22));
-  const settle = t > T_DROP + 0.22 ? Math.exp(-(t - T_DROP - 0.22) * 8) * Math.sin((t - T_DROP - 0.22) * 26) * 0.06 : 0;
-  let pos = T2W(-0.14, 0.175 + drop * 0.22), ang = th + 0.08 + 0.035 * Math.sin((st.ph ?? 0) * TAU) * (st.walk ?? 0) + settle, sag = Math.max(0, settle * 4);
+  const drop = 1 - E.inQuad(seg(t, T_DROP - 0.3, T_DROP + 0.05, E.linear));
+  const settle = t > T_DROP + 0.05 ? Math.exp(-(t - T_DROP - 0.05) * 8) * Math.sin((t - T_DROP - 0.05) * 26) * 0.07 : 0;
+  let pos = T2W(-0.14, 0.175 + drop * 1.3), ang = th + 0.08 + 0.035 * Math.sin((st.ph ?? 0) * TAU) * (st.walk ?? 0) + settle, sag = Math.max(0, settle * 4);
   const restC = [SLAB.bundleX, ground(SLAB.bundleX) - 0.082 * S];
   const lowU = t >= T_LOWER[1] ? 1 : (st.lowerU ?? 0);
   let strapFrom = null;
@@ -1493,7 +1499,7 @@ function drawBundleState(ctx, t, st, r, tc, ta, dawn) {
     if (dawn > 0.01) { ctx.save(); ctx.globalAlpha *= dawn * 0.9; C.cloth = '#F2C48C'; C.clothD = '#F2C48C'; C.clothL = '#F6D29E'; C.clothPat = '#F6D29E'; drawBundle(ctx, pos[0] - 4, pos[1] - 1, ang, 1, sag); ctx.restore(); C.cloth = css(mix(save.cloth, tc, tk)); C.clothD = css(mix(save.clothD, tc, tk)); C.clothL = css(mix(save.clothL, tc, tk)); C.clothPat = css(mix(save.clothPat, tc, tk)); }
   }
   // strap over the near shoulder and across the chest (over the vest, under the near arm)
-  if (lowU <= 0) {
+  if (lowU <= 0 && t > T_DROP + 0.03) {
     ctx.save();
     const clip = new Path2D(); clip.rect(-1e5, -1e5, 2e5, 2e5);
     const capsule = (a, b, w) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l * w, ny = dx / l * w; const p = new Path2D(); p.moveTo(a[0] + nx, a[1] + ny); p.lineTo(b[0] + nx, b[1] + ny); p.arc(b[0], b[1], w, Math.atan2(ny, nx), Math.atan2(ny, nx) + Math.PI, true); p.lineTo(a[0] - nx, a[1] - ny); p.arc(a[0], a[1], w, Math.atan2(-ny, -nx), Math.atan2(-ny, -nx) + Math.PI, true); p.closePath(); return p; };

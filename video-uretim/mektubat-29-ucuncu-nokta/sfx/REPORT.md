@@ -28,7 +28,7 @@ Short: 59.6 s vertical gouache animation, male narrator (Risale-i Nur passage). 
 | 1 chimes were tuned notes / melodies with long tails | `chime()` deleted. New `glass_glint()`: random pitch 1.9-3.2 kHz, >= 40 cents from every equal-tempered note, no consonant intervals, non-monotonic order, fundamental tau 0.08-0.11 s, weak inharmonic upper modes, no beating partner; 'shine' space 1.5 s, send 0.15 (was heaven 3.4 s, send 0.45) | glint fundamentals 40-49 cents off ET; -20 dB after 0.20-0.27 s (v1: 1.0-1.3 s); sustained tonal lines in the SFX as heard: 4 (longest 0.32 s); v1 bus had 12, longest 1.31 s |
 | 2 dead air 14.8-17.4 s | `air_drift` bed 14.4-17.9 s + a full-length `air_floor` (~-62 dBFS) | quietest 100 ms of the SFX in 14.8-17.4 s: -52.8 dBFS (v1: -75); pause 15.78-16.19 s: -52.1 dBFS; quietest 100 ms anywhere: -56.9 dBFS at 29.5 s |
 | 3 beds pumped in every pause | beds and events ducked separately; beds 3 dB with 250 ms attack ramp, 1.0 s hold, 1.2 s release; events 7 dB, 110 ms attack ramp | bed duck range across all 27 pauses of the narration: 0.22 dB (steady at -3.0 dB); measured bed gain range 1.04 dB |
-| 4 fader ride acted in pauses and on the beds | the root causes were fixed in cues.json (levels/timing); the ride is now a safety net on the events only, only on frames where he speaks (strict VAD), no spreading, max 3 dB | active (>0.5 dB) 2.21% of the time, regions [[1.88, 2.17, 3.0], [9.95, 10.11, 3.0], [11.59, 11.7, 2.4], [13.47, 13.68, 3.0], [19.59, 19.91, 3.0], [35.27, 35.36, 1.8], [40.92, 40.93, 0.6], [40.93, 40.95, 0.6], [47.73, 47.83, 1.5]] |
+| 4 fader ride acted in pauses and on the beds | the root causes were fixed in cues.json (levels/timing); the ride is now a safety net on the events only, only on frames where he speaks (strict VAD), no spreading, max 3 dB | active (>0.5 dB) 2.16% of the time, regions [[1.88, 2.17, 3.0], [9.95, 10.11, 3.0], [11.59, 11.7, 2.4], [13.47, 13.68, 3.0], [19.59, 19.91, 3.0], [35.27, 35.36, 1.8], [47.73, 47.84, 1.6]] |
 | 5 birds sounded synthetic | new syllable model: per syllable contour type/depth, length, gap, FM trill 20-60 Hz, AM flutter, pitch wander; 2-3 syllables per call; 2nd harmonic -32 dB; LP 4 kHz; fewer and quieter calls | bird layer test render: syllable length CV 37.0 %, gap CV 28.0 %, median pitch change between neighbours 12.2 % |
 | 6 pops were clicks | peak-normalised puff + body, 4.5-6 ms raised-cosine attack; soft_pop 3.94 -> 3.88 s and sprout_pop 11.86 -> 11.80 s (80 ms before the words); fruit pops jittered +-12 ms, +-3 dB, varied resonance, diminishing | rise 10-90 % 1.77-2.92 ms (v1 0.46-1.3), crest max 10.1 dB, median 7.1-9.7 dB (v1 12.5-16.4) |
 | 7 radiant bed was band-passed hiss | broad band around 2.25 kHz with slow drift, 300-900 Hz body, sparse soft grains; -3 dB | bed alone: centroid 2110 Hz, 20.2 % in 3-7 kHz, 19.3 % in 300-900 Hz (v1 in the mix 25-31.4 s: 4321 Hz, 91.9 % in 3-7 kHz) |
@@ -48,15 +48,15 @@ Short: 59.6 s vertical gouache animation, male narrator (Risale-i Nur passage). 
 | integrated loudness | -14 LUFS | -14.02 LUFS (ffmpeg ebur128: -14.0) | yes |
 | true peak | <= -1.5 dBTP | -1.7 dBTP (ffmpeg: -1.7) | yes |
 | clipping | 0 samples | 0 (sample peak -1.71 dBFS) | yes |
-| DC offset | ~0 | final [-1.17e-05, -1.17e-05], bus [-6.98e-11, -6.51e-11] | yes |
-| voice/SFX during speech, speech = voice > p95-30 dB (-40.7 dBFS) | >= 18 dB in 400 ms RMS windows (spec) | min 17.67 / p5 21.61 / median 29.05 dB; 1 of 4125 windows (0.02 %) below 18 dB | **NO** |
-| voice/SFX during speech, speech = voice > p95-35 dB (-45.7 dBFS) | >= 18 dB in 400 ms RMS windows (stricter, informative) | min 11.61 / p5 21.36 / median 28.89 dB; 17 of 4261 windows (0.4 %) below 18 dB | partly: 17 windows, all on phrase tails (see Levels) |
-| voice/SFX during speech, speech = voice > p95-40 dB (-50.7 dBFS) | >= 18 dB in 400 ms RMS windows (stricter, informative) | min 9.57 / p5 20.98 / median 28.79 dB; 35 of 4385 windows (0.8 %) below 18 dB | partly: 35 windows, all on phrase tails (see Levels) |
-| SFX in gaps | modest, gentle | loudest gap window 19.22 dB below median speech; median 29.1 dB below | yes |
+| DC offset | ~0 | final [-1.16e-05, -1.17e-05], bus [-6.99e-11, -6.5e-11] | yes |
+| voice/SFX during speech, speech = voice > p95-30 dB (-40.7 dBFS) | >= 18 dB in 400 ms RMS windows (spec) | min 17.67 / p5 21.66 / median 29.05 dB; 1 of 4125 windows (0.02 %) below 18 dB | **NO** |
+| voice/SFX during speech, speech = voice > p95-35 dB (-45.7 dBFS) | >= 18 dB in 400 ms RMS windows (stricter, informative) | min 11.61 / p5 21.48 / median 28.89 dB; 17 of 4261 windows (0.4 %) below 18 dB | partly: 17 windows, all on phrase tails (see Levels) |
+| voice/SFX during speech, speech = voice > p95-40 dB (-50.7 dBFS) | >= 18 dB in 400 ms RMS windows (stricter, informative) | min 9.57 / p5 21.24 / median 28.79 dB; 35 of 4385 windows (0.8 %) below 18 dB | partly: 35 windows, all on phrase tails (see Levels) |
+| SFX in gaps | modest, gentle | loudest gap window 19.22 dB below median speech; median 29.25 dB below | yes |
 | beds steady (no pumping) | bed gain constant through the narration | bed duck range 0.22 dB over 27 pauses | yes |
 | no dead air | no hole in the floor | quietest 100 ms of SFX -56.9 dBFS (old hole now -52.8); beds median -51.3 dBFS | yes |
 | no musical / sustained tones | no tonal line >= 0.6 s, none near an ET note | 4 lines >= 0.25 s; longest 0.32 s; 0 within 20 cents of a note | yes |
-| >8 kHz energy (SFX) | no harsh spikes | HF share -38.4 dB, max narrow-band prominence 1.49 dB, worst 43 ms frame -23.22 dB | yes |
+| >8 kHz energy (SFX) | no harsh spikes | HF share -38.39 dB, max narrow-band prominence 1.53 dB, worst 43 ms frame -23.22 dB | yes |
 | clicks | 0 in SFX; 0 new in mix | 2nd-difference spikes: bus 0, mix 0 not in the voice; HF bursts: beds 0, events 0 | yes |
 | pops are not clicks | soft attack (4.5-6 ms raised cosine), crest <= ~10 dB | rise min 1.77 ms; crest max 10.1 dB | yes |
 | onset timing | +-20 ms | 84 transient hits, max |dev| 10.5 ms; 36 gradual cues start within 11.1 ms | yes |
@@ -64,17 +64,17 @@ Short: 59.6 s vertical gouache animation, male narrator (Risale-i Nur passage). 
 ## Levels
 
 - Voice stem (final scale): **-13.99 LUFS** integrated.
-- SFX as heard: **-41.28 LUFS** (pre-duck -35.24); beds as heard -46.86 LUFS. Integrated voice-to-SFX difference **27.3 LU**; K-weighted 400 ms during speech: median 27.65 LU, min 16.29 LU.
-- SFX bus file (as rendered): -34.98 LUFS, peak -12.9 dBFS.
+- SFX as heard: **-41.29 LUFS** (pre-duck -35.27); beds as heard -46.86 LUFS. Integrated voice-to-SFX difference **27.3 LU**; K-weighted 400 ms during speech: median 27.65 LU, min 16.29 LU.
+- SFX bus file (as rendered): -35.01 LUFS, peak -12.9 dBFS.
 - Voice/SFX ratio in 400 ms RMS windows (10 ms hop, channels pooled); a window counts as speech when >= 50 % of its 10 ms frames are above the speech threshold:
-  - threshold p95-30 dB = -40.7 dBFS: 4125 windows, min **17.67 dB**, p5 21.61, p10 23.06, median 29.05; below 18 dB: 1 (0.02 %).
+  - threshold p95-30 dB = -40.7 dBFS: 4125 windows, min **17.67 dB**, p5 21.66, p10 23.1, median 29.05; below 18 dB: 1 (0.02 %).
     - 19.65-19.65 s: 17.7 dB (voice -29.9 dBFS = 12.8 dB under median speech, SFX -47.6 dBFS)
-  - threshold p95-35 dB = -45.7 dBFS: 4261 windows, min **11.61 dB**, p5 21.36, p10 22.71, median 28.89; below 18 dB: 17 (0.4 %).
+  - threshold p95-35 dB = -45.7 dBFS: 4261 windows, min **11.61 dB**, p5 21.48, p10 22.67, median 28.89; below 18 dB: 17 (0.4 %).
     - 2.03-2.04 s: 17.8 dB (voice -28.0 dBFS = 10.7 dB under median speech, SFX -45.8 dBFS)
     - 9.99-10.02 s: 16.9 dB (voice -31.3 dBFS = 14.0 dB under median speech, SFX -48.2 dBFS)
     - 13.53-13.56 s: 11.6 dB (voice -37.6 dBFS = 20.4 dB under median speech, SFX -49.2 dBFS)
     - 19.65-19.71 s: 15.0 dB (voice -32.8 dBFS = 15.6 dB under median speech, SFX -47.8 dBFS)
-  - threshold p95-40 dB = -50.7 dBFS: 4385 windows, min **9.57 dB**, p5 20.98, p10 22.41, median 28.79; below 18 dB: 35 (0.8 %).
+  - threshold p95-40 dB = -50.7 dBFS: 4385 windows, min **9.57 dB**, p5 21.24, p10 22.4, median 28.79; below 18 dB: 35 (0.8 %).
     - 2.03-2.07 s: 9.6 dB (voice -36.7 dBFS = 19.4 dB under median speech, SFX -46.3 dBFS)
     - 5.63-5.63 s: 17.2 dB (voice -26.0 dBFS = 8.7 dB under median speech, SFX -43.2 dBFS)
     - 9.99-10.03 s: 16.7 dB (voice -31.5 dBFS = 14.1 dB under median speech, SFX -48.2 dBFS)
@@ -85,23 +85,23 @@ Short: 59.6 s vertical gouache animation, male narrator (Risale-i Nur passage). 
     - 44.64-44.66 s: 9.6 dB (voice -40.0 dBFS = 22.7 dB under median speech, SFX -49.6 dBFS)
     - 48.86-48.86 s: 17.1 dB (voice -26.4 dBFS = 9.0 dB under median speech, SFX -43.5 dBFS)
   - Where they are: every one of the 13 clusters is centred -26-157 ms after the last word of a phrase ends ('darülhikmettir' 1.90 s, 'değil' 5.56 s, 'ahirettedir' 9.92 s, 'amal' 11.54 s, 'verir' 13.48 s, 'gerektir' 19.71 s, 'değildir' 35.23 s, 'velayet' 44.49 s, 'görüyorlar' 48.73 s), i.e. on the narrator's own decaying voice and room tail going into a pause of 0.32-1.28 s. The SFX there are 24.6-32.6 dB under the median speech level (steady beds plus events that start in the pause). Passing these windows would need the SFX up to 8.4 dB lower at those moments, which for the beds means practically no ambience.
-- Gaps (502 windows with no voice inside the narration): SFX median -46.25 dBFS, loudest -36.37 dBFS = 19.22 dB under median speech; loudest gap windows [(6.08, -36.4), (6.07, -36.4), (6.09, -36.4), (6.12, -36.4), (6.11, -36.4)]. End card: SFX median -52.0 dBFS (34.85 dB under the speech level).
+- Gaps (502 windows with no voice inside the narration): SFX median -46.4 dBFS, loudest -36.37 dBFS = 19.22 dB under median speech; loudest gap windows [(6.08, -36.4), (6.07, -36.4), (6.09, -36.4), (6.12, -36.4), (6.11, -36.4)]. End card: SFX median -52.0 dBFS (34.85 dB under the speech level).
 - Ducking: beds 3.0 dB (attack ramp 0.25 s ending at the word, hold 1.0 s, release 1.2 s) -> range during narration 0.22 dB, i.e. steady; events 7.0 dB (attack ramp 0.11 s, hold 0.2 s, release 0.4 s); largest event-duck swing in a pause 6.28 dB (12 of 27 pauses > 3 dB; this only moves the events, which are discrete sounds, not the beds). Key: voice 20 ms RMS above p95-30 dB.
-- Safety net on the events: events only, frames where he speaks (strict VAD), no spreading; targets 19.0 dB RMS / 16.0 LU; max 3.0 dB; active >0.5 dB during 2.21 % of the timeline; regions (from, to, max dB): [[1.88, 2.17, 3.0], [9.95, 10.11, 3.0], [11.59, 11.7, 2.4], [13.47, 13.68, 3.0], [19.59, 19.91, 3.0], [35.27, 35.36, 1.8], [40.92, 40.93, 0.6], [40.93, 40.95, 0.6], [47.73, 47.83, 1.5]].
-- Master: -0.23 dB gain, true-peak limiter ceiling -1.7 dBTP, max gain reduction 1.774 dB, >0.5 dB GR during 4.0693 % of the time (voice peaks only).
+- Safety net on the events: events only, frames where he speaks (strict VAD), no spreading; targets 19.0 dB RMS / 16.0 LU; max 3.0 dB; active >0.5 dB during 2.16 % of the timeline; regions (from, to, max dB): [[1.88, 2.17, 3.0], [9.95, 10.11, 3.0], [11.59, 11.7, 2.4], [13.47, 13.68, 3.0], [19.59, 19.91, 3.0], [35.27, 35.36, 1.8], [47.73, 47.84, 1.6]].
+- Master: -0.23 dB gain, true-peak limiter ceiling -1.7 dBTP, max gain reduction 1.772 dB, >0.5 dB GR during 4.0634 % of the time (voice peaks only).
 - Voice: offset 1.52 s, 10 ms fade-in, zero-phase Butterworth, 4th order fwd+bwd (48 dB/oct) at 70 Hz; declip [{'channel': 0, 'start_s': 2.617, 'end_s': 2.625, 'samples': 7, 'max_restored_peak': 1.0}, {'channel': 0, 'start_s': 2.6413, 'end_s': 2.6645, 'samples': 16, 'max_restored_peak': 1.006}, {'channel': 1, 'start_s': 2.6169, 'end_s': 2.62, 'samples': 8, 'max_restored_peak': 1.0}, {'channel': 1, 'start_s': 2.6508, 'end_s': 2.6585, 'samples': 14, 'max_restored_peak': 1.011}]; de-click [{'mark_video_s': 0.534, 'spike_video_s': 0.5339, 'hf_peak_before': 0.0652, 'hf_peak_after': 0.0125}, {'mark_video_s': 6.429, 'spike_video_s': 6.429, 'hf_peak_before': 0.0204, 'hf_peak_after': 0.0048}, {'mark_video_s': 6.432, 'spike_video_s': 6.4322, 'hf_peak_before': 0.0298, 'hf_peak_after': 0.0117}]. No EQ, no compression.
 
 ## Spectrum / artefact checks
 
-- SFX as heard (post-duck): energy above 8 kHz -38.4 dB re total; largest narrow-band peak above 8 kHz 1.49 dB above the local spectrum at 20725 Hz; worst 43 ms frame HF share -23.22 dB at 20.61 s.
+- SFX as heard (post-duck): energy above 8 kHz -38.39 dB re total; largest narrow-band peak above 8 kHz 1.53 dB above the local spectrum at 20725 Hz; worst 43 ms frame HF share -23.22 dB at 20.61 s.
 - final mix: energy above 8 kHz -30.96 dB re total; largest narrow-band peak above 8 kHz 5.13 dB above the local spectrum at 16160 Hz; worst 43 ms frame HF share -0.94 dB at 5.12 s.
 - voice stem alone: energy above 8 kHz -30.96 dB re total; largest narrow-band peak above 8 kHz 5.13 dB above the local spectrum at 16160 Hz; worst 43 ms frame HF share -0.83 dB at 5.12 s.
 - sfx_bus.wav: 2nd-difference spikes (> 8x local RMS, above -80 dBFS) **0** ; max sample-to-sample jump 0.08166 (-8.86 dB re peak); max 2 ms-peak / 20 ms-RMS crest 17.24 dB at [(2.693, 17.2), (26.961, 17.1), (28.297, 16.7)].
-- final_audio.wav: 2nd-difference spikes (> 8x local RMS, above -80 dBFS) **41** [0.839, 0.847, 0.854, 0.862, 3.119, 5.336, 7.626, 9.191, 9.518, 9.702]; max sample-to-sample jump 0.28268 (-9.27 dB re peak); max 2 ms-peak / 20 ms-RMS crest 18.25 dB at [(4.735, 18.3), (46.319, 17.9), (34.263, 17.8)]. Spikes not already in the narration: **0**.
-- voice stem: 2nd-difference spikes (> 8x local RMS, above -80 dBFS) **49** [0.839, 0.847, 0.854, 0.862, 2.163, 3.119, 5.336, 7.626, 9.191, 9.518]; max sample-to-sample jump 0.28163 (-9.39 dB re peak); max 2 ms-peak / 20 ms-RMS crest 18.96 dB at [(34.263, 19.0), (4.735, 18.3), (46.319, 18.2)].
+- final_audio.wav: 2nd-difference spikes (> 8x local RMS, above -80 dBFS) **41** [0.839, 0.847, 0.854, 0.862, 3.119, 5.336, 7.626, 9.191, 9.518, 9.702]; max sample-to-sample jump 0.2826 (-9.27 dB re peak); max 2 ms-peak / 20 ms-RMS crest 18.25 dB at [(4.735, 18.3), (46.319, 17.9), (34.263, 17.8)]. Spikes not already in the narration: **0**.
+- voice stem: 2nd-difference spikes (> 8x local RMS, above -80 dBFS) **49** [0.839, 0.847, 0.854, 0.862, 2.163, 3.119, 5.336, 7.626, 9.191, 9.518]; max sample-to-sample jump 0.28155 (-9.4 dB re peak); max 2 ms-peak / 20 ms-RMS crest 18.96 dB at [(34.263, 19.0), (4.735, 18.3), (46.319, 18.2)].
 - HF click-burst scan (1 ms RMS of the >4 kHz band > 6x its 30 ms RMS, above -80 dBFS): beds 0, events 0, sfx_bus.wav 0. (Bursts that remain are the onsets of intentional transients - twig crack, clock ticks, gravel pebbles - all low-passed at 6 kHz.)
-- Stereo: SFX L/R correlation 0.422, final mix 0.997; mono fold-down changes the SFX by -1.48 dB.
-- DC: final [-1.17e-05, -1.17e-05], bus [-6.98e-11, -6.51e-11] (30 Hz HPF on the bus, 70 Hz zero-phase HPF on the voice). Stem sum vs final: -137.7 dB.
+- Stereo: SFX L/R correlation 0.421, final mix 0.997; mono fold-down changes the SFX by -1.48 dB.
+- DC: final [-1.16e-05, -1.17e-05], bus [-6.99e-11, -6.5e-11] (30 Hz HPF on the bus, 70 Hz zero-phase HPF on the voice). Stem sum vs final: -137.8 dB.
 - Band-limiting by design: every transient foley layer has a 4th-order low-pass at 4.2-6.5 kHz, glint clouds 7.2 kHz, glass glints 6.5 kHz, the bus a 4th-order 12 kHz low-pass and a 30 Hz high-pass.
 
 ### Tonal content (replaces the old, wrong 'no sustained tones' claim)
@@ -155,14 +155,14 @@ Event peak (50 ms RMS, as heard: after ducking, safety net and master gain) agai
 | 1.05 | sparkle_line | 1.08 | -44.0 | 26.8 | -32.2 | +7.0 |
 | 1.25 | light_rain | 2.32 | -45.5 | 28.4 | -31.4 | +4.0 |
 | 1.75 | footsteps_grass | 2.83 | -43.4 | 26.2 | -22.3 | +9.9 |
-| 3.32 | water_pour | 3.93 | -41.3 | 24.2 | -29.3 | +10.2 |
+| 3.47 | water_pour | 4.0 | -43.2 | 26.1 | -32.1 | +8.5 |
 | 3.88 | soft_pop | 3.91 | -34.6 | 17.5 | -21.8 | +16.9 |
 | 4.82 | soft_pop | 4.85 | -36.4 | 19.3 | -16.0 | +14.9 |
 | 5.38 | whoosh_up | 6.12 | -35.9 | 18.8 | pause | +13.7 |
 | 6.90 | motes_twinkle | 8.57 | -45.0 | 27.8 | -27.6 | +2.2 |
 | 10.08 | settle_chimes | 10.38 | -44.7 | 27.5 | pause | +7.8 |
-| 10.50 | whoosh_soft | 10.71 | -33.3 | 16.2 | -18.6 | +24.1 |
-| 11.10 | cloth_kneel | 11.41 | -42.2 | 25.0 | -27.0 | +6.3 |
+| 10.50 | whoosh_soft | 10.71 | -33.4 | 16.2 | -18.6 | +24.1 |
+| 11.10 | cloth_kneel | 11.41 | -42.2 | 25.1 | -27.0 | +6.3 |
 | 11.42 | soil_pat | 11.45 | -38.4 | 21.3 | -22.4 | +9.9 |
 | 11.80 | sprout_pop | 11.83 | -36.4 | 19.3 | -20.0 | +11.0 |
 | 11.90 | grow_swish_up | 12.65 | -40.5 | 23.4 | -24.8 | +8.7 |
@@ -188,7 +188,7 @@ Event peak (50 ms RMS, as heard: after ducking, safety net and master gain) agai
 | 29.40 | ring_shimmer | 30.12 | -43.3 | 26.1 | -28.8 | +12.4 |
 | 31.60 | whoosh_soft | 31.98 | -40.3 | 23.2 | pause | +7.6 |
 | 33.45 | bite | 33.48 | -39.3 | 22.2 | -21.5 | +12.2 |
-| 33.85 | bite | 33.88 | -39.5 | 22.4 | -22.6 | +10.8 |
+| 33.85 | bite | 33.88 | -39.6 | 22.4 | -22.6 | +10.8 |
 | 34.05 | sand_crumble | 34.1 | -43.2 | 26.0 | -20.2 | +6.0 |
 | 34.20 | scale_creak | 34.52 | -40.7 | 23.5 | -27.5 | +10.8 |
 | 34.90 | scale_settle_clunk | 34.93 | -40.0 | 22.9 | -23.5 | +11.4 |
@@ -198,12 +198,12 @@ Event peak (50 ms RMS, as heard: after ducking, safety net and master gain) agai
 | 37.85 | candle_light | 37.88 | -41.6 | 24.4 | -22.9 | +4.8 |
 | 38.85 | flame_waver | 39.03 | -42.8 | 25.6 | -24.7 | +5.3 |
 | 40.15 | swap_swish | 40.54 | -43.4 | 26.2 | -30.0 | +4.2 |
-| 41.03 | candle_out_puff | 41.07 | -38.1 | 21.0 | -15.3 | +10.7 |
-| 42.45 | lamp_swell | 42.83 | -40.3 | 23.2 | -22.9 | +8.9 |
+| 41.15 | candle_out_puff | 41.19 | -38.4 | 21.2 | -15.9 | +11.6 |
+| 42.45 | lamp_swell | 42.83 | -40.3 | 23.2 | -23.0 | +8.9 |
 | 44.30 | footsteps_gravel | 51.39 | -40.7 | 23.6 | pause | +4.4 |
 | 45.05 | water_pour | 45.38 | -43.4 | 26.2 | -25.2 | +8.2 |
 | 46.67 | thunder_soft | 47.55 | -42.9 | 25.8 | -23.6 | +4.6 |
-| 47.27 | load_thump | 47.3 | -38.6 | 21.5 | -18.2 | +9.2 |
+| 47.33 | load_thump | 47.36 | -39.1 | 21.9 | -20.1 | +7.6 |
 | 47.95 | bloom_chimes | 47.98 | -45.1 | 27.9 | -27.2 | +3.2 |
 | 49.62 | puff_dissolve | 49.65 | -41.3 | 24.2 | -25.1 | +4.9 |
 | 50.62 | puff_dissolve | 50.65 | -41.5 | 24.3 | -23.0 | +1.7 |
@@ -236,10 +236,10 @@ Transient hits detected independently on the events-only stem (spectral flux, 1 
 | 2.180 | footsteps_grass | 2.1860 | 6.0 | 4.9 |
 | 2.500 | footsteps_grass | 2.5050 | 5.0 | 6.2 |
 | 2.800 | footsteps_grass | 2.8040 | 4.0 | 5.7 |
-| 3.080 | footsteps_grass | 3.0830 | 3.0 | 13.6 |
-| 3.320 | water_pour | 3.3224 | 2.4 | start(-60dB) |
-| 3.880 | soft_pop | 3.8790 | -1.0 | 2.9 |
-| 4.820 | soft_pop | 4.8250 | 5.0 | 72.8 |
+| 3.080 | footsteps_grass | 3.0830 | 3.0 | 14.9 |
+| 3.470 | water_pour | 3.4738 | 3.8 | start(-60dB) |
+| 3.880 | soft_pop | 3.8840 | 4.0 | 5.0 |
+| 4.820 | soft_pop | 4.8250 | 5.0 | 52.6 |
 | 5.380 | whoosh_up | 5.3849 | 4.9 | start(-60dB) |
 | 6.900 | motes_twinkle | 6.9111 | 11.1 | start(-60dB) |
 | 10.080 | settle_chimes | 10.0830 | 3.0 | 76.2 |
@@ -302,12 +302,12 @@ Transient hits detected independently on the events-only stem (spectral flux, 1 
 | 39.200 | clock_ticks | 39.2020 | 2.0 | 10.7 |
 | 39.700 | clock_ticks | 39.7020 | 2.0 | 37.9 |
 | 40.200 | clock_ticks | 40.2030 | 3.0 | 7.6 |
-| 40.700 | clock_ticks | 40.7020 | 2.0 | 19.8 |
+| 40.700 | clock_ticks | 40.7020 | 2.0 | 22.2 |
 | 37.850 | candle_light | 37.8560 | 6.0 | 14.7 |
 | 38.850 | flame_waver | 38.8520 | 2.0 | start(-60dB) |
 | 40.150 | swap_swish | 40.1502 | 0.2 | start(-60dB) |
 | 40.400 | swap_swish | 40.4007 | 0.7 | start(-60dB) |
-| 41.030 | candle_out_puff | 41.0340 | 4.0 | 9.0 |
+| 41.150 | candle_out_puff | 41.1570 | 7.0 | 10.1 |
 | 42.450 | lamp_swell | 42.4587 | 8.7 | start(-60dB) |
 | 44.350 | footsteps_gravel | 44.3520 | 2.0 | 38.4 |
 | 44.750 | footsteps_gravel | 44.7540 | 4.0 | 9.0 |
@@ -315,10 +315,10 @@ Transient hits detected independently on the events-only stem (spectral flux, 1 
 | 45.550 | footsteps_gravel | 45.5540 | 4.0 | 9.2 |
 | 45.970 | footsteps_gravel | 45.9740 | 4.0 | 11.0 |
 | 46.420 | footsteps_gravel | 46.4230 | 3.0 | 15.6 |
-| 46.880 | footsteps_gravel | 46.8830 | 3.0 | 11.1 |
-| 47.360 | footsteps_gravel | 47.3660 | 6.0 | 4.2 |
-| 47.860 | footsteps_gravel | 47.8630 | 3.0 | 8.7 |
-| 48.360 | footsteps_gravel | 48.3650 | 5.0 | 7.7 |
+| 46.880 | footsteps_gravel | 46.8830 | 3.0 | 10.9 |
+| 47.360 | footsteps_gravel | 47.3660 | 6.0 | 4.1 |
+| 47.860 | footsteps_gravel | 47.8630 | 3.0 | 8.8 |
+| 48.360 | footsteps_gravel | 48.3650 | 5.0 | 7.8 |
 | 48.860 | footsteps_gravel | 48.8650 | 5.0 | 6.4 |
 | 49.360 | footsteps_gravel | 49.3630 | 3.0 | 5.7 |
 | 49.860 | footsteps_gravel | 49.8650 | 5.0 | 5.7 |
@@ -327,10 +327,10 @@ Transient hits detected independently on the events-only stem (spectral flux, 1 
 | 51.360 | footsteps_gravel | 51.3630 | 3.0 | 12.4 |
 | 45.050 | water_pour | 45.0531 | 3.1 | start(-60dB) |
 | 46.670 | thunder_soft | 46.6743 | 4.3 | start(-60dB) |
-| 47.270 | load_thump | 47.2750 | 5.0 | 5.4 |
-| 47.950 | bloom_chimes | 47.9540 | 4.0 | 3.5 |
-| 48.153 | bloom_chimes | 48.1560 | 2.9 | 4.3 |
-| 48.362 | bloom_chimes | 48.3650 | 2.5 | 7.7 |
+| 47.330 | load_thump | 47.3350 | 5.0 | 4.2 |
+| 47.950 | bloom_chimes | 47.9540 | 4.0 | 3.6 |
+| 48.153 | bloom_chimes | 48.1560 | 2.9 | 4.2 |
+| 48.362 | bloom_chimes | 48.3650 | 2.5 | 7.8 |
 | 48.580 | bloom_chimes | 48.5770 | -3.0 | 1.7 |
 | 49.620 | puff_dissolve | 49.6290 | 9.0 | 3.8 |
 | 50.620 | puff_dissolve | 50.6270 | 7.0 | 5.5 |
@@ -376,7 +376,7 @@ Calibration: event level 1.0 = loudest 100 ms window at -23.0 LUFS (dry); bed le
 | 1.05 | sparkle_line | 0.35 | shine | ~12 soft little grains at random times over the cue (the picture draws two overlapping dotted paths): 12-20 ms Hann noise grains through Q 12-18 resonances at 2.2-3.4 kHz drifting slowly upward, random level 0..-5 dB, pan following the line; faint 3 kHz air underlay; 4th-order LP 5.5 kHz; short 'shine' space. Grains, not ticks: crest ~12 dB. |
 | 1.25 | light_rain | 0.25 | garden | Sparse (45/s) leaf taps (resonant 2-5 ms bursts) and soft water 'plips' (rising-pitch bubble model, first drop exactly on the cue) with a quiet 1.8 kHz bed, 0.35/0.5 s fades, LP 6 kHz. |
 | 1.75 | footsteps_grass | 0.3 | garden | Per step: heel + toe roll (70-100 ms later) of 50-70 grass-crush micro-grains with an exponentially thinning tail, a continuous 0.8-3.5 kHz crush body (tau 60 ms), a 700-2800 Hz swish and a 170 Hz LP heel thump; 4th-order LP 5.5 kHz; alternating +-0.08 pan, every step re-randomised (level 0.3, was 0.5). |
-| 3.32 | water_pour | 0.3 | garden | Watering-can stream: 140/s small bubbles (van den Doel style rising-pitch damped sines, 0.7-3.2 kHz) over a flow-noise band with 18 Hz turbulence AM; LP 6.5 kHz. |
+| 3.47 | water_pour | 0.3 | garden | Watering-can stream: 140/s small bubbles (van den Doel style rising-pitch damped sines, 0.7-3.2 kHz) over a flow-noise band with 18 Hz turbulence AM; LP 6.5 kHz. |
 | 3.88 | soft_pop | 0.38 | garden | Muted bud pop: 6-10 ms Hann noise puff through a low-Q (2.2-3.6) 650-800 Hz resonator at half the level of a 210-250 Hz body tone with only +6 % pitch rise; both share a 4.5-5.5 ms raised-cosine attack (10-90 % rise ~2.5 ms, crest ~9 dB, not a click), tiny rustle tail, 4th-order LP 4.2 kHz. **Cue:** 80 ms before the word onset at ~3.96 s so it cannot read as a mouth click; picture pop starts 3.94 |
 | 4.82 | soft_pop | 0.45 | garden | (as above, re-seeded) |
 | 5.38 | whoosh_up | 0.5 | garden | Pink noise band (1 oct sigma) sweeping 280 Hz -> 3 kHz, peak at 60% of dur, LF air body, stereo width opening 0.8 -> 1.3. |
@@ -419,12 +419,12 @@ Calibration: event level 1.0 = loudest 100 ms window at -23.0 LUFS (dry); bed le
 | 37.85 | candle_light | 0.35 | room | Wick ignition at the picture's ignite moment (37.85 s): soft 'fff' band (900 Hz) with flicker + LP 'whump' body + two tiny crackles. Under the voice by design (texture). **Cue:** picture: flame ignites at 37.85 s (T.dakika + 0.32) |
 | 38.85 | flame_waver | 0.3 | room | Flame flutter: 450 Hz band with 9 Hz high-contrast flicker AM, 0.75 s swell. |
 | 40.15 | swap_swish | 0.4 | room | Two quick arc-shaped swishes (700 -> 2.4 kHz -> 700 Hz), panning L->R then R->L. |
-| 41.03 | candle_out_puff | 0.5 | room | Blown-out candle: breath puff (1 kHz band, 18 ms attack) and dying 14 Hz flame flutter on the cue, then the smoke curl (1.5 kHz band drifting +-0.25 oct, -10 dB) swells to its peak ~0.6 s later, inside the 41.41-42.47 s pause. |
+| 41.15 | candle_out_puff | 0.5 | night | Blown-out candle: breath puff (1 kHz band, 18 ms attack) and dying 14 Hz flame flutter on the cue, then the smoke curl (1.5 kHz band drifting +-0.25 oct, -10 dB) swells to its peak ~0.6 s later, inside the 41.41-42.47 s pause. |
 | 42.45 | lamp_swell | 0.4 | night | Warm oil-lamp swell: flicker-modulated band rising 250 -> 700 Hz. |
 | 44.30 | footsteps_gravel | 0.4 | mountain | Per step: heel + roll grain clouds (120 + 80 grains; 65 % resonant bursts, 35 % tiny 2-4.2 kHz pebble pings) whose density thins out exponentially (tau 35 ms) instead of stopping, a continuous 0.9-4 kHz crunch body under the grains (tau 50 ms), 3-7 displaced pebbles ticking 30-200 ms later, 160 Hz heel thump; 4th-order LP 6 kHz; every step re-randomised; step 2 -6 dB (lands on the end of 'velayet'); mountain reverb. **Cue:** step 2 (44.75 s) lands on the decaying tail of 'velayet': -6 dB |
 | 45.05 | water_pour | 0.35 | mountain | (as above, re-seeded) |
 | 46.67 | thunder_soft | 0.25 | mountain | Distant thunder: brown-tilted noise 52-220 Hz (4th-order 52 Hz high-pass, plus a 45 Hz HPF on the result) and an equally weighted 140-600 Hz roll layer under five rolling bursts; no crack; 0.8 s fade tail; mountain reverb; level 0.25 (was 0.45). |
-| 47.27 | load_thump | 0.35 | mountain | Burden on the back: 95 -> 71 Hz body with pitch drop + 300 Hz LP noise + cloth rustle; HP 40 Hz. |
+| 47.33 | load_thump | 0.35 | mountain | Burden on the back: 95 -> 71 Hz body with pitch drop + 300 Hz LP noise + cloth rustle; HP 40 Hz. |
 | 47.95 | bloom_chimes | 0.3 | shine | Four soft glass-bead glints at irregular times over 0.63 s, off-scale pitches in a non-monotonic order (no arpeggio), spreading L->R, -20 dB in ~0.2-0.25 s, over a faint airy bloom; short 'shine' space, send 0.15. |
 | 49.62 | puff_dissolve | 0.4 | mountain | Soft 1.1 kHz breath puff + glint grains thinning out over 0.6 s; re-timed to the picture's dissolve moments (49.62 s sigh cloud turns to light, 50.62 s grumble blown away). **Cue:** picture: the sigh cloud dissolves into light 49.6-50.0 s |
 | 50.62 | puff_dissolve | 0.4 | mountain | (as above, re-seeded) **Cue:** picture: the grumble is blown away 50.6-51.15 s |

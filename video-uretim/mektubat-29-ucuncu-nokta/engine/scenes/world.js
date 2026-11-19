@@ -1,7 +1,7 @@
 // world.js — shots A–G (0 … 35.6 s): Dünya · Berzah · Âhiret on one vertical axis.
 // v2: cuts/dissolves instead of whip pans, match-zooms through the fruit, the hypothetical (ghost) self does the unwise act.
 import { W, H, P, css, mix, lerp, clamp, invlerp, smooth, E, env, rng, noise1, fbm1, TAU, fillG, rough, ellipsePts, rectPts, crPts, bezPts, roughen, toPath, brushDab, strokeG, sprite, ringHalo, applyCam, camAt } from '../core.js';
-import { drawMan, STAND, walkPose, mixPose, LEG } from '../rig.js';
+import { drawMan, STAND, walkPose, mixPose, LEG, resolveArms } from '../rig.js';
 import { on } from '../timing.js';
 import * as WE from './world_env.js';
 
@@ -51,15 +51,17 @@ const POSE = {
   joy: { ...STAND, torso: -0.06, neck: -0.25, head: -0.1, armN: { sh: 2.7, el: 0.28, wr: 0.2, hand: 'open' }, armF: { sh: 2.45, el: 0.35, wr: 0.2, hand: 'open' } },
 };
 POSE.handChest.armN = { ik: [MAN_X2 + 0.08 * SIZE, hipY() - 0.14 * SIZE], bend: -1, hand: 'open' };
-function keyed(keys, t) {
-  if (t <= keys[0][0]) return POSE[keys[0][1]] || keys[0][1];
+const RA = (p, hip) => resolveArms({ ...p, hip }, SIZE);
+function keyed(keys, t, hip) {
+  const get = (k) => RA(POSE[k[1]] || k[1], hip);
+  if (t <= keys[0][0]) return get(keys[0]);
   for (let i = 0; i < keys.length - 1; i++) {
     const a = keys[i], b = keys[i + 1];
-    if (t <= b[0]) { const pa = POSE[a[1]] || a[1], pb = POSE[b[1]] || b[1]; return mixPose(pa, pb, (b[2] || E.inOutCubic)(invlerp(a[0], b[0], t))); }
+    if (t <= b[0]) return mixPose(get(a), get(b), (b[2] || E.inOutCubic)(invlerp(a[0], b[0], t)));
   }
-  const l = keys[keys.length - 1]; return POSE[l[1]] || l[1];
+  return get(keys[keys.length - 1]);
 }
-const KEYS_A = [[3.05, 'holdCan'], [3.3, 'pour', E.inOutQuad], [4.05, 'pour'], [4.45, 'tend'], [9, 'tend']];
+const KEYS_A = [[3.27, 'holdCan'], [3.52, 'pour', E.inOutQuad], [4.1, 'pour'], [4.45, 'tend'], [9, 'tend']];
 const KEYS_D = [
   [17.0, 'stand'], [T.dunyada - 0.1, 'stand'], [T.dunyada + 0.35, 'lookFruit'], [T.istememek - 0.05, 'lookFruit'], [T.istememek + 0.35, 'declinePalm', E.outCubic],
   [T.gerektir - 0.05, 'declinePalm'], [T.gerektir + 0.5, 'handChest', E.inOutCubic], [T.verilse - 0.1, 'handChest'], [T.verilse + 0.4, 'cupUp', E.inOutCubic],
@@ -79,21 +81,22 @@ function manState(t) {
     p.legF = { ik: [lerp(wp.legF.ik[0], MAN_X - 20, k), -Math.sin(Math.PI * k) * 22], ft: lerp(wp.legF.ft, 0, k) };
     return { pose: p, can: 1, x: MAN_X };
   }
-  if (t < 10.6) return { pose: { ...keyed(KEYS_A, t), ...legsAt(MAN_X), hip: [MAN_X, hipY()] }, can: t < 9 ? 1 : 0, x: MAN_X };
+  if (t < 10.6) return { pose: { ...keyed(KEYS_A, t, [MAN_X, hipY()]), ...legsAt(MAN_X), hip: [MAN_X, hipY()] }, can: t < 9 ? 1 : 0, x: MAN_X };
   const standHip = [KNEEL_X, hipY()], kneelHip = [KNEEL_X, -0.255 * SIZE];
   if (t < 12.85) {
-    const st = { ...POSE.stand, ...legsAt(KNEEL_X), hip: standHip };
+    const st = RA({ ...POSE.stand, ...legsAt(KNEEL_X) }, standHip);
+    const kh = RA(POSE.kneelHigh, kneelHip), kn = RA(POSE.kneel, kneelHip), pt = RA(POSE.pat, kneelHip);
     let p;
-    if (t < 10.95) p = mixPose(st, { ...POSE.kneelHigh, hip: kneelHip }, E.inOutCubic(invlerp(10.6, 10.95, t)));
-    else if (t < 11.3) p = mixPose({ ...POSE.kneelHigh, hip: kneelHip }, { ...POSE.kneel, hip: kneelHip }, E.inOutCubic(invlerp(10.95, 11.3, t)));
-    else if (t < 11.62) p = { ...POSE.kneel, hip: kneelHip };
-    else if (t < 11.95) p = mixPose({ ...POSE.kneel, hip: kneelHip }, { ...POSE.pat, hip: kneelHip }, Math.sin(Math.PI * invlerp(11.62, 11.95, t)));
-    else if (t < 12.15) p = { ...POSE.kneel, hip: kneelHip };
-    else p = mixPose({ ...POSE.kneel, hip: kneelHip }, st, E.inOutCubic(invlerp(12.15, 12.85, t)));
+    if (t < 10.95) p = mixPose(st, kh, E.inOutCubic(invlerp(10.35, 10.95, t)));
+    else if (t < 11.3) p = mixPose(kh, kn, E.inOutCubic(invlerp(10.95, 11.3, t)));
+    else if (t < 11.62) p = kn;
+    else if (t < 11.95) p = mixPose(kn, pt, Math.sin(Math.PI * invlerp(11.62, 11.95, t)));
+    else if (t < 12.15) p = kn;
+    else p = mixPose(kn, st, E.inOutCubic(invlerp(12.15, 12.85, t)));
     return { pose: p, can: 0, seedInHand: t < 11.32, x: KNEEL_X };
   }
   if (t < 17.0) { const look = E.inOutSine(invlerp(12.9, 13.6, t)); return { pose: { ...mixPose(POSE.stand, POSE.lookUp, look), ...legsAt(KNEEL_X), hip: standHip, breath: Math.sin(t * 1.6) }, can: 0, x: KNEEL_X }; }
-  const p = keyed(KEYS_D, t);
+  const p = keyed(KEYS_D, t, [MAN_X2, hipY()]);
   const sag = 7 * smooth(invlerp(T.mahzunane, T.mahzunane + 0.8, t)) * (1 - smooth(invlerp(31.6, 32.2, t)));
   return { pose: { ...p, ...legsAt(MAN_X2), hip: [MAN_X2, hipY() + sag], breath: Math.sin(t * 1.6) * 0.5 + 0.5 }, can: 0, x: MAN_X2 };
 }
@@ -189,10 +192,11 @@ function drawStem(ctx, t) {
 
 // ------------------------------------------------------------------ fruit
 /** golden-orange fruit; sphere shading (crescent terminator), optional bites (clipped to the body), dull → fâni */
-function drawFruit(ctx, x, y, r, { glow: gl = 1, dull = 0, bites = 0, seed = 0, t = 0, ring = 0, leaf = true, alpha = 1 } = {}) {
+function drawFruit(ctx, x, y, r, { glow: gl = 1, dull = 0, bites = 0, seed = 0, t = 0, ring = 0, leaf = true, alpha = 1, halo = true, haloA = 0.45, haloR = 1.7 } = {}) {
   if (r <= 0.5 || alpha <= 0) return;
   ctx.save(); if (alpha < 1) ctx.globalAlpha *= alpha;
-  if (gl > 0.01) ringHalo(ctx, x, y, r * 1.7, ['#F7C66B', '#F9E2AE'], { seed: 300 + seed, amp: 1.0, spread: 1.45, alpha: 0.45 * Math.min(gl, 1.2) * (0.85 + 0.15 * Math.sin(t * 3 + seed)) });
+  if (halo && ring > 0.01) ringHalo(ctx, x, y, r * 2.15 * 1.18, ['#F4D592', '#F9E6B8'], { seed: 410, amp: 1.5, spread: 1.0, alpha: 0.35 * ring });
+  if (halo && gl > 0.01) ringHalo(ctx, x, y, r * haloR, ['#F7C66B', '#F9E2AE'], { seed: 300 + seed, amp: 1.0, spread: 1.45, alpha: haloA * Math.min(gl, 1.2) * (0.85 + 0.15 * Math.sin(t * 3 + seed)) });
   const bodyPts = roughen(ellipsePts(x, y, r, r * 0.96, 30), { amp: 0.9 * Math.min(1, r / 30), seed: 310 + seed, step: 3 });
   const body = toPath(bodyPts);
   ctx.save();
@@ -226,7 +230,6 @@ const BITES = (x, y, r) => [[x + r * 0.95, y - r * 0.2, r * 0.5], [x + r * 0.62,
 function eternityRing(ctx, x, y, R0, k, t) {
   const rot = t * 0.35, n = 30;
   ctx.save();
-  ringHalo(ctx, x, y, R0 * 1.18, ['#F4D592', '#F9E6B8'], { seed: 410, amp: 1.5, spread: 1.0, alpha: 0.35 * k });
   const arc = []; const sweep = clamp(k);
   for (let i = 0; i <= 160 * sweep; i++) { const a = -Math.PI / 2 + (i / 160) * TAU; arc.push([x + Math.cos(a) * R0, y + Math.sin(a) * R0]); }
   if (arc.length > 2) { strokeG(ctx, arc, Math.max(4, R0 * 0.04), '#D9A441', { tex: 0, taper: false }); strokeG(ctx, arc.map(([px, py]) => [x + (px - x) * 0.94, y + (py - y) * 0.94]), Math.max(1.5, R0 * 0.012), '#FBE7A6', { tex: 0, taper: false }); }
@@ -446,16 +449,36 @@ function cuHand(ctx, t, c0, c1, part) {
     fillG(ctx, rough(crPts(T2([[10, 18], [60, 30], [100, 34], [112, 22], [70, 40], [10, 40]]), true, 4), { amp: 0.6, seed: 1794 }), P.skinShade, { tex: 0.3, alpha: 0.7 });
     return { holding: u > 0.5, at };
   }
-  // fingers: extended → curled over the fruit
-  for (let f = 0; f < 4; f++) {
-    const off = -32 + f * 17, L1 = 70 - Math.abs(f - 1.2) * 8;
-    const ext = [[108, off], [108 + L1 * 0.55, off - 2], [108 + L1, off - 4]];
-    const curl = [[108, off], [150 - f * 3, off - 24], [146 - f * 6, off - 58]];
-    const pts = ext.map((p, i) => [lerp(p[0], curl[i][0], closed), lerp(p[1], curl[i][1], closed)]);
-    strokeG(ctx, T2(pts), 22 * HS * 0.62, f % 2 ? P.skin : '#D6A07A', { tex: 0.3, taper: false, seed: 1795 + f });
-    const tip = T2([pts[2]])[0]; fillG(ctx, rough(ellipsePts(tip[0], tip[1], 7 * HS, 7 * HS, 12), { amp: 0.4, seed: 1799 + f }), f % 2 ? P.skin : '#D6A07A', { tex: 0 });
+  // open fingers (approach) — fade out as the hand closes
+  const openA = 1 - clamp((closed - 0.25) / 0.5);
+  if (openA > 0.01) {
+    ctx.save(); ctx.globalAlpha *= openA;
+    for (let f = 0; f < 4; f++) {
+      const off = -32 + f * 17, L1 = 70 - Math.abs(f - 1.2) * 8;
+      const pts = [[108, off], [108 + L1 * 0.55, off - 2], [108 + L1, off - 4]];
+      strokeG(ctx, T2(pts), 22 * HS * 0.62, f % 2 ? P.skin : '#D6A07A', { tex: 0.3, taper: false, seed: 1795 + f });
+      const tip = T2([pts[2]])[0]; fillG(ctx, rough(ellipsePts(tip[0], tip[1], 7 * HS, 7 * HS, 12), { amp: 0.4, seed: 1799 + f }), f % 2 ? P.skin : '#D6A07A', { tex: 0 });
+    }
+    ctx.restore();
   }
-  strokeG(ctx, T2([[108, -36], [108, 22]]), 3, '#A9724F', { tex: 0, taper: true, alpha: 0.6 }); // knuckle line
+  // closed: four fingers wrapped around the lower-left of the fruit as one opaque band with finger grooves
+  const fistA = clamp((closed - 0.25) / 0.5);
+  if (fistA > 0.01) {
+    const c = at, r = CU.r;
+    const a0 = 1.95, a1 = 3.55; // canvas angles (down = +pi/2): lower-left arc
+    const band = [];
+    for (let i = 0; i <= 24; i++) { const a = lerp(a0, a1, i / 24); band.push([c[0] + Math.cos(a) * r * 1.06, c[1] + Math.sin(a) * r * 1.06]); }
+    for (let i = 24; i >= 0; i--) { const a = lerp(a0, a1, i / 24); const k = 0.62 + 0.05 * Math.sin(i * 0.9); band.push([c[0] + Math.cos(a) * r * k, c[1] + Math.sin(a) * r * k]); }
+    ctx.save(); ctx.globalAlpha *= fistA;
+    fillG(ctx, rough(band, { amp: 1, seed: 1810 }), P.skin, { tex: 0.35, dir: 2.7, scale: 0.35 });
+    // knuckle shade along the outer rim and three finger grooves
+    const rim = []; for (let i = 0; i <= 20; i++) { const a = lerp(a0, a1, i / 20); rim.push([c[0] + Math.cos(a) * r * 1.0, c[1] + Math.sin(a) * r * 1.0]); }
+    strokeG(ctx, rim, 12, P.skinShade, { tex: 0.2, taper: true, alpha: 0.7 });
+    for (let g = 1; g <= 3; g++) { const a = lerp(a0, a1, g / 4); strokeG(ctx, [[c[0] + Math.cos(a) * r * 1.04, c[1] + Math.sin(a) * r * 1.04], [c[0] + Math.cos(a) * r * 0.7, c[1] + Math.sin(a) * r * 0.7]], 4, '#A9724F', { tex: 0, taper: true, alpha: 0.8 }); }
+    // fingertips peeking on the fruit face
+    for (let g = 0; g < 4; g++) { const a = lerp(a0, a1, (g + 0.5) / 4); fillG(ctx, rough(ellipsePts(c[0] + Math.cos(a) * r * 0.64, c[1] + Math.sin(a) * r * 0.64, 15, 12, 12, a), { amp: 0.5, seed: 1820 + g }), g % 2 ? P.skin : '#D6A07A', { tex: 0.2 }); }
+    ctx.restore();
+  }
   // thumb (from the base of the palm, wrapping the near side)
   const th = [[40, 38], [86 + closed * 12, 66 - closed * 4], [122 + closed * 20, 66 - closed * 34]];
   strokeG(ctx, T2(th), 26 * HS * 0.62, '#C68D66', { tex: 0.3, taper: false, seed: 1800 });
@@ -467,6 +490,11 @@ function drawCloseup(ctx, t, zExtra = 1) {
   ctx.drawImage(cuBackground(), 0, 0);
   const z = (lerp(1.0, 1.08, E.inOutSine(invlerp(24.9, 31.4, t))) + 0.05 * E.inOutCubic(invlerp(T.baki - 0.1, T.baki + 1.4, t))) * zExtra;
   ctx.save(); ctx.translate(CU.fruit[0], CU.fruit[1]); ctx.scale(z, z); ctx.translate(-CU.fruit[0], -CU.fruit[1]);
+  {
+    const ringK0 = E.inOutCubic(invlerp(T.baki - 0.05, T.baki + 1.0, t));
+    if (ringK0 > 0.01) ringHalo(ctx, CU.fruit[0], CU.fruit[1], CU.r * 2.15 * 1.18, ['#F4D592', '#F9E6B8'], { seed: 410, amp: 1.5, spread: 1.0, alpha: 0.35 * ringK0 });
+    ringHalo(ctx, CU.fruit[0], CU.fruit[1], CU.r * 1.7, ['#F7C66B', '#F9E2AE'], { seed: 300, amp: 1.0, spread: 1.45, alpha: 0.42 * (0.85 + 0.15 * Math.sin(t * 3)) });
+  }
   const stalk = cuBranch(ctx, t, 'back');
   let s = 1;
   CYCLES.forEach(([c0, c1]) => { if (invlerp(c0, c1, t) > 0.5 && t < c1 + 0.5) s = Math.min(s, E.outBack(invlerp(c1 - 0.1, c1 + 0.45, t), 1.7)); });
@@ -475,13 +503,13 @@ function drawCloseup(ctx, t, zExtra = 1) {
   if (s > 0.02) {
     strokeG(ctx, [stalk, [lerp(stalk[0], fx, 0.6) + 6, lerp(stalk[1], fy - CU.r * s, 0.6)], [fx + 6, fy - CU.r * s * 0.9]], 14 * Math.max(0.4, s), '#5C4334', { tex: 0, taper: false });
     const ringK = E.inOutCubic(invlerp(T.baki - 0.05, T.baki + 1.0, t));
-    drawFruit(ctx, fx, fy, CU.r * s, { glow: 1 + 0.3 * env(t, T.ameli, T.ameli + 1.2, 0.3, 0.6), seed: 0, t, ring: ringK, leaf: false });
+    drawFruit(ctx, fx, fy, CU.r * s, { glow: 1 + 0.3 * env(t, T.ameli, T.ameli + 1.2, 0.3, 0.6), seed: 0, t, ring: ringK, leaf: false, halo: false });
   }
   cuBranch(ctx, t, 'front');
   CYCLES.forEach(([c0, c1], ci) => { const u = invlerp(c1 + 0.05, c1 + 0.7, t); if (u > 0 && u < 1) for (let i = 0; i < 9; i++) { const a = (i / 9) * TAU + 0.4 + ci; mote(ctx, fx + Math.cos(a) * (CU.r * 1.05 + u * 120), fy + Math.sin(a) * (CU.r * 1.05 + u * 120), 9 * (1 - u), 1 - u, t, 60 + i); } });
   CYCLES.forEach(([c0, c1], ci) => {
     const h = cuHand(ctx, t, c0, c1, 'probe'); if (!h) return;
-    if (h.holding) drawFruit(ctx, h.at[0], h.at[1], CU.r * 0.98, { glow: 0.45, seed: 50 + ci, t, leaf: false });
+    if (h.holding) drawFruit(ctx, h.at[0], h.at[1], CU.r * 0.98, { glow: 0.45, seed: 50 + ci, t, leaf: false, halo: false });
     cuHand(ctx, t, c0, c1, 'front');
   });
   ctx.restore();
@@ -592,7 +620,7 @@ function drawWorld(ctx, t, cam) {
     const m = ctx.getTransform();
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.28 * sadK; ctx.fillStyle = '#8FA3C4'; ctx.fillRect(0, 0, W, H); ctx.restore();
     ctx.setTransform(m);
-    const F = fruitIn(jointsAt(t)); drawFruit(ctx, F[0], F[1], 25, { glow: 0.8, seed: 21, t });
+    const F = fruitIn(jointsAt(t)); drawFruit(ctx, F[0], F[1], 25, { glow: 0.8, seed: 21, t, haloA: 0.22, haloR: 1.45 });
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
@@ -676,9 +704,9 @@ function drawManAndProps(ctx, t) {
   const st = manState(t);
   const j = drawMan(ctx, st.pose, { size: SIZE });
   if (st.can) {
-    const ang = -0.05 + 0.58 * E.inOutQuad(invlerp(3.12, 3.4, t)) - 0.58 * E.inOutQuad(invlerp(4.05, 4.35, t));
+    const ang = -0.05 + 0.58 * E.inOutQuad(invlerp(3.3, 3.56, t)) - 0.58 * E.inOutQuad(invlerp(4.1, 4.4, t));
     const tip = drawWateringCan(ctx, j.wristN[0] + 4, j.wristN[1] - 2, ang, 0.95);
-    drawWater(ctx, tip, [SAP[0] - 22, SAP[1] - 26], env(t, 3.32, 4.12, 0.08, 0.15), t);
+    drawWater(ctx, tip, [SAP[0] - 22, SAP[1] - 26], env(t, 3.48, 4.16, 0.08, 0.15), t);
   }
   if (st.seedInHand) mote(ctx, j.handN[0], j.handN[1], 8, smooth(invlerp(10.75, 10.95, t)), t, 2);
   // ghost of joy ("memnunane … değil")
@@ -690,7 +718,7 @@ function drawManAndProps(ctx, t) {
   // the given fruit in his hands (until the close-up and again after it)
   if (t > T.verilse + 0.62 && !(t > T.mahzunane && t < 24.5) && !(t > 24.75 && t < 31.62)) {
     const F = fruitIn(j);
-    drawFruit(ctx, F[0], F[1], 25, { glow: 0.85, seed: 21, t });
+    drawFruit(ctx, F[0], F[1], 25, { glow: 0.85, seed: 21, t, haloA: 0.22, haloR: 1.45 });
   }
   // the hypothetical self eats its fruit here ("fâni bir surette yemek") — and it crumbles to dust
   const ek = env(t, 32.25, 34.42, 0.35, 0.18);

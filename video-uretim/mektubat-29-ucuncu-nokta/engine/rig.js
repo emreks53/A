@@ -48,6 +48,25 @@ export function ik2(root, target, l1, l2, bend = 1) {
   return [a1, a2];
 }
 
+const wrapPi = (a) => { while (a > Math.PI) a -= TAU; while (a <= -Math.PI) a += TAU; return a; };
+/** convert IK arms ({ik:[x,y] world}) to joint angles for this pose (needs pose.hip), so poses can be blended smoothly */
+export function resolveArms(pose, size, facing = 1) {
+  if (!pose.hip) return pose;
+  const out = { ...pose };
+  const th = pose.torso ?? 0; const up = [Math.sin(th), -Math.cos(th)], fw = [Math.cos(th), Math.sin(th)];
+  const T2B = (p) => [fw[0] * p[0] + up[0] * p[1], fw[1] * p[0] + up[1] * p[1]];
+  const breath = 1 + (pose.breath ?? 0) * 0.012;
+  const shN = T2B([-0.004, (L.torso - L.shoulderDrop) * breath]), shF = T2B([-0.016, (L.torso - L.shoulderDrop) * breath + 0.004]);
+  const [hx, hy] = pose.hip;
+  for (const [k, sh] of [['armN', shN], ['armF', shF]]) {
+    const a = pose[k]; if (!a || !a.ik) continue;
+    const tgt = [(a.ik[0] - hx) / (size * facing), (a.ik[1] - hy) / size];
+    const [a1, a2] = ik2(sh, tgt, L.upper, L.fore, a.bend ?? 1);
+    out[k] = { sh: wrapPi(a1 - th), el: wrapPi(a2 - a1), wr: a.wr ?? 0, hand: a.hand, palm: a.palm };
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------- default pose
 export const STAND = {
   torso: 0.02, neck: 0.04, head: 0.0, breath: 0,
