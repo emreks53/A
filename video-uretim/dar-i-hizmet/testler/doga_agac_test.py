@@ -22,7 +22,13 @@ if 'serit' in args:
     T.lavi(yol_dikdortgen(0, 1800, 1080, 1820), np.eye(3), '#C9B899', yog=0.4, kenar=1.2)
     kaydet(T, 'agac_serit.png')
 if 'buyuk' in args:
-    for g in [float(a) for a in (sys.argv[2:] if len(sys.argv) > 2 else ['1.0'])]:
+    sayilar = []
+    for a in sys.argv[1:]:
+        try:
+            sayilar.append(float(a))
+        except ValueError:
+            pass
+    for g in (sayilar or [1.0]):
         T = Tuval()
         t0 = time.time()
         r = doga.ciz_agac(T, M_yerlestir(540, 1500, 1.0), g, tohum=0)

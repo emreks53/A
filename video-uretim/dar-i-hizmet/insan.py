@@ -27,7 +27,9 @@ ANA FONKSİYON
     isik     : ışığa doğru birim vektör (ekran); (-0.6,-0.8) = sol üstten ışık -> gölge sağ/alt yanlarda.
     battaniye: 0..1 omuzlardan dökülen yün battaniye (sıcak soluk lavanta, etekte iki ince şerit); değer büyüdükçe
                etek omuzdan zemine iner (1 = ayaklara kadar sarılı, ayakkabı burnu görünür). oturus_* pozları için
-               tasarlandı. battaniye_alfa 0..1: battaniyenin opaklığı (yumuşak çözülme; altındaki beden belirir).
+               tasarlandı. battaniye_alfa 1..0: battaniyeden kurtulma (kalkışta): azaldıkça battaniye omuzlardan
+               kayar (dalgalı üst kenarı zemine iner, beden yukarıdan aşağı açılır), son ~%45'te solar; 0 = yok.
+               Eller yalnız dizin çevresindeyse battaniye onları da sarar (öne uzanan kollar onu şişirmez).
     elde     : elde(t, M_el) — yakın elde tutulan nesneyi çizen geri çağrı; M_el = el çerçevesi->ekran:
                köken = avuç merkezi, +x = parmak yönü, +y = +x'in saat yönünde 90° dönmüşü (yerel birimler,
                ölçeksiz). Yakın el + yakın koldan SONRA, baş/gövdeden ÖNCE çağrılır (gövdenin önünde, elin arkasında).
@@ -846,9 +848,10 @@ def _uzak(c, miktar=0.22):
     return karistir(c, RENK['uzak'], miktar)
 
 
-def _battaniye_yolu(sk, b):
+def _battaniye_yolu(sk, b, dus=0.0):
     """Omuzlardan dökülüp oturan bedeni ayaklara kadar saran battaniye; b (0..1) görünen kısım (etek omuzdan
-    zemine iner). Dönüş: (görünen biçim, şerit bandı, etek y fonksiyonu parametreleri) ya da None."""
+    zemine iner). dus (0..1): battaniye omuzlardan kayar (üst kenarı zemine iner).
+    Dönüş: (görünen biçim, şerit bandı, ikinci şerit, kıvrım darbeleri, üst kenar noktaları ya da None)."""
     LT = sk['LT']
     N, aN = sk['N'], sk['a_N']
     fN, uN = _onn(aN), _yuk(aN)
@@ -878,7 +881,14 @@ def _battaniye_yolu(sk, b):
     ust = [N - fN * 25.0 + uN * 5.0, S + _yuk(a_om) * 29.0 - _onn(a_om) * 2.0,
            S + _yuk(a_om) * 27.0 + _onn(a_om) * 15.0, N + fN * 14.0 + uN * 6.0]
     # eller dizin önündeyse battaniye onları da örter
-    el_x = max(sk['avuc_on'][0], sk['avuc_ar'][0])
+    # (yalnız diz çevresindeki eller; öne uzanan kollar battaniyeyi şişirmesin)
+    w_el = 0.0
+    el_x = K[0] + 18.0
+    for t_ in ('on', 'ar'):
+        av = sk['avuc_' + t_]
+        w_ = _ss(95.0, 60.0, float(np.hypot(*(av - K))))
+        if w_ > 0:
+            el_x = max(el_x, K[0] + 18.0 + (av[0] - K[0] - 18.0) * w_)
     on_diz = K + _v(38.0, -10.0)
     on_el = np.array([max(K[0] + 38.0, el_x + 20.0), 0.5 * (on_diz[1] + kaval1[1])])
     kaval1 = np.array([max(kaval1[0], on_el[0] - 4.0), kaval1[1]])
@@ -896,6 +906,15 @@ def _battaniye_yolu(sk, b):
         return yh + ek - 0.10 * (x - xc) + 3.0 * math.sin(x * 0.045 + 1.3)
     bolge = [(x, etek_y(x)) for x in xs] + [(xs[-1], -900.0), (xs[0], -900.0)]
     gorunen = yol_op(tam, _yol(bolge, gerilim=0.3), 'kesisim')
+    ust_kenar = None
+    if dus > 1e-3:                           # omuzlardan kayış: üst kenar (yumuşak dalgalı kumaş kenarı) zemine iner
+        e = dus * dus * (3.0 - 2.0 * dus)
+        y0 = S[1] - 70.0
+        def ust_y(x):
+            return y0 + (12.0 - y0) * e + 0.12 * (x - xc) * (1.0 - e) + 4.0 * math.sin(x * 0.05 + 0.4) * (1 - e)
+        ust_kenar = [(x, ust_y(x)) for x in xs]
+        kes = ust_kenar + [(xs[-1], 40.0), (xs[0], 40.0)]
+        gorunen = yol_op(gorunen, _yol(kes, gerilim=0.3), 'kesisim')
     bant_pts = [(x, etek_y(x, -21.0)) for x in xs] + [(x, etek_y(x, -31.0)) for x in xs[::-1]]
     bant = yol_op(gorunen, _yol(bant_pts, gerilim=0.3), 'kesisim')
     bant2_pts = [(x, etek_y(x, -36.0)) for x in xs] + [(x, etek_y(x, -39.5)) for x in xs[::-1]]
@@ -903,11 +922,11 @@ def _battaniye_yolu(sk, b):
     kivrim = [[S + _yuk(a_om) * 10.0 - _onn(a_om) * 22.0, sk.C(0.55 * LT) - _onn(sk.A(0.55 * LT)) * 44.0,
                sk.C(0.15 * LT) - _onn(sk.A(0.15 * LT)) * 50.0],
               [diz_ust + _v(-6.0, 22.0), K + _v(14.0, 40.0), A + _v(6.0, -20.0)]]
-    return gorunen, bant, bant2, kivrim
+    return gorunen, bant, bant2, kivrim, ust_kenar
 
 
-def _boya_battaniye(B, sk, b, R):
-    gor, bant, bant2, kivrim = _battaniye_yolu(sk, b)
+def _boya_battaniye(B, sk, b, R, dus=0.0):
+    gor, bant, bant2, kivrim, ust_kenar = _battaniye_yolu(sk, b, dus)
     if gor.isEmpty():
         return
     B.lavi(gor, R['battaniye'], YOG['battaniye'])
@@ -924,6 +943,9 @@ def _boya_battaniye(B, sk, b, R):
         B.lavi(bant2, R['battaniye_serit2'], 0.32, islak=0.5)
     for k_ in kivrim:
         B.kat(k_, 2.2, 1.0, R['battaniye_golge'], 0.20, kirp=gor)
+    if ust_kenar is not None:                # kayan üst kenar: kıvrılmış kumaşın koyu, yumuşak katı
+        uk = np.array(ust_kenar) + _v(0.0, 7.0)
+        B.kat(uk, 4.0, 4.0, R['battaniye_golge'], 0.30, kirp=gor)
     B.sakla(gor)
 
 
@@ -989,11 +1011,13 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
     # ---- önden arkaya ----------------------------------------------------------------------------------------
     if batt > 1e-3:
         bas()
-        if b_alfa < 0.999:
-            with t.gorunurluk(b_alfa):
-                _boya_battaniye(B, sk, batt, R)
+        dus = 1.0 - b_alfa
+        opak = 1.0 - _ss(0.55, 1.0, dus)     # önce omuzlardan kayar, sonda solar
+        if opak < 0.999:
+            with t.gorunurluk(opak):
+                _boya_battaniye(B, sk, batt, R, dus)
         else:
-            _boya_battaniye(B, sk, batt, R)
+            _boya_battaniye(B, sk, batt, R, dus)
         yakin_kol()
     else:
         yakin_kol()

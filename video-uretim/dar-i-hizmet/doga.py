@@ -1931,7 +1931,7 @@ def ciz_ucusan_yapraklar(t: Tuval, M, zaman, sayi, alan=(0, 0, W, H), ruzgar=1.0
         don_h = rng.uniform(-3.0, 3.0)
         tak_h = rng.uniform(1.5, 4.0)
         f1, f2, f3 = rng.uniform(0, 6.28, 3)
-        L = (rng.uniform(16, 26) if tur == 'yaprak' else rng.uniform(11, 17)) * boyut
+        L = (rng.uniform(16, 26) if tur == 'yaprak' else rng.uniform(15, 23)) * boyut
         c = renkler[i % len(renkler)]
         # konum (döngüsel; alan dışına çıkınca öbür yandan girer)
         pad = 60
@@ -1973,9 +1973,10 @@ def ciz_ucusan_yapraklar(t: Tuval, M, zaman, sayi, alan=(0, 0, W, H), ruzgar=1.0
         B.lavi([g_[0] for g_ in golge], '#5E7F6A' if tur == 'yaprak' else '#C9707E', yog=yog * 0.5, kenar=0.8,
                dalga=0.04, islak=0.6, islak_gen=1.5, gran=0.06, akis=0.1, alfalar=[g_[1] for g_ in golge],
                siluet=False, sakla=False)
+    yog_t = yog if tur == 'yaprak' else min(1.0, yog * 1.3)  # açık pembe taç yaprakları kâğıtta kaybolmasın
     for c, (yy, aa) in yollar.items():
         if yy:
-            B.lavi(yy, c, yog=yog, kenar=0.8, dalga=0.04, islak=1.0, islak_gen=1.8, gran=0.06, akis=0.15,
+            B.lavi(yy, c, yog=yog_t, kenar=0.8, dalga=0.04, islak=1.0, islak_gen=1.8, gran=0.06, akis=0.15,
                    toplam=True, alfalar=aa, ust=0.6, siluet=False, sakla=False)
     B.bitir(sakla_sonra=False, sakla_global=False)
     return None

@@ -197,7 +197,7 @@ def poz_durumu(V, evre):
         poz = insan.sula_pozu(0.25 * dok, alt_el=esyalar.ibrik_alt_nokta(egim))
         return dict(poz=poz, x=ADAM_X, ibrik=True, egim=egim, battaniye=0.0, seccade=None, dok=dok)
     if evre == 'secde' or (evre is None and V < G3[0]):
-        return dict(poz=P['secde'], x=SECDE_X1, ibrik=False, battaniye=0.0, seccade=SECDE_X1 - 128, dok=0)
+        return dict(poz=P['secde'], x=SECDE_X1, ibrik=False, battaniye=0.0, seccade=SECDE_X1 - 142, dok=0)
     if V < T_KUVVET:
         u = ilerle(V, T_SABIR, T_SABIR + 0.75, e_io)
         return dict(poz=insan.poz_karistir(P['oturus_hasta'], P['oturus_dik'], u), x=ADAM_X, ibrik=False,
@@ -207,7 +207,7 @@ def poz_durumu(V, evre):
         return dict(poz=insan.kalkis(u), x=ADAM_X, ibrik=False, battaniye=1.0,
                     battaniye_alfa=1.0 - ilerle(V, T_KUVVET, T_KUVVET + 0.4, e_io), seccade=None, dok=0)
     if V < 24.55:
-        return dict(poz=P['secde'], x=SECDE_X2, ibrik=False, battaniye=0.0, seccade=SECDE_X2 - 128, dok=0)
+        return dict(poz=P['secde'], x=SECDE_X2, ibrik=False, battaniye=0.0, seccade=SECDE_X2 - 142, dok=0)
     if V < T_SUKUR:
         u = ilerle(V, 24.55, 25.10, e_io)
         if u < 1:
@@ -215,10 +215,10 @@ def poz_durumu(V, evre):
             poz = insan.poz_karistir(poz, DIZ_OTUR, ilerle(V, 24.85, 25.10, e_io))
         else:
             poz = DIZ_OTUR
-        return dict(poz=poz, x=SECDE_X2, ibrik=False, battaniye=0.0, seccade=SECDE_X2 - 128, dok=0)
+        return dict(poz=poz, x=SECDE_X2, ibrik=False, battaniye=0.0, seccade=SECDE_X2 - 142, dok=0)
     u = ilerle(V, T_SUKUR, T_SUKUR + 0.55, e_io)
     return dict(poz=insan.poz_karistir(DIZ_OTUR, P['diz_dua'], u), x=SECDE_X2, ibrik=False, battaniye=0.0,
-                seccade=SECDE_X2 - 128, dok=0)
+                seccade=SECDE_X2 - 142, dok=0)
 
 
 def durum(V, evre=None):
