@@ -79,6 +79,11 @@ def e_io5(t):  # quint in-out (kamera)
     return 16 * t ** 5 if t < 0.5 else 1 - (-2 * t + 2) ** 5 / 2
 
 
+def e_ss(t):  # smootherstep (kamera: tepe hızı ortalamanın 1,9 katı)
+    t = min(1.0, max(0.0, t))
+    return t * t * t * (t * (6 * t - 15) + 10)
+
+
 def e_out(t):  # cubic out
     t = min(1.0, max(0.0, t))
     return 1 - (1 - t) ** 3

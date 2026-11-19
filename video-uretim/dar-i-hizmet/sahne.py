@@ -158,7 +158,7 @@ def ciz_kapi_sahnesi(V):
     t = Tuval()
     kc = kapi_kamera(V)
     Mk = kc.M() @ M_yerlestir(540, 1430, 1.0)
-    ac = ilerle(V, 0.0, 0.62, e_out)
+    ac = ilerle(V, -0.22, 0.58, e_out)
     if kc.zum < 7.0:
         mimari.ciz_kemerli_kapi(t, Mk, acilma=ac, isik=(-0.6, -0.8), tohum=1)
     # dünya: kapının içinden (kapı saklaması sayesinde yalnız açıklıkta görünür)
@@ -284,10 +284,10 @@ def bahce_kamera(V):
         (4.40, K(560, 1080, 1.22)),
         (7.80, K(560, 1060, 1.20)),
         (8.70, K(575, 1170, 1.42)),
-        (9.85, K(585, 1180, 1.48)),
-        (10.0, K(540, 905, 0.94)),
-        (11.5, K(545, 915, 0.97)),
-        (12.0, K(540, 960, 1.0)),
+        (G2[0], K(585, 1180, 1.48)),
+        (G2[1], K(540, 905, 0.94)),
+        (G3[0], K(545, 915, 0.97)),
+        (G3[1], K(540, 960, 1.0)),
         (13.3, K(540, 950, 1.02)),
         (14.10, K(0, 0, 2.3)),   # kalbe yaklaş (konum aşağıda doldurulur)
         (14.85, K(0, 0, 2.38)),
@@ -296,10 +296,10 @@ def bahce_kamera(V):
         (17.45, K(535, 1090, 0.94)),
         (20.15, K(540, 1060, 0.97)),
         (21.05, K(540, 820, 0.76)),
-        (21.75, K(560, 760, 0.80)),
-        (22.35, K(GUNES[0] - 10, GUNES[1] + 60, 1.25)),
-        (23.25, K(GUNES[0] - 15, GUNES[1] + 50, 1.30)),
-        (24.05, K(545, 880, 0.88)),
+        (21.30, K(555, 790, 0.79)),
+        (22.30, K(GUNES[0] - 10, GUNES[1] + 60, 1.25)),
+        (23.22, K(GUNES[0] - 15, GUNES[1] + 50, 1.30)),
+        (24.25, K(545, 880, 0.88)),
         (24.9, K(560, 1000, 1.02)),
         (26.1, K(560, 1010, 1.06)),
     ]
@@ -355,6 +355,11 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
                         zemin_y=ADAM_Y + 20, korunan=kor)
     if s['sukur'] > 0:
         doga.ciz_ucusan_yapraklar(t, M, V, int(14 * s['sukur']), (0, 300, 1080, 1700), 0.3, 9, tur='tac')
+    zerre = max(anahtar(V, [(23.3, 0.0), (23.9, 1.0), (24.9, 1.0), (25.4, 0.3)]), s['sukur'])
+    if zerre > 0.02:
+        esyalar.ciz_isik_zerreleri(t, M, V, int(22 * zerre), (300, 700, 1080, 1500), tohum=6, guc=0.5 * zerre)
+    if T_MUVAFIK - 0.5 < V < T_MUVAFIK + 1.6:
+        ciz_damlalar(t, V, s, M)
     if s['sikayet'] > 0 and s['sikayet_kaldir'] < 1:
         bas = adam_capasi(V, s, 'bas_ust', M)
         Mb = M_bilesik(M_oteleme(bas[0] + 10 * cam.zum, bas[1] - 215 * cam.zum), M_olcek(cam.zum * 1.45))
@@ -423,6 +428,38 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
     return t, s
 
 
+DAMLA_SIRASI = [(0, 0.0), (3, 0.15), (1, 0.25), (4, 0.4), (2, 0.5), (5, 0.65)]  # (çiçek, gecikme) — durum() ile aynı
+
+
+def ciz_damlalar(t, V, s, M):
+    """'muvafık': parlak damlalar tam çiçek kâselerine düşer; düştüğü an o çiçek açılır (durum()'daki zamanla)."""
+    kuru = Tuval()
+    for i, gec in DAMLA_SIRASI:
+        t_in = T_MUVAFIK + gec * 0.55
+        u = (V - (t_in - 0.42)) / 0.42
+        if u < 0 or u > 1.5:
+            continue
+        x, y, b, r = CICEKLER[i]
+        bilgi = doga.ciz_cicek_fidani(kuru, M, x, y, b, renk_=r, acilma=s['acilma'][i], sallanma=0.0, tohum=10 + i)
+        if not bilgi or not bilgi.get('cicekler'):
+            continue
+        (cx, cy), rr, _ = bilgi['cicekler'][0]
+        if u <= 1.0:
+            yy = lerp(cy - 520 * M[0, 0], cy - rr * 0.2, e_in(u))
+            sk = M[0, 0] * 2.2
+            dam = yol_egri([(0, -16), (6, -4), (7.5, 4), (0, 10), (-7.5, 4), (-6, -4)], kapali=True)
+            Md = M_bilesik(M_oteleme(cx, yy), M_olcek(sk))
+            t.lavi(dam, Md, '#7FB3D8', yog=0.55, kenar=0.8, dalga=0.03, islak=0.9, islak_gen=2, gran=0.04, akis=0.1,
+                   sakla=False, tohum=40 + i)
+            t.isik(yol_daire(-1.8, 0.5, 2.8), Md, '#FFFFFF', guc=0.85, yumusak=1.0)
+            t.isik(yol_daire(0, 0, 14), Md, '#DDEFFF', guc=0.25, yumusak=6 * sk)
+        else:
+            # kâseye değdiği an: küçük ışıltı halkası
+            k = (u - 1.0) / 0.5
+            t.isik(yol_daire(cx, cy - rr * 0.15, rr * (0.25 + 0.6 * k)), np.eye(3), '#FFF4D8',
+                   guc=0.55 * (1 - k), yumusak=10 * M[0, 0])
+
+
 def adam_capasi(V, s, ad, M):
     t = Tuval()
     Madam = M @ M_yerlestir(s['x'], ADAM_Y, ADAM_OLCEK)
@@ -462,13 +499,20 @@ def ciz_gok_bahce(t, V, s, cam):
     if s['gunes'] > 0.01:
         Ms = cam.M(1.0) @ M_yerlestir(GUNES[0], GUNES[1], 1.0)
         with t.gorunurluk(s['gunes']):
-            esyalar.ciz_saat(t, Ms, 175, dilim=s['dilim'], gun=s['gun'], gorunurluk=s['saat'], tohum=1)
+            akrep = 30.0 * s['dilim'] + 330.0 * s['gun']
+            yelkovan = 360.0 * s['dilim']
+            esyalar.ciz_saat(t, Ms, 175, dilim=s['dilim'], gun=s['gun'], gorunurluk=s['saat'], tohum=1,
+                             akrep=akrep, yelkovan=yelkovan)
+            parilti = math.sin(math.pi * s['gun'])
+            if parilti > 0.02:
+                t.isik(yol_daire(0, 0, 175 * 1.9), Ms, '#FFE2B0', guc=0.32 * parilti, yumusak=60 * Ms[0, 0])
     ust = el.karistir('#5F8DC2', '#6F6C8C', k)
     orta = el.karistir('#8FB2D6', '#8A87A2', k)
     alt = el.karistir('#EDD9CC', '#B4AEBE', k)
-    bulut_al = 1.0 - k
-    bulutlar = [(200, 300, 300, 100, 41), (850, 470, 240, 85, 42)] if bulut_al > 0.3 else []
-    el.gok(t, Mg, bulutlar=bulutlar, ust=ust, orta=orta, alt=alt, ufuk=0.62, alt_yog=0.32, yog=0.85)
+    bulut_al = max(0.0, 1.0 - 1.6 * k)
+    bulutlar = [(200, 300, 300, 100, 41), (850, 470, 240, 85, 42)]
+    el.gok(t, Mg, bulutlar=bulutlar, ust=ust, orta=orta, alt=alt, ufuk=0.62, alt_yog=0.32, yog=0.85,
+           bulut_alfa=bulut_al)
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -518,10 +562,18 @@ def ciz_simgeler(t, V, s, cam):
         if p <= 0:
             continue
         sc = e_back(min(1.0, p * 1.15), 1.4) if p < 1 else 1.0
-        yuk = -kal * 220 * (0.8 + 0.2 * i)
-        alfa = 1.0 - e_in(kal)
+        yuk = -e_in(kal) * 160 * (0.8 + 0.2 * i)
+        alfa = 1.0 - e_in(min(1.0, kal * 1.15))
         Ms = M @ M_yerlestir(xs[i], 700 + yuk + math.sin(V * 1.6 + i) * 6, 0.85 * (0.6 + 0.4 * sc))
-        with t.gorunurluk(alfa):
+        # ıslak fırça soldan sağa geçer: simgenin boyası kalkar (yerel koordinatta yönlü çözülme)
+        erit = None
+        if kal > 0:
+            gecik = 0.18 * i
+            pk = min(1.0, max(0.0, (kal - gecik) / 0.62))
+            if pk > 0:
+                f_ac = acilma_yonlu(pk, -170, 0, 1, -0.25, 340, dalga=0.2, on=0.18, tohum=11 + i)
+                erit = (lambda m, X, Y, f_ac=f_ac: m - f_ac(m, X, Y))
+        with t.gorunurluk(alfa, erit, M=Ms):
             fonk[i](t, Ms, olcek=1.0, tohum=i + 1)
             esyalar.ciz_simge_halkasi(t, Ms, 150, '#F1E3D3', ilerleme=p, tohum=i + 5)
 
@@ -529,8 +581,22 @@ def ciz_simgeler(t, V, s, cam):
 # ---------------------------------------------------------------------------------------------------------------
 # kare dağıtımı
 # ---------------------------------------------------------------------------------------------------------------
+def _kamera_ani(V, evre):
+    """Boya geçişlerinde eski görüntünün kadrajı donar, yeni görüntü kendi kadrajında belirir."""
+    if evre == 'sulama' and G2[0] <= V:
+        return G2[0]
+    if evre == 'secde':
+        if V < G2[1]:
+            return G2[1]
+        if V > G3[0]:
+            return G3[0]
+    if evre == 'hasta' and V < G3[1]:
+        return G3[1]
+    return V
+
+
 def _bahce_tuval(V, evre=None):
-    cam = bahce_kamera(V)
+    cam = bahce_kamera(_kamera_ani(V, evre))
     if V >= 26.25:
         return ciz_son(V)
     t, s = ciz_bahce(V, cam, evre)
@@ -559,6 +625,29 @@ def kare(V):
     return _bahce_tuval(V).R
 
 
+def _kamera_hareketi(V):
+    """Bir karede ekranın en çok kaç piksel kaydığı (hareket bulanıklığı için)."""
+    dt = 1.0 / FPS
+    pts = np.array([[0, 0, 1], [W, 0, 1], [0, H, 1], [W, H, 1], [W / 2, H / 2, 1]], np.float64).T
+    kameralar = []
+    if V < G1[1]:
+        kameralar.append(lambda v: kapi_kamera(v).M() if kapi_kamera(v).zum < 7.0 else meydan_kamera(v).M())
+        kameralar.append(lambda v: meydan_kamera(v).M())
+    gecis_icinde = (G2[0] - 0.05 <= V <= G2[1] + 0.05) or (G3[0] - 0.05 <= V <= G3[1] + 0.05)
+    if V > G1[0] and not gecis_icinde:
+        kameralar.append(lambda v: bahce_kamera(v).M())
+    if V > 26.2:
+        kameralar.append(lambda v: Kamera(540.0, 1060.0, son_kapi_zum(v)).M())
+    en = 0.0
+    for f in kameralar:
+        A = f(V)
+        B = f(V + dt)
+        dunya = np.linalg.inv(A) @ pts
+        d = np.abs((B @ dunya) - pts)[:2]
+        en = max(en, float(np.hypot(d[0], d[1]).max()))
+    return min(en, 400.0)
+
+
 def kare_son(V):
     if V >= KAPANIS_BAS:
         R = kapanis_yazi.kapanis_kare(V - KAPANIS_BAS)
@@ -568,7 +657,18 @@ def kare_son(V):
             beyaz = np.array([0.985, 0.972, 0.95], np.float32)
             R = R * u + beyaz * (1 - u)
         return rgb8(R)
-    R = son_islem(kare(V))
+    hiz = _kamera_hareketi(V)
+    n = int(min(9, 1 + hiz // 7))
+    if n <= 1:
+        R = son_islem(kare(V))
+    else:
+        # 180° obtüratör: kare süresinin yarısına yayılan alt kareler
+        R = None
+        for k in range(n):
+            vk = V + (k / (n - 1) - 0.5) * (0.5 / FPS)
+            r = son_islem(kare(vk))
+            R = r if R is None else R + r
+        R /= n
     # kapı ışığı -> beyaz
     if V > 27.2:
         u = ilerle(V, 27.2, KAPANIS_BAS, e_in)

@@ -1,20 +1,27 @@
 """Kapanis cekimi (fotogercekci): Risale-i Nur Kulliyati + Kur'an-i Kerim.
 
-Yontem: Cycles CPU'da tam cozunurluk (1080x1920, 128 ornek, esik 0.02, OIDN) tek kare ~411 sn
-surdugu icin (4 cekirdek) 192 kare dogrudan render edilmez. Bunun yerine:
+Gorunum: parlak bir sabah, sol pencereden alcak acili (22 derece) sicak gunes; pencere kasasi/dikme/kayit ve
+tul perde golgeleri (yari golgeli) duvara, kaideye ve kitaplara duser; golgeler kameranin arkasindaki acik
+renkli odadan notr dolgu alir. Deri: cok acik, solgun gul-taba (acik kahveye kayan) - gunesli sirt orta tonu
+~#CC9C86, parlak ~#E3BDA8, golge ~#A7745F (AgX, yaldiz haric olculur: `olc`).
+Kadraj: Kur'an ustu ~%6, Lem'alar + kurdele alti ~%66 (dolly sonunda < %68), 75 mm, f/3.2.
+
+Yontem: Cycles CPU'da tam cozunurluk tek kare ~6-7 dk surdugu icin (4 paylasimli cekirdek) 192 kare
+dogrudan render edilmez. Bunun yerine:
   1) kare1: hareketin ilk konumundan 1350x2400 (1.25x), %3 genis goruntu alanli buyuk kare
-     (160 ornek, esik 0.015; ~795 sn) + ayni kameradan DOF'suz kamera-uzayi Z derinligi;
-  2) son:   hareketin son konumundan 1080x1920 gercek render (dogrulama icin; ~426 sn);
-  3) hareket.py: derinlige gore yeniden izdusumle 2.5D dolly-in (192 kare, ~4 dk) + son islem.
-  Dogrulama: 2.5D son kare ile gercek son kare render'i arasindaki ortalama mutlak fark ~0.003.
+     (160 ornek, esik 0.015) + ayni kameradan DOF'suz kamera-uzayi Z derinligi + olcum maskesi;
+  2) son:   hareketin son konumundan 1080x1920 gercek render (dogrulama icin);
+  3) hareket.py: derinlige gore yeniden izdusumle 2.5D dolly-in (192 kare) + son islem; son kareyi gercek
+     render ile kiyaslar, 1. karede sirt renklerini ve altyazi bandinin sakinligini olcer.
 
 Kullanim (python3, bpy modulu):
     python3 kapanis.py hepsi          # varlik indir + doku uret + kare1 (buyuk) + son kare + 2.5D hareket
     python3 kapanis.py varlik         # Poly Haven CC0 varliklarini indir
     python3 kapanis.py doku           # sirt / kapak dokularini uret
-    python3 kapanis.py test [json]    # dusuk cozunurluklu deneme karesi (test/)
+    python3 kapanis.py test [json]    # dusuk cozunurluklu deneme karesi + maske + sirt renk olcumu (test/)
+    python3 kapanis.py olc img maske  # sirt derisi golge / orta / gunesli / parlak tonlari
     python3 kapanis.py zaman          # tam cozunurluk tek kare suresi
-    python3 kapanis.py kare1          # 1350x2400 buyuk ilk kare + derinlik (EXR)
+    python3 kapanis.py kare1          # 1350x2400 buyuk ilk kare + derinlik (EXR) + maske
     python3 kapanis.py son            # hareketin son karesi 1080x1920 (kontrol)
     python3 kapanis.py anim           # 192 kareyi dogrudan render (sure yetiyorsa)
 """
@@ -33,7 +40,7 @@ CFG = {
     "pitch": 10.5,               # daha onden bakis: ayni dikey aralikta konu daha genis
     "mesafe": 3.05,
     "hedef": [0.0, 0.18, 0.30],
-    "fstop": 2.8,
+    "fstop": 3.2,                # ~f/2.8 (1/3 durak kisik): ust sira basliklari okunur kalsin
     "samples": 64,
     "esik": 0.04,
     "rx": 540,

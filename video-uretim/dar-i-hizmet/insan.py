@@ -55,7 +55,8 @@ POZ = sözlük (ANAHTARLAR; bos_poz() hepsini 0'la doldurur). Açılar derece:
   kivrim_X     : 0 açık el .. 1 yumruk.  yan_X: 0 elin sırtı/avucu görünür (geniş eldiven, başparmak önde/üstte),
                  +1 kenardan, avuç el çerçevesinin +y yanında (ör. yerdeki ya da dizdeki el), -1 avuç -y yanında
                  (ör. dua: avuç yukarı/yüze).  kisalt_X: 0..1 el boyu kısalması (öne/derinliğe bakan el).
-  kol_kisalt_X, ust_kisalt_X : 0..1 kol (ve yalnız üst kol) perspektif kısalması (secde: dirsekler yana açık).
+  kol_kisalt_X, ust_kisalt_X, onkol_kisalt_X : 0..1 kol / yalnız üst kol / yalnız ön kol perspektif kısalması
+                 (secde: dirsekler yana açık; kıyam: ön kol karnın önünden karşı yana geçer).
   kalca_X      : uyluk mutlak açısı (0 aşağı, + öne).  diz_X: diz bükülmesi (>= 0).
   ayak_bilek_X : ayak, baldıra göre (0 = baldıra dik; + parmak ucu aşağı).  parmak_X: parmaklar (+ yukarı kıvrık).
   etek_on, etek_ar, etek_ar_boy : gömlek eteği kanatlarına poz özel düzeltme (açı / ek boy).
@@ -225,7 +226,7 @@ ANAHTARLAR = (
     'omuz_ar', 'dirsek_ar', 'el_bilek_ar', 'kivrim_ar', 'yan_ar', 'kisalt_ar', 'kol_kisalt_ar', 'ust_kisalt_ar',
     'kalca_on', 'diz_on', 'ayak_bilek_on', 'parmak_on',
     'kalca_ar', 'diz_ar', 'ayak_bilek_ar', 'parmak_ar',
-    'etek_on', 'etek_ar', 'etek_ar_boy', 'bel_kambur',
+    'etek_on', 'etek_ar', 'etek_ar_boy', 'bel_kambur', 'onkol_kisalt_on', 'onkol_kisalt_ar',
 )
 
 
@@ -297,8 +298,9 @@ def iskelet(p, nefes=0.0):
         th = tf + p['el_bilek_' + t]
         kk = 1.0 - 0.5 * p.get('kol_kisalt_' + t, 0.0)
         ku = 1.0 - 0.65 * p.get('ust_kisalt_' + t, 0.0)
+        kf = 1.0 - 0.5 * p.get('onkol_kisalt_' + t, 0.0)
         E = St + L_UST * kk * ku * _asg(tu)
-        Wr = E + L_ON * kk * _asg(tf)
+        Wr = E + L_ON * kk * kf * _asg(tf)
         sk['S_' + t], sk['E_' + t], sk['Wr_' + t] = St, E, Wr
         sk['tu_' + t], sk['tf_' + t], sk['th_' + t] = tu, tf, th
         ks = 1.0 - 0.45 * p['kisalt_' + t]
@@ -353,7 +355,8 @@ def kol_ik(p, taraf, bilek, isaret=-1):
     Wr = np.asarray(bilek, float)
     kk = 1.0 - 0.5 * p.get('kol_kisalt_' + taraf, 0.0)
     ku = 1.0 - 0.65 * p.get('ust_kisalt_' + taraf, 0.0)
-    E = _ik2(St, Wr, L_UST * kk * ku, L_ON * kk, isaret)
+    kf = 1.0 - 0.5 * p.get('onkol_kisalt_' + taraf, 0.0)
+    E = _ik2(St, Wr, L_UST * kk * ku, L_ON * kk * kf, isaret)
     tu = _aci_asg(E - St)
     tf = _aci_asg(Wr - E)
     a_om = sk.A(sk['s_om'])
@@ -550,6 +553,21 @@ def _govde_genislik(u, nf=0.0):
     return wf, wb
 
 
+def _kose_r(d_gir, d_cik, r0, r1, uzun):
+    """Köşe yuvarlama yarıçapı: dönüş açısı büyüdükçe (sivri köşe) r0 -> r1; komşu kenarların ~%40'ını aşmaz."""
+    c = float(np.clip(np.dot(d_gir, d_cik), -1.0, 1.0))
+    donus = math.degrees(math.acos(c))
+    return float(min(r0 + (r1 - r0) * _ss(60.0, 150.0, donus), max(2.0, 0.4 * uzun)))
+
+
+def _kose(P, d_gir, d_cik, r):
+    """P köşesini yuvarlayan 3 nokta (gelen yön d_gir, giden yön d_cik)."""
+    a = P - d_gir * r
+    b = P + d_cik * r
+    m = P + (b - a) * 0.0 + (-d_gir + d_cik) * r * 0.30
+    return [a, m, b]
+
+
 def _gomlek_yolu(sk, p):
     LT = sk['LT']
     nf = sk['nf']
@@ -577,13 +595,16 @@ def _gomlek_yolu(sk, p):
     F1b = Hj + dt * 50.0 - nt * 28.0        # uyluğun üst yüzüne yatan etek ucu (yakın uyluk onu örter)
     F1 = F1a + (F1b - F1a) * wk
     B0 = c0 - f_b * wb0
-    phi_b = _smin(phi_g, tt_min + 2.0, 10.0) + p.get('etek_ar', 0.0)
+    # çömelip öne eğilince (uyluk kalkık, gövde öne) sırt kumaşı gerilir: arka kanat kısalır ve oturağın altına
+    # doğru döner (aşağı sarkan sivri kuyruk olmasın); dik oturuş, secde ve ayakta etkilenmez
+    g_c = wk * _ss(4.0, 30.0, sk['a_b']) * (1.0 - _ss(55.0, 80.0, sk['a_b']))
+    phi_b = _smin(phi_g, tt_min + 2.0, 10.0) + p.get('etek_ar', 0.0) + 30.0 * g_c
     db = _asg(phi_b)
-    Lb = L_ar + p.get('etek_ar_boy', 0.0)
+    Lb = (L_ar + p.get('etek_ar_boy', 0.0)) * (1.0 - 0.55 * g_c)
     batma = B0[1] + Lb * db[1] + 1.5          # >0: kanat zemine giriyor
     if db[1] > 1e-3 and batma > 0:           # zemine değince orada biter (yerde yatar)
         Lb = max(0.0, (-1.5 - B0[1]) / db[1])
-    w_yer = _ss(0.0, 9.0, batma)
+    w_yer = _ss(-12.0, 6.0, batma)           # kanat ucu zemine yaklaşınca etek yere yatmaya başlar (sivri kuyruk yok)
     B1 = B0 + Lb * db
     F1[1] = min(F1[1], -1.5)
     B1[1] = min(B1[1], -1.5)
@@ -621,12 +642,21 @@ def _gomlek_yolu(sk, p):
     df = df / (np.hypot(*df) + 1e-9)
     dF = F1 - F0
     dF = dF / (np.hypot(*dF) + 1e-9)
-    etek_a = [Bm, B1 - db * 6.0, B1 + dh * 6.0, 0.6 * B1 + 0.4 * orta, orta, 0.4 * orta + 0.6 * F1,
-              F1 - df * 6.5, F1 - dF * 6.5]
+    # köşeler dönüş açısıyla orantılı yarıçapla yuvarlanır (çömelme/oturmada sivri "kuyruk" olmasın);
+    # her köşe hep 3 nokta: geçişlerde biçim sürekli
+    din = B1 - Bm
+    din = din / (np.hypot(*din) + 1e-9)
+    rB = _kose_r(din, dh, 6.0, 15.0, min(2.0 * np.hypot(*(B1 - Bm)), np.hypot(*(orta - B1))))
+    rF = _kose_r(df, -dF, 6.5, 12.0, min(np.hypot(*(F1 - orta)), np.hypot(*(F1 - F0))))
+    kB = _kose(B1, din, dh, rB)
+    kF = _kose(F1, df, -dF, rF)
+    etek_a = [Bm] + kB + [0.6 * B1 + 0.4 * orta, orta, 0.4 * orta + 0.6 * F1] + kF
     # etek yerde yatıyor: köşe yuvarlak, kenar zemin boyunca öne (aynı nokta sayısı: sürekli geçiş)
-    B1y = B1 + _v(16.0, 0.0)
-    etek_b = [Bm, B1 + _v(-1.0, -5.0), B1 + _v(4.0, 0.0), B1y, 0.5 * (B1y + F1), 0.25 * B1y + 0.75 * F1,
-              F1 - df * 6.5, F1 - dF * 6.5]
+    yer_d = _v(1.0, 0.0)
+    rBy = _kose_r(din, yer_d, 6.0, 12.0, 2.0 * np.hypot(*(B1 - Bm)))
+    B1y = B1 + _v(max(24.0, 0.3 * (F1[0] - B1[0])) + rBy, 0.0)
+    kBy = _kose(B1, din, yer_d, rBy)
+    etek_b = [Bm] + kBy + [B1y, 0.5 * (B1y + F1), 0.25 * B1y + 0.75 * F1] + kF
     etek = [a_ * (1.0 - w_yer) + b_ * w_yer for a_, b_ in zip(etek_a, etek_b)]
     cevre = ([0.45 * F1 + 0.55 * F0] + on + [yaka_on, N + uN * 3.0 + fN * 2.0, yaka_ar] + ar[::-1] + etek)
     yol = _yol(cevre, gerilim=0.42)
@@ -636,10 +666,15 @@ def _gomlek_yolu(sk, p):
 def _gomlek_maskesi(sk, gom, Mf, kenar):
     """Gömlek maskesi; kalça hattının üstünde (gövde yönünde) yakın uyluğun örttüğü yer oyulur: uyluk göğse
     çekildiğinde (oturma, secde) uyluk gövdenin önünde görünür, ayakta/yürürken etek uyluk kökünü örter."""
-    k = yollar_kirp([gom], Mf, 6 + 3 * kenar)
+    olc = math.sqrt(abs(np.linalg.det(Mf[:2, :2])))
+    sig = 4.5 * olc                          # kumaşta sivri köşe yok: bulanıklaştır + yeniden eşikle (yuvarlama)
+    k = yollar_kirp([gom], Mf, 6 + 3 * kenar + 2.0 * sig)
     m = maske_ciz([gom], Mf, k)
     if k.bos():
         return k, m
+    if sig > 0.8:
+        mb = cv2.GaussianBlur(m, (0, 0), sig)
+        m = np.clip((mb - 0.5) * (2.5 * sig) + 0.5, 0.0, 1.0).astype(np.float32)
     tt = sk['tt_on']
     dt = _asg(tt)
     Hj = sk['H_on']
@@ -1136,15 +1171,18 @@ IBRIK_ALT_EL = (42.0, 40.0)   # sula pozunda uzak elin avucu, yakın el çerçev
 
 
 def sula_pozu(dok=0.0, alt_el=None):
+    """Sulama pozu: dok 0..1 (bilekler öne döner, ibrik eğilir). alt_el: ibriğin alt noktası (yakın el çerçevesinde;
+    varsayılan IBRIK_ALT_EL); uzak el her dok değerinde oraya IK ile oturur (erişemezse kol tam uzanır).
+    Kalça geride (karşı ağırlık), yakın üst kol dünyada ~dik sarkar, dirsek gövde silüetinin içinde kalır."""
     p = bos_poz()
-    p.update(kx=-10.0, ky=KALCA_Y + 7.0, bel=17.0, gogus=9.0, boyun=10.0, bas=8.0,
+    p.update(kx=-26.0, ky=KALCA_Y + 7.0, bel=18.0, gogus=8.0, boyun=10.0, bas=8.0,
              kivrim_on=0.92, yan_on=0.0, kivrim_ar=0.15, yan_ar=-1.0)
     bacak_ik(p, 'on', (24.0, -AYAK_YUK))
     bacak_ik(p, 'ar', (-30.0, -AYAK_YUK))
     ayak_duz(p, 'on')
     ayak_duz(p, 'ar')
     th = 92.0 - 42.0 * dok
-    kol_ik(p, 'on', (66.0 + 6 * dok, -392.0 + 6 * dok))
+    kol_ik(p, 'on', (72.0 + 6 * dok, -383.0 + 6 * dok))
     el_aci(p, 'on', th)
     sk = iskelet(p)
     Mel = M_bilesik(M_oteleme(*sk['avuc_on']), M_donme(90.0 - th))
@@ -1157,32 +1195,35 @@ def sula_pozu(dok=0.0, alt_el=None):
 
 def _poz_kiyam():
     p = bos_poz()
+    # ön kollar karnın önünden karşı yana geçer (profilde kısalır): dirsekler gövdenin yanında, üst kol dik
     p.update(ky=KALCA_Y + 1.0, bel=1.0, gogus=-1.0, boyun=17.0, bas=2.0,
-             kivrim_on=0.25, yan_on=0.3, kisalt_on=0.62, kivrim_ar=0.35, yan_ar=0.2, kisalt_ar=0.5)
+             kivrim_on=0.25, yan_on=0.3, kisalt_on=0.62, kivrim_ar=0.35, yan_ar=0.2, kisalt_ar=0.5,
+             onkol_kisalt_on=0.58, onkol_kisalt_ar=0.58)
     bacak_ik(p, 'on', (7.0, -AYAK_YUK))
     bacak_ik(p, 'ar', (-9.0, -AYAK_YUK))
     ayak_duz(p, 'on')
     ayak_duz(p, 'ar')
-    kol_ik(p, 'on', (21.0, -356.0))
-    el_aci(p, 'on', 66.0)
-    kol_ik(p, 'ar', (28.0, -364.0))
+    kol_ik(p, 'on', (43.0, -382.0))
+    el_aci(p, 'on', 68.0)
+    kol_ik(p, 'ar', (48.0, -388.0))
     el_aci(p, 'ar', 62.0)
     return p
 
 
 def _poz_ruku():
     p = bos_poz()
-    p.update(kx=-38.0, ky=KALCA_Y + 5.0, bel=82.0, gogus=5.0, boyun=-2.0, bas=2.0,
+    # dizler kilitli, kalça topukların gerisinde; kollar omuzdan dizlere neredeyse düz iner (dirsek ~10-15°)
+    p.update(kx=-26.0, ky=KALCA_Y + 1.5, bel=82.0, gogus=5.0, boyun=-2.0, bas=2.0,
              kivrim_on=0.25, yan_on=0.45, kivrim_ar=0.25, yan_ar=0.45)
     bacak_ik(p, 'on', (5.0, -AYAK_YUK))
     bacak_ik(p, 'ar', (-5.0, -AYAK_YUK))
     ayak_duz(p, 'on')
     ayak_duz(p, 'ar')
     sk = iskelet(p)
-    for t in ('on', 'ar'):
+    for t, dx in (('on', 0.0), ('ar', 3.0)):
         K = sk['K_' + t]
-        kol_ik(p, t, K + _v(16.0, -30.0))
-        el_aci(p, t, 8.0)
+        kol_ik(p, t, K + _v(17.0 + dx, -27.0))
+        el_aci(p, t, 4.0)
     return p
 
 
@@ -1310,12 +1351,12 @@ def _diz_secde_ara(i):
         p.update(kx=kok[0], ky=kok[1], bel=38.0, gogus=6.0, boyun=6.0, bas=-8.0,
                  kivrim_on=0.25, yan_on=0.6, kivrim_ar=0.25, yan_ar=0.6, kol_kisalt_on=0.15, kol_kisalt_ar=0.15,
                  etek_ar=8.0, etek_ar_boy=20.0)
-    else:        # eller yere iner
+    else:        # eller yere iner: secde'deki yerlerine (secdeye geçişinde artık kaymazlar)
         th = 14.0
         kok = DIZ - L_UYLUK * _asg(th)
         p.update(kx=kok[0], ky=kok[1], bel=96.0, gogus=8.0, boyun=10.0, bas=-14.0,
-                 kivrim_on=0.05, yan_on=1.0, kivrim_ar=0.05, yan_ar=1.0, kol_kisalt_on=0.6, kol_kisalt_ar=0.6,
-                 ust_kisalt_on=0.4, ust_kisalt_ar=0.4, etek_ar=18.0, etek_ar_boy=48.0)
+                 kivrim_on=0.05, yan_on=1.0, kivrim_ar=0.05, yan_ar=1.0, kol_kisalt_on=0.35, kol_kisalt_ar=0.35,
+                 ust_kisalt_on=0.2, ust_kisalt_ar=0.2, etek_ar=18.0, etek_ar_boy=48.0)
     _ayak_parmakta(p, 'on')
     _ayak_parmakta(p, 'ar', dx=-3.0)
     sk = iskelet(p)
@@ -1325,8 +1366,16 @@ def _diz_secde_ara(i):
             kol_ik(p, t, (S[0] + 70.0 + dx, -78.0))
             el_aci(p, t, 60.0)
         else:
-            kol_ik(p, t, (S[0] + 58.0 + dx, -7.6), isaret=+1)
+            kol_ik(p, t, SECDE_EL[t], isaret=-1)
             el_aci(p, t, 90.0)
+    return p
+
+
+def _eller_yerde(p):
+    """Diz ailesinde (diz DIZ'de) elleri secde'deki yerlerine IK ile oturtur (avuçlar yerde sabit)."""
+    for t in ('on', 'ar'):
+        kol_ik(p, t, SECDE_EL[t], isaret=-1)
+        el_aci(p, t, 90.0)
     return p
 
 
@@ -1490,7 +1539,10 @@ def secdeye(t):
     """diz_dua -> secde (t 0..1, içeride yumuşatılır); dizler ve ayak parmakları yerde sabit.
     Geri dönüş (secde -> diz_dua) için secdeye(1 - t)."""
     u = _ss(0.0, 1.0, t)
-    return poz_yolu(SECDE_DIZI, u, sabit='diz_on', sureler=[1.0, 1.0, 1.0])
+    p = poz_yolu(SECDE_DIZI, u, sabit='diz_on', sureler=[1.0, 1.0, 1.0])
+    if u > 2.0 / 3.0:          # diz_secde_2 -> secde: avuçlar yere basmış, kaymaz
+        _eller_yerde(p)
+    return p
 
 
 POZLAR = {}
@@ -1501,6 +1553,8 @@ POZLAR['sula_dok'] = sula_pozu(1.0)
 POZLAR['kiyam'] = _poz_kiyam()
 POZLAR['ruku'] = _poz_ruku()
 POZLAR['secde'] = _poz_secde()
+_sk_secde = iskelet(POZLAR['secde'])
+SECDE_EL = {t: _sk_secde['Wr_' + t].copy() for t in ('on', 'ar')}   # secde'de bilekler (diz ailesi çerçevesi)
 POZLAR['oturus_hasta'] = _poz_oturus(False)
 POZLAR['oturus_dik'] = _poz_oturus(True)
 POZLAR['diz_dua'] = _poz_diz_dua()

@@ -299,10 +299,10 @@ class Malzeme:
         b.l(nz.outputs["Fac"], mr.inputs["Value"])
         b.l(mr.outputs["Result"], g.inputs["Roughness"])
         # varak kirisikligi: ~0.7 mm'lik faset normalleri -> gunes altinda kucuk parilti noktalari
-        vr = b.n("ShaderNodeTexVoronoi", (loc[0] - 400, loc[1] - 550), feature="F1", i_Scale=cfgG.get("altin_faset", 1000.0))
+        vr = b.n("ShaderNodeTexVoronoi", (loc[0] - 400, loc[1] - 550), feature="F1", i_Scale=cfgG.get("altin_faset", 900.0))
         b.l(tc.outputs["Object"], vr.inputs["Vector"])
-        bp = b.n("ShaderNodeBump", (loc[0] - 200, loc[1] - 550), i_Strength=cfgG.get("altin_kirisik", 0.65),
-                 i_Distance=0.00004)
+        bp = b.n("ShaderNodeBump", (loc[0] - 200, loc[1] - 550), i_Strength=cfgG.get("altin_kirisik", 0.7),
+                 i_Distance=cfgG.get("altin_faset_d", 0.00035))
         b.l(vr.outputs["Distance"], bp.inputs["Height"])
         b.l(normal_s, bp.inputs["Normal"])
         b.l(bp.outputs["Normal"], g.inputs["Normal"])
@@ -793,7 +793,7 @@ class Malzeme:
 
 
 # ===================================================================== kitap
-RENK_DERI = srgb("#AC8373")       # cok acik, solgun gul-taba (acik kahveye kayan) deri; render'da kalibre edildi
+RENK_DERI = srgb("#AA8272")       # cok acik, solgun gul-taba (acik kahveye kayan) deri; render'da kalibre edildi
 RENK_KOYU = srgb("#865D4F")       # bas/kuyruk ve kenar asinmasi
 # Birkac kitabin derisi digerlerinden cok az farkli (ayri parti deri / yillanma): dogrusal RGB carpimsal sapma
 TON = {
@@ -1431,8 +1431,9 @@ def kamera(cfg):
     # odak: Lem'alar sirti / alt sira arasi
     odak = bpy.data.objects.new("odak", None)
     sc.collection.objects.link(odak)
-    # f/2.8: Lem'alar ile alt sira arasinda (ikisi de keskin), ust sira hafif, duvar belirgin bulanik
-    odak.location = cfg.get("odak", (0.0, -0.045, 0.07))
+    # f/3.2 (~f/2.8): odak Lem'alar sirtinin hemen arkasinda; Lem'alar ve alt sira keskin, ust sira hafif yumusak,
+    # Kur'an okunur, duvar ve arka masa krem bokeh (duvarda ~12 px bulaniklik cemberi)
+    odak.location = cfg.get("odak", (0.0, -0.02, 0.10))
     cd.dof.focus_object = odak
     kamera_konum(cam, cfg)
     return cam

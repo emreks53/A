@@ -5,7 +5,7 @@ import json
 import math
 import os
 
-from motor import KOK, e_io, e_io5, lerp, Kamera, kamera_karistir
+from motor import KOK, e_io, e_io5, e_ss, lerp, Kamera, kamera_karistir
 
 SES = 0.30  # sesin videodaki gecikmesi
 
@@ -36,7 +36,7 @@ def anahtar(V, kareler, egri=e_io):
     return kareler[-1][1]
 
 
-def kamera_yolu(V, kareler, egri=e_io5):
+def kamera_yolu(V, kareler, egri=e_ss):
     """kareler: [(zaman, Kamera), ...]"""
     if V <= kareler[0][0]:
         return kareler[0][1]

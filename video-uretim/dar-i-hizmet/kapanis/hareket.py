@@ -13,7 +13,9 @@ mertebesinde, dusuk frekansli, puruzsuz "elde tutulmus" salinim. Her cikti pikse
 kaynak goruntude derinlige gore yeniden izdusum (iteratif ters esleme) yapilir; boylece
 on plan (masa, Lem'alar) arka plandan (duvar) biraz daha fazla buyur -> gercek paralaks.
 Son islem: hafif vinyet, cok hafif renk sapmasi (kenarlarda), parlak bolgelerde yumusak
-isima ve her karede degisen ince film greni.
+isima, gunes huzmesinde cok hafif pus (yalnizca ust bolgede) ve her karede degisen ince film greni.
+Olcum: kare1_maske.png ayni izdusumle 1. kareye tasinir; onizleme.png uzerinde sirt derisi tonlari ve
+altyazi bandi (y 1344-1651) sakinligi raporlanir. Dogrulama: 2.5D son kare <-> gercek son kare render'i.
 """
 import json
 import math

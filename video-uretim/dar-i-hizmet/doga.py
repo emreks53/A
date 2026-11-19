@@ -180,6 +180,7 @@ class _Boya:
         self.T = np.ones((3, h, w), np.float32)  # düzlemsel geçirgenlik (kanal başına bitişik)
         self.S = np.zeros((h, w), np.float32)
         self.SIL = np.zeros((h, w), np.float32)
+        self.DEL = None  # gerçek boşluklar (ör. taçtaki gök delikleri): nesne içinde boyanmaz, silüete de girmez
         self.olc = 1.0 / max(1e-6, olcek_doku)
         self.kay = ((tohum * 197.3 + 11) % N, (tohum * 89.7 + 7) % N)
         self._gk = self._ga = self._gr = self._xy = None
@@ -395,7 +396,12 @@ class _Boya:
                 t1 += 1.0
                 self.T[c][sl] *= t1
         if siluet:
-            np.maximum(self.SIL[sl], kapsama, out=self.SIL[sl])
+            if self.DEL is not None:
+                t1 = np.subtract(1.0, self.DEL[sl], out=self._tmp(0, shp))
+                t1 *= kapsama
+                np.maximum(self.SIL[sl], t1, out=self.SIL[sl])
+            else:
+                np.maximum(self.SIL[sl], kapsama, out=self.SIL[sl])
         kr = getattr(self, '_kir', None)
         y0_, y1_, x0_, x1_ = sl[0].start, sl[0].stop, sl[1].start, sl[1].stop
         self._kir = (y0_, y1_, x0_, x1_) if kr is None else (min(kr[0], y0_), max(kr[1], y1_), min(kr[2], x0_),
@@ -411,14 +417,23 @@ class _Boya:
             m = cv2.GaussianBlur(m, (0, 0), yumusak)
         np.maximum(self.S[sl], m, out=self.S[sl])
 
-    def sakla_yol(self, yollar, Mloc=None, yumusak=0.6):
+    def sakla_yol(self, yollar, Mloc=None, yumusak=0.6, delik=False):
+        """Yolları nesne içi saklamaya yazar. delik=True: gerçek boşluk (arkadaki sahne görünür; sonraki geçişlerin
+        silüetine de girmez). delik=False: kâğıt beyazı vurgu (silüet içinde kalır)."""
         Mloc = self.M if Mloc is None else Mloc
         if isinstance(yollar, skia.Path):
             yollar = [yollar]
         kk, sl = self.alt(yollar, Mloc, 3 + 3 * yumusak)
         if kk.bos():
             return
-        self.sakla((sl, _rast(yollar, Mloc, kk)), yumusak)
+        m = _rast(yollar, Mloc, kk)
+        self.sakla((sl, m), yumusak)
+        if delik:
+            if self.DEL is None:
+                self.DEL = np.zeros_like(self.S)
+            if yumusak > 0:
+                m = cv2.GaussianBlur(m, (0, 0), yumusak)
+            np.maximum(self.DEL[sl], m, out=self.DEL[sl])
 
     def isik(self, yollar, renk_, guc=0.5, yumusak=2.0, Mloc=None):
         """Küçük parıltı (screen) — tamponda değil, bitir()'den sonra çağrılmak üzere listeye eklenir."""
@@ -839,6 +854,31 @@ def _agac_iskelet(tohum):
             tr = -tr
             s += rng.uniform(34, 50)
     kabuk = [(rng.uniform(-0.7, 0.55), rng.uniform(20, 300), rng.uniform(30, 90)) for _ in range(9)]
+    rng2 = np.random.default_rng(104729 + tohum * 7)
+    # genç ağacın yapraklanması: ana ve ikinci kuşak dallarda araya giren ikinci sıra (kümeler gelince erken solar)
+    for bi, d in enumerate(dallar):
+        if d.der not in (1, 2):
+            continue
+        s = rng2.uniform(46, 64)
+        tr2 = -1
+        while s < d.L - 14:
+            g0 = _ilk_gecis(d, s + 16)
+            f0 = rng2.uniform(0.36, 0.46)
+            yapraklar.append(dict(bi=bi, s=s, taraf=tr2, aci=math.radians(rng2.uniform(34, 56)),
+                                  L=rng2.uniform(50, 64), g0=g0, kiv=rng2.uniform(-0.12, 0.12), sol=(f0, f0 + 0.16)))
+            tr2 = -tr2
+            s += rng2.uniform(40, 56)
+    for bi, d in enumerate(dallar):
+        if d.der != 3:
+            continue
+        s = rng2.uniform(12, 22)
+        while s < d.L - 6:
+            g0 = _ilk_gecis(d, s + 12)
+            f0 = rng2.uniform(0.42, 0.52)
+            yapraklar.append(dict(bi=bi, s=s, taraf=tr, aci=math.radians(rng2.uniform(36, 58)),
+                                  L=rng2.uniform(46, 60), g0=g0, kiv=rng2.uniform(-0.12, 0.12), sol=(f0, f0 + 0.16)))
+            tr = -tr
+            s += rng2.uniform(24, 34)
     iskelet = dict(dallar=dallar, kumeler=kumeler, yapraklar=yapraklar, tac=(tcx, tcy, trx, try_), kabuk=kabuk,
                    bosluk=bosluk, pencere=pencere)
     _AGAC_IS[tohum] = iskelet
@@ -938,7 +978,8 @@ def _kume_durum(isk, durum, g, yaprak, sallanma):
             u1 = min(1.0, u)
             bl = u1 ** 0.85 * (2.0 - u1) ** 0.5 / 1.0
             bl = min(1.0, bl)
-            R = k['R'] * (0.16 + 0.84 * bl) * (0.5 + 0.5 * v)
+            # genç ağaçta uç kümesi küçük bir yaprak öbeği olarak başlar (tek başına iri "lolipop" topu olmasın)
+            R = k['R'] * (0.16 + 0.84 * bl) * (0.5 + 0.5 * v) * (0.42 + 0.58 * sstep(0.24, 0.56, g))
             vx, vy = pp[-1] - pp[-2]
             n_ = math.hypot(vx, vy) + 1e-9
             cx = pp[-1, 0] + vx / n_ * R * 0.28 + sallanma * 6.0
@@ -1000,10 +1041,11 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
     B = _Boya(t, M, k, tohum=tohum)
     ik = 1.0 + 0.22 * damla  # ıslaklık: renkler biraz doygun
 
-    # ------------------------------------------------------------------ fidan yaprakları (önde)
+    # ------------------------------------------------------------------ fidan yaprakları (ön/orta kümelerin arkasında,
+    # dalların önünde boyanır: kümeler açınca tek yapraklar boşluklarda kalır, kümelerin üstüne yapışmaz)
+    yy, ya, yg = [], [], []
     if lider is not None and g < 0.72:
         pp, th, r, ss = lider
-        yy, ya, yg = [], [], []
 
         def yaprak_ekle(px, py, thl, Lf, kiv, a):
             aci_deg = math.degrees(thl) - 90.0
@@ -1048,7 +1090,26 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
             px, py = pp[-1]
             for sgn in (-1, 1):
                 saplar.append(yaprak_ekle(px, py, th[-1] + sgn * 0.42 + sallanma * 0.4, 40, -0.08 * sgn, a))
-        if yy:
+        # dal uçlarında yaprak öbeği (genç ağacın dal uçları çıplak diken gibi kalmasın; kümeler gelince arkada kalır)
+        uc_sol = 1.0 - sstep(0.40, 0.60, g)
+        if uc_sol > 0.01:
+            dallar_ = isk['dallar']
+            for i, Dd in enumerate(durum):
+                if i == 0 or Dd is None or dallar_[i].der < 1:
+                    continue
+                ppd, thd, rd, ssd = Dd
+                if len(ppd) < 2 or ssd[-1] < 4:
+                    continue
+                a = min(1.0, ssd[-1] / 22.0) * uc_sol
+                Lb = (40.0 if dallar_[i].der >= 2 else 46.0) * min(1.0, 0.45 + ssd[-1] / 60.0)
+                px, py = ppd[-1]
+                sg0 = 1 if i % 2 else -1
+                for k_, (da, lk) in enumerate(((0.5, 1.0), (-0.5, 0.92), (0.05, 0.8))):
+                    saplar.append(yaprak_ekle(px, py, thd[-1] + sg0 * da + sallanma * 0.4, Lb * lk,
+                                              -0.08 * sg0 * np.sign(da + 1e-6), a))
+
+    def yapraklari_boya():
+        if lider is not None and g < 0.72 and yy:
             iz = B.lavi(yy, '#93C08A', yog=0.56 * ik, Mloc=Ms, kenar=0.9, dalga=0.05, islak=1.05, islak_gen=2.2,
                         gran=0.08, akis=0.2, toplam=True, alfalar=ya, renk2='#6FA67A')
             B.lavi(yg, '#4F8463', yog=0.30 * ik, Mloc=Ms, kenar=0.8, dalga=0.05, islak=0.8, islak_gen=1.8,
@@ -1121,8 +1182,9 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
             if izd is not None:
                 sl_, m_ = izd
                 np.maximum(B.S[sl_], m_ * 0.7, out=B.S[sl_])
-    B.sakla(kume_boya(2, '#A2C98F', '#7FB383', 0.48, '#4E8466', 0.30, ust=0.45, acik=0.68))
+    B.sakla(kume_boya(2, '#A2C98F', '#7FB383', 0.48, '#4E8466', 0.30, ust=0.45, acik=0.72, isik_g=0.3))
     B.sakla(kume_boya(1, '#8EBA8A', '#6EA27E', 0.50, '#477B63', 0.24, ust=0.45))
+    yapraklari_boya()
 
     # ------------------------------------------------------------------ gövde ve dallar
     dal_yollar, dal_golge, kabuk_yollar = [], [], []
@@ -1142,8 +1204,9 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
         sgn[sgn == 0] = 1
         # gölge sırrının iç kenarı kabuk gibi dalgalı (ikinci gövde gibi görünmesin)
         dal_f = 0.12 * np.sin(ss * 0.045 + i * 1.7) + 0.06 * np.sin(ss * 0.13 + i * 0.9)
-        om = pp + nor * (sgn * rr * (0.5 + dal_f))[:, None]
-        dal_golge.append(_poly(_serit_np(om, rr * (0.52 - dal_f * 0.5))))
+        # dış kenar silüetin içinde (0.94 r) kalır; yoksa gölge sırrı gövdenin dışına lavanta bir şerit bırakır
+        om = pp + nor * (sgn * rr * (0.48 + 0.5 * dal_f))[:, None]
+        dal_golge.append(_poly(_serit_np(om, rr * (0.46 - dal_f * 0.5))))
     if lider is not None:
         # kök genişlemesi: zemine yayılan kısa yüzey kökleri
         for sgn_, uz, kal in ((-1, 2.5, 0.55), (1, 2.2, 0.5), (-1, 1.55, 0.42), (1, 1.7, 0.45)):
@@ -1171,7 +1234,7 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
             kabuk_yollar.append(_poly(q, kapali=False))
     iz_dal = B.lavi(dal_yollar, '#A99383', yog=0.60, Mloc=Ms, kenar=0.9, dalga=0.05, islak=0.95, islak_gen=2.6,
                     gran=0.14, akis=0.16, renk2='#9C8579')
-    B.lavi(dal_golge, '#6F5A66', yog=0.36, Mloc=Ms, kenar=1.2, dalga=0.12, islak=0.8, islak_gen=2.0, gran=0.14,
+    B.lavi(dal_golge, '#6F5A66', yog=0.34, Mloc=Ms, kenar=1.1, dalga=0.08, islak=0.6, islak_gen=2.0, gran=0.14,
            akis=0.12, siluet=False)
     if kabuk_yollar:
         B.lavi(kabuk_yollar, '#6F5A63', yog=0.26 * sstep(0.25, 0.6, g), Mloc=Ms, kenar=0.7, dalga=0.1, islak=0.3,
@@ -1191,7 +1254,7 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
             if ag > 0.05:
                 dl.append(EL.damla_blob(bx, by, br * ag * yaprak ** 0.5, tohum=bt, duzensizlik=0.18, lob=5))
         if dl:
-            B.sakla_yol(dl, Ms, yumusak=1.0)
+            B.sakla_yol(dl, Ms, yumusak=1.0, delik=True)
     kume_boya(0, '#7FA592', '#6A977E', 0.56, '#3F6F5F', 0.20, acik=0.75, ust=0.35, isik_g=0.5)
 
     B.bitir(sakla_sonra=sakla_sonra)
@@ -1525,7 +1588,7 @@ def _cimen_boya(B, M, x0, x1, y, yogunluk, sallanma, rng, boy=(14, 34), ince=Fal
         cx = x0 + (i + rng.uniform(0.1, 0.9)) / n_tutam * L
         nb = int(rng.integers(3, 7))
         hb = rng.uniform(*boy)
-        yy0 = y + (rng.uniform(-0.25, 0.25) * boy[1] if not ince else 0.0)
+        yy0 = y + (rng.uniform(-0.45, 0.45) * boy[1] if not ince else 0.0)  # tek sıra değil, dar bir bant
         for j in range(nb):
             u = (j + 0.5) / nb - 0.5
             h = hb * rng.uniform(0.55, 1.0) * (1 - 0.5 * abs(u))
@@ -1569,17 +1632,22 @@ def _gurultu(X, Y, kay, olcek, doku=None):
 
 
 def _firtina_sekli(cx, cy, gen, yuk, rng):
-    """Ağır, loblu üst ve hafif dalgalı tabanlı bulut silüeti + lob listesi."""
+    """Ağır, loblu üst ve hafif dalgalı tabanlı bulut silüeti + lob listesi. Uçlarda alçak omuz lobları tabanı
+    yuvarlar (taban elipsi lobların dışına "şapka siperi" gibi taşmaz)."""
     n = int(rng.integers(6, 8))
     loblar = []
     for i in range(n):
         u = (i + 0.5) / n
         tepe = math.sin(u * math.pi) ** 0.8
-        x = cx - gen * 0.42 + u * gen * 0.84 + rng.uniform(-0.03, 0.03) * gen
-        r = yuk * (0.26 + 0.32 * tepe) * rng.uniform(0.9, 1.12)
-        y = cy + yuk * 0.10 - r * 0.72 - tepe * yuk * 0.24
+        x = cx - gen * 0.39 + u * gen * 0.78 + rng.uniform(-0.03, 0.03) * gen
+        r = yuk * (0.25 + 0.33 * tepe) * rng.uniform(0.9, 1.12)
+        y = cy + yuk * 0.12 - r * 0.72 - tepe * yuk * 0.24
         loblar.append((x, y, r))
-    p = yol_elips(cx, cy + yuk * 0.1, gen * 0.5, yuk * 0.32)
+    # omuz lobları (taban köşeleri)
+    for sgn in (-1, 1):
+        r = yuk * rng.uniform(0.21, 0.25)
+        loblar.append((cx + sgn * gen * rng.uniform(0.405, 0.425), cy + yuk * 0.17, r))
+    p = yol_elips(cx, cy + yuk * 0.12, gen * 0.43, yuk * 0.28)
     for (x, y, r) in loblar:
         p = yol_op(p, yol_daire(x, y, r), 'birlesim')
     xs = np.linspace(cx - gen * 0.62, cx + gen * 0.62, 30)
@@ -1589,7 +1657,7 @@ def _firtina_sekli(cx, cy, gen, yuk, rng):
     kes = np.concatenate([np.array([[cx - gen * 0.62, cy - yuk * 1.6]]), np.stack([xs, tb], 1),
                           np.array([[cx + gen * 0.62, cy - yuk * 1.6]])], 0)
     p = yol_op(p, _poly(kes), 'kesisim')
-    return p, loblar
+    return p, loblar[:n]
 
 
 def ciz_firtina_bulutu(t: Tuval, M, cx, cy, gen, yuk, koyuluk=1.0, gelis=1.0, tohum=0, yon=0.0,
@@ -1614,7 +1682,7 @@ def ciz_firtina_bulutu(t: Tuval, M, cx, cy, gen, yuk, koyuluk=1.0, gelis=1.0, to
     # 1) üst: net, ışıklı kenarlı açık lavi (aşağı doğru söner)
     def ust_fn(X, Y):
         u = np.clip((Y - ust_y) / (alt_y - ust_y), 0, 1)
-        return (0.5 + 0.7 * u) * (1.0 - smoothstep(orta_y - yuk * 0.05, alt_y - yuk * 0.05, Y))
+        return (0.5 + 0.25 * k + 0.7 * u) * (1.0 - smoothstep(orta_y - yuk * 0.05, alt_y - yuk * 0.05, Y))
     c1 = _karis('#C6CEDC', '#A9A5C2', k)
     c1b = _karis('#BAC6D8', '#A0A7C6', k)
     iz_ust = B.lavi(yol, c1, yog=0.34 + 0.24 * k, kenar=1.5, dalga=0.14, islak=0.9 + 0.3 * k, islak_gen=4.5,
@@ -1626,14 +1694,24 @@ def ciz_firtina_bulutu(t: Tuval, M, cx, cy, gen, yuk, koyuluk=1.0, gelis=1.0, to
     # 2) alt: yumuşak kenarlı (ıslak-üstüne-ıslak) taban lavisi
     def alt_fn(X, Y):
         return smoothstep(cy - yuk * 0.35, orta_y + yuk * 0.12, Y)
-    B.lavi(yol, c1, yog=0.34 + 0.24 * k, yumusak=(14 + 8 * k) * ys_, dalga=0.05, islak=0.0, gran=0.10, akis=0.12,
-           renk2=c1b, yog_fn=alt_fn)
+    iz_alt = B.lavi(yol, c1, yog=0.34 + 0.24 * k, yumusak=(14 + 8 * k) * ys_, dalga=0.05, islak=0.0, gran=0.10,
+                    akis=0.12, renk2=c1b, yog_fn=alt_fn, siluet=False)
+    if iz_alt is not None:
+        # yumuşak tabanın saklaması boyanın gerçek örtücülüğü kadar (kare): arkadaki gök kenarda bulutla karışır,
+        # bulutla gök arasında kâğıt beyazı bir hale kalmaz. Üst yarıda yalnız net üst lavinin silüeti geçerli.
+        sl_, m_ = iz_alt
+        X_, Y_ = B.xy_dilim(sl_)
+        # (geliş sırasında karın henüz koyulaşmadan taban açık kalır; saklama da o kadar zayıf)
+        yk_ = 0.35 + 0.65 * sstep(0.2, 0.75, gelis)
+        np.maximum(B.SIL[sl_], (m_ * m_) * (yk_ * smoothstep(cy - yuk * 0.3, cy + yuk * 0.05, Y_)), out=B.SIL[sl_])
     # 3) lob gölgeleri: her lobun altında yumuşak, yuvarlak koyuluk (hacim)
-    gl = []
+    # her lobun ışıktan uzak alt yanı doğrusal geçişle koyulaşır (üst kenarı yok: baloncuk/hilal izi bırakmaz)
+    gl, gr_l = [], []
     for (x, y, r) in loblar:
-        gl.append(yol_op(yol_elips(x + r * 0.12, y + r * 0.42, r * 0.78, r * 0.55), yol, 'kesisim'))
-    B.lavi(gl, _karis('#ADB7C9', '#85819F', k), yog=(0.16 + 0.18 * k), yumusak=(16 + 6 * k) * ys_, dalga=0.05,
-           islak=0.0, gran=0.05, akis=0.12, toplam=True, ust=0.5, siluet=False)
+        gl.append(yol_op(yol_daire(x, y, r * 0.95), yol, 'kesisim'))
+        gr_l.append((x - 0.12 * r, y - 0.32 * r, x + 0.18 * r, y + 0.95 * r, 0.0, 1.0))
+    B.lavi(gl, _karis('#ADB7C9', '#85819F', k), yog=(0.20 + 0.20 * k), yumusak=(13 + 5 * k) * ys_, dalga=0.08,
+           islak=0.0, gran=0.06, akis=0.16, gradyanlar=gr_l, siluet=False)
     # 4) karın: alttan yukarı dağılan koyu lavi + geri akışlar
     karin_y = cy - yuk * 0.18
     karin = yol_op(yol, yol_dikdortgen(cx - gen, karin_y, cx + gen, cy + yuk * 2), 'kesisim')
@@ -1688,8 +1766,9 @@ def ciz_firtina_bulutu(t: Tuval, M, cx, cy, gen, yuk, koyuluk=1.0, gelis=1.0, to
 # 5. YAĞMUR
 # ================================================================================================================
 def ciz_yagmur(t: Tuval, M, zaman, yogunluk, alan=(0, 0, W, H), ruzgar=0.0, tohum=0, zemin_y=None, korunan=None,
-               hiz=2300.0, renk_='#6F7F9E', yog=0.5):
-    """Yağmur çizgileri (bkz. modül belgesi)."""
+               hiz=2300.0, renk_='#76869F', yog=0.42, zemin_bant=70.0):
+    """Yağmur çizgileri (bkz. modül belgesi). zemin_bant: damlaların zemine değdiği derinlik bandı (yerel; uzak
+    damlalar zemin_y'nin bu kadar üstünde biter, sıçramalar tek bir çizgide dizilmez)."""
     x0, y0, x1, y1 = alan
     yg = max(0.0, float(yogunluk))
     if yg <= 0.001:
@@ -1719,8 +1798,12 @@ def ciz_yagmur(t: Tuval, M, zaman, yogunluk, alan=(0, 0, W, H), ruzgar=0.0, tohu
     ys = yb - L  # kuyruk
     xs = xb - egim * L
     alfa = np.ones(n)
-    # zemin: başın zemini geçen kısmı kesilir
-    yb_k = np.minimum(yb, taban)
+    # zemin: başın zemini geçen kısmı kesilir (her damla kendi derinliğindeki zeminde: uzaktakiler biraz yukarıda)
+    if zemin_y is not None:
+        zem = taban - (1.0 - DR) * max(0.0, float(zemin_bant))
+    else:
+        zem = np.full(n, float(taban))
+    yb_k = np.minimum(yb, zem)
     gor = yb_k - ys > 4
     parilti = []
     if korunan is not None:
@@ -1772,35 +1855,40 @@ def ciz_yagmur(t: Tuval, M, zaman, yogunluk, alan=(0, 0, W, H), ruzgar=0.0, tohu
             ux, uy = hx - tx, hy - ty
             ll = math.hypot(ux, uy) + 1e-6
             nx, ny = -uy / ll, ux / ll
-            w = kal * (0.7 + 0.6 * DR[i])
-            pts = [(tx, ty), (hx + nx * w * 0.5, hy + ny * w * 0.5 - w * 0.6), (hx, hy + w * 0.5),
-                   (hx - nx * w * 0.5, hy - ny * w * 0.5 - w * 0.6)]
+            ex, ey = ux / ll, uy / ll
+            w = kal * (0.7 + 0.6 * DR[i]) * 0.5
+            # iğ biçimli fırça izi: kuyruk kıl inceliğinde, en geniş yer başa yakın (%80), baş yuvarlak
+            mx, my = tx + ux * 0.8, ty + uy * 0.8
+            pts = [(tx, ty), (mx + nx * w, my + ny * w), (hx + nx * w * 0.6 - ex * w * 0.3, hy + ny * w * 0.6 - ey * w * 0.3),
+                   (hx + ex * w * 0.5, hy + ey * w * 0.5),
+                   (hx - nx * w * 0.6 - ex * w * 0.3, hy - ny * w * 0.6 - ey * w * 0.3), (mx - nx * w, my - ny * w)]
             yollar.append(yol_cokgen(pts))
             alf.append(float(alfa[i]))
         if yollar:
-            B.lavi(yollar, renk_, yog=yog * yy * min(1.0, 0.55 + 0.45 * yg), kenar=0.6, dalga=0.0, islak=0.25,
-                   islak_gen=1.2, gran=0.06, akis=0.25, alfalar=alf, esik=False, sakla=False)
+            B.lavi(yollar, renk_, yog=yog * yy * min(1.0, 0.55 + 0.45 * yg), kenar=0.7, dalga=0.0, islak=0.35,
+                   islak_gen=1.2, gran=0.08, akis=0.3, alfalar=alf, esik=False, sakla=False)
     # sıçrama halkaları: son 0.28 sn içinde zemine değen damlalar
     if zemin_y is not None:
         halkalar, h_alf = [], []
         cevrim = (yol_boy + L) / v
-        gecen = ((FZ * (yol_boy + L) + v * zaman - (taban - ust)) % (yol_boy + L)) / v  # zemine değeli geçen süre
+        gecen = ((FZ * (yol_boy + L) + v * zaman - (zem - ust)) % (yol_boy + L)) / v  # zemine değeli geçen süre
         for i in np.flatnonzero((gecen < 0.28) & (DR > 0.25))[:400]:
             if korunan is not None and alfa[i] < 0.3:
                 continue
             u = gecen[i] / 0.28
+            zy = float(zem[i])
             xh = X0[i] * (gen_ + abs(egim) * yol_boy) - (abs(egim) * yol_boy if egim > 0 else 0) + x0 + \
-                egim * (taban - ust)
+                egim * (zy - ust)
             r = (4 + 11 * DR[i]) * (0.35 + 0.65 * u ** 0.6)
-            a = (1 - u) ** 1.3
-            halka = yol_op(yol_elips(xh, taban, r, r * 0.32), yol_elips(xh, taban - r * 0.04, r * 0.7, r * 0.18),
+            a = (1 - u) ** 1.3 * (0.6 + 0.4 * DR[i])
+            halka = yol_op(yol_elips(xh, zy, r, r * 0.32), yol_elips(xh, zy - r * 0.04, r * 0.7, r * 0.18),
                            'fark')
             halkalar.append(halka)
             h_alf.append(a)
             if u < 0.5:
                 for sgn in (-1, 1):
-                    hx = xh + sgn * r * 0.7
-                    hy = taban - (1 - (2 * u - 0.5) ** 2) * (5 + 6 * DR[i])
+                    hx = xh + sgn * r * (0.55 + 0.3 * ((i * 7 + (sgn > 0)) % 3) / 2)
+                    hy = zy - (1 - (2 * u - 0.5) ** 2) * (5 + 6 * DR[i]) * (0.8 + 0.4 * ((i * 3 + (sgn > 0)) % 2))
                     halkalar.append(yol_daire(hx, hy, 0.9 + 0.5 * DR[i]))
                     h_alf.append(a * 0.8)
         if halkalar:
@@ -1811,8 +1899,8 @@ def ciz_yagmur(t: Tuval, M, zaman, yogunluk, alan=(0, 0, W, H), ruzgar=0.0, tohu
     for (px, py, a) in parilti:
         if a <= 0:
             continue
-        t.isik(yol_daire(px, py, 2.6), M, '#FFF4D6', guc=0.75 * a, yumusak=3.0)
-        t.isik(yol_daire(px, py, 1.2), M, '#FFFFFF', guc=0.6 * a, yumusak=0.8)
+        t.isik(yol_daire(px, py, 3.2), M, '#FFF0C8', guc=0.8 * a, yumusak=3.5)
+        t.isik(yol_daire(px, py, 1.4), M, '#FFFFFF', guc=0.7 * a, yumusak=0.8)
     return dict(sayi=int(np.count_nonzero(gor)))
 
 
@@ -1865,9 +1953,11 @@ def ciz_ucusan_yapraklar(t: Tuval, M, zaman, sayi, alan=(0, 0, W, H), ruzgar=1.0
             pts[:, 1] *= max(0.18, abs(tak))
         else:
             # taç yaprağı: yelpaze/kaşık biçimi
-            a = np.linspace(-math.pi / 2, math.pi / 2, 14)
-            rr = L * 0.5 * (0.75 + 0.25 * np.cos(a * 3)) ** 0.5
-            pts = np.concatenate([[[-L * 0.5, 0]], np.stack([np.cos(a) * rr, np.sin(a) * rr * 0.9], 1)], 0)
+            uu = np.linspace(0.0, 1.0, 16)
+            gw = L * 0.36 * np.sin(np.clip(uu, 0, 1) * math.pi * 0.92) ** 0.75 * (0.55 + 0.45 * uu)
+            gw[-1] = 0.0
+            ox = -L * 0.5 + L * uu - L * 0.06 * (1 - np.cos(uu * math.pi))  # uç yuvarlak (kaşık)
+            pts = np.concatenate([np.stack([ox, gw], 1), np.stack([ox[::-1], -gw[::-1]], 1)[1:-1]], 0)
             pts[:, 1] *= max(0.2, abs(tak))
         ca, sa = math.cos(math.radians(aci)), math.sin(math.radians(aci))
         P = np.stack([pts[:, 0] * ca - pts[:, 1] * sa + px, pts[:, 0] * sa + pts[:, 1] * ca + py], 1)
@@ -1974,12 +2064,36 @@ def _tomurcuk_yollari(px, py, r, aci, acik, renk_):
     return govde, canak
 
 
+def _tomurcuk_boya(B, liste, renk_k):
+    """liste: [(px, py, rb, aci, acik, alfa[, canak_alfa]), ...] tomurcuklar (önce çanaklar, sonra pembe gövde)."""
+    if not liste:
+        return
+    gv, gva, cn, cna = [], [], [], []
+    for q in liste:
+        px, py, rb, aci, acik, a = q[:6]
+        ac_ = a * (q[6] if len(q) > 6 else 1.0)
+        govde, canak = _tomurcuk_yollari(px, py, rb, aci, acik, None)
+        gv.append(_poly(govde))
+        gva.append(a)
+        if ac_ > 0.004:
+            for cc in canak:
+                cn.append(_poly(cc))
+                cna.append(ac_)
+    izc = B.lavi(cn, '#7DA676', yog=0.55, kenar=0.8, dalga=0.05, islak=1.0, islak_gen=1.6, gran=0.08, akis=0.15,
+                 toplam=True, alfalar=cna, ust=0.4, renk2='#6C9A70')
+    B.sakla(izc)
+    izg = B.lavi(gv, renk_k[2], yog=0.55, kenar=0.8, dalga=0.05, islak=1.1, islak_gen=1.8, gran=0.08,
+                 akis=0.15, alfalar=gva, renk2=renk_k[3])
+    B.sakla(izg)
+
+
 def ciz_cicek_fidani(t: Tuval, M, x, y, boy, renk_='allik', acilma=0.0, sallanma=0.0, solgunluk=0.0, tohum=0,
                      isik=(-0.6, -0.8), sakla_sonra=True):
     from motor import acilma_radyal
     isk = _fidan_iskelet(tohum)
     ac = float(acilma)
     sg = min(1.0, max(0.0, float(solgunluk)))
+    sg = sg * (1.0 - 0.25 * sg * sg)  # üst uçta yumuşar: 1 = belirgin sarkma, ezilmiş/yatmış çalı değil
     lx, ly = isik
     ln = math.hypot(lx, ly) + 1e-9
     lx, ly = lx / ln, ly / ln
@@ -2003,6 +2117,7 @@ def ciz_cicek_fidani(t: Tuval, M, x, y, boy, renk_='allik', acilma=0.0, sallanma
     # --- 1) çiçekler (öndeki: daha alçak olanlar önce) ---
     sira = sorted(range(len(isk['cicekler'])), key=lambda i: -saplar[i][-1, 1])
     tomur_ciz = []
+    olc_M = math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2])))
     for i in sira:
         c = isk['cicekler'][i]
         p = min(1.0, max(0.0, ac * 1.3 - 0.3 * c['f']))
@@ -2012,7 +2127,24 @@ def ciz_cicek_fidani(t: Tuval, M, x, y, boy, renk_='allik', acilma=0.0, sallanma
         aci = c['aci'] + sallanma * 9 + sg * 18 * (1 if c['dx'] >= 0 else -1)
         acik_q = sstep(0.32, 0.78, p)  # açılış (radyal beliriş)
         cy_ = py - r * 0.08
+        tb = 1.0 - sstep(0.48, 0.68, p)  # tomurcuk, taç yaprakları çevresinde açıldıktan sonra erir
+        tom = None
+        if tb > 0.01:
+            rb = r * (0.26 + 0.14 * sstep(0.0, 0.45, p)) * (1.0 - 0.45 * acik_q)
+            tom = (px, py - rb * 0.6, rb, aci * 0.5, sstep(0.15, 0.5, p), 1.0)
         if acik_q > 0.001:
+            # açılış: tomurcuk ÖNDE kalır (kendi katmanında, solarak), taç yaprakları onun arkasından ve çevresinden
+            # açılır; tomurcuk çiçeğin göbeğine eriyerek kaybolur (göbek tomurcuğun üstüne "yapışık" görünmez)
+            if tom is not None:
+                bx_, by_, rb_ = tom[0], tom[1], tom[2]
+                # (B ile aynı doku tohumu: kapalı tomurcuktan öne geçişte renk/doku sıçramasın)
+                Bt = _boya_ac(t, M, (bx_ - rb_ * 2.2, by_ - rb_ * 2.4, bx_ + rb_ * 2.2, by_ + rb_ * 2.6),
+                              tohum=tohum + 21)
+                if Bt is not None:
+                    # çanaklar gövdeden önce çekilir (yeşil hayalet çanak taç yapraklarının üstünde kalmasın)
+                    _tomurcuk_boya(Bt, [tom + (1.0 - sstep(0.44, 0.58, p),)], renk_k)
+                    with t.gorunurluk(tb):
+                        Bt.bitir(sakla_sonra=True, siluet_yumusak=0.8)
             ac_f = 0.45 + 0.55 * sstep(0.55, 1.0, p)
             yg = 1.0 - 0.12 * sg
             if acik_q < 0.999:
@@ -2021,31 +2153,14 @@ def ciz_cicek_fidani(t: Tuval, M, x, y, boy, renk_='allik', acilma=0.0, sallanma
                     EL.sakayik(t, M, px, cy_, r, renk_, tohum=c['tohum'], acilma=ac_f, yog=yg, egim=egim, aci=aci)
             else:
                 EL.sakayik(t, M, px, cy_, r, renk_, tohum=c['tohum'], acilma=ac_f, yog=yg, egim=egim, aci=aci)
-        # tomurcuk (açılınca çiçeğin arkasında kalır ve solar)
-        tb = 1.0 - sstep(0.36, 0.62, p)
-        if tb > 0.01:
-            rb = r * (0.26 + 0.14 * sstep(0.0, 0.45, p)) * (1.0 - 0.45 * acik_q)
-            tomur_ciz.append((px, py - rb * 0.6, rb, aci * 0.5, sstep(0.15, 0.5, p), tb))
-        sonuc.append((nokta_donustur(M, px, cy_), r * math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2]))), p))
+        elif tom is not None:
+            tomur_ciz.append(tom)
+        sonuc.append((nokta_donustur(M, px, cy_), r * olc_M, p))
     for j, tm in enumerate(isk['tomur']):
         px, py = saplar[len(isk['cicekler']) + j][-1]
         tomur_ciz.append((px, py, tm['r'] * boy, tm['aci'] + sallanma * 10, 0.15 * min(1, ac), 1.0))
-    # --- 2) tomurcuklar ---
-    if tomur_ciz:
-        gv, gva, cn, cna = [], [], [], []
-        for (px, py, rb, aci, acik, a) in tomur_ciz:
-            govde, canak = _tomurcuk_yollari(px, py, rb, aci, acik, renk_)
-            gv.append(_poly(govde))
-            gva.append(a)
-            for cc in canak:
-                cn.append(_poly(cc))
-                cna.append(a)
-        izc = B.lavi(cn, '#7DA676', yog=0.55, kenar=0.8, dalga=0.05, islak=1.0, islak_gen=1.6, gran=0.08, akis=0.15,
-                     toplam=True, alfalar=cna, ust=0.4, renk2='#6C9A70')
-        B.sakla(izc)
-        izg = B.lavi(gv, renk_k[2], yog=0.55, kenar=0.8, dalga=0.05, islak=1.1, islak_gen=1.8, gran=0.08,
-                     akis=0.15, alfalar=gva, renk2=renk_k[3])
-        B.sakla(izg)
+    # --- 2) kapalı tomurcuklar ---
+    _tomurcuk_boya(B, tomur_ciz, renk_k)
     # --- 3) yapraklar (ön kat), saplar, arka kat ---
     yap = ([], [], []), ([], [], [])
     for yp in isk['yapraklar']:
@@ -2253,7 +2368,7 @@ def ciz_tas(t: Tuval, M, x, y, r, tohum=0, isik=(-0.6, -0.8), yass=1.0, sakla_so
 
 def ciz_cimen(t: Tuval, M, x0, x1, y, yogunluk=1.0, sallanma=0.0, tohum=0, boy=(14, 34), sakla_sonra=True):
     rng = np.random.default_rng(3307 + tohum)
-    B = _boya_ac(t, M, (x0 - 20, y - boy[1] * 1.3, x1 + 20, y + 6), tohum=tohum + 51)
+    B = _boya_ac(t, M, (x0 - 20, y - boy[1] * 1.5, x1 + 20, y + boy[1] * 0.5 + 6), tohum=tohum + 51)
     if B is None:
         return None
     _cimen_boya(B, M, x0, x1, y, yogunluk, sallanma, rng, boy=boy)
@@ -2276,11 +2391,28 @@ def ciz_tarh(t: Tuval, M, x0, x1, y, tohum=0, yuk=None, bolum='hepsi', sakla_son
     yuv = yuv * (2 - yuv)
     f = rng.uniform(0, 6.28, 3)
     topak = np.abs(np.sin(u * L / (hh * 0.22) + f[0])) ** 0.6 * 0.07 + 0.03 * np.sin(u * 41 + f[1])
+    for _ in range(max(2, int(L / (hh * 2.2)))):  # iri kesekler
+        c_, w_ = rng.uniform(0.05, 0.95), rng.uniform(0.012, 0.03) * (hh * 30 / L)
+        topak = topak + rng.uniform(0.05, 0.11) * np.exp(-((u - c_) / w_) ** 2)
     ust = y - hh * 0.30 * yuv - hh * topak * yuv
     on_ust = y + hh * 0.12 * yuv + hh * 0.04 * np.sin(u * 17 + f[1])  # ön yüzün başladığı çizgi
     alt = y + hh * 0.55 * (0.4 + 0.6 * yuv) + hh * 0.04 * np.sin(u * 11 + f[2])
     tum = _poly(np.concatenate([np.stack([xs, ust], 1), np.stack([xs[::-1], alt[::-1]], 1)], 0))
     on = _poly(np.concatenate([np.stack([xs, on_ust], 1), np.stack([xs[::-1], alt[::-1]], 1)], 0))
+
+    def alt_sol(X, Y):  # alt kenara doğru solma (toprak zemine karışır)
+        ab = np.interp(X, xs, alt).astype(np.float32)
+        return 1.0 - smoothstep(ab - hh * 0.34, ab + hh * 0.02, Y)
+
+    def govde(yol_, yf_):
+        iz_ = B.lavi(yol_, '#6F4A38', yog=0.70, kenar=1.1, dalga=0.12, islak=0.9, islak_gen=3, gran=0.16, akis=0.2,
+                     renk2='#654238', yog_fn=lambda X, Y: yf_(X, Y) * alt_sol(X, Y), siluet=False)
+        if iz_ is not None:  # saklama da solan alt kenarla birlikte azalır (arkada açık hale kalmasın)
+            sl_, m_ = iz_
+            X_, Y_ = B.xy_dilim(sl_)
+            np.maximum(B.SIL[sl_], m_ * np.sqrt(alt_sol(X_, Y_)), out=B.SIL[sl_])
+        B.lavi(yol_, '#46322F', yog=0.36, kenar=1.1, dalga=0.12, islak=0.8, islak_gen=3, gran=0.16, akis=0.2,
+               siluet=False, yog_fn=lambda X, Y: (0.4 + 0.6 * np.clip((Y - y) / (hh * 0.5), 0, 1)) * alt_sol(X, Y))
     if bolum in ('hepsi', 'on'):
         # topak ve benekler
         ben = []
@@ -2296,19 +2428,13 @@ def ciz_tarh(t: Tuval, M, x0, x1, y, tohum=0, yuk=None, bolum='hepsi', sakla_son
         izb = B.lavi(ben, '#5C463D', yog=0.4, kenar=0.6, dalga=0.05, islak=0.5, islak_gen=1, gran=0.1, akis=0.1,
                      siluet=False)
         if bolum == 'on':
-            B.lavi(on, '#6F4A38', yog=0.70, kenar=1.1, dalga=0.12, islak=0.9, islak_gen=3, gran=0.16, akis=0.2,
-                   renk2='#654238', yog_fn=lambda X, Y: 0.62 + 0.55 * np.clip((Y - (y - hh * 0.35)) / (hh * 0.8), 0, 1))
-            B.lavi(on, '#46322F', yog=0.36, kenar=1.1, dalga=0.12, islak=0.8, islak_gen=3, gran=0.16, akis=0.2,
-                   siluet=False, yog_fn=lambda X, Y: 0.4 + 0.6 * np.clip((Y - y) / (hh * 0.5), 0, 1))
+            govde(on, lambda X, Y: 0.62 + 0.55 * np.clip((Y - (y - hh * 0.35)) / (hh * 0.8), 0, 1))
             B.bitir(sakla_sonra=sakla_sonra)
             return dict(ust_y=float(nokta_donustur(M, (x0 + x1) / 2, ust.min())[1]))
     # tam tarh: üst yüzey açık (ışık), ön yüz koyu sır
     def isik_fn(X, Y):
         return 0.62 + 0.55 * np.clip((Y - (y - hh * 0.35)) / (hh * 0.8), 0, 1)
-    B.lavi(tum, '#6F4A38', yog=0.70, kenar=1.1, dalga=0.12, islak=0.9, islak_gen=3, gran=0.16, akis=0.2,
-           renk2='#654238', yog_fn=isik_fn)
-    B.lavi(on, '#46322F', yog=0.36, kenar=1.1, dalga=0.12, islak=0.8, islak_gen=3, gran=0.16, akis=0.2,
-           siluet=False, yog_fn=lambda X, Y: 0.4 + 0.6 * np.clip((Y - y) / (hh * 0.5), 0, 1))
+    govde(tum, isik_fn)
     # üst yüzeyde topaklar (açık kenarlı küçük kesekler)
     kr = []
     for j in range(int(L / 14)):
@@ -2336,12 +2462,16 @@ def ciz_yokus(t: Tuval, M, x0, x1, taban, tepe_x, tepe_y, tohum=0, isik=(-0.6, -
     H_ = taban - tepe_y
     dxl = tepe_x - x0
     dxr = x1 - tepe_x
-    kont = [(x0 - 5, taban + 2), (x0 + 0.3 * dxl, taban - 0.2 * H_), (x0 + 0.62 * dxl, taban - 0.62 * H_),
-            (x0 + 0.86 * dxl, tepe_y + 0.1 * H_), (tepe_x, tepe_y), (tepe_x + 0.25 * dxr, tepe_y + 0.05 * H_),
-            (tepe_x + 0.6 * dxr, tepe_y + 0.16 * H_), (x1 + 5, tepe_y + 0.3 * H_)]
-    ust = _yumusak_omurga(kont, n=90)
+    # analitik profil: etekte içbükey (ovaya yumuşak geçiş), ortada dik, doruk yuvarlak; sağda yavaş, yuvarlak iniş
+    u = np.linspace(0.0, 1.0, 70)
+    sol_x = x0 - 5 + (dxl + 5) * u
+    sol_y = taban + 2 - (H_ + 2) * np.sin(u * math.pi / 2) ** 1.7
+    v = np.linspace(0.0, 1.0, 60)[1:]
+    sag_x = tepe_x + (dxr + 5) * v
+    sag_y = tepe_y + 0.3 * H_ * v ** 1.7
+    ust = np.concatenate([np.stack([sol_x, sol_y], 1), np.stack([sag_x, sag_y], 1)], 0)
     f = rng.uniform(0, 6.28, 2)
-    ust[:, 1] += H_ * 0.008 * np.sin(np.linspace(0, 11, len(ust)) + f[0])
+    ust[:, 1] += H_ * 0.008 * np.sin(np.linspace(0, 11, len(ust)) + f[0]) * np.clip((taban - ust[:, 1]) / H_ * 4, 0, 1)
     pts = np.concatenate([ust, [[x1 + 5, taban + 4], [x0 - 5, taban + 4]]], 0)
     yol = _poly(pts)
     B = _boya_ac(t, M, (x0 - 10, tepe_y - 20, x1 + 10, taban + 10), tohum=tohum + 81)
@@ -2374,24 +2504,30 @@ def ciz_yokus(t: Tuval, M, x0, x1, taban, tepe_x, tepe_y, tohum=0, isik=(-0.6, -
         c[:, 1] += np.linspace(0, H_ * 0.06, len(c))
         bant.append(_poly(_serit_np(c, np.sin(np.linspace(0, math.pi, len(c))) ** 1.5 * H_ * 0.02 + 0.3)))
     B.lavi(bant, renk2, yog=0.13, kenar=1.6, dalga=0.18, islak=0.5, islak_gen=3, gran=0.12, akis=0.2, siluet=False)
-    # gölge yamacı: doruktan aşağı sağa inen sırt çizgisinin sağı
-    sirt = np.array([[tepe_x - 0.02 * dxl, tepe_y - 10], [tepe_x + 0.1 * dxr, tepe_y + 0.28 * H_],
-                     [tepe_x + 0.16 * dxr, tepe_y + 0.6 * H_], [tepe_x + 0.36 * dxr, taban + 10]])
-    sirt = _yumusak_omurga(sirt, n=30)
-    sirt[:, 0] += H_ * 0.015 * np.sin(np.linspace(0, 7, len(sirt)) + f[1])
-    gol_p = np.concatenate([sirt, [[x1 + 20, taban + 10], [x1 + 20, tepe_y - 20]]], 0)
+    # gölge yamacı: doruğun biraz sağından eteğe inen, ortada dışa bombeli (kubbe hacmi) yumuşak kenarlı sır
+    sirt = np.array([[tepe_x + 0.04 * dxr, tepe_y - 12], [tepe_x + 0.17 * dxr, tepe_y + 0.3 * H_],
+                     [tepe_x + 0.2 * dxr, tepe_y + 0.62 * H_], [tepe_x + 0.12 * dxr, taban + 12]])
+    sirt = _yumusak_omurga(sirt, n=40)
+    sirt[:, 0] += H_ * 0.012 * np.sin(np.linspace(0, 6, len(sirt)) + f[1])
+    gol_p = np.concatenate([sirt, [[x1 + 20, taban + 12], [x1 + 20, tepe_y - 20]]], 0)
     gol = yol_op(yol, _poly(gol_p), 'kesisim')
-    B.lavi(gol, renk2, yog=0.3, kenar=1.4, dalga=0.16, islak=0.8, islak_gen=4, gran=0.14, akis=0.2, siluet=False,
-           yog_fn=lambda X, Y: (0.8 + 0.4 * np.clip((Y - tepe_y) / H_, 0, 1)) *
-           (1.0 - smoothstep(taban - H_ * 0.16, taban, Y)))
-    def yf(X, Y):  # etekte ovaya yumuşakça karışır
-        return (0.68 + 0.42 * np.clip((Y - tepe_y) / H_, 0, 1)) * (1.0 - 0.75 * smoothstep(taban - H_ * 0.2, taban, Y))
+    olc = math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2])))
+    B.lavi(gol, renk2, yog=0.3, yumusak=max(2.5, H_ * 0.02 * olc), dalga=0.1, islak=0.0, gran=0.14, akis=0.2,
+           siluet=False, yog_fn=lambda X, Y: (0.75 + 0.45 * np.clip((X - tepe_x) / max(dxr, 1.0) * 2.5, 0, 1)) *
+           (1.0 - smoothstep(taban - H_ * 0.18, taban, Y)))
+    # aynı yamaçta ikinci, daha dar ve koyu sır: doruğun gölge yanını belirginleştirir (net ıslak kenarlı)
+    gol2_p = sirt + np.array([0.12 * dxr, 0.0])
+    gol2 = yol_op(yol, _poly(np.concatenate([gol2_p, [[x1 + 20, taban + 12], [x1 + 20, tepe_y - 20]]], 0)), 'kesisim')
+    B.lavi(gol2, renk2, yog=0.12, kenar=1.6, dalga=0.16, islak=0.6, islak_gen=4, gran=0.12, akis=0.2, siluet=False,
+           yog_fn=lambda X, Y: 1.0 - smoothstep(taban - H_ * 0.3, taban, Y))
+    def yf(X, Y):  # etekte ovaya tamamen karışır (tepe ile ova arasında yatay bir kesik çizgi kalmaz)
+        return (0.68 + 0.42 * np.clip((Y - tepe_y) / H_, 0, 1)) * (1.0 - smoothstep(taban - H_ * 0.24, taban + 2, Y))
     iz = B.lavi(yol, renk1, yog=0.46, kenar=1.5, dalga=0.14, islak=0.85, islak_gen=4.5, gran=0.14, akis=0.2,
                 yog_fn=yf, renk2='#B5C795', siluet=False)
     if iz is not None:  # saklama da etekte söner (ova tepenin eteğine karışsın)
         sl_, m_ = iz
         X_, Y_ = B.xy_dilim(sl_)
-        np.maximum(B.SIL[sl_], m_ * (1.0 - smoothstep(taban - H_ * 0.2, taban, Y_)), out=B.SIL[sl_])
+        np.maximum(B.SIL[sl_], m_ * (1.0 - smoothstep(taban - H_ * 0.24, taban + 2, Y_)), out=B.SIL[sl_])
     B.bitir(sakla_sonra=sakla_sonra)
     return dict(tepe=nokta_donustur(M, tepe_x, tepe_y), siluet=[nokta_donustur(M, p[0], p[1]) for p in ust[::3]])
 
@@ -2463,11 +2599,11 @@ def ciz_dere(t: Tuval, M, noktalar, genislik, zaman=0.0, tohum=0, daralma=0.6, t
         j = int(np.clip(taslar, 0, 1) * (len(om) - 1))
         for q in range(tas_sayi):
             fr = (q + 0.5) / tas_sayi * 2 - 1  # -1..1 enine
-            c = om[j] + nor[j] * fr * wo[j] * 0.72 + tan[j] * rng.uniform(-0.15, 0.15) * wo[j]
-            r = wo[j] * rng.uniform(0.44, 0.52)
+            c = om[j] + nor[j] * fr * wo[j] * 0.78 + tan[j] * rng.uniform(-0.18, 0.18) * wo[j]
+            r = wo[j] * rng.uniform(0.46, 0.58)
             tas_konum.append((c[0], c[1], r))
         for (cx, cy, r) in sorted(tas_konum, key=lambda q: -q[1]):
-            _tas_boya(B, M, cx, cy + r * 0.3, r, rng, isik, yass=0.72, renk1='#CFC7C0', renk2='#C2BAB8',
+            _tas_boya(B, M, cx, cy + r * 0.3, r, rng, isik, yass=0.95, renk1='#CFC7C0', renk2='#C2BAB8',
                       golge_yer=False, islak_tas=0.5)
     # 2) ışık dalgacıkları (kâğıt beyazı): akışla ilerler
     dalg = []
