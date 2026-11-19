@@ -105,6 +105,17 @@
       "video": "videolar/gul-ve-beka.mp4",
       "kapak": "videolar/gul-ve-beka-kapak.jpg",
       "onizleme": "videolar/gul-ve-beka-onizleme.jpg"
+    },
+    {
+      "id": "insan-bir-yolcudur",
+      "baslik": "Onuncu Risale'den",
+      "kitap": "Mesnevî-i Nûriye",
+      "bolum": "Onuncu Risale",
+      "sayfa": 224,
+      "etiketler": ["yolculuk", "ömür", "ahiret"],
+      "video": "videolar/insan-bir-yolcudur.mp4",
+      "kapak": "videolar/insan-bir-yolcudur-kapak.jpg",
+      "onizleme": "videolar/insan-bir-yolcudur-onizleme.jpg"
     }
   ]
 }
