@@ -9,24 +9,26 @@
  *         lines as A.star8 open=1) grow radially from the centre; gold bevel frame (16-gon = union of the two
  *         squares) · 30.18 click → shutters slide apart, light slit, warm light spills onto the page
  *   niche = dark velvet jewel-box with warm top light and drifting motes
+ *   (30.06 the centre seam brightens; the light column has its own decay, it never switches off)
  *   30.79 six masterpieces pop (0.08 s): sapphire butterfly, peacock feather, snowflake / nautilus, cut
  *         pomegranate, tulip · 31.37 gold halos + tiny Star8 seals · cam 1.05→1.1 drifting to the butterfly
  *  Part 2 macro (signature #4): 32.08–33.40 log zoom Z 1.1→40 (+ slow creep to 34.49) into the butterfly's
- *   forewing, locked to screen (540,700). Layers by zoom: gallery → iridescent scale shingles (3 mip tiles,
- *   ridges in the big one, masked by the wing itself) → girih tessellation (A.girih iridescent, own circular
- *   lens mask) fading in Z 15–30 · 32.60 "sanatı": light runs along the scale ridges · 33.23 relief rises +
- *   central rosette blooms + rings of light sweep out · 34.10 hue wave + glints (bloom .72) ·
- *   34.49–35.13 fast reverse to the gallery; frost creeps in from the left (#DDEFFF/#A8D4F5/#6E9CC9 + crystals).
+ *   forewing, locked to screen (540,700). Layers by zoom: gallery → overlapping scale shingles (mip tiles drawn
+ *   near native size; overlay first so the wing keeps its colour and spots; ridged once magnified; masked by the
+ *   wing) → girih tessellation growing out of the wing (wing-masked until Z≈11, then its own circular lens)
+ *   · 32.60 "sanatı": light runs along the scales/girih · 33.23 relief rises + central rosette blooms + rings of
+ *   light sweep out · 34.10 hue wave + glints (bloom .72) · 34.49–35.13 fast reverse (trapezoid ease, layer
+ *   crossfades on wider zoom ranges ≈5 frames) to the gallery; frost creeps in from the left.
  *  Part 3: 35.42 push toward the snowflake → melts to a droplet → mist wisps; butterfly scatters into glitter,
  *   tulip droops and drops petals, pomegranate seeds dull · 36.27–36.79 halos shrink to a dot and blink out
- *   (peacock last, on "azdır") · each item leaves a ghost outline (local helper: silhouette → eroded edge
- *   + glow, 'lighter') · 37.12 slight pull back · 37.22 gold girih grille in the window · 37.28 the page falls
- *   into the bazaar's evening (#241634/#4A2A45/#6E3B3B) while the H vitrine (same A.archGate w1000 h970 @
- *   (540,1150) as H) appears inside the window · 37.42–37.80 we fly forward THROUGH the window (z ×2.6): grille
- *   → walnut kafes (2→14 px, blurred, opening in the centre) passing the camera; ghosts glide to H's hand-off
- *   points (H_numune ITEMS[].g at 37.60) and follow H's own path toward the shelves.
- *  Gloss 32.07–34.16: lower page in shadow before the zoom covers it; macro view is a circular lens field that
- *   falls off before the band + soft scrim ≤0.22.
+ *   (peacock last, on "azdır") · each item leaves a ghost line drawing (Sobel of the item, 'lighter').
+ *  End (hand-off to H_numune, see below): 37.0 the page around the star turns into H's walnut kafes (thin gold →
+ *   14 px walnut, spreading out from the frame), evening falls, the niche dissolves into H's own shop (H's draw,
+ *   read back without its kafes and ghosts); camera eases back 1.1→1.0 then accelerates through the window,
+ *   meeting H's kafes star exactly (R, speed) at 37.70; the ghosts fly onto H's shelf slots as H's own ghost
+ *   drawings. From 37.70 G draws H (gecisler: cut at 37.70 between identical frames).
+ *  Gloss 32.07–33.41: lower page in shadow before the zoom covers it; macro view is a circular lens field that
+ *   falls off before the band + soft scrim ≤0.22 (lifts 33.6–33.95, after the gloss has gone).
  * ========================================================================== */
 (function () {
   'use strict';
