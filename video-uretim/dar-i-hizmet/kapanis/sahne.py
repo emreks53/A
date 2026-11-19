@@ -19,12 +19,13 @@ import varliklar as V  # noqa: E402
 RND = random.Random(1405)
 
 # ------------------------------------------------------------------ olculer
-KAIDE_W = 0.420          # basamakli kaide eni
+KAIDE_W = 0.380          # basamakli kaide eni
 BASAMAK_D = 0.260        # her basamak derinligi
 H1 = 0.055               # alt basamak yuksekligi
-H2 = H1 + 0.130          # ust basamak yuksekligi
+H2 = H1 + 0.150          # ust basamak yuksekligi (~13-15 cm fark)
 SIRT_PAY = 0.006         # kitap sirtlarinin basamak on kenarindan geride durusu
-DUVAR_Y = 1.75           # arka duvar
+DUVAR_Y = 1.15           # arka duvar
+SOL_DUVAR_X = -1.30      # pencereli sol duvar
 LEM_Y_ARKA = -0.010      # yatan Lem'alar'in agiz tarafi (kaideye yakin)
 
 
@@ -137,11 +138,11 @@ def kutu_uv(bm, M=None, grain="x", ofs=(0.0, 0.0)):
         for lp in f.loops:
             p = M @ lp.vert.co
             if ax == 2:       # ust/alt: damar x
-                u, v = p.x, p.y
+                u, v = p.y, p.x
             elif ax == 1:     # on/arka
-                u, v = p.x, p.z
+                u, v = p.z, p.x
             else:             # yanlar
-                u, v = p.y, p.z
+                u, v = p.z, p.y
             lp[uv].uv = (u + ofs[0], v + ofs[1])
 
 
@@ -698,7 +699,7 @@ def sahne_kur(cfg):
             out.append(root)
         return out
 
-    ust_kitaplar = sira(A.UST_SIRA, H2, BASAMAK_D + SIRT_PAY, ileri=3)
+    ust_kitaplar = sira(A.UST_SIRA, H2, BASAMAK_D + 0.012, ileri=3)
     alt_kitaplar = sira(A.ALT_SIRA, H1, SIRT_PAY + 0.002, ileri=None)
 
     # ---------------- yatan Lem'alar (on kapak yukarida, sirt kameraya)
@@ -727,7 +728,7 @@ def kurdele_kur(M, lem, T):
     bpy.context.view_layer.update()
     mw = lem.matrix_world
     # kitap dunya sinirlari
-    xr = mw.translation.x + A.KITAP_H / 2          # kuyruk ucu (sag)
+    xr = mw.translation.x - 0.0030                 # sayfa blogu kuyruk yuzu (sag)
     ysp = mw.translation.y                          # sirt tepe
     y_r = ysp + 0.034                               # sirtin 3.4 cm gerisi
     z_c = T * 0.52

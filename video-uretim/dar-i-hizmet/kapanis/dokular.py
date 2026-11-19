@@ -191,7 +191,7 @@ def sirt_dokusu(ad, ppm=16, cap_max_mm=10.0):
     mid_x_old = bx + (l + r) / 2.0
     cy_new = mid_x_old
     hedef_x = W / 2.0
-    hedef_y = (y_ust + y_alt) / 2.0
+    hedef_y = Hp * 0.44                               # orta bolge, biraz yukarida
     ox = int(round(hedef_x - cx_new))
     oy = int(round(hedef_y - cy_new))
     yazi = np.zeros((Hp, W), np.float32)
