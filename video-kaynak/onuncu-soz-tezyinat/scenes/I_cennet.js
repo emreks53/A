@@ -27,7 +27,11 @@
  *   the footnote star8 (r 40), vista → white → dawn · 61.3 star descends to the horizon (y 1020) and
  *   morphs (128 pts) into J's dawn sun (r 70 #FFF4D6, glow #FFD98A r 300).
  * BAND (y 1229–1574): always the dark garden; rain there is sparse/slow (lightRain bandSlow); no blooms,
- *   exposure lifts are masked out of it, feathered scrim ≤ 0.22 while a gloss is up.
+ *   exposure lifts are masked out of it, feathered scrim ≤ 0.22 while a gloss is up — all band calming is clipped
+ *   to the pool below the terrace foot (the cream marble is never darkened).
+ * RING 3: one rosette layer in front of the scene (rose/bowl/pedestal stand in a soft window), folds into the star.
+ * OUTRO: cream veil → J's opening plate rebuilt with the same A.garden call (sky, strata, meadow, path, sun on the
+ *   far crest) so the 61.6 fade only adds J's clouds/mosque/rose.
  * No beings, no figures, no text. Light is sourceless and comes from above.
  * ===================================================================================== */
 (function () {
@@ -609,8 +613,8 @@
     }
     target.restore();
     lay(target, cam, 1, () => { drawPoolSurface(target, t, st); target.drawImage(SP.beds, BED.x0, BED.y0, BED.w, BED.h); drawPoolFurniture(target, t, st); });
-    if (st.g > 0.01) {   // smooth envelope: the bright border, lamps and flowers sink behind the gloss line
-      target.save(); target.setTransform(ks, 0, 0, ks, 0, 0); target.translate(540, 1405); target.scale(1, 0.34);
+    if (st.g > 0.01) {   // smooth envelope: the bright border, lamps and flowers sink behind the gloss line (pool only, never the marble)
+      target.save(); target.setTransform(ks, 0, 0, ks, 0, 0); target.beginPath(); target.rect(0, ye - 1, W, H - ye + 1); target.clip(); target.translate(540, 1405); target.scale(1, 0.34);
       target.fillStyle = E.rad(target, 0, 0, 0, 580, [[0, '#0A2A25', 0.4 * st.g], [0.78, '#0A2A25', 0.42 * st.g], [1, '#0A2A25', 0]]); target.fillRect(-580, -580, 1160, 1160);
       target.restore();
     }
@@ -832,16 +836,7 @@
   /* ---------------- hero layer: bounties, terrace, prepared places ---------------- */
   function drawHero(ctx, t, cam, st) {
     lay(ctx, cam, 1, () => {
-      // ring 3 rosette behind everything of the hero plane
-      if (st.r3 > 0 && st.out < 1) {
-        E.at(ctx, ROSE.x, ROSE.y, 1, 0, () => {
-          ctx.globalAlpha = (1 - st.out);
-          const rr = 640 * (0.8 + 0.2 * E.ease.outCubic(st.r3));
-          ctx.fillStyle = E.rad(ctx, 0, 0, 0, rr, [[0, '#FFF6DA', 0], [0.42, '#FBD27A', 0.5 * st.r3], [0.86, '#F2B44A', 0.42 * st.r3], [1, '#F2B44A', 0]]); ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.fill();
-          A.rosetteFlower(ctx, { r: 600 * (0.82 + 0.18 * E.ease.outCubic(st.r3)), fill: st.r3, t, col: '#F2B44A', core: '#FFF4D6', rays: true, alpha: 0.95 });
-          ctx.globalAlpha = 1;
-        });
-      }
+      // (ring 3 rosette: one single layer in front of the scene, see drawRosette)
       // bounties materialise from light
       const ap = st.appear;
       if (ap > 0) {
@@ -878,14 +873,21 @@
       // paradise rose on its stem
       if (ap > 0) {
         const k = E.ease.outBack(clamp(ap), 1.3), ox = ROSE.x - SIL.cx, oy = ROSE.y - SIL.cy;   // receptacle
+        // match-cut: while the jar arrives the original turns into its luminous outline (never a second solid rose
+        // behind the growing sample); from 57.4 the growing sample itself is drawn here, at the original's depth
+        // (behind the bowl, under the top light), and at g = 1 it IS the original (same R, bloom, variant, transform)
+        const Gr = growInfo(t), done = Gr.g >= 1, ghost = done ? 0 : P(t, 56.98, 57.22, 'inOutSine');
+        const olA = ghost * (1 - sm(clamp((Gr.k - 0.8) / 0.2))), growA = !done && Gr.g > 0 ? P(t, 57.38, 57.46, 'inOutSine') : 0;
         ctx.save(); ctx.globalAlpha = clamp(ap * 1.5);
         const tip = A.stemTip({ len: 330, t, sway: 0.25, bend: 0.12 });
         E.at(ctx, ox - tip.x, oy - tip.y, 1, 0, () => A.stem(ctx, { len: 330, t, sway: 0.25, bend: 0.12, leaves: 3, thorns: 4, width: 13 }));
-        E.at(ctx, ROSE.x, ROSE.y, 0.86 + 0.14 * k, 0, () => {
-          E.at(ctx, -SIL.cx, -SIL.cy, 1, 0, () => A.heroRose(ctx, { R: ROSE.R, bloom: 0.55 + 0.45 * clamp(ap * 1.2), variant: 'paradise', t, rot: 0 }));
-        });
+        const head = (a, sc, o) => { if (a <= 0.003) return; ctx.save(); ctx.globalAlpha *= a; E.at(ctx, ROSE.x, ROSE.y, sc, 0, () => E.at(ctx, -SIL.cx, -SIL.cy, 1, 0, () => A.heroRose(ctx, Object.assign({ R: ROSE.R, t, rot: 0 }, o)))); ctx.restore(); };
+        const bl = 0.55 + 0.45 * clamp(ap * 1.2), sc0 = 0.86 + 0.14 * k;
+        head(1 - ghost, sc0, { bloom: bl, variant: 'paradise' });
+        head(olA, sc0, { bloom: bl, variant: 'outline', col: '#F3B9C6', lw: 2.6, glow: 1 });
+        head(growA, Gr.s, { bloom: 1, variant: 'paradise' });
         ctx.restore();
-        if (st.shine > 0) S.light(ctx, ROSE.x, ROSE.y, 380, '#FFF3D0', 0.25 * st.shine, 'lighter');
+        if (st.shine > 0) S.light(ctx, ROSE.x, ROSE.y, 380, '#FFF3D0', 0.25 * Math.min(st.shine, 0.75), 'lighter');   // capped: the peak keeps the rose's colour
       }
       // terrace
       ctx.drawImage(SP.ter, TER.x0, TER.y0, TER.w, TER.h);
@@ -918,25 +920,48 @@
       const sc = 0.36;
       ctx.save(); ctx.globalAlpha = clamp(bw * 1.6);
       if (bw < 1) S.light(ctx, ROSE.x, PLINTH_TOP - 50, 200, '#FFF4D8', 0.8 * (1 - bw), 'screen');
-      E.at(ctx, ROSE.x, PLINTH_TOP - 220 * sc, sc * (0.85 + 0.15 * E.ease.outBack(clamp(bw * 1.4))), 0, () => A.iznikBowl(ctx, { t, overflow: 0.62 * st.overflow, honey: 0, shadow: false, lit: 1, tilt: 0.2 }));
+      // overflow 0.9: the bowl's own five streams leave the front lip and run all the way down its outer wall to the
+      // pedestal top (at 0.62 they stopped half-way with round heads, reading as dangling strands)
+      E.at(ctx, ROSE.x, PLINTH_TOP - 220 * sc, sc * (0.85 + 0.15 * E.ease.outBack(clamp(bw * 1.4))), 0, () => {
+        const gb = A.iznikBowl(ctx, { t, overflow: 0.9 * st.overflow, honey: 0, shadow: false, lit: 1, tilt: 0.2 });
+        const hk = clamp(st.overflow * 2.5);
+        if (hk > 0.01 && gb && gb.innerRx) {
+          // read the brim as liquid, not a lamp: deeper amber where the surface meets the far wall + a bright
+          // meniscus bulging along the front lip where the streams leave
+          const irx = gb.innerRx, iry = gb.innerRy, sy = iry * 0.1;
+          ctx.save(); ctx.beginPath(); ctx.ellipse(0, sy, irx * 0.985, iry * 0.93, 0, 0, TAU); ctx.clip();
+          ctx.fillStyle = LG(ctx, 0, sy - iry, 0, sy + iry * 0.1, [[0, '#C8701A', 0.5 * hk], [0.45, '#E08A1E', 0.18 * hk], [1, '#E08A1E', 0]]); ctx.fillRect(-irx, sy - iry, irx * 2, iry * 1.2);
+          ctx.restore();
+          ctx.save(); ctx.lineCap = 'round';
+          ctx.strokeStyle = E.rgba('#FFF6D8', 0.8 * hk); ctx.lineWidth = irx * 0.022; ctx.beginPath(); ctx.ellipse(0, sy + iry * 0.02, irx * 0.95, iry * 0.88, 0, PI * 0.12, PI * 0.88); ctx.stroke();
+          ctx.strokeStyle = E.rgba('#F2A33A', 0.55 * hk); ctx.lineWidth = irx * 0.012; ctx.beginPath(); ctx.ellipse(0, sy + iry * 0.07, irx * 0.98, iry * 0.93, 0, PI * 0.08, PI * 0.92); ctx.stroke();
+          ctx.restore();
+        }
+      });
       ctx.restore();
       if (st.overflow > 0.15) {
-        // continuous honey streams: over the rim, down the pedestal, a rill across the marble into the pool
-        const k = clamp((st.overflow - 0.15) / 0.6), rx = 119 * 0.36 / 0.42 * 0.42 / 0.36 * 0.36 * 330 / 119;
-        const streams = [[-0.8, 0], [-0.3, 0.12], [0.3, 0.06], [0.8, 0.18]];
+        // the honey gathers on the pedestal top and slides down its front in three tapered sheets, then a rill runs
+        // across the marble into the pool (nothing starts inside the bowl any more)
+        const k = clamp((st.overflow - 0.15) / 0.6);
         ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        for (const [u, d] of streams) {
-          const kk = clamp(k * 1.4 - d); if (kk <= 0) continue;
-          const x0 = ROSE.x + u * rx * 0.98, y0 = PLINTH_TOP - 220 * 0.36 + 30 * 0.36 * Math.sqrt(1 - u * u) * 0.0, pts = [[x0, y0], [x0 + u * 8, y0 + 34], [ROSE.x + u * 70, PLINTH_TOP - 4], [ROSE.x + u * 62, PLINTH_Y - 6], [ROSE.x + u * 44, PLINTH_Y + 6]];
-          const n = Math.max(2, Math.round(pts.length * kk)), seg = pts.slice(0, n);
-          const pth = new Path2D(); A.crPath(pth, seg, false);
-          ctx.strokeStyle = 'rgba(255,181,71,0.35)'; ctx.lineWidth = 9; ctx.stroke(pth);
-          ctx.strokeStyle = '#FFB547'; ctx.lineWidth = 4.2; ctx.stroke(pth);
-          ctx.strokeStyle = '#FFE7A0'; ctx.lineWidth = 1.8; ctx.stroke(pth);
-          ctx.setLineDash([3, 7]); ctx.lineDashOffset = -t * 70; ctx.strokeStyle = 'rgba(255,253,240,0.95)'; ctx.lineWidth = 1.2; ctx.stroke(pth); ctx.setLineDash([]);
+        for (const [u, d] of [[-0.42, 0.1], [0.05, 0], [0.46, 0.16]]) {
+          const kk = P(t, 56.98 + d, 57.36 + d, 'inOutSine'); if (kk <= 0) continue;
+          const x0 = ROSE.x + u * 70, pts = [[x0, PLINTH_TOP + 7], [x0 - u * 3, PLINTH_TOP + 17], [x0 - u * 12, PLINTH_Y - 12], [x0 - u * 20, PLINTH_Y - 2], [ROSE.x + u * 30, PLINTH_Y + 7]];
+          const seg = A.sampleCurve(pts, 16), m = Math.max(2, Math.round(seg.length * kk)), L = [], R = [];
+          for (let i = 0; i < m; i++) {
+            const a = seg[Math.max(0, i - 1)], b = seg[Math.min(seg.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, q = i / (seg.length - 1);
+            const w = lerp(5.2, 2.6, q) * (i === m - 1 && kk < 1 ? 0.75 : 1);
+            L.push([seg[i][0] - (dy / l) * w, seg[i][1] + (dx / l) * w]); R.push([seg[i][0] + (dy / l) * w, seg[i][1] - (dx / l) * w]);
+          }
+          const sheet = new Path2D(); sheet.moveTo(L[0][0], L[0][1]); for (const p of L) sheet.lineTo(p[0], p[1]); for (let i = R.length - 1; i >= 0; i--) sheet.lineTo(R[i][0], R[i][1]); sheet.closePath();
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,181,71,0.22)'; ctx.lineWidth = 7; ctx.stroke(sheet); ctx.restore();
+          ctx.fillStyle = LG(ctx, 0, PLINTH_TOP, 0, PLINTH_Y + 8, [[0, '#FFC15E'], [1, '#F2A33A']]); ctx.fill(sheet);
+          const core = new Path2D(); A.crPath(core, seg.slice(0, m), false);
+          ctx.strokeStyle = 'rgba(255,236,170,0.9)'; ctx.lineWidth = 1.6; ctx.stroke(core);
+          ctx.setLineDash([3, 7]); ctx.lineDashOffset = -t * 60; ctx.strokeStyle = 'rgba(255,253,240,0.95)'; ctx.lineWidth = 1.1; ctx.stroke(core); ctx.setLineDash([]);
         }
         // the rill runs forward across the marble and spills into the pool (the river)
-        const kr = clamp(k * 1.6 - 0.5);
+        const kr = P(t, 57.2, 57.9, 'inOutSine');
         if (kr > 0) {
           const y1 = lerp(PLINTH_Y + 8, 1092, kr), rill = new Path2D(); rill.moveTo(ROSE.x, PLINTH_Y + 8); rill.bezierCurveTo(ROSE.x + 10, PLINTH_Y + 50, ROSE.x - 8, 1010, ROSE.x, y1);
           ctx.strokeStyle = 'rgba(255,181,71,0.4)'; ctx.lineWidth = 10; ctx.stroke(rill); ctx.strokeStyle = '#FFC15E'; ctx.lineWidth = 4.5; ctx.stroke(rill);
@@ -972,24 +997,29 @@
     ctx.globalCompositeOperation = 'screen'; ctx.strokeStyle = E.rgba('#FFFFFF', 0.55 * k); ctx.lineWidth = wide * 0.2; ctx.stroke(path);
     ctx.restore();
   }
+  /** stroke colour; with fy = [y0, y1] (local) the line of light dissolves downward (full above y0, gone at y1) */
+  function fcol(ctx, col, a, fy) {
+    if (!fy) return E.rgba(col, a);
+    const g = ctx.createLinearGradient(0, fy[0], 0, fy[1]); g.addColorStop(0, E.rgba(col, a)); g.addColorStop(1, E.rgba(col, 0)); return g;
+  }
   /** one clean closed star8 stroke with a soft gold glow (no extensions, no dark metal edge) */
-  function cleanStar(ctx, r, rot, a, lw) {
+  function cleanStar(ctx, r, rot, a, lw, fy) {
     if (a <= 0.003) return;
     const p = star8Path(r, rot);
     ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.strokeStyle = E.rgba('#FFD98A', 0.2 * a); ctx.lineWidth = lw * 5; ctx.stroke(p);
-    ctx.strokeStyle = E.rgba('#F2C66A', 0.42 * a); ctx.lineWidth = lw * 2.2; ctx.stroke(p);
-    ctx.strokeStyle = E.rgba('#D9A441', a); ctx.lineWidth = lw; ctx.stroke(p);
-    ctx.strokeStyle = E.rgba('#FFF6DA', 0.85 * a); ctx.lineWidth = Math.max(0.8, lw * 0.32); ctx.stroke(p);
+    ctx.strokeStyle = fcol(ctx, '#FFD98A', 0.2 * a, fy); ctx.lineWidth = lw * 5; ctx.stroke(p);
+    ctx.strokeStyle = fcol(ctx, '#F2C66A', 0.42 * a, fy); ctx.lineWidth = lw * 2.2; ctx.stroke(p);
+    ctx.strokeStyle = fcol(ctx, '#D9A441', a, fy); ctx.lineWidth = lw; ctx.stroke(p);
+    ctx.strokeStyle = fcol(ctx, '#FFF6DA', 0.85 * a, fy); ctx.lineWidth = Math.max(0.8, lw * 0.32); ctx.stroke(p);
     ctx.restore();
   }
-  function cleanRing(ctx, r, frac, a, lw) {
+  function cleanRing(ctx, r, frac, a, lw, fy) {
     if (a <= 0.003 || frac <= 0) return;
     const p = new Path2D(); p.arc(0, 0, r, -PI / 2, -PI / 2 + TAU * frac);
     ctx.save(); ctx.lineCap = 'round';
-    ctx.strokeStyle = E.rgba('#FFD98A', 0.2 * a); ctx.lineWidth = lw * 5; ctx.stroke(p);
-    ctx.strokeStyle = E.rgba('#D9A441', a); ctx.lineWidth = lw; ctx.stroke(p);
-    ctx.strokeStyle = E.rgba('#FFF6DA', 0.85 * a); ctx.lineWidth = Math.max(0.8, lw * 0.32); ctx.stroke(p);
+    ctx.strokeStyle = fcol(ctx, '#FFD98A', 0.2 * a, fy); ctx.lineWidth = lw * 5; ctx.stroke(p);
+    ctx.strokeStyle = fcol(ctx, '#D9A441', a, fy); ctx.lineWidth = lw; ctx.stroke(p);
+    ctx.strokeStyle = fcol(ctx, '#FFF6DA', 0.85 * a, fy); ctx.lineWidth = Math.max(0.8, lw * 0.32); ctx.stroke(p);
     ctx.restore();
   }
   function drawRings(ctx, t, st) {
@@ -1002,12 +1032,14 @@
       ctx.fillStyle = E.rad(ctx, 0, 0, 0, dr, [[0, '#FFF6DE', 0.5 * st.r1], [0.7, '#FFF6DE', 0.38 * st.r1], [1, '#FFF6DE', 0]]); ctx.beginPath(); ctx.arc(0, 0, dr, 0, TAU); ctx.fill();
       ctx.restore();
       const lock = st.lock, rot1 = (PI / 8) * (1 - lock) + t * 0.012 * (1 - clamp(lock));
-      cleanRing(ctx, 336, st.r1, 0.75, 2.2);
-      cleanStar(ctx, 330 * (0.94 + 0.06 * st.r1), rot1, st.r1 * 0.85, 2.4 + 1.2 * st.r2);
+      // the lines dissolve into light above the terrace edge (world y 800→872) instead of being sliced by it
+      const fy = [800 - ROSE.y, 872 - ROSE.y], ff = (y) => 1 - sm(clamp((y - fy[0]) / (fy[1] - fy[0])));
+      cleanRing(ctx, 336, st.r1, 0.75, 2.2, fy);
+      cleanStar(ctx, 330 * (0.94 + 0.06 * st.r1), rot1, st.r1 * 0.85, 2.4 + 1.2 * st.r2, fy);
       if (st.r2 > 0) {
-        cleanRing(ctx, 452, clamp(st.r2 * 1.3), 0.95, 4);
-        cleanStar(ctx, 440 * (0.94 + 0.06 * st.r2), 0, st.r2, 4.4);
-        for (let i = 0; i < 16; i++) { const a = (i / 16) * TAU, k = clamp(st.r2 * 1.6 - (i / 16) * 0.5); if (k <= 0) continue; S.sparkle(ctx, Math.cos(a) * 452, Math.sin(a) * 452, 8 * k * (0.8 + 0.2 * Math.sin(t * 3 + i)), 0.9, '#FFFFFF'); ctx.fillStyle = E.rgba('#FFF6E0', k); ctx.beginPath(); ctx.arc(Math.cos(a) * 452, Math.sin(a) * 452, 4.5, 0, TAU); ctx.fill(); }
+        cleanRing(ctx, 452, clamp(st.r2 * 1.3), 0.95, 4, fy);
+        cleanStar(ctx, 440 * (0.94 + 0.06 * st.r2), 0, st.r2, 4.4, fy);
+        for (let i = 0; i < 16; i++) { const a = (i / 16) * TAU, px = Math.cos(a) * 452, py = Math.sin(a) * 452, k = clamp(st.r2 * 1.6 - (i / 16) * 0.5) * ff(py); if (k <= 0.003) continue; S.sparkle(ctx, px, py, 8 * k * (0.8 + 0.2 * Math.sin(t * 3 + i)), 0.9, '#FFFFFF'); ctx.fillStyle = E.rgba('#FFF6E0', k); ctx.beginPath(); ctx.arc(px, py, 4.5, 0, TAU); ctx.fill(); }
       }
       ctx.globalAlpha = 1;
     });
@@ -1051,9 +1083,10 @@
   function drawJar(ctx, t, cam, st) {
     const J = jarAt(t, cam); if (!J.on) return J;
     const dis = st.dissolve;   // glass → sparkles
-    if (dis < 1) {
+    const ja = 1 - P(t, 57.12, 57.38, 'inOutSine');   // glass, gold base and tag are gone before the rose outgrows them
+    if (ja > 0.003) {
       ctx.save(); ctx.translate(J.x, J.y); ctx.rotate(J.rot); ctx.scale(J.s, J.s); ctx.translate(-JAR.ROX, JAR.h * JAR.ROFF);
-      ctx.globalAlpha = 1 - E.ease.inCubic(dis);
+      ctx.globalAlpha = ja;
       // soft floating halo under the jar
       S.light(ctx, 0, -JAR.h * 0.35, JAR.w * 1.1, '#FFF6DE', 0.35, 'screen');
       A.bellJar(ctx, { w: JAR.w, h: JAR.h, t, tag: true, spec: st.jarSpec, content: (c) => { if (st.contentFade < 1) { c.globalAlpha *= 1 - st.contentFade; jarContent(c, t, st.grow <= 0 ? 1 : 0, 1 - P(t, 57.1, 57.36, 'inOutSine')); } } });
@@ -1073,34 +1106,35 @@
     return J;
   }
   /* the sample grows into its original: mini rose scales 0.12→1, gold contour on the shared silhouette */
+  function growInfo(t) { const g = (t - 57.12) / 0.62, k = A.morphEase(clamp(g), 0.05); return { g, k, s: lerp(MINI, 1, k) }; }
   function drawGrow(ctx, t, cam, st) {
-    const g = st.grow; if (g <= 0 || g >= 1.6) return;
-    const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y);
-    const k = A.morphEase(clamp(g), 0.05), s = lerp(MINI, 1, k);
-    const fade = 1 - sm(clamp((k - 0.62) / 0.38)), mP = sm(clamp((k - 0.1) / 0.5));
-    if (fade > 0.01) {
+    const Gr = growInfo(t), g = Gr.g; if (g <= 0 || g >= 1.6) return;
+    const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y), k = Gr.k, s = Gr.s;
+    // phase 1 (in front of the dissolving jar), opaque; hands over to the hero-depth copy in drawHero at 57.38–57.46
+    const a1 = g < 1 ? 1 - P(t, 57.38, 57.46, 'inOutSine') : 0;
+    if (a1 > 0.003) {
       ctx.save(); ctx.translate(rx, ry); ctx.scale(rz * s, rz * s); ctx.translate(-SIL.cx, -SIL.cy);
-      const mN = sm(clamp((s - 0.13) / 0.12));
-      if (mP < 0.99 && mN < 0.99) { ctx.globalAlpha = fade * (1 - mP) * (1 - mN); A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'mini', t }); }
-      if (mP < 0.99 && mN > 0.01) { ctx.globalAlpha = fade * (1 - mP) * mN; A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'normal', t }); }
-      if (mP > 0.01) { ctx.globalAlpha = fade * mP; A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'paradise', t }); }
+      const mP = sm(clamp((k - 0.02) / 0.13));   // the world's mini rose turns into the paradise rose while still tiny
+      if (mP < 0.995) { ctx.globalAlpha = a1 * (1 - mP); A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'mini', t }); }
+      if (mP > 0.005) { ctx.globalAlpha = a1 * mP; A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'paradise', t }); }
       ctx.restore();
     }
-    // gold contour shimmer tracing the shared outline
+    // gold contour shimmer tracing the shared outline (same breathing scale as the drawn rose; widths follow its size)
     const ca = E.env(g, 0, 1.55, 0.12, 0.45);
     if (ca > 0.01) {
-      const pts = SIL.pts.map((p) => [rx + (p[0] - SIL.cx) * s * rz, ry + (p[1] - SIL.cy) * s * rz]);
-      const path = A.shapePath(pts, true);
+      const br = 1 + 0.012 * Math.sin((TAU * t) / 3.2), f = s * rz;
+      const pts = SIL.pts.map((p) => [rx + (p[0] * br - SIL.cx) * f, ry + (p[1] * br - SIL.cy) * f]);
+      const path = A.shapePath(pts, true), lw = 0.45 + 0.55 * clamp((s - MINI) / (1 - MINI));
       ctx.save(); ctx.lineJoin = 'round';
-      ctx.strokeStyle = E.rgba('#F2C66A', 0.3 * ca); ctx.lineWidth = 16; ctx.stroke(path);
-      ctx.strokeStyle = E.rgba('#9A6418', 0.4 * ca); ctx.lineWidth = 5.5; ctx.stroke(path);
-      ctx.strokeStyle = E.rgba('#F2BE55', 1 * ca); ctx.lineWidth = 3.4; ctx.stroke(path);
-      ctx.strokeStyle = E.rgba('#FFF4D0', 0.9 * ca); ctx.lineWidth = 1.1; ctx.stroke(path);
+      ctx.strokeStyle = E.rgba('#F2C66A', 0.3 * ca); ctx.lineWidth = 16 * lw; ctx.stroke(path);
+      ctx.strokeStyle = E.rgba('#9A6418', 0.4 * ca); ctx.lineWidth = 5.5 * lw; ctx.stroke(path);
+      ctx.strokeStyle = E.rgba('#F2BE55', 1 * ca); ctx.lineWidth = 3.4 * lw; ctx.stroke(path);
+      ctx.strokeStyle = E.rgba('#FFF4D0', 0.9 * ca); ctx.lineWidth = Math.max(0.8, 1.1 * lw); ctx.stroke(path);
       ctx.globalCompositeOperation = 'lighter';
-      ctx.strokeStyle = E.rgba('#FFE7B0', 0.45 * ca); ctx.lineWidth = 12; ctx.stroke(path);
-      // travelling highlight
-      const n = pts.length, head = Math.floor(((g * 1.1) % 1) * n);
-      for (let j = 0; j < 22; j++) { const q = pts[(head - j + n * 4) % n], a = (1 - j / 22) * ca; S.sparkle(ctx, q[0], q[1], 9 * a + 2, a, '#FFFFFF', 0); }
+      ctx.strokeStyle = E.rgba('#FFE7B0', 0.45 * ca); ctx.lineWidth = 12 * lw; ctx.stroke(path);
+      // travelling glint: a short arc (~19 % of the outline) of small spaced sparkles, sized with the outline
+      const n = pts.length, head = Math.floor(((g * 1.1) % 1) * n), sz = 0.3 + 0.7 * clamp(s);
+      for (let j = 0; j < 8; j++) { const q = pts[(head - j * 3 + n * 4) % n], a = (1 - j / 8) * ca * 0.85; S.sparkle(ctx, q[0], q[1], (2 + 7 * a) * sz, a, '#FFFFFF', 0); }
       ctx.restore();
     }
   }
@@ -1167,80 +1201,170 @@
     ctx.beginPath(); ctx.arc(540, 820, R, 0, TAU); ctx.stroke();
     ctx.restore();
   }
+  /* gloss cues closer than 1.5 s are merged into one guarded stretch (no dips between lines); the guard eases in
+   * just before the text and releases slowly (0.8 s) after the last line, landing on ring 1 */
+  let GSEG = null;
+  function glossSegs() {
+    if (GSEG || !window.TIMING) return GSEG || [];
+    const out = [];
+    for (const q of TIMING.glosses.slice().sort((a, b) => a.in - b.in)) { const l = out[out.length - 1]; if (l && q.in - l[1] < 1.5) l[1] = Math.max(l[1], q.out); else out.push([q.in, q.out]); }
+    return (GSEG = out);
+  }
   function bandGuard(t) {
-    if (!window.TIMING) return 0;
-    let g = 0; for (const q of TIMING.glosses) g = Math.max(g, E.env(t, q.in - 0.3, q.out + 0.45, 0.25, 0.3));
+    let g = 0;
+    for (const [a, b] of glossSegs()) g = Math.max(g, Math.min(P(t, a - 0.5, a + 0.05, 'inOutSine'), 1 - P(t, b + 0.1, b + 0.9, 'inOutSine')));
     return g;
   }
-  function drawExposure(ctx, t, st, g) {
+  /** screen y of the terrace foot (= far edge of the pool): band calming never reaches above it onto the marble */
+  const poolEdgeY = (cam) => toScreen(cam, 1, 0, POOL.y0)[1];
+  function drawExposure(ctx, t, st, g, ye, cam) {
     const ex = st.exp; if (ex <= 0.003) return;
-    const kb = 1 - 0.85 * g;
-    ctx.save(); ctx.globalCompositeOperation = 'screen';
-    ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, '#FFF7E6', ex], [0.6, '#FFF7E6', ex], [0.64, '#FFF7E6', ex * kb], [0.82, '#FFF7E6', ex * kb], [0.86, '#FFF7E6', ex], [1, '#FFF7E6', ex]]);
-    ctx.fillRect(0, 0, W, H); ctx.restore();
+    const kb = 1 - 0.85 * g, y0 = clamp(ye / H, 0.3, 0.9), y1 = Math.min(0.95, y0 + 46 / H), y2 = Math.max(y1 + 0.001, 0.82), y3 = Math.max(y2 + 0.001, 0.86);
+    const fill = (c) => { c.fillStyle = E.lin(c, 0, 0, 0, H, [[0, '#FFF7E6', ex], [y0, '#FFF7E6', ex], [y1, '#FFF7E6', ex * kb], [y2, '#FFF7E6', ex * kb], [y3, '#FFF7E6', ex], [1, '#FFF7E6', ex]]); c.fillRect(0, 0, W, H); };
+    // during the crescendo the lift spares the rose itself (soft window), so the peak is radiant around a rose that
+    // keeps its colour instead of one flat milky veil
+    const pr = 0.75 * clamp(st.r1 * 1.5) * (1 - st.out);
+    if (pr > 0.01) {
+      const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y);
+      E.layer(ctx, (l) => {
+        fill(l); l.globalCompositeOperation = 'destination-out';
+        l.translate(rx, ry); l.scale(1, 0.72); l.fillStyle = E.rad(l, 0, 0, 0, 330 * rz, [[0, '#000', pr], [0.6, '#000', pr * 0.8], [1, '#000', 0]]); l.fillRect(-340 * rz, -340 * rz, 680 * rz, 680 * rz);
+      }, { lo: true, op: 'screen' });
+      return;
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; fill(ctx); ctx.restore();
   }
 
   /* ---------------- outro: footnote star → dawn sun ---------------- */
   const STAR_PTS = A.starPts(1, 8, 0.72, 128), CIRC_PTS = A.circlePts(1, 128);
-  function drawOutro(ctx, t, cam) {
-    if (t < 60.5) return;
-    const wK = P(t, 60.5, 61.0, 'inOutSine');        // vista dissolves into warm cream (never brighter than the 60.15 peak)
-    const dK = P(t, 60.85, 61.6, 'inOutSine');       // cream → light rose / peach / gold horizon (upper sky stays light)
-    const hK = P(t, 60.88, 61.36, 'inOutSine');       // hill strata and garden silhouettes fade in
-    const SW = ['#EAD2B8', '#EBCFB2', '#ECCCAB', '#EECAA5', '#F0C89E'], SD = ['#F0C4C6', '#F6C7BA', '#FFCFA0', '#FFDEA6', '#FFE9BE'];
-    const stops = [0, 0.32, 0.64, 0.86, 1];
+  const outroK = (t) => ({
+    wK: P(t, 60.5, 61.0, 'inOutSine'),                 // vista dissolves into warm cream (never brighter than the 60.15 peak)
+    c: P(t, 60.55, 61.2, 'inOutSine'),                 // rosette folds into the footnote star8
+    jK: P(t, 60.95, 61.5, 'inOutSine'),                // J's dawn plate (sky, strata, meadow, path, flowers) emerges
+    dsc: P(t, 61.0, 61.62, 'inOutSine'),               // the star glides down onto the far crest = J's sun position
+    mo: P(t, 61.25, 61.58, 'inOutCubic'),              // star → disc (128-pt morph)
+  });
+  /** warm cream veil over the vista (one full-height gradient, no seam) */
+  function drawVeil(ctx, t, wK) {
+    if (wK <= 0.001) return;
     ctx.save(); ctx.globalAlpha = wK;
-    ctx.fillStyle = E.lin(ctx, 0, 0, 0, 1030, stops.map((q, i) => [q, E.mix(SW[i], SD[i], dK)])); ctx.fillRect(0, 0, W, 1031);
-    ctx.fillStyle = E.mix('#E2C8AC', '#E3C2A0', dK); ctx.fillRect(0, 1030, W, H - 1030);
-    ctx.globalCompositeOperation = 'screen';
-    ctx.fillStyle = E.rad(ctx, 540, 1020, 0, 700, [[0, '#FFE6B0', 0.5 * dK], [0.5, '#FFD2A0', 0.18 * dK], [1, '#FFD2A0', 0]]); ctx.fillRect(0, 300, W, 1000);
+    ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, '#EAD2B8'], [0.172, '#EBCFB2'], [0.343, '#ECCCAB'], [0.461, '#EECAA5'], [0.536, '#F0C89E'], [1, '#E2C8AC']]); ctx.fillRect(0, 0, W, H);
     ctx.restore();
-    // footnote star: ring-2's star8 folds (slowly) into the small star, glides down to the horizon, settles, rises as the sun
-    const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y);
-    const c = P(t, 60.55, 61.28, 'inOutSine'), dsc = P(t, 61.0, 61.58, 'inOutSine'), rise = P(t, 61.6, 61.95, 'outCubic'), mo = P(t, 61.42, 61.82, 'inOutCubic');
-    const RS = 64, r = lerp(440 * rz, RS, c), sx = lerp(rx, 540, c), sy = lerp(ry, 1012, dsc) - 34 * rise;
-    if (c < 0.9) { ctx.save(); ctx.translate(lerp(rx, sx, c), ry); ctx.globalAlpha = wK * (1 - sm(c * 2.2)); A.rosetteFlower(ctx, { r: 600 * rz * (1 - 0.15 * c), fill: 1, t, col: '#F2B44A', core: '#FFF4D6', alpha: 0.95 }); ctx.restore(); }
-    const sa = sm(c * 1.6) * wK;
-    if (sa > 0) {
-      const R = lerp(r, 70, mo), gr = lerp(Math.max(r * 2.2, 220), 300, mo);
+  }
+  /* ring 3 — ONE rosette, ONE depth, from its first frame to the fold: in front of the terrace/pool (it reaches into the
+   * band, no gloss there), with a soft window cut where the rose, its stem, the bowl and the pedestal stand, so they keep
+   * standing in front of it. The window closes as the vista dissolves into the veil, revealing the full rosette, which
+   * then folds into the footnote star. Drawn after exposure/flash, so the peak stays crisp instead of washed. */
+  function drawRosette(ctx, t, cam, st, wK, c) {
+    if (st.r3 <= 0) return;
+    const fa = 1 - sm(clamp(c * 2.2)); if (fa <= 0.003) return;
+    const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y), e3 = E.ease.outCubic(st.r3), shrink = 1 - 0.15 * c;
+    const cx = rx + (540 - rx) * c * c, R = 600 * rz * (0.82 + 0.18 * e3) * shrink, rr = 640 * rz * (0.8 + 0.2 * e3) * shrink, hA = 1 - wK;
+    E.layer(ctx, (l) => {
+      l.save(); l.translate(cx, ry);
+      l.fillStyle = E.rad(l, 0, 0, 0, rr, [[0, '#FFF6DA', 0], [0.42, '#FBD27A', 0.4 * st.r3], [0.86, '#F2B44A', 0.32 * st.r3], [1, '#F2B44A', 0]]); l.beginPath(); l.arc(0, 0, rr, 0, TAU); l.fill();
+      A.rosetteFlower(l, { r: R, fill: st.r3, t, col: '#F2B44A', core: '#FFF4D6', rays: true, alpha: 0.95 });
+      l.restore();
+      if (hA > 0.003) {
+        const br = 1 + 0.012 * Math.sin((TAU * t) / 3.2), q = (wx, wy) => toScreen(cam, 1, wx, wy);
+        const hole = A.shapePath(SIL.pts.map((p) => q(ROSE.x + p[0] * br - SIL.cx, ROSE.y + p[1] * br - SIL.cy)), true);
+        const bowl = new Path2D(), [bx, by] = q(ROSE.x, PLINTH_TOP - 40), [px, py] = q(ROSE.x, PLINTH_Y - 18), [sx0, sy0] = q(ROSE.x - 9, ROSE.y + 60), [sx1, sy1] = q(ROSE.x + 9, PLINTH_TOP - 60);
+        bowl.ellipse(bx, by, 132 * rz, 58 * rz, 0, 0, TAU); bowl.ellipse(px, py, 84 * rz, 30 * rz, 0, 0, TAU); bowl.rect(sx0, sy0, sx1 - sx0, sy1 - sy0);
+        l.save(); l.globalCompositeOperation = 'destination-out'; l.globalAlpha = hA; l.filter = 'blur(4px)';
+        l.fillStyle = '#000'; l.strokeStyle = '#000'; l.lineJoin = 'round'; l.lineWidth = 12;
+        l.fill(hole); l.stroke(hole); l.fill(bowl); l.lineWidth = 8; l.stroke(bowl);
+        l.restore();
+      }
+    }, { alpha: fa });
+  }
+
+  /* J's opening plate, rebuilt with the very same shared A.garden call J makes while its camera is parked (61.6–61.9:
+   * plate offset 190, zoom .93, bow 0), plus J's cloudless sky repaint, sun and grade — so I's outro lands on J's first
+   * frame and the 0.3 s cross-fade only adds J's clouds, mosque, rose and hoopoe. */
+  const JHZ = 1020, JSTRATA = [[JHZ - 175, 62, 0.0036, 1.3, 0.15], [JHZ - 110, 52, 0.0052, 4.1, 0.25]];
+  const JSKY = [[0, '#2A2148'], [330, '#6B3F72'], [650, '#E58A78'], [880, '#FFC98F'], [1010, '#FFE7B5']];
+  const jHillY = (x, s) => s[0] - s[1] * (0.6 * Math.sin(x * s[2] + s[3]) + 0.3 * Math.sin(x * s[2] * 2.3 + s[3] * 1.7) + 0.12 * Math.sin(x * s[2] * 5.1 + s[3] * 3.1));
+  const jCam = (t) => ({ cx: 540, cy: 1150, cam: { x: 540 + 3 * Math.sin(0.37 * t), y: 960 + 2 * Math.sin(0.29 * t + 1), zoom: 0.93 } });
+  function jToS(cs, x, y, p) { const z = 1 + (cs.cam.zoom - 1) * p, kx = 540 + (cs.cam.x - 540) * p, ky = 960 + (cs.cam.y - 960) * p; return [cs.cx + z * (x - kx), cs.cy + z * (y - ky), z]; }
+  const jSun = (cs) => ({ x: jToS(cs, 540, 0, 0.04)[0], y: jToS(cs, 540, 834, 0.15)[1] - 4, r: 70 });
+  function jHillClip(ctx, cs, s) {
+    const p = new Path2D(); let first = null, last = null;
+    for (let x = -900; x <= 1980; x += 30) { const q = jToS(cs, x, jHillY(x, s), s[4]); if (!first) { first = q; p.moveTo(q[0], q[1]); } else p.lineTo(q[0], q[1]); last = q; }
+    p.lineTo(last[0], -3000); p.lineTo(first[0], -3000); p.closePath(); ctx.clip(p);
+  }
+  function drawJPlate(l, t, cs, sun) {
+    const z04 = 1 + (cs.cam.zoom - 1) * 0.04, ky04 = 960 + (cs.cam.y - 960) * 0.04, gSunY = ky04 + (sun.y + 330 - cs.cy) / z04;
+    A.garden(l, t, { palette: 'J', cx: cs.cx, cy: cs.cy, cam: cs.cam, sunX: 540, sunY: gSunY, bow: 0, fg: false, flowers: 180, span: [-200, 1280] });
+    const y0 = jToS(cs, 0, 740, 0.08)[1], y1 = jToS(cs, 0, 792, 0.08)[1];
+    E.layer(l, (s) => {
+      s.save(); s.translate(cs.cx - 540, cs.cy - 960); s.fillStyle = E.lin(s, 0, 0, 0, 1920, JSKY.map((q) => [q[0] / 1920, q[1]])); s.fillRect(-2000, -2000, 5080, 5920); s.restore();
+      const g = jToS(cs, 540, gSunY, 0.04);
+      s.globalCompositeOperation = 'screen';
+      s.fillStyle = E.rad(s, g[0], g[1], 0, 820 * g[2], [[0, '#FFD98A', 0.6], [0.22, '#FFD98A', 0.22], [1, '#FFD98A', 0]]); s.fillRect(0, 0, W, H);
+      S.rays(s, g[0], g[1], { n: 9, len: 1300, angle: PI / 2, spread: 2.4, col: '#FFD98A', alpha: 0.035, t, width: 0.03 });
+      s.globalCompositeOperation = 'destination-in';
+      s.fillStyle = E.lin(s, 0, y0, 0, y1, [[0, '#000', 1], [1, '#000', 0]]); s.fillRect(0, 0, W, H);
+    });
+  }
+  /** the footnote star → J's dawn sun. inPlate: drawn inside J's plate (corona + disc clipped to the sky above the far
+   *  strata, as J does); otherwise over the cream veil (no hills yet) */
+  function drawStarSun(ctx, t, cs, sun, cam, K, inPlate) {
+    const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y), { c, dsc, mo, wK } = K;
+    const r = lerp(440 * rz, 64, c), sx = lerp(lerp(rx, 540, c), sun.x, dsc), sy = lerp(ry, sun.y, dsc), R = lerp(r, sun.r, mo);
+    const sa = sm(c * 1.6) * wK; if (sa <= 0.003) return;
+    // the star's own glow hands over to J's atmospheric sun bloom (both unclipped: they bleed over the crests)
+    const gA = sa * (1 - mo), gr = Math.max(r * 2.2, 220);
+    if (gA > 0.003) {
       ctx.save();
-      ctx.fillStyle = E.rad(ctx, sx, sy, 0, gr * 1.1, [[0, '#FFD98A', 0.4 * sa], [0.45, '#FFD98A', 0.16 * sa], [1, '#FFD98A', 0]]); ctx.fillRect(sx - gr * 1.2, sy - gr * 1.2, gr * 2.4, gr * 2.4);
+      ctx.fillStyle = E.rad(ctx, sx, sy, 0, gr * 1.1, [[0, '#FFD98A', 0.4 * gA], [0.45, '#FFD98A', 0.16 * gA], [1, '#FFD98A', 0]]); ctx.fillRect(sx - gr * 1.2, sy - gr * 1.2, gr * 2.4, gr * 2.4);
       ctx.globalCompositeOperation = 'screen';
-      ctx.fillStyle = E.rad(ctx, sx, sy, 0, gr, [[0, '#FFF4D6', 0.85 * sa], [0.3, '#FFD98A', 0.45 * sa], [1, '#FFD98A', 0]]); ctx.fillRect(sx - gr, sy - gr, gr * 2, gr * 2);
-      ctx.restore();
-      const starA = sa * (1 - sm(clamp(mo * 1.8)));
-      if (starA > 0.003) {
-        ctx.save(); ctx.translate(sx, sy);
-        cleanStar(ctx, R, (t - 60.55) * 0.12, starA, Math.min(6, Math.max(2.4, R * 0.045)));
-        cleanRing(ctx, R * 0.42, 1, starA * 0.8, Math.min(4, Math.max(1.6, R * 0.03)));
-        ctx.fillStyle = E.rgba('#FFF6DA', starA); ctx.beginPath(); ctx.arc(0, 0, Math.max(3, R * 0.08), 0, TAU); ctx.fill();
-        ctx.restore();
-      }
-      if (mo > 0) {
-        const pts = A.lerpShape(STAR_PTS, CIRC_PTS, A.morphEase(mo, 0.03)).map((q) => [sx + q[0] * R, sy + q[1] * R]);
-        ctx.save(); ctx.globalAlpha = sm(mo * 2.2) * wK;
-        ctx.fillStyle = E.rad(ctx, sx - R * 0.3, sy - R * 0.3, 0, R * 1.1, [[0, '#FFFFFF'], [0.7, '#FFF4D6'], [1, '#FFE6B0']]);
-        A.fillShape(ctx, pts, true);
-        ctx.restore();
-      }
-    }
-    // hill strata + garden silhouettes (drawn after the sun: the disc and glow sit behind the horizon)
-    if (hK > 0.003) {
-      const dip = (x, w) => Math.min(1, Math.abs(x - 540) / w);
-      const far = (x) => 1024 - 26 * dip(x, 320) + 10 * Math.sin(x * 0.005 + 1) * dip(x, 200) + 6 * Math.sin(x * 0.017);
-      const mid = (x) => 1028 - 14 * dip(x, 280) + 8 * Math.sin(x * 0.0062 + 0.4) * dip(x, 200) + 4 * Math.sin(x * 0.021);
-      const near = (x) => 1030 + 26 * Math.sin(x * 0.0042 + 2.2) * Math.min(1, Math.abs(x - 540) / 260) + 10 * Math.sin(x * 0.013);
-      const fillH = (f, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 24) ctx.lineTo(x, f(x)); ctx.lineTo(W, H); ctx.closePath(); ctx.fill(); };
-      ctx.save(); ctx.globalAlpha = hK;
-      fillH(far, '#D8AEA6');
-      fillH(mid, '#A9C2A4');
-      for (let i = 0; i < 9; i++) { const x = 40 + i * 125 + hs(i, 2401) * 40; if (Math.abs(x - 540) < 120) continue; const y = mid(x) + 2, h = 22 + hs(i, 2402) * 18; ctx.fillStyle = '#86A88E'; ctx.beginPath(); ctx.moveTo(x, y - h); ctx.quadraticCurveTo(x + h * 0.2, y - h * 0.4, x + h * 0.12, y); ctx.lineTo(x - h * 0.12, y); ctx.quadraticCurveTo(x - h * 0.2, y - h * 0.4, x, y - h); ctx.fill(); }
-      ctx.fillStyle = E.lin(ctx, 0, 1010, 0, H, [[0, '#4E8A74'], [0.25, '#3F7F6E'], [0.6, '#2C5E58'], [1, '#1C4442']]);
-      ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 24) ctx.lineTo(x, near(x)); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-      for (let i = 0; i < 8; i++) { const x = 30 + i * 145 + hs(i, 2411) * 50; if (Math.abs(x - 540) < 150) continue; const y = near(x) + 6, h = 40 + hs(i, 2412) * 40; ctx.fillStyle = '#2C5E52'; if (i % 3 === 1) { ctx.beginPath(); ctx.arc(x, y - h * 0.55, h * 0.32, 0, TAU); ctx.fill(); ctx.fillRect(x - 2, y - h * 0.3, 4, h * 0.3); } else { ctx.beginPath(); ctx.moveTo(x, y - h); ctx.quadraticCurveTo(x + h * 0.2, y - h * 0.4, x + h * 0.12, y); ctx.lineTo(x - h * 0.12, y); ctx.quadraticCurveTo(x - h * 0.2, y - h * 0.4, x, y - h); ctx.fill(); } }
-      ctx.strokeStyle = E.rgba('#FFD98A', 0.8 * dK); ctx.lineWidth = 3; ctx.beginPath(); for (let x = 0; x <= W; x += 24) (x ? ctx.lineTo(x, near(x)) : ctx.moveTo(x, near(x))); ctx.stroke();
+      ctx.fillStyle = E.rad(ctx, sx, sy, 0, gr, [[0, '#FFF4D6', 0.85 * gA], [0.3, '#FFD98A', 0.45 * gA], [1, '#FFD98A', 0]]); ctx.fillRect(sx - gr, sy - gr, gr * 2, gr * 2);
       ctx.restore();
     }
+    const jA = sa * mo;
+    if (jA > 0.003) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = E.rad(ctx, sx, sy + 20, 0, 520, [[0, '#FFD98A', 0.42 * jA], [0.3, '#FFC98F', 0.16 * jA], [1, '#FFC98F', 0]]); ctx.fillRect(sx - 520, sy - 500, 1040, 1040); ctx.restore(); }
+    const starA = sa * (1 - sm(clamp(mo * 1.8)));
+    if (starA > 0.003) {
+      ctx.save(); ctx.translate(sx, sy);
+      cleanStar(ctx, R, (t - 60.55) * 0.12, starA, Math.min(6, Math.max(2.4, R * 0.045)));
+      cleanRing(ctx, R * 0.42, 1, starA * 0.8, Math.min(4, Math.max(1.6, R * 0.03)));
+      ctx.fillStyle = E.rgba('#FFF6DA', starA); ctx.beginPath(); ctx.arc(0, 0, Math.max(3, R * 0.08), 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();
+    if (inPlate) { jHillClip(ctx, cs, JSTRATA[0]); jHillClip(ctx, cs, JSTRATA[1]); }
+    if (jA > 0.003) {
+      const pulse = 1 + 0.03 * Math.sin(t * 2.1);
+      ctx.globalCompositeOperation = 'screen';
+      ctx.fillStyle = E.rad(ctx, sx, sy, R * 0.8, 300 * pulse, [[0, '#FFD98A', 0.85 * jA], [0.25, '#FFD98A', 0.42 * jA], [0.6, '#FFC98F', 0.12 * jA], [1, '#FFC98F', 0]]); ctx.fillRect(sx - 320, sy - 320, 640, 640);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (mo > 0) {
+      const pts = A.lerpShape(STAR_PTS, CIRC_PTS, A.morphEase(mo, 0.03)).map((q) => [sx + q[0] * R, sy + q[1] * R]);
+      ctx.globalAlpha *= sm(mo * 2.2) * wK;
+      ctx.fillStyle = E.rad(ctx, sx - R * 0.28, sy - R * 0.3, 0, R * 1.02, [[0, '#FFFFFF'], [0.55, '#FFF8E6'], [0.85, '#FFF4D6'], [1, '#FFE2AE']]);
+      A.fillShape(ctx, pts, true);
+    }
+    ctx.restore();
+  }
+  /** after the veil and the rosette: J's plate fades in (with the sun inside it), the star glides and becomes the sun */
+  function drawOutro(ctx, t, cam, K) {
+    if (t < 60.5) return;
+    const cs = jCam(t), sun = jSun(cs), jK = K.jK;
+    if (jK > 0.003) {
+      E.layer(ctx, (l) => {
+        drawJPlate(l, t, cs, sun);
+        drawStarSun(l, t, cs, sun, cam, K, true);
+        // J's horizon haze over the low sun + J's grade
+        const hy = jToS(cs, 540, 834, 0.15)[1];
+        l.fillStyle = E.lin(l, 0, hy - 70, 0, hy + 30, [[0, '#F4B496', 0], [0.6, '#F4B496', 0.38], [1, '#F4B496', 0.15]]); l.fillRect(0, hy - 70, W, 100);
+        l.save(); l.globalCompositeOperation = 'soft-light'; l.fillStyle = E.rgba('#FF9A6A', 0.12); l.fillRect(0, 0, W, H); l.restore();
+      }, { alpha: jK });
+    }
+    if (jK < 0.997) { ctx.save(); ctx.globalAlpha = 1 - jK; drawStarSun(ctx, t, cs, sun, cam, K, false); ctx.restore(); }
+    // J's own ivory wash continuing I's whiteout (same formula J uses from 61.62)
+    const iw = 0.24 * jK * (1 - P(t, 61.62, 62.35, 'inOutSine'));
+    if (iw > 0.003) { ctx.fillStyle = E.rgba('#FFF6E6', iw); ctx.fillRect(0, 0, W, H); }
   }
 
   /* ======================= STATE ======================= */
@@ -1288,35 +1412,44 @@
     },
     post: (t) => {
       const f = E.env(t, 60.05, 60.75, 0.1, 0.5);
-      let bloom = 0.16 + 0.07 * E.env(t, 49.0, 49.8, 0.08, 0.6) + 0.04 * E.env(t, 52.0, 55.5, 0.5, 1.0) + 0.08 * E.env(t, 57.1, 58.0, 0.1, 0.5) + 0.07 * P(t, 57.88, 58.3) + 0.09 * P(t, 59.15, 59.5) + 0.2 * f;
-      bloom = lerp(bloom, 0.32, P(t, 60.9, 61.8));
-      return { bloom, vignette: lerp(0.2, 0.28, P(t, 61.0, 61.8)), grain: 0.035 };
+      let bloom = 0.16 + 0.07 * E.env(t, 49.0, 49.8, 0.08, 0.6) + 0.04 * E.env(t, 52.0, 55.5, 0.5, 1.0) + 0.08 * E.env(t, 57.1, 58.0, 0.1, 0.5) + 0.07 * P(t, 57.88, 58.3) + 0.09 * P(t, 59.15, 59.5) + 0.3 * f;
+      // lands on J's opening post (bloom .42, vignette .26, grain .05) by the 61.6 hand-off
+      const h = P(t, 61.0, 61.6, 'inOutSine');
+      bloom = lerp(bloom, 0.42, P(t, 60.9, 61.6, 'inOutSine'));
+      return { bloom, vignette: lerp(0.2, 0.26, h), grain: lerp(0.035, 0.05, h) };
     },
     draw(ctx, t) {
-      const cam = camAt(t), st = stateAt(t), g = bandGuard(t); SKYK = Math.max(st.top, P(t, 56.1, 57.0) * 0.6);
-      const bg = (c) => { drawSky(c, t, cam); drawFar(c, t, cam); drawMid(c, t, cam, st); };
-      if (st.blurBG > 0.5 && Math.abs(st.blurBG - st.blurMID) < 0.3) E.layer(ctx, (l) => { bg(l); drawHero(l, t, cam, st); }, { blur: st.blurBG, lo: true });
-      else {
-        if (st.blurBG > 0.5) E.layer(ctx, (l) => bg(l), { blur: st.blurBG, lo: true }); else bg(ctx);
-        drawHero(ctx, t, cam, st);
+      const cam = camAt(t), st = stateAt(t), g = bandGuard(t), K = outroK(t); SKYK = Math.max(st.top, P(t, 56.1, 57.0) * 0.6);
+      if (K.wK < 1) {   // once the veil is opaque (≥ 61.0) the vista underneath is invisible: skip it
+        const bg = (c) => { drawSky(c, t, cam); drawFar(c, t, cam); drawMid(c, t, cam, st); };
+        if (st.blurBG > 0.5 && Math.abs(st.blurBG - st.blurMID) < 0.3) E.layer(ctx, (l) => { bg(l); drawHero(l, t, cam, st); }, { blur: st.blurBG, lo: true });
+        else {
+          if (st.blurBG > 0.5) E.layer(ctx, (l) => bg(l), { blur: st.blurBG, lo: true }); else bg(ctx);
+          drawHero(ctx, t, cam, st);
+        }
+        drawRingPulse(ctx, t);
+        drawLightFromAbove(ctx, t, st);
+        drawLove(ctx, t);
+        drawJar(ctx, t, cam, st);
+        drawGrow(ctx, t, cam, st);
+        const src = ctx.canvas, pb = Math.max(st.blurBG, st.blurMID) * 0.85;
+        if (pb > 0.6) E.layer(ctx, (l) => drawPool(l, src, t, cam, st), { blur: pb, lo: true }); else drawPool(ctx, src, t, cam, st);
+        drawRain(ctx, t, st);
+        if (t > 56.2) A.petals(ctx, t, { area: { x: 0, y: 0, w: W, h: 1150 }, n: 14, seed: 1110, light: true, size: 20, wind: [14, 26], alpha: 0.75 * P(t, 56.2, 57.0) });
+        drawFg(ctx, t, cam);
+        const ye = poolEdgeY(cam);
+        drawExposure(ctx, t, st, g, ye, cam);
+        if (st.flash > 0.01) { const q = toScreen(cam, 1, ROSE.x, ROSE.y); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = E.rad(ctx, q[0], q[1], 0, 760, [[0, '#FFFFFF', 0.12 * st.flash], [0.32, '#FFF3D2', 0.22 * st.flash], [1, '#FFF3D2', 0]]); ctx.fillRect(0, 0, W, 1240); ctx.restore(); }
+        // feathered band scrim over the dark pool only (clipped at the terrace foot, so the cream marble stays clean)
+        if (g > 0.01) { ctx.save(); ctx.beginPath(); ctx.rect(0, ye - 1, W, H - ye + 1); ctx.clip(); ctx.fillStyle = E.rad(ctx, 540, 1400, 0, 640, [[0, '#082A22', 0.22 * g], [0.7, '#082A22', 0.12 * g], [1, '#082A22', 0]]); ctx.translate(540, 1400); ctx.scale(1, 220 / 640); ctx.translate(-540, -1400); ctx.fillRect(-100, 760, 1280, 1280); ctx.restore(); }
+        // grade: warm soft-light
+        ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = E.rgba('#FFE7B0', 0.10); ctx.fillRect(0, 0, W, H); ctx.restore();
       }
-      drawRingPulse(ctx, t);
-      drawLightFromAbove(ctx, t, st);
-      drawLove(ctx, t);
-      drawJar(ctx, t, cam, st);
-      drawGrow(ctx, t, cam, st);
-      const src = ctx.canvas, pb = Math.max(st.blurBG, st.blurMID) * 0.85;
-      if (pb > 0.6) E.layer(ctx, (l) => drawPool(l, src, t, cam, st), { blur: pb, lo: true }); else drawPool(ctx, src, t, cam, st);
-      drawRain(ctx, t, st);
-      if (st.r3 > 0 && t < 61.2) A.petals(ctx, t, { t0: 60.1, origin: (() => { const q = toScreen(cam, 1, ROSE.x, ROSE.y); return { x: q[0], y: q[1] }; })(), n: 46, seed: 1100, speed: 1100, spread: TAU, life: 1.5, light: true, size: 26, gravity: 0, stagger: 0.12, wind: [0, -20] });
-      if (t > 56.2) A.petals(ctx, t, { area: { x: 0, y: 0, w: W, h: 1150 }, n: 14, seed: 1110, light: true, size: 20, wind: [14, 26], alpha: 0.75 * P(t, 56.2, 57.0) });
-      drawFg(ctx, t, cam);
-      drawExposure(ctx, t, st, g);
-      if (st.flash > 0.01) { const q = toScreen(cam, 1, ROSE.x, ROSE.y); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = E.rad(ctx, q[0], q[1], 0, 760, [[0, '#FFFFFF', 0.32 * st.flash], [0.3, '#FFF3D2', 0.16 * st.flash], [1, '#FFF3D2', 0]]); ctx.fillRect(0, 0, W, 1240); ctx.restore(); }
-      if (g > 0.01) { ctx.save(); ctx.fillStyle = E.rad(ctx, 540, 1400, 0, 640, [[0, '#082A22', 0.22 * g], [0.7, '#082A22', 0.12 * g], [1, '#082A22', 0]]); ctx.translate(540, 1400); ctx.scale(1, 220 / 640); ctx.translate(-540, -1400); ctx.fillRect(-100, 760, 1280, 1280); ctx.restore(); }
-      // grade: warm soft-light
-      ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = E.rgba('#FFE7B0', 0.10); ctx.fillRect(0, 0, W, H); ctx.restore();
-      drawOutro(ctx, t, cam);
+      drawVeil(ctx, t, K.wK);
+      drawRosette(ctx, t, cam, st, K.wK, K.c);
+      // light-petals burst outward over the rosette, dissolving with the vista
+      if (st.r3 > 0 && K.wK < 1) A.petals(ctx, t, { t0: 60.1, origin: (() => { const q = toScreen(cam, 1, ROSE.x, ROSE.y); return { x: q[0], y: q[1] }; })(), n: 46, seed: 1100, speed: 1100, spread: TAU, life: 1.5, light: true, size: 26, gravity: 0, stagger: 0.12, wind: [0, -20], alpha: 1 - K.wK });
+      drawOutro(ctx, t, cam, K);
       const wo = t < 47.8 ? 0.9 : 0.9 * (1 - P(t, 47.8, 48.55, 'inOutSine'));
       if (wo > 0.003) { ctx.fillStyle = E.rgba(C.sky0, wo); ctx.fillRect(0, 0, W, H); }
     },

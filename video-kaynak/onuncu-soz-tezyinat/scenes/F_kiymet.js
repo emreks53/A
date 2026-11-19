@@ -19,11 +19,11 @@
  *  26.03 8 medallions pop (0.06 s stagger) from the rose to orbit r350 (0.06 rad/s) + gold octagram
  *  27.05 orbit accelerates and tightens into a bright lens ring; the gem rose swells, spins and (behind a
  *        sparkle) becomes an 8-petal ruby iris whose blades rotate open on ivory light with the footnote star
- *        geometry glimpsed inside · 27.15–28.40 dive (inCubic → outExpo), roll +8°
+ *        geometry glimpsed inside · 27.15–28.40 dive (inCubic → C2 quintic settle, no speed jump), roll +8°
  *  27.45–28.00 16-wedge kaleidoscope (mirrored), masked to a soft circle r≈520 @ (540,760)
  *  27.90–28.30 ivory flood from the centre (band last) → 28.15 parchment fibres + footnote Star8 r40 @
  *        (540,760), open 0 (G handoff; parchment/star code is identical in G_hasiye.js)
- *  Gloss 26.09–27.93: band kept violet/dark, near bokeh dimmed, soft feathered scrim ≤0.2.
+ *  Gloss 'süslemeler' (≈26.09–27.05, read from TIMING): band kept violet/dark, near bokeh dimmed, soft feathered scrim ≤0.2.
  * ========================================================================== */
 (function () {
   'use strict';
@@ -138,9 +138,23 @@
     const nudge = -6 * Math.sin(PI * clamp((t - 23.76) / 0.14)) * (t > 23.76 ? 1 : 0);
     return baseRCY(t) + bob + nudge;
   }
+  /* dive 27.15–28.40, log-zoom fraction e(u): the inCubic plunge (unchanged) up to u = 0.5, then a quintic that
+   * continues it with the SAME position, speed and acceleration and comes to rest at e = 1 (z ×12/1.08).
+   * (The old inCubic→outExpo join had a 4× speed jump at 27.84: a one-frame lurch to white.) */
+  const DIVE_A = 0.42 / Math.pow(0.55, 3), DIVE_U1 = 0.5;
+  const DIVE_Q = (() => {
+    const h = 1 - DIVE_U1, p0 = DIVE_A * DIVE_U1 ** 3, v0 = 3 * DIVE_A * DIVE_U1 ** 2 * h, a0 = 3 * DIVE_A * DIVE_U1 * h * h;
+    // p(s) = p0 + v0 s + a0 s² + c3 s³ + c4 s⁴ + c5 s⁵ with p(1) = 1, p'(1) = 0, p''(1) = 0
+    const r1 = 1 - p0 - v0 - a0, r2 = -(v0 + 2 * a0), r3 = -2 * a0;
+    const c5 = (r3 - 6 * r1 - 6 * (r2 - 3 * r1)) / 2, c4 = r2 - 3 * r1 - 2 * c5, c3 = r1 - c4 - c5;
+    return [p0, v0, a0, c3, c4, c5];
+  })();
   function diveZ(t) {
     if (t <= 27.15) return 1;
-    const u = clamp((t - 27.15) / 1.25), e = u < 0.55 ? 0.42 * ez.inCubic(u / 0.55) : 0.42 + 0.58 * ez.outExpo((u - 0.55) / 0.45);
+    const u = clamp((t - 27.15) / 1.25), q = DIVE_Q;
+    let e;
+    if (u <= DIVE_U1) e = DIVE_A * u * u * u;
+    else { const s = (u - DIVE_U1) / (1 - DIVE_U1); e = q[0] + s * (q[1] + s * (q[2] + s * (q[3] + s * (q[4] + s * q[5])))); }
     return Math.pow(12 / 1.08, e);
   }
   /** close framing: push in on the ruby after the E handoff (z 1→1.6 ⇒ rose R180 ≈ 288 px), small push on
@@ -188,20 +202,25 @@
     x.fillStyle = 'rgba(70,36,4,0.26)'; x.beginPath(); x.moveTo(-84, 92); x.lineTo(-40, 92); x.lineTo(-43, 790); x.lineTo(-92, 790); x.closePath(); x.fill();
     x.fillStyle = 'rgba(70,36,4,0.12)'; x.beginPath(); x.moveTo(40, 92); x.lineTo(84, 92); x.lineTo(92, 790); x.lineTo(43, 790); x.closePath(); x.fill();
     x.strokeStyle = 'rgba(255,246,206,0.6)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-40, 92); x.lineTo(-43, 790); x.moveTo(40, 92); x.lineTo(43, 790); x.stroke();
-    // engraved OPEN running rumi vine: one wavy stem, leaves and tendrils ALTERNATE sides (never mirrored,
-    // never closing into a loop), punched-dot borders
-    const eng = new Path2D(), stemX = (y) => 9 * Math.sin(y / 34);
-    eng.moveTo(stemX(100), 100); for (let y = 104; y <= 700; y += 4) eng.lineTo(stemX(y), y);
-    for (let k = 0, y = 118; y < 690; k++, y += 36) {
-      const g = k % 2 ? 1 : -1, bx = stemX(y);
-      // pointed saz leaf, open at the base, leaning upward and outward
-      eng.moveTo(bx, y); eng.quadraticCurveTo(bx + g * 14, y - 4, bx + g * 25, y - 15); eng.moveTo(bx, y); eng.quadraticCurveTo(bx + g * 8, y - 13, bx + g * 25, y - 15);
-      // tendril curling the other way, an open half-spiral
-      const ty = y + 18, tb = stemX(ty);
-      eng.moveTo(tb, ty); eng.bezierCurveTo(tb - g * 12, ty + 2, tb - g * 22, ty + 10, tb - g * 20, ty + 20); eng.quadraticCurveTo(tb - g * 18, ty + 26, tb - g * 13, ty + 24);
+    // engraved symmetric ogee chain (classic rumi band): two mirrored stems weave pointed ogival cells, each holding
+    // a small four-petal rosette, with paired saz leaves on every bulge. Strict bilateral symmetry and closed
+    // shapes, so nothing reads as a doodle or as script. Two-tone engraving: recessed shadow + lit lower lip.
+    const eng = new Path2D(), Y0 = 100, CH = 60, AX = 20;
+    const stem = (y) => AX * Math.pow(Math.abs(Math.sin(PI * (y - Y0) / CH)), 0.85);
+    for (const g of [-1, 1]) { eng.moveTo(0, Y0); for (let y = Y0 + 2; y <= 700; y += 2) eng.lineTo(g * stem(y), y); }
+    const almond = (x0, y0, x1, y1, wd) => {   // closed pointed leaf from (x0,y0) to (x1,y1), half-width wd
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, nx = -dy / L * wd * 2, ny = dx / L * wd * 2;
+      eng.moveTo(x0, y0); eng.quadraticCurveTo(mx + nx, my + ny, x1, y1); eng.quadraticCurveTo(mx - nx, my - ny, x0, y0);
+    };
+    for (let yc = Y0 + CH / 2; yc < 700; yc += CH) {
+      // rosette in the cell: dot + four small almond petals
+      eng.moveTo(2.6, yc); eng.arc(0, yc, 2.6, 0, TAU);
+      for (const [ux, uy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) almond(ux * 4.5, yc + uy * 4.5, ux * (uy ? 7 : 11), yc + uy * 13, 2.6);
+      // paired saz leaves on the bulges, leaning up and out
+      for (const g of [-1, 1]) almond(g * (AX + 1), yc + 3, g * (AX + 13), yc - 9, 2.4);
     }
-    for (const [dx, col, lw] of [[0.9, 'rgba(255,248,214,0.8)', 1.1], [0, 'rgba(110,64,16,0.85)', 1.7]]) {
-      x.save(); x.translate(-dx, -dx); x.strokeStyle = col; x.lineWidth = lw; x.lineCap = 'round'; x.lineJoin = 'round'; x.stroke(eng); x.restore();
+    for (const [dx, col, lw] of [[0.8, 'rgba(255,248,214,0.75)', 1.0], [0, 'rgba(96,54,12,0.85)', 1.5]]) {
+      x.save(); x.translate(dx, dx); x.strokeStyle = col; x.lineWidth = lw; x.lineCap = 'round'; x.lineJoin = 'round'; x.stroke(eng); x.restore();
     }
     for (let y = 104; y < 700; y += 9) for (const bx of [-37, 37]) { x.fillStyle = 'rgba(110,64,16,0.6)'; x.beginPath(); x.arc(bx, y, 1.3, 0, TAU); x.fill(); x.fillStyle = 'rgba(255,248,214,0.6)'; x.beginPath(); x.arc(bx - 0.6, y - 0.6, 0.7, 0, TAU); x.fill(); }
     // strong specular streaks (polished gold), soft occlusion under the neck
@@ -317,7 +336,11 @@
     x.fillStyle = E.rad(x, 0, -2, 0, 40, [[0, '#FFFFFF', 0.4], [1, '#FFFFFF', 0]]); x.beginPath(); x.arc(0, -2, 40, 0, TAU); x.fill();
     const t0 = 0.4;
     if (i === 0) E.at(x, 0, 18, 1.15, 0, (c) => A.flowerSet(c, { type: 'tulip', size: 30, stem: 0, t: t0, sway: 0 }));
-    else if (i === 1) E.at(x, 6, 42, 1, 0.3, (c) => A.peacockFeather(c, { len: 86, t: t0, sway: 0 }));
+    else if (i === 1) {
+      // centred on the table: quill base low, eye just above the middle; drawn 3× with sub-pixel offsets so the
+      // asset's hair-thin barbs survive the sprite's downscale (the opaque eye/vane are unchanged)
+      for (const ox of [-0.45, 0.45, 0]) E.at(x, -11 + ox, 36, 1, 0.12, (c) => A.peacockFeather(c, { len: 78, t: t0, sway: 0 }));
+    }
     else if (i === 2) E.at(x, 0, 4, 1, 0, (c) => A.butterfly(c, { size: 30, pattern: 'sapphire', gem: true, flap: 0.96, t: t0 }));
     else if (i === 3) E.at(x, 0, 6, 1, 0, (c) => A.pomegranate(c, { r: 24, gem: true, t: t0 }));
     else if (i === 4) E.at(x, 0, 18, 1.1, 0, (c) => A.flowerSet(c, { type: 'carnation', size: 30, stem: 0, t: t0, sway: 0 }));
@@ -328,6 +351,29 @@
     x.fillStyle = E.lin(x, -ro, -ro, ro * 0.2, ro * 0.2, [[0, '#FFFFFF', 0.3], [0.5, '#FFFFFF', 0.06], [1, '#FFFFFF', 0]]);
     x.beginPath(); out.forEach((q, k) => (k ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1]))); x.closePath(); x.fill();
     return { c: cv.c, s: S2, size };
+  }
+  /** the gem-rose's heart: one clean cut-ruby crown (5 facet triangles round an apex, lit from the rose's key light,
+   *  upper left), replacing the asset's inner ring whose thin, overlapping slivers read as a jagged tangle.
+   *  Rose-local coords (origin = receptacle); k 0..1 grows it in with the bloom. */
+  const BUD_RAMP = ['#6E0A28', '#9A0E38', '#C2184A', '#E8305E', '#FF5A84', '#FF9AB4', '#FFD8E4'];
+  const budRamp = (v) => { v = clamp(v) * (BUD_RAMP.length - 1); const i = Math.min(BUD_RAMP.length - 2, Math.floor(v)); return E.mix(BUD_RAMP[i], BUD_RAMP[i + 1], v - i); };
+  const BUD_L = [-0.55, -0.5, 0.67].map((v, _, a) => v / Math.hypot(a[0], a[1], a[2]));
+  function gemBud(c, t, k) {
+    const se = Math.sin(0.85), ce = Math.cos(0.85), r = 48 * k, hz = 26 * k, by = -30;
+    const B = []; for (let i = 0; i < 5; i++) { const th = -PI / 2 + i * TAU / 5; B.push([r * Math.cos(th), by + r * Math.sin(th) * se, th]); }
+    const ax = 0, ay = by - hz * ce, al = Math.atan2(hz, r * Math.cos(PI / 5)) || 0;
+    c.save(); c.lineJoin = 'round';
+    for (let i = 0; i < 5; i++) {
+      const p = B[i], q = B[(i + 1) % 5], ph = p[2] + PI / 5;
+      const lam = Math.sin(al) * (Math.cos(ph) * BUD_L[0] + Math.sin(ph) * BUD_L[1]) + Math.cos(al) * BUD_L[2], v = 0.6 + 0.9 * (lam - 0.55);
+      c.fillStyle = E.lin(c, ax, ay, (p[0] + q[0]) / 2, (p[1] + q[1]) / 2, [[0, budRamp(v + 0.12)], [1, budRamp(v - 0.1)]]);
+      c.beginPath(); c.moveTo(ax, ay); c.lineTo(p[0], p[1]); c.lineTo(q[0], q[1]); c.closePath(); c.fill();
+      c.strokeStyle = E.rgba('#FFD6E2', 0.55 * k); c.lineWidth = 0.9; c.stroke();
+    }
+    c.beginPath(); B.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); c.strokeStyle = E.rgba('#FFE3EC', 0.7 * k); c.lineWidth = 1.2; c.stroke();
+    const tw = Math.pow(E.osc(t, 1.9, 0.3), 3);
+    S.sparkle(c, ax - r * 0.12, ay + r * 0.08, r * (0.22 + 0.08 * tw), (0.7 + 0.3 * tw) * k, '#FFFFFF', t * 0.4);
+    c.restore();
   }
   /** soft additive glint (round core + faint thin cross), never a hard 4-point star */
   function softGlint(ctx, x, y, r, a, col = '#FFF6E6') {
@@ -349,7 +395,13 @@
     add(10, 0.3, 18, 34, 0.08, 0.16); add(8, 0.6, 22, 40, 0.07, 0.13);
     for (let i = 0; i < 10; i++) BOKEH.push({ p: 1.7, x: i % 2 ? 860 + rnd() * 420 : -200 + rnd() * 420, y: -300 + rnd() * 2500, r: lerp(50, 120, rnd()), a: lerp(0.1, 0.2, rnd()), col: ['#FF3D6E', '#FFCF5A', '#B47CFF', '#FF8AA8'][i % 4], sp: 14 + rnd() * 16, ph: rnd() * 10, hex: true });
   }
-  function bandGuard(t) { return P(t, 25.85, 26.1, 'inOutSine') * (1 - P(t, 27.2, 27.45, 'inOutSine')); }
+  /** band treatment follows the 'süslemeler' gloss in engine/timing.js: ramps in 0.25 s before it enters and out
+   *  while it fades (engine out-fade 0.28 s) */
+  let GLS = null;
+  function bandGuard(t) {
+    if (!GLS) GLS = (window.TIMING && TIMING.glosses.find((g) => g.in > 25.5 && g.in < 26.6)) || { in: 26.085, out: 27.05 };
+    return P(t, GLS.in - 0.25, GLS.in, 'inOutSine') * (1 - P(t, GLS.out, GLS.out + 0.3, 'inOutSine'));
+  }
   function drawBokeh(ctx, t, c, layerSel, vis) {
     const g = bandGuard(t);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -723,7 +775,11 @@
         // 'ibret': the gem-rose's own facets rotate open (spin + spread) around an opening heart of light
         const spin = 0.5 * ez.inCubic(clamp((t - 26.95) / 0.3)) + 2.4 * ez.inOutCubic(clamp((t - 27.1) / 1.0)), swell = (1 + 0.12 * P(t, 26.95, 27.24)) * (1 + 0.5 * P(t, 27.15, 27.95));
         h.save(); h.globalAlpha *= gA;
-        E.at(h, CX, rcy, sc * swell, spin, (cc) => { cc.translate(0, 0.16 * R); A.heroRose(cc, { R, bloom, variant: 'gem', t, tilt: 0.85 }); });   // spins about its visual centre
+        E.at(h, CX, rcy, sc * swell, spin, (cc) => {   // spins about its visual centre
+          cc.translate(0, 0.16 * R);
+          A.heroRose(cc, { R, bloom, variant: 'gem', t, tilt: 0.85, rings: [5, 5] });   // outer + inner ring; the heart is gemBud
+          const kb = sm((bloom - 0.4) / 0.6); if (kb > 0) gemBud(cc, t, kb);
+        });
         h.restore();
         return sc;
       };
@@ -740,12 +796,21 @@
       drawReflection(ctx, c, (l) => { gPlinth(l); gRose(l); }, 0.34 * envA * bgK);
       hero((h) => {
         h.save(); h.globalAlpha *= envA;
+        // low haze on the floor, BEHIND the plinth (drawn over it, it veiled the lower shaft into a dull mauve)
+        h.save(); h.globalAlpha *= 0.5; for (const [dx, sp] of [[0, 9], [260, -6]]) { const mx = ((dx + t * sp) % 700 + 700) % 700 - 350; h.drawImage(SP.mist, CX - 700 + mx * 0.3, FY - 330, 1400, 600); } h.restore();
         gPlinth(h);
-        // emergence: light ring on the floor around the rising plinth
+        // a soft violet breath only around the plinth's foot, so it still stands in the haze (no hard base line)
+        if (pk > 0) { h.save(); h.translate(CX, FY - 4); h.scale(1, 0.3); h.fillStyle = E.rad(h, 0, 0, 0, 200, [[0, '#6A389C', 0.4 * pk], [0.5, '#5E2C86', 0.18 * pk], [1, '#5E2C86', 0]]); h.fillRect(-200, -200, 400, 400); h.restore(); }
+        // emergence: a ripple of light spreading over the floor from the plinth's foot. The plinth stands on the
+        // wall seam (FY), so only the front half lies on the floor; it fades out where it meets the wall (never
+        // painted on the wall, never across the column).
         const er = E.env(t, 23.36, 24.3, 0.12, 0.5);
-        if (er > 0) { h.save(); h.globalCompositeOperation = 'lighter'; h.translate(CX, FY); h.scale(1, 0.16); h.strokeStyle = E.rgba('#FFCF5A', 0.55 * er); h.lineWidth = 14; h.beginPath(); h.arc(0, 0, 150 + 120 * P(t, 23.36, 24.3, 'outCubic'), 0, TAU); h.stroke(); h.restore(); }
-        // low haze on the floor
-        h.globalAlpha *= 0.5; for (const [dx, sp] of [[0, 9], [260, -6]]) { const mx = ((dx + t * sp) % 700 + 700) % 700 - 350; h.drawImage(SP.mist, CX - 700 + mx * 0.3, FY - 330, 1400, 600); }
+        if (er > 0) {
+          const rr = 150 + 120 * P(t, 23.36, 24.3, 'outCubic');
+          h.save(); h.globalCompositeOperation = 'lighter'; h.translate(CX, FY); h.scale(1, 0.16);
+          h.strokeStyle = E.lin(h, 0, 0, 0, rr * 0.6, [[0, '#FFCF5A', 0], [1, '#FFCF5A', 0.55 * er]]); h.lineWidth = 14;
+          h.beginPath(); h.arc(0, 0, rr, 0, PI); h.stroke(); h.restore();
+        }
         h.restore();
       });
       hero((h) => {
@@ -765,7 +830,11 @@
         let rsc;
         if (ah > 0.5) {
           h.save(); h.fillStyle = E.rad(h, CX, rcy, 0, ah * 1.15, [[0, '#FFF6E2'], [0.55, '#FFE9C4'], [1, '#F7C890']]); h.beginPath(); h.arc(CX, rcy, ah * 1.15, 0, TAU); h.fill();
-          E.at(h, CX, rcy, 1, -t * 0.6, (cc) => star8a(cc, { r: ah * 0.5, open: 1, draw: 1, glow: 0.3, lineW: Math.max(1.4, ah * 0.02), col: '#B08030' })); h.restore();
+          // the star geometry glimpsed inside fades while the camera passes through it (its screen radius grows
+          // ≈360→1350 px over 27.85–28.0), so no giant crisp lines rush across the ivory right after the crossing
+          const sk = 1 - P(t, 27.85, 28.0, 'inOutSine');
+          if (sk > 0.002) E.at(h, CX, rcy, 1, -t * 0.6, (cc) => { cc.globalAlpha *= sk; star8a(cc, { r: ah * 0.5, open: 1, draw: 1, glow: 0.3, lineW: Math.max(1.4, ah * 0.02), col: '#B08030' }); });
+          h.restore();
           const m = h.getTransform();
           E.layer(h, (l) => { fresh(l, false); l.setTransform(m); rsc = gRose(l); l.globalCompositeOperation = 'destination-out'; l.fillStyle = E.rad(l, CX, rcy, ah * 0.7, ah, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(CX - ah - 4, rcy - ah - 4, 2 * ah + 8, 2 * ah + 8); });
           h.save(); h.globalCompositeOperation = 'lighter'; h.fillStyle = E.rad(h, CX, rcy, ah * 0.6, ah * 1.5, [[0, '#FFE9C8', 0.18], [1, '#FF8AA8', 0]]); h.fillRect(CX - ah * 1.7, rcy - ah * 1.7, ah * 3.4, ah * 3.4); h.restore();

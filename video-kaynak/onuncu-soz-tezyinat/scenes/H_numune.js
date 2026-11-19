@@ -16,15 +16,18 @@
  *          to the rose jar z2.05, framed low + RACK FOCUS → 39.66–40.95 eased pull-back to the wide hold z0.6
  *          (shop low, originals uncropped in y 160–590, plinth under the gloss line) → hold to 45.9 with lateral
  *          sway (z 0.6→0.62) → 45.9–47.9 tilt up 2200 at constant zoom through opaque clouds coming from above.
- *  BEATS   37.60 crisp walnut kafes with a straight-edged star frame (continues G's push) scaling past the edges ·
- *          38.36+0.07·rank ghosts fill in, domes set down, tags swing (new ghosts only appear after the flights) ·
+ *  BEATS   37.60 crisp walnut kafes with a straight-edged star frame (continues G's push) scaling past the edges;
+ *          G's six ghost line-drawings arrive ON their shelf slots (G owns the only flight; H holds them there) ·
+ *          38.36+0.07·rank ghosts fill in through a soft feathered front, domes set down, tags swing ·
  *          38.84 spec sweep · 39.0/.25/.5 lanterns · 39.7 originals appear huge behind the back glass and rise
  *          into the sky as the camera pulls back · 40.80 projection lines (heroes, only onto visible originals) ·
  *          41.39 solidify · 43.38 12 gaze filaments from the L/R edges (y 980–1180) · 44.06 focus · 44.76 prism:
- *          a 4-colour ribbon rises from each jar's knob along its own lane (never across a jar above) ·
- *          45.30–45.95 each gaze filament MORPHS (outCubic) into its jar's beam: knob → lane → its own original,
- *          which ignites where the beam lands · 45.95+ beams rise from the originals to the meeting point ·
- *          46.85 the gate traces on (pointed arch bright, frame at 25 %), originals fade to ≤ 0.2 ·
+ *          a short fanned 4-colour ribbon leaves each jar (top row: knob; rows 2–3: dome shoulder) along its own
+ *          beam path, tips fading · 45.30 the turn: gazes are drawn in to their jars (edge end held, eased) while
+ *          every beam shoots up at once as ONE smooth tapered stroke — exit point → one bend into its lane between
+ *          the jars → up → onto its own original, which ignites where it lands · 45.95+ beams rise from the
+ *          originals to a meeting point kept above every original, easing into the gate's apex ·
+ *          46.85 the pointed arch traces on from that apex (frame fades in at 25 %), originals fade to ≤ 0.2 ·
  *          47.42–47.80 fly through the arch (vertical-gradient fill) into #FFFDF7.
  *  Band    smooth gloss envelope (no booleans): band shows plinth + dark wet setts, scrim ≤ 0.2.
  * ========================================================================== */
@@ -131,7 +134,7 @@
     { key: 'tulip', r: 1, c: 2, g: [803, 843, 1.51], stand: 'vase', OL: [935, 355, 370, 0.04, 1],
       art: (x, t, pose) => E.at(x, 0, -24, 1, 0, () => A.flowerSet(x, { type: 'tulip', size: 31, stem: 60, t: pose ? 0 : t, sway: pose ? 0 : 0.45, phase: 2.1 })) },
     { key: 'nautilus', r: 2, c: 0, g: [277, 843, 1.59], stand: 'dish', OL: [290, 122, 80, -0.2, 0],
-      art: (x, t, pose) => E.at(x, 0, -47, 1, pose ? 0 : 0.02 * Math.sin(t * 0.7), () => A.nautilus(x, { r: 36 })) },
+      art: (x, t, pose) => E.at(x, 0, -28, 1, pose ? 0 : 0.02 * Math.sin(t * 0.7), () => A.nautilus(x, { r: 36 })) },
     { key: 'pomegranate', r: 2, c: 1, g: [540, 843, 1.68], stand: 'dish', OL: [238, 510, 170, 0.08, 1],
       art: (x, t, pose) => E.at(x, 0, -40, 1, 0, () => A.pomegranate(x, { r: 31, t: pose ? 0 : t })) },
     { key: 'cherries', r: 2, c: 2, g: null, stand: 'dish', OL: [1012, 125, 85, 0.1, 0],
@@ -151,8 +154,11 @@
     [-1, 'peacock', 1030], [1, 'peacock', 1022], [-1, 'pomegranate', 1172], [1, 'pomegranate', 1166],
   ].map((f, k) => ({ side: f[0], it: byKey[f[1]], ey: f[2], k, ta: T_FIL + 0.05 * k + 0.42 }));
   const HAIR = ['#FF6F91', '#FFD27A', '#6FF0FF', '#B48CFF'], HAIR_D = [-1.5, -0.5, 0.5, 1.5];
-  /* lanes (world x) through the vitrine so no beam ever crosses a jar above it; target contour angle on the original */
-  const LANE = { butterfly: 310, peacock: 540, snowflake: 770, carnation: 222, rose: 642, tulip: 858, nautilus: 412, pomegranate: 442, cherries: 672 };
+  /* lanes (world x) through the vitrine so no beam ever crosses a jar above it (top row: straight up from the knob;
+   * rows 2–3 leave the dome's shoulder on the lane side and bend smoothly into the gap); target contour angle on the original */
+  // (no gap holds a mirrored pair of bends — that read as a cup between jars — and the central beams do not cross)
+  const LANE = { butterfly: 310, peacock: 540, snowflake: 770, nautilus: 188, carnation: 228, pomegranate: 452, rose: 636, tulip: 860, cherries: 902 };
+  const SH_X = 43, SH_Y = 148;                 // dome shoulder (45° point of A.bellJar's dome) from the jar base centre
   const AIM = { butterfly: 0.3 * PI, rose: 0.5 * PI, tulip: 0.5 * PI, pomegranate: 0.05 * PI };
   FILS.forEach((f) => { f.primary = !FILS.some((g) => g.it === f.it && g.k < f.k); });
 
@@ -270,6 +276,30 @@
     });
   }
 
+  /* spandrel medallion drawn over A.archGate's (which reads as a cog at phone size): gilt ring, eight long +
+   * eight short almond petals, filled brass boss — no hole, no teeth */
+  function spandrelRosette(x, cx, cy, r) {
+    x.save(); x.translate(cx, cy);
+    x.fillStyle = '#3A2416'; x.beginPath(); x.arc(0, 0, r * 1.07, 0, TAU); x.fill();
+    x.strokeStyle = '#C99A4A'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, r * 0.97, 0, TAU); x.stroke();
+    x.strokeStyle = 'rgba(201,154,74,0.5)'; x.lineWidth = 1.2; x.beginPath(); x.arc(0, 0, r * 0.87, 0, TAU); x.stroke();
+    x.fillStyle = '#C99A4A'; for (let k = 0; k < 16; k++) { const a = (k + 0.5) * TAU / 16; x.beginPath(); x.arc(Math.cos(a) * r * 0.92, Math.sin(a) * r * 0.92, 1.7, 0, TAU); x.fill(); }
+    const petal = (len, wid, a, c0, c1) => {
+      x.save(); x.rotate(a);
+      const b0 = r * 0.13, p = new Path2D();
+      p.moveTo(0, -b0); p.bezierCurveTo(wid, -b0 - len * 0.3, wid * 0.75, -b0 - len * 0.78, 0, -b0 - len);
+      p.bezierCurveTo(-wid * 0.75, -b0 - len * 0.78, -wid, -b0 - len * 0.3, 0, -b0); p.closePath();
+      x.fillStyle = E.lin(x, 0, -b0, 0, -b0 - len, [[0, c1], [0.45, c0], [1, c1]]); x.fill(p);
+      x.strokeStyle = 'rgba(30,14,6,0.65)'; x.lineWidth = 1.1; x.stroke(p);
+      x.strokeStyle = 'rgba(255,236,190,0.45)'; x.lineWidth = 0.9; x.beginPath(); x.moveTo(0, -b0 - len * 0.12); x.lineTo(0, -b0 - len * 0.82); x.stroke();
+      x.restore();
+    };
+    for (let k = 0; k < 8; k++) petal(r * 0.42, r * 0.13, (k + 0.5) * TAU / 8, '#B88A44', '#6E4A26');
+    for (let k = 0; k < 8; k++) petal(r * 0.68, r * 0.19, k * TAU / 8, '#F2D58E', '#A8783A');
+    x.fillStyle = E.rad(x, -r * 0.05, -r * 0.06, 0, r * 0.2, [[0, '#FFF0C0'], [0.45, '#E8C27A'], [1, '#8A6428']]); x.beginPath(); x.arc(0, 0, r * 0.17, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(30,14,6,0.7)'; x.lineWidth = 1.4; x.stroke();
+    x.restore();
+  }
   function buildFrame() {
     SP.frame = spriteWorld(30, 120, 1020, 1040, 1.3, (x) => {
       x.save(); x.clip(OPEN_PATH);
@@ -289,6 +319,7 @@
       }
       x.restore();
       E.at(x, AR.x, AR.y, 1, 0, () => A.archGate(x, { w: AR.w, h: AR.h, lattice: false, muqarnas: false }));
+      for (const sg of [-1, 1]) spandrelRosette(x, AR.x + sg * AR.w * 0.335, AR.y - AR.h + AG.ft * 1.25 + AG.hw * 0.32, AG.ft);
       x.globalCompositeOperation = 'source-atop';
       x.fillStyle = E.lin(x, 0, 120, 0, 1160, [[0, '#2A1430', 0.42], [0.45, '#24102A', 0.5], [1, '#160818', 0.62]]);
       x.fillRect(30, 120, 1020, 1040);
@@ -458,6 +489,23 @@
     const ed = E.canvas(w, h); ed.x.drawImage(maskC, 0, 0); ed.x.globalCompositeOperation = 'destination-out'; ed.x.drawImage(er.c, 0, 0);
     return ed.c;
   }
+  /* ghost line drawing — same recipe as G_hasiye makeGhost (alpha + luminance Sobel, soft glow), so the
+   * hand-off ghosts read alike and inner structure (nautilus chambers, petals, barbs) shows */
+  function ghostLines(d, w, h) {                 // d = the art's RGBA pixels (already read back by measure)
+    const n = w * h;
+    const Lm = new Float32Array(n), Al = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const a = d[i * 4 + 3] / 255; Al[i] = a; Lm[i] = a * (0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2]) / 255; }
+    const out = E.canvas(w, h), id = out.x.createImageData(w, h), o = id.data;
+    const sob = (F, i) => Math.hypot(F[i - w + 1] + 2 * F[i + 1] + F[i + w + 1] - F[i - w - 1] - 2 * F[i - 1] - F[i + w - 1],
+      F[i + w - 1] + 2 * F[i + w] + F[i + w + 1] - F[i - w - 1] - 2 * F[i - w] - F[i - w + 1]);
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x, e = Math.max(sm((sob(Al, i) - 0.5) / 1.2), sm((sob(Lm, i) - 0.22) / 0.5) * 0.85);
+      if (e <= 0) continue;
+      o[i * 4] = 255; o[i * 4 + 1] = 246; o[i * 4 + 2] = 224; o[i * 4 + 3] = e * 255;
+    }
+    out.x.putImageData(id, 0, 0);
+    return out.c;
+  }
   function tinted(src, w, h, col) { const b = E.canvas(w, h); b.x.drawImage(src, 0, 0); b.x.globalCompositeOperation = 'source-in'; b.x.fillStyle = col; b.x.fillRect(0, 0, w, h); return b.c; }
   function lineArt(artC, w, h) {
     const d = artC.getContext('2d').getImageData(0, 0, w, h).data, n = w * h;
@@ -502,10 +550,9 @@
     };
     const a = run(it.art), ba = bbox(a);
     it.ghost = { c: E.canvas(cw, ch).c, cx: (ba.x0 + ba.x1) / 2, cy: (ba.y0 + ba.y1) / 2 };
-    { const mask = tinted(a.c, cw, ch, '#FFF6E0'), edge = erodeEdge(mask, cw, ch, 3), g = it.ghost.c.getContext('2d');
-      g.filter = 'blur(5px)'; g.globalAlpha = 0.7; g.drawImage(tinted(a.c, cw, ch, '#FFD27A'), 0, 0); g.globalAlpha = 0.35; g.drawImage(edge, 0, 0);
-      g.filter = 'none'; g.globalAlpha = 0.5; g.drawImage(tinted(a.c, cw, ch, '#FFF0D0'), 0, 0); g.globalCompositeOperation = 'destination-out'; g.globalAlpha = 0.85; g.drawImage(mask, 0, 0);
-      g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.drawImage(edge, 0, 0); g.drawImage(edge, 0, 0); }
+    { const lines = ghostLines(ba.d, cw, ch), g = it.ghost.c.getContext('2d');
+      g.filter = 'blur(4px)'; g.globalAlpha = 0.9; g.drawImage(lines, 0, 0);
+      g.filter = 'none'; g.globalAlpha = 1; g.drawImage(lines, 0, 0); g.globalAlpha = 0.55; g.drawImage(lines, 0, 0); }
     it.sbb = { x0: (ba.x0 - ox) / S2, y0: (ba.y0 - oy) / S2, x1: (ba.x1 - ox) / S2, y1: (ba.y1 - oy) / S2 };
     const b = it.oart ? run(it.oart) : a, bb = it.oart ? bbox(b) : ba;
     it.obb = { x0: (bb.x0 - ox) / S2, y0: (bb.y0 - oy) / S2, x1: (bb.x1 - ox) / S2, y1: (bb.y1 - oy) / S2 };
@@ -666,16 +713,34 @@
     }
   }
   /* ---------------- drawing: the shop ---------------- */
+  /* the sample materialises bottom → top through a soft 32-unit feathered front (no hard wipe edge, no white
+   * band): the art is drawn offscreen at device resolution, tinted faintly ivory at the front, then masked */
+  let REV = null;
+  function revealArt(c, it, t, fill) {
+    const F = 16, b = it.sbb, x0 = b.x0 - 16, x1 = b.x1 + 16, y0 = b.y0 - 12, y1 = b.y1 + 8;
+    const yc = lerp(b.y1 + F, b.y0 - F, fill);
+    const m = c.getTransform(), cs = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]);
+    const dx0 = Math.floor(Math.min(...cs.map((q) => q[0]))) - 2, dy0 = Math.floor(Math.min(...cs.map((q) => q[1]))) - 2;
+    const w = Math.ceil(Math.max(...cs.map((q) => q[0]))) + 2 - dx0, h = Math.ceil(Math.max(...cs.map((q) => q[1]))) + 2 - dy0;
+    if (!(w > 0 && h > 0) || w > 1400 || h > 1400) { it.art(c, t, false); return; }
+    if (!REV || REV.c.width < w || REV.c.height < h) REV = E.canvas(Math.max(w, REV ? REV.c.width : 0), Math.max(h, REV ? REV.c.height : 0));
+    const o = REV.x;
+    o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over'; o.globalAlpha = 1; o.clearRect(0, 0, w + 2, h + 2);
+    o.setTransform(m.a, m.b, m.c, m.d, m.e - dx0, m.f - dy0);
+    o.save(); it.art(o, t, false); o.restore();
+    o.globalCompositeOperation = 'source-atop';
+    o.fillStyle = E.lin(o, 0, yc - F, 0, yc + F, [[0, '#FFF6E0', 0], [0.5, '#FFF6E0', 0.28], [1, '#FFF6E0', 0]]); o.fillRect(x0, y0, x1 - x0, y1 - y0);
+    o.globalCompositeOperation = 'destination-in';
+    o.fillStyle = E.lin(o, 0, yc - F, 0, yc + F, [[0, '#000', 0], [1, '#000', 1]]); o.fillRect(x0 - 40, y0 - 40, x1 - x0 + 80, y1 - y0 + 80);
+    o.globalCompositeOperation = 'source-over';
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(REV.c, 0, 0, w, h, dx0, dy0, w, h); c.restore();
+  }
   function sampleContent(it, t, fill) {
     return (c) => {
       drawStand(c, it);
       if (fill <= 0) return;
       if (fill >= 1) { it.art(c, t, false); return; }
-      const y0 = it.sbb.y0 - 2, y1 = it.sbb.y1 + 2, yc = lerp(y1, y0, fill);
-      c.save(); c.beginPath(); c.rect(-80, yc, 160, y1 - yc + 4); c.clip(); it.art(c, t, false); c.restore();
-      c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = E.lin(c, 0, yc - 6, 0, yc + 6, [[0, '#FFF6E0', 0], [0.5, '#FFF6E0', 0.75], [1, '#FFF6E0', 0]]);
-      c.beginPath(); c.rect(it.sbb.x0 - 4, yc - 6, it.sbb.x1 - it.sbb.x0 + 8, 12); c.clip();
-      c.globalAlpha = 0.9; it.art(c, t, false); c.restore();
+      revealArt(c, it, t, fill);
     };
   }
   function jarState(it, t) {
@@ -723,15 +788,13 @@
     for (const it of ITEMS) {
       const fillK = clamp((t - it.tLand) / 0.26);
       if (fillK >= 1) continue;
+      // G's ghosts land exactly on these shelf slots (G owns the only flight); G-items are held here from T0,
+      // the three new ones (carnation, rose, cherries) fade in once the lattice has passed
       const end = scr(L3, it.jx + it.ghostCl[0], it.fy + it.ghostCl[1]);
-      let x = end[0], y = end[1], s = L3.z, a;
-      if (it.g) {
-        const k = E.ease.inOutCubic(clamp((t - T0) / 0.6));
-        const c = [(it.g[0] + end[0]) / 2, (it.g[1] + end[1]) / 2 - 24];
-        x = (1 - k) * (1 - k) * it.g[0] + 2 * (1 - k) * k * c[0] + k * k * end[0];
-        y = (1 - k) * (1 - k) * it.g[1] + 2 * (1 - k) * k * c[1] + k * k * end[1];
-        s *= lerp(it.g[2], 1, k); a = 0.62;
-      } else { a = 0.62 * pp(t, 38.04, 38.3, 'outCubic'); s *= lerp(0.85, 1, pp(t, 38.04, 38.32, 'outCubic')); }
+      const x = end[0], y = end[1];
+      let s = L3.z, a;
+      if (it.g) a = 0.62;
+      else { a = 0.62 * pp(t, 38.04, 38.3, 'outCubic'); s *= lerp(0.85, 1, pp(t, 38.04, 38.32, 'outCubic')); }
       a *= 0.86 + 0.14 * Math.sin(t * 9 + it.i * 1.7);
       a *= 1 - E.ease.inCubic(fillK);
       a += 0.6 * E.env(t, it.tLand - 0.04, it.tLand + 0.2, 0.06, 0.14) * (1 - fillK);
@@ -850,13 +913,43 @@
     }
     ctx.restore();
   }
-  function hair(ctx, P0, P1, P2, col, a, tt) {
-    if (a <= 0.003) return;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-    const path = new Path2D(); path.moveTo(P0[0], P0[1]); path.quadraticCurveTo(P1[0], P1[1], P2[0], P2[1]);
-    ctx.strokeStyle = E.rgba(E.hexOf(col), 0.22 * a); ctx.lineWidth = 7; ctx.stroke(path);
-    ctx.strokeStyle = E.rgba(E.hexOf(col), 0.95 * a); ctx.lineWidth = 1.7; ctx.stroke(path);
-    ctx.setLineDash([3, 22]); ctx.lineDashOffset = -tt * 80; ctx.strokeStyle = E.rgba('#FFFFFF', 0.7 * a); ctx.lineWidth = 1.6; ctx.stroke(path);
+  /* ---- light strokes: tapered strips (no round 'pen' ends that could read as written strokes) ---- */
+  function cumL(pl) { const c = [0]; for (let i = 1; i < pl.length; i++) c.push(c[i - 1] + Math.hypot(pl[i][0] - pl[i - 1][0], pl[i][1] - pl[i - 1][1])); return c; }
+  function subPl(pl, cum, a, b) {
+    const out = []; if (b <= a) return out;
+    const at = (d) => { let i = 1; while (i < cum.length - 1 && cum[i] < d) i++; const sl = cum[i] - cum[i - 1] || 1, u = clamp((d - cum[i - 1]) / sl); return [lerp(pl[i - 1][0], pl[i][0], u), lerp(pl[i - 1][1], pl[i][1], u)]; };
+    out.push(at(a));
+    for (let i = 0; i < pl.length; i++) if (cum[i] > a && cum[i] < b) out.push(pl[i]);
+    out.push(at(b));
+    return out;
+  }
+  function strip(pl, cum, hwf) {
+    const n = pl.length, Lf = [], Rt = [];
+    for (let i = 0; i < n; i++) {
+      const a = pl[Math.max(0, i - 1)], b = pl[Math.min(n - 1, i + 1)];
+      let tx = b[0] - a[0], ty = b[1] - a[1]; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+      const hw = hwf(cum[i]);
+      Lf.push([pl[i][0] - ty * hw, pl[i][1] + tx * hw]); Rt.push([pl[i][0] + ty * hw, pl[i][1] - tx * hw]);
+    }
+    const p = new Path2D(); Lf.forEach((q, i) => (i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])));
+    for (let i = n - 1; i >= 0; i--) p.lineTo(Rt[i][0], Rt[i][1]);
+    p.closePath(); return p;
+  }
+  /* o: { w core px, halo px, col, alpha, tin / tout taper lengths px, t, flow px/s (0 = none), head (glow at the end) } */
+  function lightStroke(ctx, pl, o) {
+    if (pl.length < 2 || o.alpha <= 0.003) return;
+    const cum = cumL(pl), L = cum[cum.length - 1]; if (L < 1.5) return;
+    const tin = Math.max(1, Math.min(o.tin, L * 0.45)), tout = Math.max(1, Math.min(o.tout, L * 0.45));
+    const prof = (s) => Math.sqrt(sm(s / tin) * sm((L - s) / tout));
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const [hw, a] of [[o.halo * 1.15, 0.06], [o.halo * 0.5, 0.13], [o.w * 1.2, 0.42]]) { ctx.fillStyle = E.rgba(o.col, a * o.alpha); ctx.fill(strip(pl, cum, (s) => hw * prof(s))); }
+    ctx.fillStyle = E.mix(o.col, '#FFFFFF', 0.65, o.alpha); ctx.fill(strip(pl, cum, (s) => o.w * 0.5 * prof(s)));
+    if (o.flow && L > tin + tout + 8) {
+      const mid = subPl(pl, cum, tin, L - tout), p = new Path2D(); mid.forEach((q, i) => (i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])));
+      ctx.lineCap = 'butt'; ctx.setLineDash([Math.max(3, o.w * 2.5), Math.max(14, o.w * 11)]); ctx.lineDashOffset = -o.t * o.flow + tin;
+      ctx.strokeStyle = E.rgba('#FFFFFF', 0.55 * o.alpha); ctx.lineWidth = o.w * 1.3; ctx.stroke(p); ctx.setLineDash([]);
+    }
+    if (o.head) { const hd = pl[pl.length - 1]; S.light(ctx, hd[0], hd[1], o.halo * 3, o.col, 0.8 * o.alpha); ctx.fillStyle = E.rgba('#FFFFFF', 0.9 * o.alpha); ctx.beginPath(); ctx.arc(hd[0], hd[1], o.w * 1.2, 0, TAU); ctx.fill(); }
     ctx.restore();
   }
   function filPts(f, t, L3, cam) {
@@ -870,70 +963,121 @@
     const m2 = [lerp(Es[0], Hs[0], 0.7), Math.min(lim, lerp(Es[1], Hs[1], 0.7) + 10 - wv * 0.5)];
     return { pts: [Es, m1, m2, Hs], Hs, Cs, z };
   }
-  /* the up-beam: jar knob → own lane → above the vitrine → a point ON the sample's own original */
-  function beamRoute(it, t, L1, L3) {
-    const lx = LANE[it.key], top = it.jy - JH - 6;
-    const J0 = scr(L3, it.jx, top);
-    const J1 = it.r === 0 ? scr(L3, lx, top - 70) : scr(L3, lx, top - 16);
-    const J2 = scr(L3, lx, 470), J3 = scr(L3, lx, 300);
-    const Oc = scr(L1, ...oPos(it, t));
-    const aim = AIM[it.key] !== undefined ? AIM[it.key] : Math.atan2(J3[1] - Oc[1], J3[0] - Oc[0]);
-    const T = scr(L1, ...origPt(it, t, aim));
-    const S4 = [lerp(J3[0], T[0], 0.35), lerp(J3[1], T[1], 0.55)];
-    return { pts: [J0, J1, J2, J3, S4, T], T };
+  /* the up-beam as ONE smooth screen-space polyline: exit point on the jar (top row: knob; rows 2–3: dome
+   * shoulder on the lane side) → one gentle bend into its lane → straight up between the jars → one cubic
+   * curve that arrives at a point ON the sample's own original, coming in from outside its contour */
+  function beamPath(it, t, L1, L3) {
+    const lx = LANE[it.key], pts = [];
+    const cub = (P0, P1, P2, P3, n, skip0, map) => {
+      for (let i = skip0 ? 1 : 0; i <= n; i++) {
+        const u = i / n, a = (1 - u) ** 3, b = 3 * u * (1 - u) ** 2, c = 3 * u * u * (1 - u), d = u ** 3;
+        const q = [a * P0[0] + b * P1[0] + c * P2[0] + d * P3[0], a * P0[1] + b * P1[1] + c * P2[1] + d * P3[1]];
+        pts.push(map ? scr(L3, q[0], q[1]) : q);
+      }
+    };
+    const yTopW = 300;
+    if (it.r === 0) {
+      const S0 = [it.jx, it.jy - JH];
+      cub(S0, [it.jx, lerp(S0[1], yTopW, 0.33)], [it.jx, lerp(S0[1], yTopW, 0.67)], [it.jx, yTopW], 10, false, true);
+    } else {
+      const sg = Math.sign(lx - it.jx), S0 = [it.jx + sg * SH_X, it.jy - SH_Y], yv = it.jy - 290;
+      cub(S0, [S0[0] + sg * 40, S0[1] - 40], [lx, yv + 70], [lx, yv], 12, false, true);
+      cub([lx, yv], [lx, lerp(yv, yTopW, 0.33)], [lx, lerp(yv, yTopW, 0.67)], [lx, yTopW], 8, true, true);
+    }
+    const Q0 = pts[pts.length - 1], Oc = scr(L1, ...oPos(it, t));
+    const aim = AIM[it.key] !== undefined ? AIM[it.key] : Math.atan2(Q0[1] - Oc[1], Q0[0] - Oc[0]);
+    const T = scr(L1, ...origPt(it, t, aim)), D = Math.hypot(T[0] - Q0[0], T[1] - Q0[1]);
+    const rl = Math.hypot(T[0] - Oc[0], T[1] - Oc[1]) || 1, rad = [(T[0] - Oc[0]) / rl, (T[1] - Oc[1]) / rl];
+    cub(Q0, [Q0[0], Q0[1] - 0.45 * D], [T[0] + rad[0] * 0.35 * D, T[1] + rad[1] * 0.35 * D], T, 24, true, false);
+    return { pl: pts, S0: pts[0], T };
   }
   function drawGazes(ctx, t, cam, L1, L3) {
     if (t < T_FIL) return;
     const focus = pp(t, T_FOCUS, T_FOCUS + 0.35, 'inOutSine');
     const fade = 1 - pp(t, 46.55, 47.25, 'inOutSine');
     if (fade <= 0) return;
-    const kb = E.ease.outCubic(clamp((t - T_TURN) / T_BEND));            // the visible 0.65 s bend
+    const z = L3.z;
+    // incoming gazes; at the turn each one is drawn IN to its jar (street end held first, then eased in)
+    const ret = E.ease.inOutSine(clamp((t - T_TURN) / 0.55)), retA = Math.pow(1 - ret, 0.8);
     for (const f of FILS) {
       const st = T_FIL + 0.05 * f.k, dr = E.ease.outCubic(clamp((t - st) / 0.42));
-      if (dr <= 0) continue;
-      const G = filPts(f, t, L3, cam), it = f.it, hero = it.hero;
-      const R = t >= T_PRISM ? beamRoute(it, t, L1, L3) : null;
-      // prism: from the knob a widening 4-colour ribbon rises along the jar's own lane
-      const fan = pp(t, T_PRISM, T_PRISM + 0.4, 'outCubic') * (1 - sm((t - T_TURN - 0.15) / 0.45));
-      if (R && f.primary && fan > 0.003) {
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        for (let h = 0; h < 4; h++) {
-          const off = (q) => [R.pts[q][0] + HAIR_D[h] * [0, 5, 11, 19][q] * (1 - kb), R.pts[q][1]];
-          const pl = A.sampleCurve([off(0), off(1), off(2), off(3)], 24), n = Math.max(2, Math.round(pl.length * fan));
-          const path = new Path2D(); pl.slice(0, n).forEach((q, i) => (i ? path.lineTo(q[0], q[1]) : path.moveTo(q[0], q[1])));
-          ctx.strokeStyle = E.rgba(HAIR[h], 0.25 * fade); ctx.lineWidth = 6; ctx.stroke(path);
-          ctx.strokeStyle = E.rgba(HAIR[h], 0.9 * fade); ctx.lineWidth = 1.8; ctx.stroke(path);
-        }
-        ctx.restore();
-      }
-      if (t < T_TURN || !R) {
-        const inA = lerp(0.72, 1, focus) * fade;
-        A.filament(ctx, G.pts, { t: t + f.k * 0.3, draw: dr, w: lerp(2.5, 1.5, focus) * Math.min(1, 0.6 + L3.z * 0.5), halo: lerp(9, 7, focus), col: '#FFE3A3', flow: 70, alpha: inA, head: dr < 1 });
+      if (dr <= 0 || ret >= 1) continue;
+      const G = filPts(f, t, L3, cam), inA = lerp(0.72, 1, focus) * fade, w = lerp(2.5, 1.5, focus) * Math.min(1, 0.6 + z * 0.5);
+      if (t < T_TURN) {
+        A.filament(ctx, G.pts, { t: t + f.k * 0.3, draw: dr, w, halo: lerp(9, 7, focus), col: '#FFE3A3', flow: 70, alpha: inA, head: dr < 1 });
         if (t > f.ta && t < f.ta + 0.6) A.sparks(ctx, t, { x: G.Hs[0], y: G.Hs[1], t0: f.ta, n: 10, seed: 50 + f.k, col: '#FFE3A3', speed: 170, life: 0.5, gravity: 140, size: 1.5 });
         if (t > f.ta - 0.05 && t < f.ta + 0.35) S.sparkle(ctx, G.Hs[0], G.Hs[1], 13 * E.env(t, f.ta - 0.05, f.ta + 0.35, 0.05, 0.3), 1, '#FFF6E0', t * 2);
-        continue;
-      }
-      // MORPH: the gaze filament itself swings up — anchored at the jar, its far end travels from the street to the original
-      const pl = A.sampleCurve(G.pts, 40), Fr = [1, 0.8, 0.6, 0.4, 0.2, 0].map((u) => pl[Math.round(u * (pl.length - 1))]).reverse();
-      const pts = Fr.map((q, i) => [lerp(q[0], R.pts[i][0], kb), lerp(q[1], R.pts[i][1], kb)]);
-      const a = (f.primary ? 1 : 1 - kb) * fade * (hero ? 1 : 0.7);
-      A.filament(ctx, pts, { t, w: lerp(1.5, hero ? 2.3 : 1.4, kb), halo: hero ? 11 : 7, col: E.hexOf(E.mix('#FFE3A3', '#FFD27A', kb)), flow: 90, alpha: a, head: false });
-      if (f.primary && kb < 0.98) S.sparkle(ctx, pts[5][0], pts[5][1], 10, 0.9 * fade, '#FFF6E0', t * 3);
-      if (f.primary) {   // the beam lands ON its original as it ignites
-        const hit = E.env(t, T_TURN + T_BEND * 0.75, T_TURN + T_BEND + 0.6, 0.12, 0.45);
-        if (hit > 0) { S.light(ctx, R.T[0], R.T[1], hero ? 120 : 70, '#FFE7B0', 0.7 * hit); S.sparkle(ctx, R.T[0], R.T[1], (hero ? 18 : 11) * hit, 1, '#FFFFFF', t); }
+      } else {
+        // same curve drawn from the jar end; the dash phase is mirrored so the flowing dashes do not jump
+        const rp = G.pts.slice().reverse(), Lr = cumL(A.sampleCurve(rp, 64)).pop(), dash = Math.max(3, w * 2.5);
+        A.filament(ctx, rp, { t: (Lr - dash) / 70 - (t + f.k * 0.3), draw: 1 - ret, w, halo: lerp(9, 7, focus), col: '#FFE3A3', flow: 70, alpha: inA * retA, head: false });
       }
     }
+    if (t < T_PRISM) return;
+    const kb = E.ease.outCubic(Math.pow(clamp((t - T_TURN) / 0.62), 1.35));   // up-beam growth: quick, not instant, start; lands as the original ignites
+    const ribA = pp(t, T_PRISM, T_PRISM + 0.25, 'inOutSine') * (1 - sm((t - T_TURN - 0.05) / 0.4));
+    for (const it of ITEMS) {
+      const R = beamPath(it, t, L1, L3), hero = it.hero;
+      // prism: a short, slightly fanned 4-colour ribbon leaves the jar along its own path, tip fading (staggered heights)
+      if (ribA > 0.003) {
+        const cum = cumL(R.pl), len = (95 + 70 * E.hash(it.i, 7)) * z, grow = pp(t, T_PRISM + 0.03 * it.rank, T_PRISM + 0.5 + 0.03 * it.rank, 'outCubic');
+        const lv = len * grow, conv = 1 - kb;
+        if (lv > 3) {
+          const part = subPl(R.pl, cum, 0, lv), pc = cumL(part);
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'butt';
+          for (let h = 0; h < 4; h++) {
+            const off = part.map((q, i) => {
+              const a = part[Math.max(0, i - 1)], b = part[Math.min(part.length - 1, i + 1)];
+              let tx = b[0] - a[0], ty = b[1] - a[1]; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+              const d = HAIR_D[h] * (2.4 + 7 * pc[i] / len) * z * conv;
+              return [q[0] - ty * d, q[1] + tx * d];
+            });
+            const NCH = 9;
+            for (let k = 0; k < NCH; k++) {
+              const s0 = (lv * k) / NCH, s1 = (lv * (k + 1)) / NCH, sm0 = (s0 + s1) / 2;
+              const al = ribA * fade * sm(sm0 / (lv * 0.15 + 4)) * (1 - sm((sm0 - lv * 0.45) / (lv * 0.55)));
+              if (al <= 0.004) continue;
+              const seg = subPl(off, pc, s0, s1 + 0.01), p = new Path2D(); seg.forEach((q, i) => (i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])));
+              ctx.strokeStyle = E.rgba(HAIR[h], 0.22 * al); ctx.lineWidth = 4.5; ctx.stroke(p);
+              ctx.strokeStyle = E.rgba(HAIR[h], 0.85 * al); ctx.lineWidth = 1.4; ctx.stroke(p);
+            }
+          }
+          ctx.restore();
+          S.light(ctx, R.S0[0], R.S0[1], 16 * z + 8, '#FFE3A3', 0.22 * ribA * fade);
+        }
+      }
+      if (t < T_TURN) continue;
+      // the turn: all beams shoot up at once along their paths, recombined into gold
+      const cum = cumL(R.pl), L = cum[cum.length - 1], part = subPl(R.pl, cum, 0, L * kb);
+      const a = fade * (hero ? 1 : 0.7);
+      lightStroke(ctx, part, { w: hero ? 2.3 : 1.4, halo: hero ? 11 : 7, col: E.hexOf(E.mix('#FFE3A3', '#FFD27A', kb)), alpha: a, tin: 16 * z + 6, tout: kb < 0.99 ? 6 : 14, t, flow: 90, head: kb < 0.985 });
+      S.light(ctx, R.S0[0], R.S0[1], 14 * z + 8, '#FFE3A3', 0.4 * a);
+      // the beam lands ON its original as it ignites
+      const hit = E.env(t, T_TURN + T_BEND * 0.75, T_TURN + T_BEND + 0.6, 0.12, 0.45);
+      if (hit > 0) { S.light(ctx, R.T[0], R.T[1], hero ? 120 : 70, '#FFE7B0', 0.7 * hit * fade); S.sparkle(ctx, R.T[0], R.T[1], (hero ? 18 : 11) * hit, fade, '#FFFFFF', t); }
+    }
+  }
+  /* the meeting point: always ABOVE every original's top (so no beam rises and falls back), easing down into the
+   * luminous gate's apex, where the gate then traces itself on */
+  function convPoint(t, cam, L1) {
+    const gs = gateState(t, cam), apex = gs.oc[1] + GG.apexY * gs.s / 2;
+    let top = Infinity;
+    for (const it of ITEMS) top = Math.min(top, scr(L1, ...origPt(it, t, -PI / 2))[1]);
+    const a = apex, b = top - 40, k = 15, m = Math.min(a, b);
+    return [gs.oc[0], m - k * Math.log(1 + Math.exp(-Math.abs(a - b) / k))];
   }
   function drawRise(ctx, t, cam, L1) {
     if (t < T_TURN + T_BEND) return;
-    const G = gateState(t, cam).G, fade = 1 - pp(t, 47.45, 47.75);
+    const P = convPoint(t, cam, L1), fade = 1 - pp(t, 46.78, 47.12, 'inOutSine');
+    if (fade <= 0) return;
     for (const it of ITEMS) {
-      const dr = E.ease.inOutSine(clamp((t - T_TURN - T_BEND - it.rank * 0.035) / 0.95));
+      const dr = E.ease.inOutSine(clamp((t - T_TURN - T_BEND - it.rank * 0.025) / 0.7));
       if (dr <= 0) continue;
       const c = scr(L1, ...origPt(it, t, -PI / 2));
-      const m1 = [lerp(c[0], G[0], 0.15), c[1] - 120], m2 = [lerp(c[0], G[0], 0.65), lerp(c[1], G[1], 0.6)];
-      A.filament(ctx, [c, m1, m2, G], { t, w: it.hero ? 2.1 : 1.2, halo: it.hero ? 10 : 6, col: '#FFD27A', flow: 120, draw: dr, alpha: (it.hero ? 0.9 : 0.5) * fade, head: dr < 1 });
+      // rises straight up out of the original, then leans in to the meeting point (control points between, never above it)
+      const pts = A.sampleCurve([c, [lerp(c[0], P[0], 0.08), lerp(c[1], P[1], 0.4)], [lerp(c[0], P[0], 0.55), lerp(c[1], P[1], 0.78)], P], 40);
+      const cum = cumL(pts), part = subPl(pts, cum, 0, cum[cum.length - 1] * dr);
+      lightStroke(ctx, part, { w: it.hero ? 2.1 : 1.2, halo: it.hero ? 10 : 6, col: '#FFD27A', alpha: (it.hero ? 0.9 : 0.5) * fade, tin: 22, tout: dr < 0.99 ? 6 : 26, t, flow: 120, head: dr < 0.99 });
     }
   }
   function gateHalves() {
@@ -958,9 +1102,11 @@
     S.rays(ctx, G[0], G[1], { n: 11, len: 1700, angle: PI / 2, spread: 2.6, width: 0.035, alpha: 0.07 * rad, col: '#FFE9C8', t });
   }
   function drawGate(ctx, t, cam) {
-    const gs = gateState(t, cam), G = gs.G, s = gs.s;
+    const gs = gateState(t, cam), s = gs.s;
     const conv = pp(t, 46.5, 46.95, 'inOutSine');
     const trace = pp(t, T_GATE, T_GATE + 0.42, 'inOutSine'), body = pp(t, T_GATE + 0.18, T_GATE + 0.6, 'outCubic');
+    // the gathered light sits where the beams meet (the apex), then sinks into the doorway as the portal lights
+    const P = convPoint(t, cam, lp(cam, PF)), G = [lerp(P[0], gs.oc[0], body), lerp(P[1], gs.oc[1], body)];
     if (conv > 0) {
       S.light(ctx, G[0], G[1], 700, '#FFC890', 0.12 * conv + 0.06 * body);
       S.light(ctx, G[0], G[1], 150, '#FFF6E0', 0.55 * conv * (1 - 0.8 * body));
@@ -976,9 +1122,12 @@
       ctx.globalAlpha = 0.25 * body; ctx.drawImage(g.c, -g.ox, -g.oy, g.w, g.h);        // the frame stays a whisper
     }
     ctx.globalAlpha = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const boxA = pp(t, T_GATE + 0.12, T_GATE + 0.55, 'inOutSine');
     GATE_H.forEach((hp, i) => {
-      const k = i < 2 ? 1 : 0.25;                                    // pointed arch bright, outer box faint
-      ctx.setLineDash([hp.len * trace, hp.len + 10]);
+      // pointed arch traces on from the apex (where the beams met); the faint outer box fades in whole
+      const k = i < 2 ? 1 : 0.25 * boxA;
+      if (k <= 0.002) return;
+      ctx.setLineDash(i < 2 ? [hp.len * trace, hp.len + 10] : []);
       ctx.strokeStyle = E.rgba('#FFE7B0', 0.2 * k); ctx.lineWidth = 22 / s; ctx.stroke(hp.p);
       ctx.strokeStyle = E.rgba('#FFF6E0', 0.95 * k); ctx.lineWidth = 3.2 / s; ctx.stroke(hp.p);
     });

@@ -25,8 +25,8 @@
  *        −10 % saturation.  5.95 time resumes.
  *  5.50–6.70  slow log-zoom push (creeps through the freeze) to the handoff (head (540,820), R 260); sun sinks behind
  *        the far hills (y 520→930) and the plate lerps to C's dusk palette; DOF closes on the rose.
- *  Gloss band (1229–1574): front flowers dimmed, path darkened, feathered scrim (≤0.22); the rose layer
- *        (stem/leaves/tuft) is darkened + blurred inside y 1150–1650 with a smooth gloss envelope (roseLayered).
+ *  Gloss band (1229–1574): front flowers dimmed, feathered scene-wide scrim (≤0.22); the hero rose is never
+ *        sliced/darkened/blurred by the band (roseLayered only grades it as a whole).
  *  window.BCW exports the world so C_gul_firak draws the identical frame in the 6.40–6.70 overlap.
  * ========================================================================== */
 (function () {
@@ -153,8 +153,34 @@
       for (let k = 0; k < 12; k++) { const u = k / 12, u2 = u * u, u3 = u2 * u; const f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * u + (2 * a - 5 * b + 4 * c - d) * u2 + (-a + 3 * b - 3 * c + d) * u3); sp.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1]), f(p0[2], p1[2], p2[2], p3[2])]); }
     }
     sp.push(cp[cp.length - 1]);
+    // Edge outlines: offset a dense resampling of the same spline along its analytic normal. On the inner side of a tight
+    // bend the half-width is limited to 0.8·radius (spread + smoothed along the arc), so the offset never folds back on
+    // itself (the old ±w/2 offset of the coarse samples made a hook at the [640, HZ+330] hairpin). sp stays as it was
+    // (pathX / pebbles / grass / flower layout are unchanged).
     const pl = [], pr = [];
-    for (let i = 0; i < sp.length; i++) { const a = sp[Math.max(0, i - 1)], b = sp[Math.min(sp.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, w = sp[i][2] / 2; pl.push([sp[i][0] + nx * w, sp[i][1] + ny * w]); pr.push([sp[i][0] - nx * w, sp[i][1] - ny * w]); }
+    {
+      const DN = 36, Dd = [];
+      for (let i = 0; i < cp.length - 1; i++) {
+        const a = cp[Math.max(0, i - 1)], b = cp[i], c = cp[i + 1], d = cp[Math.min(cp.length - 1, i + 2)];
+        for (let k = 0; k < DN; k++) {
+          const u = k / DN, u2 = u * u, u3 = u2 * u, A1 = (j) => -a[j] + c[j], A2 = (j) => 2 * a[j] - 5 * b[j] + 4 * c[j] - d[j], A3 = (j) => -a[j] + 3 * b[j] - 3 * c[j] + d[j];
+          const f = (j) => 0.5 * (2 * b[j] + A1(j) * u + A2(j) * u2 + A3(j) * u3), f1 = (j) => 0.5 * (A1(j) + 2 * A2(j) * u + 3 * A3(j) * u2), f2 = (j) => 0.5 * (2 * A2(j) + 6 * A3(j) * u);
+          const vx = f1(0), vy = f1(1), ax = f2(0), ay = f2(1), v = Math.hypot(vx, vy) || 1;
+          Dd.push({ x: f(0), y: f(1), w: f(2) / 2, nx: -vy / v, ny: vx / v, k: (vx * ay - vy * ax) / (v * v * v) });
+        }
+      }
+      { const L = cp[cp.length - 1], q = Dd[Dd.length - 1]; Dd.push({ x: L[0], y: L[1], w: L[2] / 2, nx: q.nx, ny: q.ny, k: 0 }); }
+      let s = 0; Dd.forEach((q, i) => { if (i) s += Math.hypot(q.x - Dd[i - 1].x, q.y - Dd[i - 1].y); q.s = s; });
+      const n = Dd.length, SM = 3;
+      const sideW = (side) => {
+        const lim = Dd.map((q) => (side * q.k > 1e-6 ? 0.8 / (side * q.k) : Infinity));
+        const red0 = Dd.map((q) => { let m = q.w; for (let j = 0; j < n; j++) if (lim[j] < Infinity) m = Math.min(m, lim[j] + 0.6 * Math.abs(q.s - Dd[j].s)); return q.w - m; });
+        const red1 = red0.map((_, i) => { let m = 0; for (let j = Math.max(0, i - 2 * SM); j <= Math.min(n - 1, i + 2 * SM); j++) m = Math.max(m, red0[j]); return m; });
+        return Dd.map((q, i) => { let acc = 0, ws = 0; for (let j = Math.max(0, i - 3 * SM); j <= Math.min(n - 1, i + 3 * SM); j++) { const g = Math.exp(-((i - j) * (i - j)) / (2 * SM * SM)); acc += red1[j] * g; ws += g; } return q.w - Math.max(0, acc / ws); });
+      };
+      const WL = sideW(1), WR = sideW(-1);
+      Dd.forEach((q, i) => { pl.push([q.x + q.nx * WL[i], q.y + q.ny * WL[i]]); pr.push([q.x - q.nx * WR[i], q.y - q.ny * WR[i]]); });
+    }
     const pp = new Path2D(); pp.moveTo(pl[0][0], pl[0][1]); for (const q of pl) pp.lineTo(q[0], q[1]); for (let i = pr.length - 1; i >= 0; i--) pp.lineTo(pr[i][0], pr[i][1]); pp.closePath();
     const edgeL = new Path2D(), edgeR = new Path2D(); pl.forEach((q, i) => (i ? edgeL.lineTo(q[0], q[1]) : edgeL.moveTo(q[0], q[1]))); pr.forEach((q, i) => (i ? edgeR.lineTo(q[0], q[1]) : edgeR.moveTo(q[0], q[1])));
     const pebbles = []; for (let i = 0; i < 46; i++) { const k = Math.floor(H(i, 81) * (sp.length - 2)) + 1, q = sp[k], off = (H(i, 82) - 0.5) * q[2] * 0.8, sz = 1 + q[2] * 0.025; pebbles.push([q[0] + off, q[1], sz]); }
@@ -466,7 +492,11 @@
   function baseBack(ctx, P) {
     ctx.fillStyle = RG(ctx, 6, 4, 0, 62, [[0, dk(P.meadow[3], 0.3), 0.6], [0.55, P.meadow[3], 0.35], [1, P.meadow[3], 0]]);
     ctx.save(); ctx.scale(1, 0.28); ctx.beginPath(); ctx.arc(6, 14, 62, 0, TAU); ctx.fill(); ctx.restore();
-    ctx.fillStyle = css(dk(P.meadow[3], 0.15)); ctx.beginPath(); ctx.ellipse(0, 3, 16, 5, 0, 0, TAU); ctx.fill();
+    // soil patch: feathered radial (no hard rim) in a mid ground tone, so at dusk/night it never reads as a black hole
+    const soil = dk(mx(P.meadow[1], P.meadow[2], 0.55), 0.18);
+    ctx.save(); ctx.translate(0, 3); ctx.scale(1, 0.32);
+    ctx.fillStyle = RG(ctx, 0, 0, 0, 22, [[0, soil, 0.8], [0.55, soil, 0.5], [1, soil, 0]]); ctx.beginPath(); ctx.arc(0, 0, 22, 0, TAU); ctx.fill();
+    ctx.restore();
   }
   function baseFront(ctx, P, t) {
     ctx.lineCap = 'round';
@@ -491,11 +521,13 @@
       baseFront(ctx, P, o.t);
     });
   }
-  /* rose rendered into its own layer: night/dusk grade, wilt browning, and a smooth darken + blur inside the gloss band */
-  let RL = null, BL = null;
-  const BAND = [1150, 1229, 1574, 1650];
+  /* rose rendered into its own layer: night/dusk grade and wilt browning. The rose is NOT altered inside the gloss band any
+     more (the old band darken + half-res blur sliced the stem/leaves into a dirty ghost behind the subtitle): legibility
+     comes from the engine's text halo and the scene-wide feathered bandScrim. o.band / o.bandDark are still accepted
+     (C_gul_firak passes them through BCW) and deliberately ignored. */
+  let RL = null;
   function roseLayered(ctx, c, o) {
-    if (!RL) { RL = E.canvas(1080, 1920); BL = E.canvas(540, 960); }
+    if (!RL) RL = E.canvas(1080, 1920);
     const x = RL.x; x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none'; x.clearRect(0, 0, 1080, 1920);
     if (o.behind) o.behind(x);
     drawRose(x, c, o);
@@ -505,17 +537,8 @@
       const [hx, hy, hr] = o.headS; x.globalCompositeOperation = 'source-atop';
       x.fillStyle = RG(x, hx, hy, 0, hr, [[0, '#4A2A2A', 0], [0.42, '#4A2A2A', 0.05 * o.brown], [0.8, '#5A3424', 0.42 * o.brown], [1, '#3A2418', 0.55 * o.brown]]); x.fillRect(0, 0, 1080, 1920);
     }
-    const m = clamp(o.band || 0);
-    if (m > 0.01) {
-      const f1 = (BAND[1] - BAND[0]) / (BAND[3] - BAND[0]), f2 = (BAND[2] - BAND[0]) / (BAND[3] - BAND[0]);
-      const dark = dk((o.P || PAL.B).meadow[3], 0.25), mask = (g, k, col, a) => LG(g, 0, BAND[0] * k, 0, BAND[3] * k, [[0, col, 0], [f1, col, a], [f2, col, a], [1, col, 0]]);
-      x.globalCompositeOperation = 'source-atop'; x.fillStyle = mask(x, 1, dark, 0.55 * m * (o.bandDark === undefined ? 1 : o.bandDark)); x.fillRect(0, 0, 1080, 1920);
-      const b = BL.x; b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'copy'; b.filter = 'blur(3px)'; b.drawImage(RL.c, 0, 0, 540, 960); b.filter = 'none';
-      b.globalCompositeOperation = 'destination-in'; b.fillStyle = mask(b, 0.5, '#000000', m); b.fillRect(0, 0, 540, 960);
-      x.globalCompositeOperation = 'destination-out'; x.fillStyle = mask(x, 1, '#000000', m); x.fillRect(0, 0, 1080, 1920);
-      x.globalCompositeOperation = 'source-over';
-      ctx.drawImage(RL.c, 0, 0); ctx.drawImage(BL.c, 0, 0, 1080, 1920);
-    } else { x.globalCompositeOperation = 'source-over'; ctx.drawImage(RL.c, 0, 0); }
+    x.globalCompositeOperation = 'source-over';
+    ctx.drawImage(RL.c, 0, 0);
   }
   function drawFg(ctx, c, t, P, kDark) {
     lay(ctx, c, 1.9, () => {
@@ -526,10 +549,12 @@
         ctx.save(); ctx.translate(x, y); ctx.rotate(sw(ph)); ctx.scale(s, s); ctx.drawImage(spr, -spr.width / 2, -spr.height); ctx.restore();
       }
     });
-    // stroll clumps: screen-space L5 elements driven by the dolly (pass fast through the foot band, below the gloss band)
-    const dx = (c.stroll || 0) * 2.6, dz = Math.max(0, zoomAt(c, 1) - 1.3) * 700;
+    // stroll clumps: screen-space L5 elements driven by the dolly (pass fast through the foot band, below the gloss band).
+    // They start fully outside the right edge (first clump's left edge at 1440-322 > 1080) and travel 3.78·stroll, so they
+    // slide in instead of popping in, yet reach the same positions as before at the stroll peak (stroll ≈ 220).
+    const dx = (c.stroll || 0) * 3.78, dz = Math.max(0, zoomAt(c, 1) - 1.3) * 700;
     if (dx > 1) {
-      for (const [bx, sc, spr, by] of [[1180, 0.92, SPR.fgM, 1965], [1480, 1.1, SPR.fgR, 2360], [1780, 0.95, SPR.fgM, 1975]]) {
+      for (const [bx, sc, spr, by] of [[1440, 0.92, SPR.fgM, 1965], [1740, 1.1, SPR.fgR, 2360], [2040, 0.95, SPR.fgM, 1975]]) {
         const x = bx - dx; if (x < -500 || x > 1600) continue;
         ctx.save(); ctx.translate(x, by + dz); ctx.rotate(Math.sin(t * 0.9 + bx) * 0.015); ctx.scale(sc, sc); ctx.drawImage(spr, -spr.width / 2, -spr.height); ctx.restore();
       }
@@ -608,11 +633,17 @@
     { pat: 'monarch', base: [300, 980], ph: 1.7, size: 33, t0: 3.15 },
     { pat: 'swallowtail', base: [900, 1050], ph: 3.1, size: 38, t0: 3.35 },
   ];
+  // exit after "değil", in warped time (so they truly hang during the freeze): the sapphire/swallowtail simply stay put in
+  // the world and leave through the right edge with the camera push; the monarch (left of the rose) turns back and flies
+  // out up-left — ease-in for 0.2 s then a steady 330 world/s (≈ 16 px/frame before the freeze, ≤ 26 px/frame after),
+  // gone by ≈6.27 s, well before the B→C cut at 6.40 (C does not draw butterflies).
+  const bflyExit = (ttw) => { const u = Math.max(0, ttw - 5.28), r = 0.2; return 330 * (u < r ? (u * u) / (2 * r) : u - r / 2); };
   function bflyPos(b, i, t, ttw) {
     const app = E.p(t, b.t0, b.t0 + 0.9, 'outCubic');
-    const lead = 240 * E.p(t, 4.5, 5.5, 'inOutSine') + 120 * E.p(ttw, 5.6, 6.0, 'linear') + 1000 * E.p(t, 5.85, 6.5, 'inQuad');
-    const x = b.base[0] + E.noise(ttw * 0.55 + i * 7, 11) * 120 + lead * (1.05 + 0.12 * i) + (1 - app) * (i === 1 ? -500 : 520);
-    const y = b.base[1] + E.noise(ttw * 0.7 + i * 3, 12) * 70 + Math.sin(ttw * 3.1 + b.ph) * 14 - (1 - app) * 180 - 60 * E.p(t, 4.6, 5.4) ;
+    const lead = 240 * E.p(t, 4.5, 5.5, 'inOutSine') + (i === 1 ? 0 : 120 * E.p(ttw, 5.6, 6.0, 'linear'));
+    const ex = i === 1 ? bflyExit(ttw) : 0;
+    const x = b.base[0] + E.noise(ttw * 0.55 + i * 7, 11) * 120 + lead * (1.05 + 0.12 * i) + (1 - app) * (i === 1 ? -500 : 520) - ex;
+    const y = b.base[1] + E.noise(ttw * 0.7 + i * 3, 12) * 70 + Math.sin(ttw * 3.1 + b.ph) * 14 - (1 - app) * 180 - 60 * E.p(t, 4.6, 5.4) - 0.3 * ex;
     return [x, y];
   }
 
@@ -696,11 +727,16 @@
     lay(l, c, 1.15, () => {
       const sw = Math.sin(ttw * 1.1) * 0.012;
       l.save(); l.translate(-80, 690); l.rotate(sw); l.translate(80, -690);
+      // the 2x sprite is minified ≈4x when the rack focus moves it into the half-res DOF layer: filter it properly
+      // (high quality = mipmapped minification) so the bark edge does not stair-step at the start of the blur
+      l.imageSmoothingEnabled = true; l.imageSmoothingQuality = 'high';
       l.drawImage(SPR.branch, -60, 690 - 140 - 118 + 20, 500, 260);
       // crest fans at 2.80 (outBack inside the asset), settles 3.10
       const fan = E.p(t, 2.78, 3.1, 'outCubic') * (1 - 0.35 * E.p(t, 3.6, 4.2)) + 0.25 * E.env(t, 4.0, 4.9, 0.2, 0.3);
       const pose = 0.12 * E.env(t, 3.05, 3.5, 0.15, 0.25);
-      E.at(l, 252, 692, 1, 0, () => A.hoopoe(l, { size: 56, t: ttw, fan, pose: t > 3.9 && t < 4.6 ? 'look' : pose }));
+      // A.hoopoe origin = feet on the perch: the branch's top surface is at y≈662 here (underside ≈676), so the feet grip
+      // the top instead of dangling below the branch; nudged left so the raised bill stays clear of the blossom twig
+      E.at(l, 240, 663, 1, 0, () => A.hoopoe(l, { size: 56, t: ttw, fan, pose: t > 3.9 && t < 4.6 ? 'look' : pose }));
       l.restore();
     });
     l.restore();
@@ -725,7 +761,7 @@
         const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.5 - 0.2 * E.p(t, 4.25, 4.8));
         const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R));
         if (pulse > 0.01) S.light(ctx2, hx, hy, 340 * zoomAt(c, 1), '#FFD98A', pulse);
-        roseLayered(ctx2, c, Object.assign(roseOpt, { P, bandDark: E.p(t, 2.5, 2.85, 'inOutSine'), band: glossK(t) * E.p(t, 2.42, 2.7, 'inOutSine'), stemGrade: 0.68 * dusk, rim: dusk, rimCol: '#FFB37A', gradeCol: '#6A3D8A', gradeA: 0.1 * dusk, onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
+        roseLayered(ctx2, c, Object.assign(roseOpt, { P, stemGrade: 0.68 * dusk, rim: dusk, rimCol: '#FFB37A', gradeCol: '#6A3D8A', gradeA: 0.1 * dusk, onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
         sweetPulse(ctx2, hx, hy, zoomAt(c, 1), t, 3.98);
         ribbons(ctx2, hx, hy, t, 3.98, zoomAt(c, 1) * 0.9);
       },
@@ -736,10 +772,14 @@
     lay(ctx, c, 1.05, () => {
       BFL.forEach((b, i) => {
         if (t < b.t0) return;
-        const [x, y] = bflyPos(b, i, t, ttw), q = bflyPos(b, i, t + 0.05, tw(t + 0.05));
+        const [x, y] = bflyPos(b, i, t, ttw);
+        // banking tilt from a centred velocity in warped time (holds steady through the freeze) with a soft dead-zone, so a
+        // change of heading rolls over several frames instead of snapping ±0.35 rad in one frame
+        const qa = bflyPos(b, i, t - 0.1, ttw - 0.1), qb = bflyPos(b, i, t + 0.1, ttw + 0.1), vx = qb[0] - qa[0], vy = qb[1] - qa[1];
+        const tilt = 0.35 * vx / Math.sqrt(vx * vx + vy * vy + 900);
         const sy = toScreen(c, 1.05, x, y)[1], inBand = sm((sy - 1190) / 60) * (1 - sm((sy - 1574) / 60));
         ctx.save(); ctx.globalAlpha *= 1 - 0.7 * gk * inBand;
-        E.at(ctx, x, y, 1, Math.cos(Math.atan2(q[1] - y, q[0] - x)) * 0.35, () => A.butterfly(ctx, { size: b.size, t: ttw, pattern: b.pat, phase: b.ph, hz: 4.2 }));
+        E.at(ctx, x, y, 1, tilt, () => A.butterfly(ctx, { size: b.size, t: ttw, pattern: b.pat, phase: b.ph, hz: 4.2 }));
         ctx.restore();
       });
     });

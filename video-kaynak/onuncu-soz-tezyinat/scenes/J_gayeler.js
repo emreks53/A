@@ -21,7 +21,8 @@
  *    zoom .93→1.0 push-in; 64.6–65.95 slow tilt up after the petals (≤~140 px/s while the gloss is up),
  *    66.0–66.28 rise ("Başka"), 66.28–66.98 crane-over with ONE pinhole camera (pitch −17°→90°, height
  *    330→1500, forward position solved so the garden glides monotonically to (540,800)): sky, sun and
- *    originals ride up with the horizon, near layers drop out under the lens, the ground (tiled meadow +
+ *    originals ride up with the horizon, the whole side view (near layers opaque) recedes into ONE golden
+ *    veil while the ground cross-fades in under it, the ground (tiled meadow +
  *    plan texture in perspective strips, distance haze, standing trees/flowers) feathers into the hills;
  *    golden bloom + bokeh carry the eye. Then plan zoom 1→.45 (67.0–67.9) over a deep-emerald / dawn-violet
  *    surround (outer girih field blurred & dimmed) and the final push .45→3.0 (68.0–68.5, inCubic).
@@ -42,7 +43,8 @@
  *    67.54 "gayeler" 7 rosettes bloom in a ring (B,D,E,F,G,H,I key colours).
  *    68.02 "içindir" everything converges into the centre, ivory flare #FFF6E6 fills the frame by 68.26;
  *                 gold lines fade into 14 faint ink lines (reverse of A) until 68.60.
- *  Gloss band (63.49–66.12): only the dark meadow sits there; particles start above y 1200, scrim on.
+ *  Gloss band (glossK from TIMING: 'daimî asıllarına' 63.59–64.97 → guard 63.24–65.42): the meadow and the rose's
+ *  stem sit there; particles start above y 1200; band-wide soft blur + dusky scrim (nothing is erased).
  * ========================================================================== */
 (function () {
   'use strict';
@@ -465,17 +467,20 @@
       S.rays(l, g[0], g[1], { n: 9, len: 1300, angle: PI / 2, spread: 2.4, col: '#FFD98A', alpha: 0.035, t, width: 0.03 });
       l.globalCompositeOperation = 'source-over';
       for (const [cx, cy, sc, sp, si] of CLOUDS) {
-        const spr = SPR.clouds[si], q = toS(cs, ((cx + t * sp + 400) % 1900) - 400, cy, 0.08), w = spr.width * sc * q[2] * 0.5, h = spr.height * sc * q[2] * 0.5;
-        l.drawImage(spr, q[0] - w / 2, q[1] - h * 0.86, w, h);
+        // sprite = CLOUD_H tall body + CLOUD_M px headroom on top (same placement/size as before the headroom)
+        const spr = SPR.clouds[si], q = toS(cs, ((cx + t * sp + 400) % 1900) - 400, cy, 0.08), k = sc * q[2] * 0.5, w = spr.width * k, h = CLOUD_H * k;
+        l.drawImage(spr, q[0] - w / 2, q[1] - h * 0.86 - CLOUD_M * k, w, spr.height * k);
       }
       l.globalCompositeOperation = 'destination-in';
       l.fillStyle = E.lin(l, 0, y0, 0, y1, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, E.W, E.H);
     });
   }
+  const CLOUD_H = 380, CLOUD_M = 48; // puff tops reach base − 1.7·r ≈ −23 px: keep headroom so they are never cut flat
   function buildClouds() {
     SPR.clouds = [];
     for (let k = 0; k < 5; k++) {
-      const w = 900, h = 380, c = E.canvas(w, h), x = c.x, n = 5 + (k % 3), base = h * 0.8;
+      const w = 900, h = CLOUD_H, c = E.canvas(w, h + CLOUD_M), x = c.x, n = 5 + (k % 3), base = h * 0.8;
+      x.translate(0, CLOUD_M);
       const body = new Path2D();
       for (let i = 0; i < n; i++) {
         const f = (i + 0.5) / n, r = h * (0.2 + 0.24 * Math.sin(f * PI)) * (0.8 + 0.35 * H(i, 700 + k));
@@ -484,11 +489,11 @@
       body.moveTo(w * 0.9, base); body.ellipse(w / 2, base - h * 0.05, w * 0.4, h * 0.12, 0, 0, TAU);
       x.fillStyle = E.lin(x, 0, h * 0.1, 0, base + h * 0.1, [[0, '#B47A9E'], [0.45, '#E6A0A0'], [0.8, '#FFC9A8'], [1, '#FFE0BE']]); x.fill(body);
       // sunlit underside rim + soft irregular base (alpha erosion), then a light blur for soft edges
-      x.save(); x.clip(body); x.globalCompositeOperation = 'screen'; x.fillStyle = E.lin(x, 0, base - h * 0.16, 0, base + h * 0.1, [[0, '#FFE7C8', 0], [1, '#FFE7C8', 0.7]]); x.fillRect(0, 0, w, h); x.restore();
+      x.save(); x.clip(body); x.globalCompositeOperation = 'screen'; x.fillStyle = E.lin(x, 0, base - h * 0.16, 0, base + h * 0.1, [[0, '#FFE7C8', 0], [1, '#FFE7C8', 0.7]]); x.fillRect(0, -CLOUD_M, w, h + CLOUD_M); x.restore();
       x.globalCompositeOperation = 'destination-out';
       for (let i = 0; i < 9; i++) { const ex = w * (0.12 + 0.76 * H(i, 720 + k)), er = 40 + H(i, 730 + k) * 70; x.fillStyle = E.rad(x, ex, base + h * 0.12, 0, er, [[0, '#000', 0.9], [1, '#000', 0]]); x.fillRect(ex - er, base + h * 0.12 - er, er * 2, er * 2); }
       x.fillStyle = E.lin(x, 0, base - h * 0.06, 0, base + h * 0.14, [[0, '#000', 0], [1, '#000', 1]]); x.fillRect(0, base - h * 0.06, w, h);
-      const out = E.canvas(w, h); out.x.filter = 'blur(2.5px)'; out.x.drawImage(c.c, 0, 0); SPR.clouds.push(out.c);
+      const out = E.canvas(w, h + CLOUD_M); out.x.filter = 'blur(2.5px)'; out.x.drawImage(c.c, 0, 0); SPR.clouds.push(out.c);
     }
   }
   function drawSun(ctx, t, cs, sun, g) {
@@ -525,7 +530,6 @@
     layerXf(ctx, cs, 0.45);
     const MY = 1033, MW = 290, u = MW / 700;
     const rim = P(t, W.sukur - 0.25, W.sukur + 0.5, 'inOutSine');
-    ctx.globalAlpha *= 1 - P(t, 65.7, 66.1, 'inOutSine');
     E.at(ctx, 800, MY, 1, 0, () => A.mosque(ctx, { w: MW, col: E.mix('#2A2140', skyAt(930), 0.05), dome: '#3E9A60', rim, sun: -1, lights: lerp(0.35, 0.15, P(t, 62.4, 64.5)), rimCol: '#FFD9A0', t }));
     // first light touching the dome
     if (rim > 0) S.light(ctx, 800 + 70 * u - 4, MY - 46 * u - 40 * u, 60, '#FFE7B0', 0.5 * rim * (0.85 + 0.15 * Math.sin(t * 3)));
@@ -587,19 +591,26 @@
   }
   function drawRibbon(ctx, t, rg, f, g) {
     if (f <= 0.002) return;
+    const hk = sm(f / 0.14); // draw-on head & glow ease in (~0.2 s) instead of popping on at full strength
     const N = 90, L = [], R = [], C = [];
     for (let i = 0; i <= N; i++) { const q = rg.at((i / N) * f); const w = q.w * (0.75 + 0.25 * Math.sin(i * 0.4 - t * 3)) * 0.5 + q.w * 0.5; L.push([q.x + q.nx * w * 0.5, q.y + q.ny * w * 0.5]); R.push([q.x - q.nx * w * 0.5, q.y - q.ny * w * 0.5]); C.push([q.x, q.y, q.w]); }
     const s0 = C[0], s1 = C[C.length - 1];
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    // wide glow (chunks with decreasing width)
-    ctx.globalCompositeOperation = 'lighter';
-    for (let c = 0; c < 6; c++) {
-      const a0 = Math.floor((c / 6) * N), a1 = Math.floor(((c + 1) / 6) * N);
-      ctx.beginPath(); for (let i = a0; i <= a1; i++) i === a0 ? ctx.moveTo(C[i][0], C[i][1]) : ctx.lineTo(C[i][0], C[i][1]);
-      const w = C[Math.floor((a0 + a1) / 2)][2];
-      ctx.strokeStyle = E.rgba('#FFC98F', 0.055); ctx.lineWidth = w * 3.4 + 30; ctx.stroke();
-      ctx.strokeStyle = E.rgba('#FFE0A8', 0.09); ctx.lineWidth = w * 1.7 + 8; ctx.stroke();
-    }
+    // wide glow (chunks with decreasing width). Drawn OPAQUE in pre-multiplied dark colours into a soft
+    // half-res layer and added once ('lighter'), so overlapping round caps never accumulate into a hard disc
+    // (0.055·#FFC98F → #0E0B08; + 0.09·#FFE0A8 → #251F17)
+    const m0 = ctx.getTransform();
+    E.layer(ctx, (l) => {
+      l.setTransform(m0.a * 0.5, m0.b * 0.5, m0.c * 0.5, m0.d * 0.5, m0.e * 0.5, m0.f * 0.5); l.lineCap = 'round'; l.lineJoin = 'round';
+      for (const [col, wk, w0] of [['#0E0B08', 3.4, 30], ['#251F17', 1.7, 8]]) {
+        l.strokeStyle = col;
+        for (let c = 0; c < 6; c++) {
+          const a0 = Math.floor((c / 6) * N), a1 = Math.floor(((c + 1) / 6) * N);
+          l.beginPath(); for (let i = a0; i <= a1; i++) i === a0 ? l.moveTo(C[i][0], C[i][1]) : l.lineTo(C[i][0], C[i][1]);
+          l.lineWidth = C[Math.floor((a0 + a1) / 2)][2] * wk + w0; l.stroke();
+        }
+      }
+    }, { lo: true, blur: 16, op: 'lighter', alpha: hk });
     // body
     ctx.globalCompositeOperation = 'screen';
     ctx.fillStyle = E.lin(ctx, s0[0], s0[1], s1[0], s1[1], [[0, '#FFE7B0', 0.72], [1, '#FFFFFF', 0.85]]);
@@ -611,7 +622,7 @@
     ctx.beginPath(); C.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])));
     ctx.setLineDash([12, 30]); ctx.lineDashOffset = -t * 150; ctx.strokeStyle = E.rgba('#FFFFFF', 0.85); ctx.lineWidth = 2.6; ctx.stroke(); ctx.setLineDash([]);
     // draw-on head
-    if (f < 1) { S.light(ctx, s1[0], s1[1], 70, '#FFE7B0', 0.8); S.sparkle(ctx, s1[0], s1[1], 22, 1, '#FFFFFF', t * 2); }
+    if (f < 1) { S.light(ctx, s1[0], s1[1], 40 + 24 * hk, '#FFE7B0', 0.62 * hk); S.sparkle(ctx, s1[0], s1[1], 10 + 12 * hk, hk, '#FFFFFF', t * 2); }
     // lift-off glow pool on the path
     const lp = rg.at(0.16);
     S.light(ctx, lp.x, lp.y, 120, '#FFE0A8', 0.35 * Math.min(1, f * 4) * bandAtt(lp.y, g));
@@ -764,15 +775,19 @@
   function drawGratitudeWave(ctx, t, cs, g) {
     const k0 = W.sukur - 0.1, u = (t - k0) / 1.15;
     if (u <= 0 || u >= 1) return;
-    const R = (u * 1.15 / (0.9 * 0.75)) * 1400, c = toS(cs, 540, 830, 1), a = Math.sin(PI * Math.min(1, u * 1.6)) * (1 - u);
+    // front keeps pace with the bow ripple at the centre column (bow front = circle about plate (540,830))
+    const rho = (u * 1.15 / (0.9 * 0.75)) * 1400, c = toS(cs, 540, HZ + 30, 1), a = Math.sin(PI * Math.min(1, u * 1.6)) * (1 - u);
+    const R = Math.max(1, (rho - 220) * c[2]);
     ctx.save();
     const mp = new Path2D(); let f0 = null;
     for (let x = -200; x <= 1280; x += 40) { const q = toS(cs, x, HZ + 34 + 14 * Math.sin(x * 0.004 + 1) + 8 * Math.sin(x * 0.011), 1); if (!f0) { f0 = q; mp.moveTo(q[0], q[1]); } else mp.lineTo(q[0], q[1]); }
     mp.lineTo(2000, 3000); mp.lineTo(-1000, 3000); mp.closePath(); ctx.clip(mp);
     ctx.globalCompositeOperation = 'screen';
-    const w = 150 + 120 * u, r0 = Math.max(0, R - w), r1 = R + w * 0.4;
-    ctx.fillStyle = E.rad(ctx, c[0], c[1], r0, r1, [[0, '#FFE7B0', 0], [0.72, '#FFE7B0', 0.42 * a * (1 - 0.6 * g)], [1, '#FFE7B0', 0]]);
-    ctx.fillRect(0, 0, E.W, E.H);
+    // flattened like a ring on the ground plane (wide across, shallow in depth), broad gaussian-ish profile
+    const w = (190 + 170 * u) * c[2], r0 = Math.max(0, R - w), r1 = R + w * 0.7, A0 = 0.3 * a * (1 - 0.6 * g);
+    ctx.translate(c[0], c[1]); ctx.scale(1.8, 1);
+    ctx.fillStyle = E.rad(ctx, 0, 0, r0, r1, [[0, '#FFE7B0', 0], [0.25, '#FFE7B0', 0.18 * A0], [0.5, '#FFE7B0', 0.7 * A0], [0.62, '#FFE7B0', A0], [0.76, '#FFE7B0', 0.62 * A0], [0.9, '#FFE7B0', 0.16 * A0], [1, '#FFE7B0', 0]]);
+    ctx.fillRect(-E.W, -E.H, E.W * 2, E.H * 2);
     ctx.restore();
   }
 
@@ -804,17 +819,9 @@
     // dust motes floating in the sunlight
     S.dust(ctx, t, { n: 34, x: 0, y: 260, w: 1080, h: 900, col: '#FFE7B0', rMin: 0.9, rMax: 2.4, speed: 12, alpha: 0.45, seed: 17 });
     drawGratitudeWave(ctx, t, cs, g);
-    // near layers: during the crane they drop out under the camera (instead of riding up with the sky)
+    // near layers (rose, hoopoe, butterflies, petals, wind, foreground leaves)
     const nearLayers = (c) => {
-      let rosePos;
-      if (g > 0.002) {
-        const m = c.getTransform();
-        E.layer(c, (l) => {
-          l.setTransform(m); rosePos = drawRose(l, t, cs, Math.min(1, bowFn(380, 1080) / 1.6));
-          l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'destination-out';
-          l.fillStyle = E.lin(l, 0, 1170, 0, 1640, [[0, '#000', 0], [0.2, '#000', g], [0.85, '#000', g], [1, '#000', 0]]); l.fillRect(0, 1170, E.W, 470);
-        });
-      } else rosePos = drawRose(c, t, cs, Math.min(1, bowFn(380, 1080) / 1.6));
+      const rosePos = drawRose(c, t, cs, Math.min(1, bowFn(380, 1080) / 1.6));
       drawHoopoe(c, t, cs);
       drawButterflies(c, t, cs, rg, g);
       drawRosePetals(c, t, cs, rg, rosePos, g);
@@ -822,11 +829,8 @@
       const [fx, fy, fz] = toS(cs, -280, 1300, 1.9); // blurred foreground leaves (parallax 1.9)
       c.drawImage(SPR.fg, fx + Math.sin(t * 0.9) * 6, fy + Math.sin(t * 1.1 + 1) * 4, 1600 * fz, 720 * fz);
     };
-    if (!crane) nearLayers(ctx);
-    else {
-      const na = 1 - crane.k;
-      if (na > 0.01) { const m = ctx.getTransform(); E.layer(ctx, (l) => { l.setTransform(m); nearLayers(l); }, { alpha: na }); }
-    }
+    // (during the crane they stay opaque: an alpha fade turned the revived rose into a grey 'wilting' ghost)
+    nearLayers(ctx);
     drawRisers(ctx, t, cs, rg, g);
     // grade + band scrim
     ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = E.rgba('#FF9A6A', 0.12); ctx.fillRect(0, 0, E.W, E.H); ctx.restore();
@@ -984,6 +988,34 @@
     planOverlays(ctx, t, v);
     ctx.restore();
   }
+  /** plan view with a radial zoom blur tied to the zoom speed (half-frame shutter, like E.renderFrameMB), so the
+   *  zoom-out/push-in is smeared in proportion to its velocity — ramping in and out smoothly — instead of
+   *  being crisp on some frames and streaked on others. Sub-frame calls (t off the 1/30 grid) come from the
+   *  renderer's own multi-sample motion blur, which integrates by itself: those are drawn crisp. */
+  const MB_SHUT = 0.5;
+  function drawPlanBlurred(ctx, t) {
+    const v = planView(t), fr = t * E.FPS;
+    let n = 1, zs = null;
+    if (Math.abs(fr - Math.round(fr)) < 0.003) {
+      const za = planView(t - (0.5 * MB_SHUT) / E.FPS).zoom, zb = planView(t + (0.5 * MB_SHUT) / E.FPS).zoom;
+      const px = Math.abs(Math.log(zb / za)) * 1250; // streak length at the far corners
+      n = px < 1.2 ? 1 : Math.min(32, 2 + Math.floor(px / 3.5)); // ≤ ~3.5 px between copies; starts from ~1 px
+      if (n >= 2) { zs = []; for (let k = 0; k < n; k++) { const tk = t + (MB_SHUT * ((k + 0.5) / n - 0.5)) / E.FPS, q = planView(tk); zs.push([q.zoom, q.cy]); } }
+    }
+    if (!zs) { drawPlanTop(ctx, t, v); return; }
+    const zmin = Math.min(...zs.map((q) => q[0])), b = SPR.mbBuf.x;
+    b.setTransform(1, 0, 0, 1, 0, 0); b.globalAlpha = 1; b.globalCompositeOperation = 'source-over'; b.filter = 'none';
+    b.clearRect(0, 0, E.W, E.H);
+    drawPlanTop(b, t, Object.assign({}, v, { zoom: zmin }));
+    // every copy is scaled ≥ 1 about the plan centre, so the frame edges stay covered; running average
+    ctx.save(); const m = ctx.getTransform();
+    zs.forEach(([z, cy], k) => {
+      const s = z / zmin;
+      ctx.setTransform(m.multiply(new DOMMatrix([s, 0, 0, s, v.cx - s * v.cx, cy - s * v.cy]))); ctx.globalAlpha = 1 / (k + 1);
+      ctx.drawImage(SPR.mbBuf.c, 0, 0);
+    });
+    ctx.restore();
+  }
   function planOverlays(ctx, t, v) {
     // gold girih lighting up line by line inside the star garden
     const dr = P(t, 66.76, 67.45, 'inOutSine');
@@ -1031,18 +1063,20 @@
     ctx.restore();
   }
   function drawIvoryEnd(ctx, t) {
-    const a = P(t, 68.15, 68.32, 'inOutSine') * (0.42 - 0.12 * P(t, 68.35, 68.6)), m = P(t, 68.28, 68.56, 'inOutCubic');
+    const a = P(t, 68.15, 68.32, 'inOutSine') * (0.42 - 0.12 * P(t, 68.35, 68.6)), m = P(t, 68.15, 68.45, 'inOutCubic');
     if (a <= 0.003) return;
     ctx.save(); ctx.lineCap = 'round';
+    const amp = 7 * (1 - m);
     for (let i = 0; i < 14; i++) {
-      const y = 482 + i * 52, x0 = 190, x1 = i === 13 ? 640 : 890, side = y < 820 ? -1 : 1, amp = (90 + 30 * Math.abs(y - 820) / 340) * (1 - m);
-      const grow = P(t, 68.15 + Math.abs(i - 6.5) * 0.008, 68.3 + Math.abs(i - 6.5) * 0.008, 'outCubic');
+      const y = 482 + i * 52, x0 = 190, x1 = i === 13 ? 640 : 890;
+      const grow = P(t, 68.13 + i * 0.009, 68.29 + i * 0.009, 'outCubic');
+      if (grow <= 0.002) continue;
       ctx.beginPath();
       for (let s = 0; s <= 24; s++) {
-        const x = lerp(540 + (x0 - 540) * grow, 540 + (x1 - 540) * grow, s / 24), q = (x - 540) / 360, yy = y + side * amp * (1 - q * q) - side * amp * 0.5;
+        const x = lerp(x0, x0 + (x1 - x0) * grow, s / 24), yy = y + amp * Math.sin((x - x0) * 0.011 + 0.5);
         s ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy);
       }
-      ctx.strokeStyle = E.mix('#C9962E', '#5A2A2F', m, a); ctx.lineWidth = lerp(2.4, 3, m); ctx.stroke();
+      ctx.strokeStyle = E.mix('#C9962E', '#5A2A2F', m, a * sm(grow / 0.25)); ctx.lineWidth = lerp(2.4, 3, m); ctx.stroke();
     }
     ctx.restore();
   }
@@ -1059,17 +1093,22 @@
       buildMeadow();
       buildBillboards();
       buildPlan();
+      SPR.mbBuf = E.canvas(E.W, E.H);
       SPR.gTree = ghostFrom(420, 420, 210, 400, (x) => pomTreeArt(x));
-      SPR.gBowl = ghostFrom(340, 320, 170, 92, (x) => {
+      // canvas ±240 wide (was ±170, which sliced the streams off with straight vertical edges)
+      SPR.gBowl = ghostFrom(480, 340, 240, 92, (x) => {
         A.iznikBowl(x, { rx: 120, ry: 40, depth: 82, t: 0, shadow: false, honey: 60 });
-        // long, thin honey-light streams pouring over the rim, fading as they fall
-        for (const [sx, sy, len, bend, w] of [[-118, 2, 175, -58, 5], [119, 6, 140, 62, 4.5], [34, 38, 110, 22, 3.5]]) {
-          x.save(); x.lineCap = 'round';
-          const g = x.createLinearGradient(0, sy, 0, sy + len); g.addColorStop(0, 'rgba(255,193,94,1)'); g.addColorStop(0.45, 'rgba(255,193,94,0.5)'); g.addColorStop(0.8, 'rgba(255,193,94,0)');
-          x.strokeStyle = g;
-          for (let k = 0; k < 3; k++) { x.lineWidth = w * (1 - k * 0.3); x.beginPath(); x.moveTo(sx, sy); x.quadraticCurveTo(sx + bend * 1.1, sy + len * 0.2, sx + bend * 1.3, sy + len * (1 - k * 0.2)); x.stroke(); }
-          x.restore();
+        // honey spilling over the lip and running down the curved outer wall, ending in short drips that stay
+        // above the foot (long free-falling streams read as saucer 'legs')
+        x.save(); x.lineCap = 'round'; x.lineJoin = 'round';
+        // [lip x, lip y, wall control x, y, run end x, y, drip length, width]
+        for (const [x0, y0, cx, cy, ex, ey, dl, w] of [[-118, 2, -126, 28, -94, 58, 16, 5], [119, 6, 125, 32, 93, 58, 8, 4.5], [30, 38, 36, 52, 33, 64, 12, 3.4]]) {
+          const g = x.createLinearGradient(0, y0, 0, ey + dl + 10); g.addColorStop(0, 'rgba(255,193,94,1)'); g.addColorStop(0.55, 'rgba(255,193,94,0.6)'); g.addColorStop(1, 'rgba(255,193,94,0.12)');
+          x.strokeStyle = g; x.fillStyle = g;
+          for (let k = 0; k < 3; k++) { x.lineWidth = w * (1 - k * 0.3); x.beginPath(); x.moveTo(x0, y0); x.quadraticCurveTo(cx, cy, ex, ey); x.lineTo(ex, ey + dl * (1 - k * 0.25)); x.stroke(); }
+          x.beginPath(); x.arc(ex, ey + dl + w * 0.55, w * 0.78, 0, TAU); x.fill(); // the drip's swelling bead
         }
+        x.restore();
       });
       const rc = E.canvas(620, 560); rc.x.translate(310, 360);
       A.heroRose(rc.x, { R: ORIG.rose[2], bloom: 1, t: 0, variant: 'outline', col: '#FFF6E0', lw: 2.2, glow: 1 });
@@ -1092,18 +1131,18 @@
         // settles top-down at 67.0
         const sdy = -200 * P(t, 66.0, 66.8, 'inOutCubic'), sy = Math.max(220, sunAt(t, camAt(t)).y + sdy);
         const veil = (a) => { if (a <= 0.003) return; ctx.fillStyle = E.rad(ctx, 540, sy, 0, 1500, [[0, '#FFF1DC', a], [0.45, '#F8D6B4', a], [1, '#EAB79C', a]]); ctx.fillRect(0, 0, E.W, E.H); };
-        // 1) the side view pitches gently and goes into warm light
-        if (t < 66.62) { ctx.save(); ctx.translate(0, sdy); drawSide(ctx, t, { dy: sdy, k: P(t, 66.1, 66.42, 'inOutSine') }); ctx.restore(); veil(0.9 * P(t, 66.2, 66.56, 'inOutSine')); }
-        // 2) the ground plane emerges from the light, already decelerating, and settles top-down at 67.0
+        // ONE veil over everything (rises 66.2–66.56, clears 66.56–66.97) and the ground cross-fades in under
+        // it, so the side view only ever recedes and the plan only ever emerges (no wash-out/re-emerge pulse)
         const aP = P(t, 66.5, 66.66, 'inOutSine');
-        if (aP > 0.002) {
-          drawGround(ctx, t, craneCam(t), aP);
-          warmSurround(ctx, 0.6 * P(t, 66.6, CR1, 'inOutSine'));
-          veil(0.9 * (1 - P(t, 66.56, 66.97, 'inOutSine')) * aP);
-        }
+        // 1) the side view pitches gently and goes into warm light (drawn until the ground fully covers it)
+        if (aP < 0.999) { ctx.save(); ctx.translate(0, sdy); drawSide(ctx, t, { dy: sdy }); ctx.restore(); }
+        // 2) the ground plane emerges from the light, already decelerating, and settles top-down at 67.0
+        if (aP > 0.002) drawGround(ctx, t, craneCam(t), aP);
+        warmSurround(ctx, 0.6 * P(t, 66.6, CR1, 'inOutSine'));
+        veil(0.9 * P(t, 66.2, 66.56, 'inOutSine') * (1 - P(t, 66.56, 66.97, 'inOutSine')));
         drawCraneMotes(ctx, t);
       } else {
-        drawPlanTop(ctx, t, planView(t));
+        drawPlanBlurred(ctx, t);
         warmSurround(ctx, 0.6);
       }
       drawFlare(ctx, t);

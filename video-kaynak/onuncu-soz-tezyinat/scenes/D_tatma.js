@@ -57,7 +57,8 @@
     const z = lerp(lerp(Zd, 1.07, cIn), 0.945, cOut);
     const tilt = 0.105 * ease.outBack(pp(t, 11.95, 12.45, 'linear'), 1.3) * (1 - cOut);
     const widen = pp(t, 13.70, 14.22, 'inOutCubic');
-    const bump = 1 + 0.03 * Math.sin(PI * cl((t - 13.92) / 0.42)) * (t > 13.92 ? 1 : 0);
+    // small zoom bump after "açar": sin² envelope → starts and settles with zero velocity (no hitch at 14.34)
+    const bump = 1 + 0.03 * Math.sin(PI * cl((t - 13.92) / 0.42)) ** 2;
     const dr = E.drift(t, 4, 0.3, 11);
     const sh = t > T.land ? Math.exp(-(t - T.land) * 11) : 0;
     const shx = E.noise(t * 38, 5) * 4 * sh, shy = E.noise(t * 41, 6) * 3 * sh;
@@ -284,7 +285,7 @@
       E.layer(ctx, (l) => {
         l.beginPath(); l.rect(0, hz, W, H - hz); l.clip();
         DE.tileFloor(l, { cx: g.x, hzT: g.footY - FL.F * g.s, F: FL.F, hc: g.s * Zc, y0: Math.floor(hz), y1: H, T: 140, xo: 70, zo: Zc + 70,
-          x0: 0, x1: W, band: 5, blur: (y) => cl((y - g.footY - 260) / 300, 0, 2) });
+          x0: 0, x1: W, band: 1, blur: (y) => cl((y - g.footY - 260) / 300, 0, 2) }); // 1-px bands: no stair-stepped grid
       }, { alpha: 0.2 * ta });
       ctx.save(); ctx.beginPath(); ctx.rect(0, hz, W, H - hz); ctx.clip();
       // dark plum glaze: deeper toward the lens and the sides, so the tiles stay a whisper under the gloss
@@ -428,19 +429,26 @@
       dim: 0.5 * pp(t, 14.88, 15.5), honey: Math.max(0, honeyR(t)), reflection: true, rimCol: '#B9A6FF',
     };
   }
+  /** reflection fade while craning: seen from high up the naive mirror of the 3/4 bowl turns into a big
+   *  milky disc, so it fades out with the crane and returns with the pull-back (0 again before 15.85) */
+  const reflFade = (c) => { const x = cl(c.crane / 0.6); return x * x * (3 - 2 * x); };
   /** bowl + its reflection. veil: darken the bowl only (pre-key); the reflection fades while craning */
   function drawBowl(ctx, t, g, extra) {
     const o = Object.assign(bowlOpts(t, g.c), extra || {});
     const veil = (extra && extra.veil !== undefined) ? extra.veil : lerp(0.72, 0.38, pp(t, 11.6, 11.95)) * (1 - pp(t, 11.97, 12.5, 'inOutSine'));
-    const rf = 0; // keep the glossy reflection through the crane
-    if (veil < 0.005 && rf < 0.005) { E.at(ctx, g.x, g.rimY, g.z, 0, (c) => A.iznikBowl(c, o)); return; }
+    const rf = o.reflection ? reflFade(g.c) : 0;
+    const body = (c, oo) => E.at(c, g.x, g.rimY, g.z, 0, (cc) => A.iznikBowl(cc, oo));
+    // seen from high up the bowl's front rim hangs BELOW its foot line, so the mirror cannot be cut out by a
+    // y-range: paint the mirrored bowl in its own pass at (1−rf) (no shadow), then the bowl itself without a
+    // reflection on top (it covers that pass completely). Same order as A.iznikBowl: reflection → shadow → bowl.
+    const paint = (c) => {
+      if (rf < 0.005) { body(c, o); return; }
+      if (rf < 0.995) { c.save(); c.globalAlpha *= 1 - rf; body(c, Object.assign({}, o, { shadow: false })); c.restore(); }
+      body(c, Object.assign({}, o, { reflection: false }));
+    };
+    if (veil < 0.005) { paint(ctx); return; }
     E.layer(ctx, (l) => {
-      E.at(l, g.x, g.rimY, g.z, 0, (c) => A.iznikBowl(c, o));
-      if (rf > 0.005) {
-        l.globalCompositeOperation = 'destination-out';
-        const y0 = g.footY + 10 * g.z;
-        l.fillStyle = E.lin(l, 0, y0, 0, y0 + 60 * g.z, [[0, '#000', 0], [1, '#000', rf]]); l.fillRect(0, y0, W, H - y0);
-      }
+      paint(l);
       if (veil > 0.005) { l.globalCompositeOperation = 'source-atop'; l.fillStyle = `rgba(22,9,30,${veil.toFixed(3)})`; l.fillRect(0, 0, W, H); }
     });
   }
@@ -458,30 +466,39 @@
     A.glints(ctx, t, { pts, r: 7 * z, period: 1.1, duty: 0.45, col: '#FFF6E0', seed: 9 });
   }
 
-  /** "doyurmaz": the honey pool evaporates into 20 curling golden ribbons that fade by ≈15.6 */
+  /** "doyurmaz" interior shade envelope (multiply strength): in with the evaporation, out again before E's morph */
+  const emptyShade = (t) => 0.62 * pp(t, 14.86, 15.32, 'inOutSine') * (1 - pp(t, 15.5, 15.86, 'inOutSine'));
+  /** "doyurmaz": the honey pool evaporates into 20 curling golden ribbons that rise out of the bowl, past the
+   *  far rim and into the dark plum air, fading by ≈15.75. Amber body (reads on the porcelain) + gold glow
+   *  (reads on the wall) + a fine golden core. */
   function drawVapor(ctx, t, g) {
     const z = g.z, fc = g.fc;
     const ribbons = (c, pass) => {
       c.lineCap = 'round'; c.lineJoin = 'round';
       for (let i = 0; i < 20; i++) {
-        const t0 = 14.86 + E.hash(i, 91) * 0.24, life = 0.6 + 0.2 * E.hash(i, 92), age = t - t0;
-        if (age <= 0 || age > life) continue;
-        const an = E.hash(i, 93) * TAU, rr = 34 * Math.sqrt(E.hash(i, 94)), dir = Math.cos(an) * (0.5 + 0.9 * E.hash(i, 95));
+        const t0 = 14.86 + E.hash(i, 91) * 0.3, life = 0.52 + 0.08 * E.hash(i, 92), age = t - t0;
+        if (age <= 0 || age >= life) continue;
+        // every thread leans outward (no straight central column that would read as a candle flame)
+        const an = E.hash(i, 93) * TAU, rr = 40 * Math.sqrt(E.hash(i, 94)), dir = (Math.cos(an) >= 0 ? 1 : -1) * (0.35 + 0.85 * E.hash(i, 95));
         const ox = fc[0] + Math.cos(an) * rr * z, oy = fc[1] + Math.sin(an) * rr * g.s * z;
-        const rise = (420 + 240 * E.hash(i, 96)) * z, ph = E.hash(i, 97) * TAU, cu = (20 + 24 * E.hash(i, 98)) * z;
-        const P = (u) => [ox + dir * 420 * z * u + Math.sin(u * 8 + ph) * cu * Math.min(1, u * 3), oy - rise * u * (1 - 0.3 * u)];
-        const k = age / life, tail = Math.min(age, 0.36), al = Math.pow(1 - k, 1.2) * Math.min(1, age * 7);
-        let prev = P(age - tail);
-        for (let j = 1; j <= 12; j++) {
-          const u = age - tail + (tail * j) / 12, q = P(u), w = j / 12;
-          if (pass === 0) { c.strokeStyle = E.rgba('#FFF0CC', 0.2 * al * w); c.lineWidth = 26 * z * (0.5 + w) * (1 + 1.5 * k); }
-          else { c.strokeStyle = E.rgba('#FFF4DC', 0.12 * al * w); c.lineWidth = 3 * z * (0.4 + w); }
+        const rise = (520 + 200 * E.hash(i, 96)) * z, ph = E.hash(i, 97) * TAU, cu = (18 + 24 * E.hash(i, 98)) * z;
+        const fr = 9 + 6 * E.hash(i, 99);
+        // kk: 0..1 along the life; quick lift-off that slows while the thread drifts sideways and curls wider
+        const P = (kk) => { kk = Math.max(0, kk); return [ox + dir * 210 * z * kk + Math.sin(kk * fr + ph) * cu * Math.min(1, kk * 2.5), oy - rise * kk * (1.5 - 0.5 * kk)]; };
+        const k = age / life, tail = Math.min(k, 0.3), al = Math.pow(1 - k, 1.4) * Math.min(1, age * 6);
+        let prev = P(k - tail);
+        for (let j = 1; j <= 16; j++) {
+          const kk = k - tail + (tail * j) / 16, q = P(kk), w = Math.sin((PI * j) / 17); // thin at both ends: a thread, not a tongue
+          if (pass === 0) { c.strokeStyle = E.rgba('#E0AA5E', 0.22 * al * w); c.lineWidth = 7 * z * (0.5 + w) * (1 + 1.4 * kk); }
+          else if (pass === 1) { c.strokeStyle = E.rgba('#FFD58A', 0.07 * al * w); c.lineWidth = 14 * z * (0.5 + w) * (1 + 1.4 * kk); }
+          else { c.strokeStyle = E.rgba('#F6CF88', 0.4 * al * w); c.lineWidth = 1.5 * z * (0.5 + w); }
           c.beginPath(); c.moveTo(prev[0], prev[1]); c.lineTo(q[0], q[1]); c.stroke(); prev = q;
         }
       }
     };
-    E.layer(ctx, (l) => ribbons(l, 0), { lo: true, blur: 14, alpha: 0.9, op: 'screen' });
-    ctx.save(); ctx.globalCompositeOperation = 'screen'; ribbons(ctx, 1); ctx.restore();
+    E.layer(ctx, (l) => ribbons(l, 0), { lo: true, blur: 4, alpha: 1 });
+    E.layer(ctx, (l) => ribbons(l, 1), { lo: true, blur: 12, alpha: 1, op: 'lighter' });
+    ctx.save(); ribbons(ctx, 2); ctx.restore();
   }
 
   /* ------------------------------------------------------------------ light shaft + dust */
@@ -543,21 +560,37 @@
     // pre-key darkness: the room is lit only by the falling honey drop until "Sana"
     const dark = lerp(0.30, 0.1, pp(t, 11.6, 11.95)) * (1 - pp(t, 11.97, 12.6, 'inOutSine'));
     if (dark > 0.005) { ctx.fillStyle = `rgba(16,6,22,${dark.toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
+    // "doyurmaz": with the honey gone the interior falls into a cool shade (deepest on the floor where the honey
+    // glowed). Back to 0 before 15.88, so E's morph (which redraws the bowl from 15.90) continues seamlessly.
+    const shd = emptyShade(t);
+    if (shd > 0.003) {
+      ctx.save();
+      ctx.beginPath(); ctx.ellipse(g.x, g.rimY, g.irx * g.z, Math.max(0.5, g.iry * g.z), 0, 0, TAU); ctx.clip();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.translate(g.fc[0], g.fc[1]); ctx.scale(1, Math.max(0.05, g.s));
+      const R = g.irx * g.z * 1.15;
+      ctx.fillStyle = E.rad(ctx, 0, 0, 0, R, [[0, '#4C5680', shd], [0.55, '#5A6488', shd * 0.9], [1, '#7A7FA0', shd * 0.75]]);
+      ctx.fillRect(-R, -R * 1.6, 2 * R, 3.2 * R);
+      ctx.restore();
+    }
     drawPoolLife(ctx, t, g);
-    // hollow rings after "doyurmaz" (run out from the floor to the rim)
-    if (t > 14.9 && t < 15.9) {
+    // hollow rings after "doyurmaz": cool dark ripples run out from the floor to the rim (all done by 15.86)
+    if (t > 14.9 && t < 15.88) {
       ctx.save();
       for (let k = 0; k < 3; k++) {
-        const u = (t - 14.92 - k * 0.2) / 0.75; if (u <= 0 || u >= 1) continue;
+        const u = (t - 14.92 - k * 0.16) / 0.62; if (u <= 0 || u >= 1) continue;
         const q = 0.06 + 0.92 * ease.outQuad(u), al = Math.sin(PI * u);
-        ctx.beginPath(); ctx.ellipse(g.x, g.rimY + g.yo * (1 - q * q) * g.z, q * g.irx * g.z, Math.max(0.5, q * g.iry * g.z), 0, 0, TAU);
-        ctx.strokeStyle = E.rgba('#3A2E5C', 0.13 * al); ctx.lineWidth = 16 * g.z; ctx.stroke();
-        ctx.strokeStyle = E.rgba('#3A2E5C', 0.42 * al); ctx.lineWidth = (2.6 - 0.5 * k) * g.z; ctx.stroke();
+        const ring = (qq) => { ctx.beginPath(); ctx.ellipse(g.x, g.rimY + g.yo * (1 - qq * qq) * g.z, qq * g.irx * g.z, Math.max(0.5, qq * g.iry * g.z), 0, 0, TAU); };
+        ring(q);
+        ctx.strokeStyle = E.rgba('#1A2142', 0.24 * al); ctx.lineWidth = 15 * g.z; ctx.stroke();
+        ctx.strokeStyle = E.rgba('#1A2142', 0.6 * al); ctx.lineWidth = (2.8 - 0.5 * k) * g.z; ctx.stroke();
+        ring(Math.max(0.02, q - 0.022)); // faint cool crest just inside the trough
+        ctx.strokeStyle = E.rgba('#C9D6FF', 0.2 * al); ctx.lineWidth = 1.6 * g.z; ctx.stroke();
       }
       ctx.restore();
     }
     // evaporation wisps
-    if (t > 14.86 && t < 15.8) drawVapor(ctx, t, g);
+    if (t > 14.86 && t < 15.9) drawVapor(ctx, t, g);
     drawSplash(ctx, t, g);
     drawMotes(ctx, t, g);
     // the falling drop: locked at (540,880) through C's handoff, then it visibly falls into the bowl
@@ -594,7 +627,8 @@
       DE.SPR_D = SPR;
     },
     post: (t) => ({
-      bloom: 0.42 + 0.3 * E.env(t, 12.22, 12.9, 0.05, 0.5) + 0.12 * E.env(t, 13.7, 14.4, 0.2, 0.3),
+      // (the "doyurmaz" shade also takes some bloom out, back to 0.42 before E's morph)
+      bloom: 0.42 + 0.3 * E.env(t, 12.22, 12.9, 0.05, 0.5) + 0.12 * E.env(t, 13.7, 14.4, 0.2, 0.3) - 0.2 * emptyShade(t),
       vignette: 0.36, grain: 0.06,
     }),
     draw(ctx, t) {
