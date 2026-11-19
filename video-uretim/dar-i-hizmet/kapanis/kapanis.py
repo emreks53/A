@@ -189,7 +189,7 @@ def sirt_olc(img_path, mask_path, erode=1, yaz=True):
     lab = np.rint(mk / 15.0).astype(int) - 1
     sirali = A.UST_SIRA + A.ALT_SIRA + [A.YATAN]
     hsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
-    Hh, Ss = hsv[..., 0], hsv[..., 1]
+    Hh = hsv[..., 0]
     yaldiz = (Hh >= 26.5) & (lab >= 0)
     yaldiz = cv2.dilate(yaldiz.astype(np.uint8), np.ones((3, 3), np.uint8), iterations=max(1, erode + 1)).astype(bool)
     lum = im @ np.array([0.2126, 0.7152, 0.0722], np.float32)

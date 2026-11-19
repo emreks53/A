@@ -6,7 +6,8 @@ from motor import *
 import elemanlar as el
 import mimari
 
-OUT = '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/testler/'
+import os
+OUT = os.environ.get('MIMARI_OUT', '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/testler/')
 
 
 def sahne(olcek, x, y, nur=0.0, cicek=True):

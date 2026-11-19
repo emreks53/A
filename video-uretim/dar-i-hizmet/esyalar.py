@@ -26,7 +26,10 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
    gövdenin arkasından çıkan uzun kuğu boynu emzik (süs bilezikli, ağzı dudaklı), C kulp (üstte başparmak dayanağı,
    altta kıvrım), kaideli taban; omuzda iki kazıma çizgi + nokta dizisi, karında iki çizgi + zikzak, boyunda halka.
    Dönel parçalar profil boyunca gölgelenir: ilk açık bakır lavi, gölge yanında yumuşak orta sır, dar koyu çekirdek
-   gölge, uzak kenarda yansıma şeridi, altta hilal; ışık yanında uzun boş bırakılmış parıltı şeritleri.
+   gölge, uzak kenarda yansıma şeridi, altta hilal; ışık yanında uzun boş bırakılmış parıltı şeritleri. Işıklı yan
+   SÜREKLİdir (``_isik_yani``): sahnedeki aynalı, ~37° eğik ibrikte ışık neredeyse eksen boyunca gelir; yerel L_x işaret
+   değiştirdiğinde parıltı ortadan geçer, gölge iki kenara paylaşılır (eskiden bütün gölgelendirme bir karede öbür
+   yana sıçrıyordu).
    * YEREL ÇERÇEVE = insan.ciz_insan'ın ``elde(t, M_el)`` çerçevesi: köken = kulpu kavrayan yumruğun avuç merkezi
      (kavrama noktası), +x emziğe doğru (parmak yönü), +y aşağı (ibriğin altı). Kulpun kavranan dik çubuğu
      x≈+5..+15'te y≈-30..+30 boyunca geçer (yumruk x∈[-24,32], y∈[-12,12] onu örter). Adam 600 birimken boyut
@@ -50,7 +53,10 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
      yerçekimine paralel ikinci derece Bezier'dir (gerçek atış parabolü; çıkış yönünü ve hedefi tam tutar).
    * kalinlik: çıkıştaki tam genişlik (yerel); None = mesafenin ~%2.4'ü (2.8..16). Sahnede figür ölçeğiyle verin
      (adam 600 birimken ~6.5 birim -> M=eye ise 6.5 * figür_ölçeği px).
-   * zaman (sn): akış animasyonu. debi 0..1: miktar (0 = hiç çizmez; <0.62'de akışın alt kısmı damlalara bölünür).
+   * zaman (sn): akış animasyonu. Akış deseni (şişkinlik, ışık çizgileri, damlalar) kalinlik ölçeğinde sabit bir
+     kafeste ~0.85 m/sn (adam ölçeğinde) akar: emzik oynayıp yol uzunluğu değişse ya da kamera yaklaşsa da desen
+     sıçramaz/geri akmaz; 30 fps'de kare başına kayma desen aralığının ~0.3'ü (akış yönü okunur).
+     debi 0..1: miktar (0 = hiç çizmez; <0.62'de akışın alt kısmı damlalara bölünür).
      cephe 0..1: suyun ön ucu yol boyunca (dökme başlarken 0->1), kuyruk 0..1: arka uç (dökme biterken 0->1).
      sicrama 0..1: hedef sıçramasının gücü (cephe hedefe varınca kendiliğinden başlar, kuyruk gelince söner).
    * Saydam: saklamaya uyar (önündeki el/ibrik boyanmaz), sakla_guc kadar kısmi saklama yazar (arkası hafif açılır).
@@ -82,7 +88,8 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
 6. ciz_simge_halkasi(t, M, r, renk_='#F1E3D3', ilerleme=1.0, tohum=0, yog=0.55)
    Simgenin ARKASINA boyanan yumuşak suluboya disk (simgeden SONRA çağırın): açık lavi, biraz koyu ıslak kenar,
    ortası hafif açık, kenar içinde çok soluk ikinci yankı. ilerleme 0..1: boya merkezden organik kenarla yayılır
-   (e_out), sonda temiz daireye oturur. Köken = disk merkezi, r yerel yarıçap. Saklamaya ilerlemeyle orantılı yazar.
+   (e_out), sonda temiz daireye oturur. Köken = disk merkezi, r yerel yarıçap. Saklamayı yalnız boyanmış (açılmış)
+   alana, lavinin keskin kenarında bitecek biçimde yazar (gök sonra boyanınca açılma kenarında beyaz hale kalmaz).
 
 7. ciz_saat(t, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, gorunurluk=1.0, tohum=0, hale=1.0) -> dict
    Güneş üzerinde beliren saat kadranı. Güneş diskini (açık sıcak sarı lavi, ortası açık, ince ıslak kenar) HER
@@ -91,7 +98,8 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
      yönünde sırayla dıştan içe boyanır (0..0.75), akrep ve yelkovan merkezden uzayarak belirir (0.55..1).
    * dilim 0..1: TEK saat dilimini (12'den 1'e, 30°) merkezden dışa organik kenarla altın sırla doldurur.
    * gun 0..1: altın dolgunun ön kenarı saat yönünde 30°'den 360°'ye döner (bir saat bütün bir gün olur); hareketli
-     kenarda yumuşak parlak şerit (kenar boyunca açılan altın + krem-beyaz ışık). gun=1: bütün disk altın.
+     kenarda yumuşak parlak şerit (kenar boyunca açılan altın + krem-beyaz ışık; öndeki akrep/yelkovan ve işaretleri
+     ağartmaz). gun=1: bütün disk altın.
    * akrep / yelkovan: derece, 0 = saat 12, saat yönünde +. None: akrep dolgunun ön kenarını izler
      (30°*dilim + 330°*gun), yelkovan = 360°*(dilim + 2*gun).
    * hale 0..1: güneş çevresinde göğün açık kalan yumuşak halesi (kısmi saklama + açık sıcak ton; gök sonra
@@ -105,7 +113,8 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
    ~1.7 sn'lik nazik nabız (boyut ±%5, parlaklık ±%12). parlaklik 0..1 (0'da yalnız ışın çizilir).
    * isin 0..1: çekirdekten yukarı yükselen yumuşak dikey ışık sütunu (genişlik kalpte ~1R sigma, yukarıda ~2R);
      ön ucu yumuşakça yükselir (e_out), 1'de isin_ust EKRAN y'sine (ekranın üstü) ulaşır; içinde yükselen ışık
-     dalgaları ve zerreler. Sütun arkasındaki sahneyi açık bırakır (kısmi saklama), önündekini parlatır.
+     dalgaları ve zerreler (sayı sabit, sütunla solar). Sütun arkasındaki sahneyi açık bırakır (kısmi saklama);
+     önceden boyanmış figürü (baş, omuz) yalnız ölçülü parlatır, böylece baş ışında ağarıp hayaletleşmez.
 
 9. ciz_sikayet_bulutu(t, M, olcek=1.0, olusum=1.0, kaldirma=0.0, zaman=0.0, tohum=0) -> None    ('şekva')
    Başın üstünde küçük, gri, karmakarışık düşünce bulutu: loblu soluk gri-mor lavi + alt gölge sırrı, içinde titrek,
@@ -122,7 +131,9 @@ FONKSİYONLAR  (boyutlar ölçülmüş silüet sınırlarıdır, olcek=1)
 10. ciz_isik_zerreleri(t, M, zaman, sayi, alan, tohum=0, boyut=1.0, renk_='#FFE3A3', guc=0.55, hiz=1.0)
    Seyrek, sıcak, yumuşak ışık zerreleri: yavaşça yükselir (alan yüksekliğinin %4-10'u / sn * hiz), yana salınır,
    nazikçe kıpırdar; alanın alt kenarında doğar, üst kenarında söner (döngüsel, sıçramasız). alan=(x0, y0, x1, y1)
-   YEREL. boyut: zerre ölçeği (1 -> çekirdek σ≈1.9, ışıma σ≈6.5 yerel birim).
+   YEREL. boyut: zerre ölçeği (1 -> çekirdek σ≈1.9, ışıma σ≈6.5 yerel birim). guc parlatmayla birlikte kısmi
+   saklamayı ve tonu da ölçekler (guc -> 0: hiç iz yok). Belirip solma için ``sayi``yı SABİT tutup guc'u değiştirin:
+   sayi her değiştiğinde yeni zerre bulunduğu yerde birden belirir.
 
 Hız (1080x1920, tek çekirdek, kullanım ölçeğinde): ibrik ~0.04 sn, su ~0.01-0.02, meyve tabağı ~0.15-0.18,
 kese ~0.05, madalya ~0.05, halka ~0.012, saat ~0.03-0.04, nur ~0.02 (ışınla ~0.07), şikâyet bulutu ~0.01-0.045,
@@ -138,7 +149,7 @@ import skia
 
 from motor import (Tuval, M_bilesik, M_oteleme, M_olcek, M_donme, yol_egri, yol_daire, yol_elips, yol_dikdortgen,
                    yol_serit, yol_op, yol_donustur, yol_cokgen, damla_blob, maske_ciz, yollar_kirp, smoothstep,
-                   acilma_radyal, renk, karistir, Kirp, nokta_donustur, W, H, e_out, e_io)
+                   acilma_radyal, renk, karistir, Kirp, nokta_donustur, W, H, e_out, e_io, sstep)
 
 I3 = np.eye(3)
 ISIK = (-0.6, -0.8)
@@ -239,6 +250,27 @@ def _sakla(t, yollar, M, yumusak=0.7):
     yollar = [y for y in yollar if not _bos(y)]
     if yollar:
         t.sakla_ekle(yollar, M, yumusak=yumusak)
+
+
+def _sakla_acilma(t, yollar, M, maske_fn=None, yumusak=0.8, guc=1.0, esik=(0.3, 0.7)):
+    """Açılma maskesiyle (acilma_radyal ...) boyanan lavinin saklaması: maske, lavinin kendi eşiği gibi eşiklenir;
+    böylece saklama lavinin keskin ıslak kenarında biter (dışında arka plan yarı açık 'beyaz hale' kalmaz)."""
+    if isinstance(yollar, skia.Path):
+        yollar = [yollar]
+    yollar = [y for y in yollar if not _bos(y)]
+    if not yollar:
+        return
+    if maske_fn is None:
+        t.sakla_ekle(yollar, M, yumusak=yumusak, guc=guc)
+        return
+    k = yollar_kirp(yollar, M, 4 + 3 * yumusak)
+    if k.bos():
+        return
+    m = maske_ciz(yollar, M, k)
+    X, Y = Tuval._yerel_izgara(np.linalg.inv(np.asarray(M, np.float64)), k)
+    m = smoothstep(esik[0], esik[1], maske_fn(m, X, Y)).astype(np.float32)
+    if m.max() > 1e-4:
+        t.sakla_ekle([], M, yumusak=yumusak, guc=guc, maske=(k, m))
 
 
 def _egri_ekle(p, pts, gerilim=0.5):
@@ -447,36 +479,67 @@ def _donel_bant(prof, cx, f0, f1, sgn, y0=None, y1=None, n=40):
     return yol_cokgen(pts)
 
 
+def _isik_yani(L):
+    """Işığın yerel x bileşeninden SÜREKLİ ışıklı yan: -1 (sol) .. +1 (sağ). |L_x| >= 0.5'te tam yan; L_x ~ 0'da
+    (ışık eksen boyunca, ör. eğik tutulmuş aynalı ibrik) 0 -> parıltı ortaya kayar, gölge iki kenara bölünür.
+    Böylece ibrik dönerken / el oynarken ışık yanı bir karede öbür yana sıçramaz."""
+    lx = float(L[0])
+    return math.copysign(sstep(0.0, 0.5, abs(lx)), lx)
+
+
+def _par_serit(prof, cx, yan, fm, fh, y0, y1, sivri=1.0, ince=False):
+    """Işıklı yanda (yan: sürekli -1..1) yarı genişliğin fm ± fh kesrinde boş parıltı şeridi. ince=True: kenara yakın
+    ince şerit, yan -> 0 iken genişliği sıfıra iner (ortadaki ana parıltıyla çakışmaz)."""
+    if ince:
+        fh = fh * abs(yan)
+        if fh < 0.004:
+            return None
+    c = yan * fm
+    return _profil_serit(prof, cx, c - fh, c + fh, y0, y1, 1.0, sivri=sivri)
+
+
 def _donel_boya(t, M, prof, cx, L, C, yog=0.55, delikler=(), f_orta=0.10, f_koyu=0.56, yansima=0.12,
                 alt_d=7.0, y_orta=0.44, y_koyu=0.30, tohum=0, govde=None):
     """Dönel cisim (gövde, kapak, kaide): ilk lavi (delikler boş) + gölge yanında yumuşak orta sır + dar koyu
-    çekirdek gölge (uzak kenarda yansıma şeridi boş) + alt (ışıktan uzak) hilal."""
+    çekirdek gölge (uzak kenarda yansıma şeridi boş) + alt (ışıktan uzak) hilal.
+    Gölge yanı sürekli ağırlıkla (``_isik_yani``) iki kenara paylaştırılır: yan=±1'de tek yanda tam gölge, ışık eksen
+    boyunca gelirken iki kenar yarı yarıya koyulaşır; ara değerler kesintisiz geçer (sıçrama yok)."""
     yol = govde if govde is not None else yol_profil(cx, prof, 0.5)
-    sg = -1.0 if L[0] > 0 else 1.0                       # gölge yanı
+    yan = _isik_yani(L)
+    w_sag = 0.5 * (1.0 - yan)                           # sağ (x>cx) kenarın gölge ağırlığı
+    w_sol = 0.5 * (1.0 + yan)
     _lv(t, _fark(yol, *delikler), M, C['acik'], yog, tohum=tohum)
     ys_p = np.array([q[0] for q in prof], np.float32)
     ws_p = np.array([q[1] for q in prof], np.float32)
 
-    def oran(X, Y):
+    def xi(X, Y):
         hw = np.interp(Y.ravel(), ys_p, ws_p).reshape(Y.shape)
-        return sg * (X - cx) / np.maximum(hw, 0.5)
-    b1 = yol_op(_donel_bant(prof, cx, f_orta, 1.3, sg), yol, 'kesisim')
-    _lv(t, b1, M, C['orta'], y_orta, yog_fn=lambda X, Y: 1.15 * smoothstep(f_orta, f_orta + 0.5, oran(X, Y)),
-        tohum=tohum + 1)
-    b2 = yol_op(_donel_bant(prof, cx, f_koyu, 1.0 - yansima, sg), yol, 'kesisim')
-    _lv(t, b2, M, C['koyu'], y_koyu, tohum=tohum + 2)
-    if alt_d > 0 and abs(L[1]) > 0.1:
+        return (X - cx) / np.maximum(hw, 0.5)
+
+    def orta_fn(X, Y):
+        x = xi(X, Y)
+        return 1.15 * (w_sag * smoothstep(f_orta, f_orta + 0.5, x) + w_sol * smoothstep(f_orta, f_orta + 0.5, -x))
+    _lv(t, yol, M, C['orta'], y_orta, yog_fn=orta_fn, tohum=tohum + 1)
+    for j, (sg, w) in enumerate(((1.0, w_sag), (-1.0, w_sol))):
+        if w < 0.02:
+            continue
+        b2 = yol_op(_donel_bant(prof, cx, f_koyu, 1.0 - yansima, sg), yol, 'kesisim')
+        _lv(t, b2, M, C['koyu'], y_koyu * w, tohum=tohum + 2 + 7 * j)
+    k_alt = sstep(0.05, 0.2, abs(float(L[1])))
+    if alt_d > 0 and k_alt > 0.0:
         alt = yol_op(yol, _tasi(yol, 0, L[1] * alt_d), 'fark')
-        _lv(t, alt, M, C['orta'], y_orta * 0.8, yog_fn=lambda X, Y: 0.35 + 0.65 * smoothstep(-0.6, 0.6, oran(X, Y)),
-            tohum=tohum + 3)
+        _lv(t, alt, M, C['orta'], y_orta * 0.8 * k_alt,
+            yog_fn=lambda X, Y: 0.35 + 0.65 * smoothstep(-0.6, 0.6, -yan * xi(X, Y)), tohum=tohum + 3)
     return yol
 
 
 def ciz_ibrik(t: Tuval, M, egim=0.0, tohum=0, sakla_sonra=True, isik=ISIK):
+    """Bakır ibrik (yerel çerçeve = el: köken kulp kavrama noktası, +x emziğe). egim derece (+ emzik aşağı).
+    Döner: emzik ağzının EKRAN konumu. Ayrıntı: modül belgesi (1)."""
     kayit = None if sakla_sonra else _sakla_kayit(t)
     Md = M_bilesik(np.asarray(M, np.float64), M_donme(egim), _ib_D())
     L = _isik_yerel(Md, isik)
-    sgn = 1.0 if L[0] > 0 else -1.0                      # ışıklı yan
+    yan = _isik_yani(L)                                  # ışıklı yan (sürekli -1..1)
     bx = _IB_BX
     C = BAKIR
 
@@ -485,28 +548,28 @@ def ciz_ibrik(t: Tuval, M, egim=0.0, tohum=0, sakla_sonra=True, isik=ISIK):
                       yol_egri([(bx - 1.5, -98.5), (bx, -105.0), (bx + 1.5, -98.5)], kapali=True, gerilim=0.4),
                       yol_egri([(bx - 2.0, -92), (bx - 2.6, -89.2), (bx + 2.6, -89.2), (bx + 2.0, -92)], kapali=True,
                                gerilim=0.3))
-    _lv(t, _fark(topuz, yol_elips(bx + sgn * 1.6, -96.4, 1.1, 1.5)), Md, C['acik'], 0.62, tohum=tohum + 1)
+    _lv(t, _fark(topuz, yol_elips(bx + yan * 1.6, -96.4, 1.1, 1.5)), Md, C['acik'], 0.62, tohum=tohum + 1)
     _lv(t, _golge(topuz, L, 2.6), Md, C['orta'], 0.5, tohum=tohum + 2)
     _sakla(t, topuz, Md)
 
     # ---- kapak (soğan kubbe) -----------------------------------------------------------------------------------
-    k_par = _profil_serit(_IB_KAPAK[:-1], bx, 0.34, 0.54, -86.5, -72.0, sgn, sivri=1.2)
+    k_par = _par_serit(_IB_KAPAK[:-1], bx, yan, 0.44, 0.10, -86.5, -72.0, sivri=1.2)
     kapak = _donel_boya(t, Md, _IB_KAPAK, bx, L, C, yog=0.56, delikler=(k_par,), f_orta=0.05, f_koyu=0.50,
                         yansima=0.14, alt_d=0.0, tohum=tohum + 3)
     _sakla(t, kapak, Md)
 
     # ---- bilezik (ağız halkası, iki boncuk) ----------------------------------------------------------------
-    b_par = _profil_serit(_IB_BILEZIK[1:-1], bx, 0.36, 0.58, -69.6, -64.4, sgn, sivri=0.8)
+    b_par = _par_serit(_IB_BILEZIK[1:-1], bx, yan, 0.47, 0.11, -69.6, -64.4, sivri=0.8)
     bilezik = _donel_boya(t, Md, _IB_BILEZIK, bx, L, C, yog=0.58, delikler=(b_par,), f_orta=0.0, f_koyu=0.52,
                           yansima=0.12, alt_d=1.8, tohum=tohum + 6)
     _sakla(t, bilezik, Md)
 
     # ---- gövde (boyun + omuz + karın tek parça) -------------------------------------------------------------
     gp = _IB_GOVDE
-    par1 = _profil_serit(gp, bx, 0.43, 0.60, -12, 31, sgn, sivri=1.15)
-    par2 = _profil_serit(gp, bx, 0.40, 0.60, -57, -38, sgn)
-    par3 = yol_elips(bx + sgn * 0.47 * float(_prof_hw(gp, -19.0)), -19.0, 1.4, 2.4)
-    par4 = _profil_serit(gp, bx, 0.74, 0.81, 2, 22, sgn, sivri=1.5)
+    par1 = _par_serit(gp, bx, yan, 0.515, 0.085, -12, 31, sivri=1.15)
+    par2 = _par_serit(gp, bx, yan, 0.50, 0.10, -57, -38)
+    par3 = yol_elips(bx + yan * 0.47 * float(_prof_hw(gp, -19.0)), -19.0, 1.4, 2.4)
+    par4 = _par_serit(gp, bx, yan, 0.775, 0.035, 2, 22, sivri=1.5, ince=True)
     govde = _donel_boya(t, Md, gp, bx, L, C, yog=0.56, delikler=(par1, par2, par3, par4), f_orta=0.12,
                         f_koyu=0.55, yansima=0.11, alt_d=9.0, tohum=tohum + 15)
     # bilezik altında boyun gölgesi
@@ -571,7 +634,7 @@ def ciz_ibrik(t: Tuval, M, egim=0.0, tohum=0, sakla_sonra=True, isik=ISIK):
     _sakla(t, emzik, Md)
 
     # ---- kaide ---------------------------------------------------------------------------------------------
-    kd_par = _profil_serit(_IB_KAIDE[:-1], bx, 0.36, 0.60, 46.5, 52.8, sgn, sivri=0.8)
+    kd_par = _par_serit(_IB_KAIDE[:-1], bx, yan, 0.48, 0.12, 46.5, 52.8, sivri=0.8)
     kaide = _donel_boya(t, Md, _IB_KAIDE, bx, L, C, yog=0.56, delikler=(kd_par,), f_orta=0.05, f_koyu=0.52,
                         yansima=0.10, alt_d=2.0, tohum=tohum + 22)
     _lv(t, yol_op(kaide, yol_dikdortgen(bx - 22, 39, bx + 22, 44.8), 'kesisim'), Md, C['koyu'], 0.38,
@@ -627,6 +690,8 @@ def _frac(x):
 
 def ciz_su_akisi(t: Tuval, M, p_bas, p_son, zaman, debi=1.0, tohum=0, yon=None, kalinlik=None, cephe=1.0,
                  kuyruk=0.0, sicrama=1.0, isik=ISIK, sakla_guc=0.3, renk_=SU):
+    """Emzikten hedefe parabolik su akışı (p_bas, p_son: M yerel). debi 0..1, cephe/kuyruk 0..1 dökme başı/sonu.
+    Döner: dict(egri, hedef) EKRAN ya da None. Ayrıntı: modül belgesi (2)."""
     debi = float(np.clip(debi, 0.0, 1.0))
     if debi <= 0.004 or cephe <= kuyruk + 1e-4:
         return None
@@ -661,10 +726,15 @@ def ciz_su_akisi(t: Tuval, M, p_bas, p_son, zaman, debi=1.0, tohum=0, yon=None, 
     nor = np.stack([-tan[:, 1], tan[:, 0]], 1)
     L = _isik_yerel(M, isik)
 
-    w0 = (0.5 * kalinlik) if kalinlik is not None else float(np.clip(0.012 * D, 1.4, 8.0))
-    w0 *= (0.42 + 0.58 * debi)
-    lam_d = w0 * 11.0                       # şişkinlik dalga boyu
-    hiz = max(60.0, 1.3 * Lt)               # yerel birim / sn
+    # Akış deseni (şişkinlik, ışık çizgileri, damlalar) yalnız w_ref ölçeğinde tanımlıdır: hız, dalga boyu ve aralıklar
+    # w_ref ile orantılı, böylece desenin fazı (dalga boyu cinsinden) zaman * sabit olur. Emzik oynayıp yol uzunluğu
+    # (Lt) her kare değişse de, kamera yaklaşsa da (kalinlik değişir) desen sıçramaz, geri akmaz; debi değişimi de
+    # yalnız genişliği etkiler.
+    w_ref = (0.5 * kalinlik) if kalinlik is not None else float(np.clip(0.012 * D, 1.4, 8.0))
+    w0 = w_ref * (0.42 + 0.58 * debi)
+    lam_d = w_ref * 10.4                    # şişkinlik dalga boyu
+    hiz = 90.0 * w_ref                      # yerel birim / sn (adam ölçeğinde ~290 ≈ 0.85 m/sn)
+    # (30 fps'de kare başına desen kayması aralığın ~0.3'ü: akış yönü okunur, tekerlek yanılsaması olmaz)
     ph = (yay - zaman * hiz) / lam_d
     puls = 1.0 + (0.15 * np.sin(2 * math.pi * ph) + 0.07 * np.sin(2 * math.pi * ph * 2.3 + 1.3)) * \
         smoothstep(0.0, 0.25, u)
@@ -681,34 +751,51 @@ def ciz_su_akisi(t: Tuval, M, p_bas, p_son, zaman, debi=1.0, tohum=0, yon=None, 
         yollar.append(yol_serit(B[idx], np.maximum(ws[idx], 0.05)))
     # kopan kısımda damlalar
     damlalar = []
-    if kopma < min(cephe, 1.0):
-        aralik = w0 * 7.0
-        n_d = int((min(cephe, 1.0) - kopma) * Lt / aralik) + 2
-        for j in range(n_d):
-            a = kopma * Lt + _frac((j * aralik + zaman * hiz) / ((n_d) * aralik)) * n_d * aralik
-            if a > min(cephe, 1.0) * Lt or a < kopma * Lt:
-                continue
+    u_on = min(cephe, 1.0)
+    if kopma < u_on:
+        # damlalar yol boyunca sabit bir kafeste akar (kafes Lt'den bağımsız; kimlik = kafes indisi - geçen tur)
+        aralik = w_ref * 9.0
+        f_d = zaman * hiz / aralik
+        n_tur = math.floor(f_d)
+        a0 = kopma * Lt
+        k_say = int((u_on - kopma) * Lt / aralik) + 2
+        for kk in range(k_say):
+            a = a0 + aralik * (kk + (f_d - n_tur))
+            if a > u_on * Lt:
+                break
+            kim = kk - n_tur
             uu = a / Lt
+            if uu < kuyruk:                 # dökme biterken kuyruğun gerisinde damla kalmaz
+                continue
             q = np.array([np.interp(uu, u, B[:, 0]), np.interp(uu, u, B[:, 1])])
             tq = np.array([np.interp(uu, u, tan[:, 0]), np.interp(uu, u, tan[:, 1])])
-            r_ = w0 * (0.75 + 0.25 * math.sin(j * 2.1)) * (1 - 0.3 * uu)
+            # kopma noktasında, kuyrukta ve ön uçta damla boyca doğar/söner (sıçrama yok)
+            gir = smoothstep(0.0, aralik * 0.8, a - a0) * (1.0 - smoothstep(u_on * Lt - aralik * 0.5, u_on * Lt, a))
+            gir_k = smoothstep(kuyruk * Lt, kuyruk * Lt + aralik * 0.8, a) if kuyruk > 0 else 1.0
+            if gir_k < 0.05:
+                continue
+            r_ = w0 * (0.75 + 0.25 * math.sin(kim * 2.1)) * (1 - 0.3 * uu) * (0.35 + 0.65 * gir) * gir_k
             damlalar.append(_damla_yolu(q, tq, r_, 1.9))
-    # yanlara kopan küçük damlacıklar (akışla birlikte)
-    for j in range(int(1 + 3 * debi)):
-        f = 0.9 + 0.5 * rng.random()
-        faz = rng.random()
-        yan = rng.choice([-1.0, 1.0])
-        uu = 0.3 + 0.68 * _frac(zaman * f * hiz / Lt * 0.8 + faz)
-        if uu > cephe or uu < kuyruk + 0.1:
+    # yanlara kopan küçük damlacıklar (akışla birlikte). Bütün rastgele değerler önceden çekilir: bir damlacığın
+    # görünüp görünmemesi ötekilerin değerlerini kaydırmaz; debi azaldıkça sondakiler boyca küçülerek kaybolur.
+    yan_r = rng.random((4, 4))
+    for j in range(4):
+        gor_j = float(np.clip(1.0 + 3.0 * debi - j, 0.0, 1.0))
+        if gor_j <= 0.02:
             continue
+        f = 0.9 + 0.5 * yan_r[j, 0]
+        faz = yan_r[j, 1]
+        yan = -1.0 if yan_r[j, 2] < 0.5 else 1.0
+        uu = 0.3 + 0.68 * _frac(zaman * f * 1.04 + faz)
         boy_k = smoothstep(0.30, 0.40, uu) * (1.0 - smoothstep(0.93, 0.98, uu))
+        boy_k *= smoothstep(kuyruk + 0.08, kuyruk + 0.16, uu) * (1.0 - smoothstep(cephe - 0.06, cephe, uu))
         if boy_k < 0.05:
             continue
         q = np.array([np.interp(uu, u, B[:, 0]), np.interp(uu, u, B[:, 1])])
         tq = np.array([np.interp(uu, u, tan[:, 0]), np.interp(uu, u, tan[:, 1])])
         nq = np.array([-tq[1], tq[0]])
         off = w0 * (1.4 + 2.6 * (uu - 0.3)) * yan
-        r_ = w0 * (0.33 + 0.18 * rng.random()) * debi ** 0.5 * boy_k
+        r_ = w0 * (0.33 + 0.18 * yan_r[j, 3]) * debi ** 0.5 * boy_k * gor_j
         damlalar.append(_damla_yolu(q + nq * off, tq, r_, 1.6))
     hepsi = yollar + damlalar
     if not hepsi:
@@ -716,14 +803,19 @@ def ciz_su_akisi(t: Tuval, M, p_bas, p_son, zaman, debi=1.0, tohum=0, yon=None, 
     # ışık çizgileri (boş kâğıt): akışla aşağı kayan ince kapsüller
     parlak = []
     if len(idx) >= 3:
-        aralik = w0 * 8.5
-        n_p = int(Lt / aralik) + 2
-        for j in range(n_p):
-            a = _frac((j * aralik + zaman * hiz * 1.0) / (n_p * aralik)) * n_p * aralik
+        # ışık çizgileri yay uzunluğunda sabit bir kafeste akar (Lt'den bağımsız; kimlik = kafes indisi - geçen tur)
+        aralik = w_ref * 11.0
+        f_p = zaman * hiz / aralik
+        n_tur = math.floor(f_p)
+        u_bas, u_son = max(kuyruk, 0.0) + 0.03, min(cephe, kopma) - 0.03
+        for kk in range(int(Lt / aralik) + 2):
+            a = aralik * (kk + (f_p - n_tur))
             uu = a / Lt
-            u_bas, u_son = max(kuyruk, 0.0) + 0.03, min(cephe, kopma) - 0.03
-            if uu < u_bas or uu > u_son:
+            if uu > u_son:
+                break
+            if uu < u_bas:
                 continue
+            j = kk - n_tur
             solma = smoothstep(u_bas, u_bas + 0.08, uu) * (1.0 - smoothstep(u_son - 0.08, u_son, uu))
             if solma < 0.05:
                 continue
@@ -733,8 +825,9 @@ def ciz_su_akisi(t: Tuval, M, p_bas, p_son, zaman, debi=1.0, tohum=0, yon=None, 
             qq = np.stack([np.interp(ss_, u, B[:, 0]), np.interp(ss_, u, B[:, 1])], 1)
             nn = np.stack([np.interp(ss_, u, nor[:, 0]), np.interp(ss_, u, nor[:, 1])], 1)
             wq = np.interp(ss_, u, ws)
-            sgn = 1.0 if float(np.mean(nn, 0) @ L) > 0 else -1.0
-            merkez = qq + nn * (sgn * wq * 0.32)[:, None]
+            # ışığa bakan yana kayık (sürekli: akış ışığa paralel döndüğü yerde çizgi ortadan geçer, yan değiştirmez)
+            yan_p = float(np.clip((np.mean(nn, 0) @ L) / 0.3, -1.0, 1.0))
+            merkez = qq + nn * (yan_p * wq * 0.32)[:, None]
             parlak.append(yol_serit(merkez, wq * 0.22 * solma * np.sin(np.linspace(0.15, math.pi - 0.15, 6)) ** 0.7
                                     + 0.02))
     k = yollar_kirp(hepsi, M, 10)
@@ -802,22 +895,27 @@ def _sicrama(t, M, p1, g, w0, zaman, guc, debi, tohum, renk_):
         ta.append(_firca(tuple(base), tuple(tip), w0 * 0.42, profil=(1.0, 0.8, 0.35), n=6))
     _lv(t, ta, M, renk_, 0.34 * guc, islak=1.0, tohum=tohum + 5)
     # sıçrayan damlacıklar (parabol)
+    # (rastgele değerler önceden çekilir: atlanan damlacık ötekileri kaydırmaz; debiyle sondakiler küçülüp kaybolur)
     dam = []
-    nd = int(4 + 5 * debi)
-    for j in range(nd):
-        per = 0.38 + 0.25 * rng.random()
-        faz = rng.random()
-        ang = rng.uniform(-1.1, 1.1)
-        v = w0 * rng.uniform(9, 16) / per
+    rr_ = rng.random((9, 5))
+    for j in range(9):
+        gor_j = float(np.clip(4.0 + 5.0 * debi - j, 0.0, 1.0))
+        if gor_j <= 0.02:
+            continue
+        per = 0.38 + 0.25 * rr_[j, 0]
+        faz = rr_[j, 1]
+        ang = -1.1 + 2.2 * rr_[j, 2]
+        v = w0 * (9 + 7 * rr_[j, 3]) / per
         tau = _frac(zaman / per + faz)
         tt = tau * per
         vx, vy = math.sin(ang) * v, math.cos(ang) * v
         gg = 2 * vy / per          # yere dönsün
         q = p1 + yan * (vx * tt) + yukari * (vy * tt - 0.5 * gg * tt * tt)
-        if tau < 0.06 or tau > 0.94:
+        boy_t = smoothstep(0.0, 0.08, tau) * (1.0 - smoothstep(0.90, 0.98, tau))
+        if boy_t < 0.05:
             continue
         vel = yan * vx + yukari * (vy - gg * tt)
-        r_ = w0 * (0.42 + 0.22 * rng.random()) * (1 - 0.35 * tau)
+        r_ = w0 * (0.42 + 0.22 * rr_[j, 4]) * (1 - 0.35 * tau) * boy_t * gor_j
         dam.append(_damla_yolu(q, vel, r_, 1.5))
     _lv(t, dam, M, renk_, 0.42 * guc, islak=1.2, tohum=tohum + 7)
 
@@ -1025,10 +1123,12 @@ def _uzum_salkimi(t, M, x, y, olc, L, tohum=0, c1='#9A7BB2', c2='#6B4F8E', aci=1
         hep.append(top)
     _lv(t, sap, M, '#7E7A55', 0.6, tohum=tohum + 3)
     # kıvrık sülük
-    sul = yol_egri([(x + 5 * olc, y - 25 * olc), (x + 13 * olc, y - 27 * olc), (x + 16 * olc, y - 21 * olc),
-                    (x + 12 * olc, y - 18 * olc), (x + 10 * olc, y - 22 * olc)], kapali=False, gerilim=0.5)
-    t.lavi(sul, M, '#8B8A5E', yog=0.5, cizgi=1.0 * olc, kenar=0.5, dalga=0.0, islak=0.0, gran=0.05, akis=0.0)
-    _sakla(t, sap, M)
+    # (dolu ince şerit: saklamaya yazılabilir, arkadaki nar onun üstüne boyanmaz)
+    sul_om = _yumusat_omurga([(x + 5 * olc, y - 25 * olc), (x + 13 * olc, y - 27 * olc), (x + 16 * olc, y - 21 * olc),
+                              (x + 12 * olc, y - 18 * olc), (x + 10 * olc, y - 22 * olc)], 24)
+    sul = yol_serit(sul_om, np.linspace(0.75, 0.35, len(sul_om)) * olc)
+    _lv(t, sul, M, '#8B8A5E', 0.5, islak=0.0, tohum=tohum + 4)
+    _sakla(t, [sap, sul], M, yumusak=0.5)
     return hep
 
 
@@ -1137,6 +1237,7 @@ def _yaprak_boya(t, M, cx, cy, uzun, gen, aci, L, kivrim=0.0, tohum=0, c='#8DB08
 
 
 def ciz_meyve_tabagi(t: Tuval, M, olcek=1.0, tohum=0, isik=ISIK, sakla_sonra=True):
+    """'lezzet': seramik kâsede nar (biri yarık), üzüm, incir. Köken = görsel merkez (~220 x 178). Döner: dict(kutu)."""
     kayit = None if sakla_sonra else _sakla_kayit(t)
     Ml = M_bilesik(np.asarray(M, np.float64), M_olcek(olcek))
     L = _isik_yerel(Ml, isik)
@@ -1316,6 +1417,7 @@ def _pigment_koyu(c, k):
 
 
 def ciz_kese(t: Tuval, M, olcek=1.0, tohum=0, isik=ISIK, sakla_sonra=True, renk_='#B5C7AA', kordon='#C46D74'):
+    """'ücret': büzgülü kumaş kese ve önünde altın sikkeler. Köken = görsel merkez (~184 x 205). Döner: dict(kutu)."""
     kayit = None if sakla_sonra else _sakla_kayit(t)
     Ml = M_bilesik(np.asarray(M, np.float64), M_olcek(olcek * 1.07), M_oteleme(-16.5, -11.5))
     L = _isik_yerel(Ml, isik)
@@ -1328,7 +1430,8 @@ def ciz_kese(t: Tuval, M, olcek=1.0, tohum=0, isik=ISIK, sakla_sonra=True, renk_
     _sikke(t, Ml, 40.0, 70.0, 24.0, 22.5, -14.0, L, kal=4.4, tohum=tohum + 1, kenar_yon=(0.42, 0.91),
            kivilcim=True)
     _sikke(t, Ml, -38.0, 93.0, 24.0, 8.4, 0.0, L, kal=3.8, tohum=tohum + 2)
-    for j in range(3):
+    # üç sikkelik deste: önden arkaya = en üstteki sikke önce (yüzü tam görünür), alttakilerin yalnız kenarı kalır
+    for j in (2, 1, 0):
         _sikke(t, Ml, 80.0 + j * 1.4, 97.0 - j * 5.0, 21.0, 7.3, 0.0, L, kal=3.8, tohum=tohum + 3 + j,
                motif=(j == 2))
     # ---- kordon: düğüm, fiyonk halkaları, sarkan uçlar ve püsküller --------------------------------------------
@@ -1419,6 +1522,8 @@ def ciz_kese(t: Tuval, M, olcek=1.0, tohum=0, isik=ISIK, sakla_sonra=True, renk_
 # 5) MADALYA
 # ================================================================================================================
 def ciz_madalya(t: Tuval, M, olcek=1.0, tohum=0, isik=ISIK, sakla_sonra=True):
+    """'mükâfat': toz pembe V kurdeleli altın madalya (defne çelengi, yıldız). Köken = görsel merkez (~124 x 218).
+    Döner: dict(kutu)."""
     kayit = None if sakla_sonra else _sakla_kayit(t)
     Ml = M_bilesik(np.asarray(M, np.float64), M_olcek(olcek))
     L = _isik_yerel(Ml, isik)
@@ -1529,6 +1634,7 @@ def ciz_madalya(t: Tuval, M, olcek=1.0, tohum=0, isik=ISIK, sakla_sonra=True):
 # 6) SİMGE HALKASI
 # ================================================================================================================
 def ciz_simge_halkasi(t: Tuval, M, r, renk_='#F1E3D3', ilerleme=1.0, tohum=0, yog=0.55):
+    """Simgenin ARKASINA (simgeden sonra çağrılır) yumuşak suluboya disk; ilerleme 0..1 merkezden yayılarak boyanır."""
     p = float(np.clip(ilerleme, 0.0, 1.0))
     if p <= 0.0:
         return
@@ -1545,7 +1651,8 @@ def ciz_simge_halkasi(t: Tuval, M, r, renk_='#F1E3D3', ilerleme=1.0, tohum=0, yo
     # hafif ikinci halka (kenarın içinde çok açık bir yankı)
     t.lavi(yol_op(disk, yol_daire(0, 0, r * 0.90), 'fark'), M, renk_, yog=yog * 0.25 * pe, kenar=2.0, dalga=0.1,
            islak=0.6, islak_gen=4.0, gran=0.1, akis=0.2, tohum=tohum + 1, maske_fn=ac)
-    t.sakla_ekle(disk, M, yumusak=1.0, guc=pe)
+    # saklama yalnız boyanmış (açılmış) alanı kaplar: açılırken arkadaki gök tam diskin hayaletiyle açılmaz
+    _sakla_acilma(t, disk, M, ac, yumusak=1.0)
 
 
 # ================================================================================================================
@@ -1569,6 +1676,8 @@ def _saat_yon(a):
 
 
 def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, gorunurluk=1.0, tohum=0, hale=1.0):
+    """Güneş diski + saat kadranı. dilim: tek saat dilimi altınla dolar; gun: dolgu bütün daireye döner.
+    Döner: dict(merkez, r_ekran). Ayrıntı: modül belgesi (7)."""
     M = np.asarray(M, np.float64)
     rng = np.random.default_rng(tohum)
     dilim = float(np.clip(dilim, 0, 1))
@@ -1584,6 +1693,7 @@ def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, goru
     el_renk = '#6F4B30'
     # ---- 1) akrep ve yelkovan (önde) ---------------------------------------------------------------------
     g_el = smoothstep(0.55, 1.0, g)
+    on_yollar = []                       # el ve işaretler: ışık şeridi bunları parlatmaz (önde dururlar)
     if g_el > 0.01:
         yollar_el = []
         for (aci, boy, gen, kuyruk) in ((akrep, 0.50, 0.040, 0.13), (yelkovan, 0.74, 0.027, 0.16)):
@@ -1595,6 +1705,7 @@ def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, goru
             yollar_el.append(yol_serit(pts, wss))
         yollar_el.append(yol_daire(0, 0, r * 0.052))
         _lv(t, yollar_el, M, el_renk, 0.62 * g_el, islak=0.8, tohum=tohum + 1)
+        on_yollar += yollar_el
         _lv(t, yol_daire(-0.012 * r, -0.014 * r, r * 0.016), M, '#F6E7C4', 0.6 * g_el, opak=True, islak=0.0,
             tohum=tohum + 2)
     # ---- 2) saat işaretleri (ince fırça izleri) -----------------------------------------------------------
@@ -1615,6 +1726,7 @@ def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, goru
             isaret.append(_firca((ux * r1, uy * r1), (ux * r0g, uy * r0g), w, profil=(0.30, 0.95, 1.0, 0.7, 0.18),
                                  n=11, egrilik=rng.uniform(-0.03, 0.03)))
         _lv(t, isaret, M, cizgi_renk, 0.58, islak=0.7, tohum=tohum + 3)
+        on_yollar += isaret
     # ---- 3) altın dilim / gün ------------------------------------------------------------------------------
     altin = '#F1BD52'
     if dilim > 0.001:
@@ -1622,7 +1734,7 @@ def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, goru
         tam = gun >= 0.999
         dy = disk if tam else yol_op(_dilim_yolu(r * 1.05, 0.0, a_on), disk, 'kesisim')
         mf = None
-        if gun <= 0.001 and dilim < 0.999:
+        if dilim < 0.999:
             mf = acilma_radyal(e_io(dilim) * 0.85 + 0.15 * dilim, 0.0, 0.0, r, dalga=0.12, on=0.10,
                                tohum=tohum + 4)
         hareket = 0.0 < gun < 0.999
@@ -1657,6 +1769,8 @@ def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, goru
                 m = m.astype(np.float32)
                 md = maske_ciz([disk], M, k)
                 m *= md
+                if on_yollar:
+                    m *= 1.0 - 0.9 * np.clip(cv2.GaussianBlur(maske_ciz(on_yollar, M, k), (0, 0), 0.8) * 1.3, 0, 1)
                 t.isik([], I3, '#FFF6D8', guc=0.85 * amp, yumusak=0.0, maske=(k, m))
                 t.lavi([], I3, '#F9D97A', yog=0.22 * amp, maske=(k, cv2.GaussianBlur(m, (0, 0), 1.5)), kenar=0.0,
                        dalga=0.0, islak=0.0, gran=0.04, akis=0.0)
@@ -1689,6 +1803,7 @@ def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, goru
 # 8) KALP NURU
 # ================================================================================================================
 def ciz_kalp_nuru(t: Tuval, M, r, parlaklik=1.0, isin=0.0, zaman=0.0, isin_ust=-80.0):
+    """Göğüste sıcak altın nur (insandan SONRA çağrılır); isin 0..1 yukarı yükselen ışık sütunu. Döner: dict(merkez)."""
     M = np.asarray(M, np.float64)
     b = float(np.clip(parlaklik, 0, 1.5))
     if b <= 0.005 and isin <= 0.005:
@@ -1718,16 +1833,22 @@ def ciz_kalp_nuru(t: Tuval, M, r, parlaklik=1.0, isin=0.0, zaman=0.0, isin_ust=-
             # yükselen, çok yumuşak ışık dalgaları (titreşimsiz: yalnız zamanla kayar)
             dal = 1.0 + 0.12 * np.sin((ys[:, None] + zaman * 160.0) / (R * 2.6))
             m = (yan * bas * kok * dal * ie).astype(np.float32)
-            _parilti(t, k, m, renk_='#FFE9B4', guc=0.50 * min(1.0, b + 0.3), sakla_guc=0.78, ton=0.15,
-                     ton_renk='#F7DA94')
-            # iç sütun: daha dar, krem-beyaz
+            # Önceden boyanmış figür (saklamadaki silüet: baş, omuz) ışında ağarıp hayaletleşmesin: orada parlatma
+            # ölçülü, sıcak bir ışıltı olarak kalır; sütunun asıl parlaklığı SONRA boyanan gökte (kısmi saklama).
+            sak = t.sakla_maske(k)
+            on_k = 1.0 if sak is None else (1.0 - 0.6 * sak)
             yan2 = np.exp(-(xs[None, :] ** 2) / (2 * (sig * 0.45) ** 2))
             m2 = (yan2 * bas * kok * ie).astype(np.float32)
-            t.isik([], I3, '#FFF7E4', guc=0.32, yumusak=0.0, maske=(k, m2))
+            t.lavi([], I3, '#F7DA94', yog=0.15, maske=(k, m), kenar=0.0, dalga=0.0, islak=0.0, gran=0.04, akis=0.0,
+                   sakla=True)
+            t.isik([], I3, '#FFE9B4', guc=0.50 * min(1.0, b + 0.3), yumusak=0.0, maske=(k, m * on_k))
+            t.isik([], I3, '#FFF7E4', guc=0.32, yumusak=0.0, maske=(k, m2 * (on_k if sak is None else
+                                                                                 1.0 - 0.75 * sak)))
+            t.sakla_ekle([], I3, yumusak=0.0, guc=0.78, maske=(k, m))
             t.sakla_ekle([], I3, yumusak=0.0, guc=0.9, maske=(k, m2))
-            # sütunda yükselen zerreler
-            ciz_isik_zerreleri(t, I3, zaman, int(7 + 9 * ie), (cx - gen1 * 1.2, ust + R * 2, cx + gen1 * 1.2, cy - R),
-                               tohum=31, boyut=max(0.8, R * 0.075), hiz=0.45)
+            # sütunda yükselen zerreler (sayı sabit: zerre sonradan belirip sıçramaz; sütunla birlikte solar)
+            ciz_isik_zerreleri(t, I3, zaman, 14, (cx - gen1 * 1.2, ust + R * 2, cx + gen1 * 1.2, cy - R),
+                               tohum=31, boyut=max(0.8, R * 0.075), hiz=0.45, guc=0.55 * smoothstep(0.0, 0.5, ie))
     if b <= 0.005:
         return dict(merkez=(cx, cy))
     # ---- çekirdek: katmanlı yumuşak ışık ---------------------------------------------------------------------
@@ -1808,6 +1929,7 @@ def _karalama(rng, rx, ry, n=380, adim=2.3):
 
 
 def ciz_sikayet_bulutu(t: Tuval, M, olcek=1.0, olusum=1.0, kaldirma=0.0, zaman=0.0, tohum=0):
+    """'şekva': başın üstünde gri karalamalı düşünce bulutu; olusum 0..1 oluşur, kaldirma 0..1 ıslak fırçayla kalkar."""
     ol = float(np.clip(olusum, 0, 1))
     ka = float(np.clip(kaldirma, 0, 1))
     if ol <= 0.0 or ka >= 1.0:
@@ -1879,7 +2001,7 @@ def ciz_sikayet_bulutu(t: Tuval, M, olcek=1.0, olusum=1.0, kaldirma=0.0, zaman=0
                     return m * np.clip(4.0 * sl * (1 - sl), 0, 1)
                 t.lavi(sekil, Ml, '#8D88A0', yog=0.32 * (1 - ka), yumusak=3.0, dalga=0.25, islak=0.0, gran=0.12,
                        akis=0.35, tohum=tohum + 6, maske_fn=halka_f)
-            t.sakla_ekle(sekil, Ml, yumusak=1.0, guc=g_lv)
+            _sakla_acilma(t, sekil, Ml, ac if g_lv < 1.0 else None, yumusak=1.0)
         # ---- düşünce kabarcıkları -----------------------------------------------------------------------
         for j, kb in enumerate((kab2, kab1)):
             gk = smoothstep(0.0 + j * 0.08, 0.14 + j * 0.08, ol)
@@ -1917,6 +2039,7 @@ def ciz_sikayet_bulutu(t: Tuval, M, olcek=1.0, olusum=1.0, kaldirma=0.0, zaman=0
 # 10) IŞIK ZERRELERİ
 # ================================================================================================================
 def ciz_isik_zerreleri(t: Tuval, M, zaman, sayi, alan, tohum=0, boyut=1.0, renk_='#FFE3A3', guc=0.55, hiz=1.0):
+    """Seyrek, yükselen sıcak ışık zerreleri; alan=(x0, y0, x1, y1) YEREL. Solma için sayi sabit, guc değişsin."""
     if sayi <= 0:
         return
     M = np.asarray(M, np.float64)
@@ -1953,5 +2076,9 @@ def ciz_isik_zerreleri(t: Tuval, M, zaman, sayi, alan, tohum=0, boyut=1.0, renk_
         return
     mh = _gauss_maske(k, pts, sig_h, [g * 0.85 for g in gc])
     mc = _gauss_maske(k, pts, sig_c, gc)
-    _parilti(t, k, mh, renk_=renk_, guc=guc * 0.9, sakla_guc=0.75, ton=0.32, ton_renk='#F4CC78')
-    _parilti(t, k, mc, renk_='#FFF6DC', guc=guc, sakla_guc=0.9, ton=0.10, ton_renk='#F7DC9A')
+    # guc yalnız parlatmayı değil, kısmi saklamayı ve tonu da ölçekler: guc -> 0 iken zerreler gökte iz bırakmaz
+    kg = float(np.clip(guc / 0.55, 0.0, 1.0))
+    if kg <= 0.0:
+        return
+    _parilti(t, k, mh, renk_=renk_, guc=guc * 0.9, sakla_guc=0.75 * kg, ton=0.32 * kg, ton_renk='#F4CC78')
+    _parilti(t, k, mc, renk_='#FFF6DC', guc=guc, sakla_guc=0.9 * kg, ton=0.10 * kg, ton_renk='#F7DC9A')

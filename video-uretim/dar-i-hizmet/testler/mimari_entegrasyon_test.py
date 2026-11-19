@@ -6,7 +6,8 @@ from motor import *
 import elemanlar as el
 import mimari
 
-OUT = '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/testler/'
+import os
+OUT = os.environ.get('MIMARI_OUT', '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/testler/')
 
 # 1) belirlenimcilik: aynı girdi -> aynı kare
 for ac in (0.37, 1.0):

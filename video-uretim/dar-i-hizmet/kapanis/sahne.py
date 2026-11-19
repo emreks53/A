@@ -283,7 +283,7 @@ class Malzeme:
         bs.inputs["Specular IOR Level"].default_value = 0.45
         bs.inputs["Coat Weight"].default_value = cfgG.get("deri_cila", 0.38) if not kuran else 0.30
         bs.inputs["Coat Roughness"].default_value = cfgG.get("deri_cila_p", 0.30)
-        bs.inputs["Sheen Weight"].default_value = 0.12
+        bs.inputs["Sheen Weight"].default_value = cfgG.get("deri_sheen", 0.12)
         bs.inputs["Sheen Roughness"].default_value = 0.4
         bs.inputs["Sheen Tint"].default_value = (1.0, 0.95, 0.9, 1.0)
         return bs
@@ -797,9 +797,10 @@ RENK_DERI = srgb("#AA8272")       # cok acik, solgun gul-taba (acik kahveye kaya
 RENK_KOYU = srgb("#865D4F")       # bas/kuyruk ve kenar asinmasi
 # Birkac kitabin derisi digerlerinden cok az farkli (ayri parti deri / yillanma): dogrusal RGB carpimsal sapma
 TON = {
-    "Mektubat": (0.070, 0.085, 0.100),          # biraz daha solgun / acik
-    "Asâ-yı Mûsâ": (-0.050, -0.075, -0.095),    # biraz daha derin, kahveye yakin
-    "Barla Lâhikası": (0.025, -0.020, -0.015),  # cok hafif daha gul
+    # (deri cilasi odadaki aydinligi yansittigi icin albedo farki goruntude yaklasik yariya iner)
+    "Mektubat": (0.10, 0.16, 0.21),             # biraz daha solgun / acik (gunes gormus)
+    "Asâ-yı Mûsâ": (-0.20, -0.28, -0.34),       # biraz daha derin, kahveye yakin
+    "Barla Lâhikası": (0.05, -0.05, -0.03),     # cok hafif daha gul
 }
 RENK_SAYFA = srgb("#E9DCC3")
 RENK_ARKA_KAGIT = srgb("#EDE2CB")

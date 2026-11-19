@@ -39,11 +39,16 @@ ciz_kemerli_kapi(t, M, acilma=1.0, isik=(-0.6, -0.8), tohum=0, sakla_sonra=True)
     acilma 0..1: cephe boş kâğıda kendini boyar — sıcak krem lavi aşağıdan yukarı, ortası önde, organik ve NET bir
         ıslak önle yükselir (önde ince pigment çizgisi, hemen arkasında koyu boncuk bandı); ressam sırasıyla basamaklar
         (0-.42), cephe/kaide/taşlık (0-.70), kemer taşları (.16-.78), açıklık derinliği (.30-.88), alfiz-korniş-
-        rozetler (.26-.90), gül dalları ve yaprakları (.40-.82), sağ çalı (.45-.95), güller en son açar (.60-1).
-        0 = boş kâğıt, 1 = tam kapı (maske yok). Öneri: acilma = ilerle(V, 0, ~0.6 sn, e_out).
+        rozetler (.26-.90), gül dalları ve yaprakları (.40-.82), sağ çalı (.45-.95); her gül çiçeği dalların önü
+        kendi hizasını geçtikten sonra açar (~.67-.99; katmanları yumuşakça belirir, sıçrama yok). Kâğıt beyazı
+        parçalar (kemer çerçevesi, alfiz, korniş, rozet diskleri, kaide silmesi, basamaklar) cephe lavisinde BAŞTAN
+        boş bırakılır; detayları (gül kurusu taşlar, gölgeler) sonra üstlerine gelir — krem lavinin üstünden beyaz
+        'silinmez'. 0 = boş kâğıt, 1 = tam kapı (maske yok). Öneri: acilma = ilerle(V, 0, ~0.6-0.9 sn, e_out);
+        ardışık kareler (30 fps) arasında sıçrama yoktur (testler/mimari_kapi_test.py surek).
     tohum: gül, derz ve doku düzeni. sakla_sonra: True ise sonunda cephenin TAM silüeti (kapi_siluet_yolu())
         acilma'dan bağımsız tam güçte saklamaya yazılır (açılma sırasında da dünya yalnız açıklıktan görünür;
-        sahne.ciz_son'daki saklama-birleştirmesi buna dayanır).
+        sahne.ciz_son'daki saklama-birleştirmesi buna dayanır). Açıklığa (kapi_acikligi_yolu()) hiçbir parça boya ya
+        da saklama bırakmaz (kaide silmesi açıklıktan çıkarılmıştır: dünya eşiğe kadar görünür).
     Süre (1080x1920, tek çekirdek): ~0.24-0.29 sn (zum 1-4), açılma kareleri ~0.15-0.30 sn.
     DÖNÜŞ dict — ekran koordinatı (x, y) demetleri; 'yerel' altında aynıları yerel:
         'aciklik_alt' (0,0), 'aciklik_merkez' (0,-430), 'kemer_tepe' (0,-860), 'kacis' (0,-400),
@@ -69,8 +74,9 @@ ciz_kubbe_cami(t, M, isik=(-0.6, -0.8), nur=0.0, tohum=0, sakla_sonra=True) -> d
     y ∈ [-186, 0] (mazgallar -211'e kadar). Minare ekseni x = -330: şerefeler y ≈ -560 ve -788, külah ucu -990,
     alem ucu ≈ -1065.
     nur 0..1: ölçülü sıcak ışık — silüeti saran yumuşak hale: halede çok açık sıcak sır + kısmi saklama (SONRA
-        boyanan gök orada açık kalır, cami ışık saçar), taş ve kubbede ince ılık sır; zemin çizgisinin altına
-        taşmaz. Gök vb. caminin ARKASINDAKİ her şey bu çağrıdan sonra boyanmalıdır.
+        boyanan gök orada açık kalır, cami ışık saçar), taş ve kubbede ince ılık sır (camiden ÖNCE boyanmış öndeki
+        nesnelere değmez); zemin çizgisinin altına taşmaz. Gök vb. caminin ARKASINDAKİ her şey bu çağrıdan sonra
+        boyanmalıdır.
     sakla_sonra: silüet (kubbe + kasnaklar + gövde + minare + alemler) saklamaya yazılır.
     Süre: 900 px genişlikte ~0.12 sn (nur ile ~0.2), 300 px'te ~0.08 sn.
     DÖNÜŞ dict (ekran): 'kubbe_tepe' (70,-780), 'alem_ucu' (70,-922.9), 'minare_ucu' (-330,-990),
@@ -82,8 +88,8 @@ ciz_seccade(t, M, uzunluk=420, egim=0.18, tohum=0, yon=-1, kayma=0.35, genislik_
         -> dict
     Yerde, yandan-3/4 görülen seccade (ince paralelkenar): kırık gül-kırmızısı alan, koyu bordür (uçlarda krem
     baklava dizisi), krem bekçi çizgileri (kâğıt + ılık krem, saklamayla korunur), iki merkezli sivri kemerli
-    mihrap nişi ve kandil motifi, köşebentlerde koyu sır, iki uçta krem saçaklar, ön kenarda ince kalınlık ve
-    altında yumuşak lila gölge. Desenler seccade düzleminde kurulup zemine izdüşürülür (doğru perspektif kısalması).
+    mihrap nişi ve kandil motifi, niş çevresinde (köşebentler + yanlar) koyu sır, iki uçta krem saçaklar, ön
+    kenarda ince kalınlık ve hemen altında seccadeden taşmayan yumuşak lila temas gölgesi. Desenler seccade düzleminde kurulup zemine izdüşürülür (doğru perspektif kısalması).
     KÖKEN: seccadenin zemindeki merkezi; uzunluk ekseni yerel x (±uzunluk/2, saçaklar +15), derinlik yukarı (-y).
     egim: derinliğin görünür oranı (kamera yükseklik açısının sinüsü); görünen derinlik
         = uzunluk * genislik_orani * egim (varsayılan ≈ 47 -> y ∈ [-23.4, +23.4]). Aralık ~0.08..0.4.
@@ -97,7 +103,7 @@ ciz_seccade(t, M, uzunluk=420, egim=0.18, tohum=0, yon=-1, kayma=0.35, genislik_
     DÖNÜŞ dict (ekran): 'on_sol', 'on_sag', 'arka_sol', 'arka_sag' köşeler (varsayılan yerel (-218,23), (202,23),
         (-202,-23), (218,-23)), 'mihrap' (kemer tepesi, (-148,0)), 'merkez' (0,0); 'yerel' altında aynıları yerel.
 
-DENEME PAFTALARI: testler/mimari_kapi_test.py (z1 | z2 | z4 | ac | all), testler/mimari_cami_test.py,
+DENEME PAFTALARI: testler/mimari_kapi_test.py (z1 | z2 | z4 | ac | on | surek | all), testler/mimari_cami_test.py,
     testler/mimari_seccade_test.py, testler/mimari_entegrasyon_test.py, testler/mimari_zaman.py
 """
 from __future__ import annotations
@@ -322,10 +328,6 @@ def _sakla(t: Tuval, yollar, M, yumusak=0.7, guc=1.0):
 
 def _saklama_al(t):
     return None if t.saklama is None else t.saklama.copy()
-
-
-def _saklama_geri(t, s):
-    t.saklama = s
 
 
 def _kaydir(yol, dx, dy):
@@ -673,17 +675,17 @@ def _cicek_yollari_(x, y, r, ac, egim, aci, tohum):
         am = faz + j * 2 * math.pi / 5 + rng.uniform(-0.2, 0.2)
         (kat['ic'] if j % 2 else kat['kase']).append(tp(0, 0, R * 0.05, R * rng.uniform(0.40, 0.48), am, 1.7,
                                                          tohum * 13 + j))
-    if ac >= 0.2:
-        faz = rng.uniform(0, 2 * math.pi)
-        for j in range(6):
-            am = faz + j * 2 * math.pi / 6 + rng.uniform(-0.15, 0.15)
-            kat['orta'].append(tp(0, 0, R * 0.12, R * rng.uniform(0.70, 0.80), am, 1.35, tohum * 19 + j))
-    if ac >= 0.45:
-        faz = rng.uniform(0, 2 * math.pi)
-        for j in range(7):
-            am = faz + j * 2 * math.pi / 7 + rng.uniform(-0.15, 0.15)
-            kat['dis'].append(tp(0, 0, R * 0.25, R * rng.uniform(0.92, 1.02) * (0.6 + 0.4 * ac), am, 1.15,
-                                 tohum * 23 + j))
+    # el.sakayik orta/dış halkaları ac 0.2 / 0.45'te birden ekler (açılmada sıçrama); burada her zaman kurulur,
+    # görünürlükleri _katman_gor ile yumuşakça artar (rng sırası sabit -> belirlenimci ve sürekli).
+    faz = rng.uniform(0, 2 * math.pi)
+    for j in range(6):
+        am = faz + j * 2 * math.pi / 6 + rng.uniform(-0.15, 0.15)
+        kat['orta'].append(tp(0, 0, R * 0.12, R * rng.uniform(0.70, 0.80), am, 1.35, tohum * 19 + j))
+    faz = rng.uniform(0, 2 * math.pi)
+    for j in range(7):
+        am = faz + j * 2 * math.pi / 7 + rng.uniform(-0.15, 0.15)
+        kat['dis'].append(tp(0, 0, R * 0.25, R * rng.uniform(0.92, 1.02) * (0.6 + 0.4 * ac), am, 1.15,
+                             tohum * 23 + j))
     for k_ in kat:
         kat[k_] = [yol_donustur(p, Tb) for p in kat[k_]]
     return kat, R
@@ -695,16 +697,21 @@ def _cicekler_ciz(t, M, cicekler, tohum, yog=1.0):
     cc = [c for c in cicekler if c[4] > 0.02 and c[5] > 0.01]
     if not cc:
         return
-    katlar = {k_: [] for k_ in ('gobek', 'on', 'kase', 'ic', 'orta', 'dis')}
+    adlar = ('gobek', 'on', 'kase', 'ic', 'orta', 'dis')
+    katlar = {k_: [] for k_ in adlar}      # [(yol, çiçek indeksi)]
     merk = []
+    agirlik = {k_: np.zeros(len(cc), np.float32) for k_ in adlar}   # çiçek x katman görünürlüğü (boya + saklama)
     for i, (x, y, r, rn, ac, gor, eg, aci) in enumerate(cc):
         kat, R = _cicek_yollari(x, y, r, ac, eg, aci, tohum * 10 + i)
-        for k_ in katlar:
-            katlar[k_] += kat[k_]
+        kg = _katman_gor(ac)
+        for k_ in adlar:
+            w_ = gor * kg[k_]
+            agirlik[k_][i] = w_
+            if w_ > 1e-3:
+                katlar[k_] += [(p, i) for p in kat[k_]]
         merk.append((x, y))
     merk = np.array(merk, np.float32)
     tablo = {idx: np.array([renk(el.CICEK_RENK[c[3]][idx]) for c in cc], np.float32) for idx in range(5)}
-    gorl = np.array([c[5] for c in cc], np.float32)
 
     def en_yakin(X, Y):
         d = (X[..., None] - merk[:, 0]) ** 2 + (Y[..., None] - merk[:, 1]) ** 2
@@ -715,31 +722,51 @@ def _cicekler_ciz(t, M, cicekler, tohum, yog=1.0):
             return tablo[idx][en_yakin(X, Y)]
         return f
 
-    def yog_f(X, Y):
-        return gorl[en_yakin(X, Y)]
-    tek = len(set(c[3] for c in cc)) == 1 and gorl.min() > 0.999
+    def yog_f(k_):
+        w_ = agirlik[k_]
+
+        def f(X, Y):
+            return w_[en_yakin(X, Y)]
+        return f
     ayar = dict(kenar=0.9, gran=0.06)
 
-    def boya(yollar, idx, y_, isl, ig, ak, th):
-        if not yollar:
+    def boya(k_, idx, y_, isl, ig, ak, th):
+        if not katlar[k_]:
             return
-        if tek:
-            _lavi(t, yollar, M, el.CICEK_RENK[cc[0][3]][idx], yog=y_ * yog, islak=isl, islak_gen=ig, akis=ak,
-                  tohum=th, **ayar)
-        else:
-            _lavi(t, yollar, M, '#FFFFFF', yog=y_ * yog, islak=isl, islak_gen=ig, akis=ak, tohum=th,
-                  renk_fn=renk_f(idx), yog_fn=yog_f, **ayar)
-    boya(katlar['gobek'], 4, 0.5, 0.5, 2.0, 0.1, tohum + 9)
-    _sakla(t, katlar['gobek'], M, 0.6)
-    boya(katlar['on'], 1, 0.42, 1.1, 2.4, 0.18, tohum + 41)
-    _sakla(t, katlar['on'], M, 0.6)
-    boya(katlar['kase'], 2, 0.40, 1.0, 2.4, 0.22, tohum + 31)
-    boya(katlar['ic'], 3, 0.40, 1.0, 2.4, 0.22, tohum + 32)
-    _sakla(t, katlar['kase'] + katlar['ic'], M, 0.6)
-    boya(katlar['orta'], 1, 0.36, 1.15, 2.6, 0.2, tohum + 37)
-    _sakla(t, katlar['orta'], M, 0.6)
-    boya(katlar['dis'], 0, 0.40, 1.25, 2.6, 0.2, tohum + 43)
-    _sakla(t, katlar['dis'], M, 0.7)
+        _lavi(t, [p for p, _ in katlar[k_]], M, '#FFFFFF', yog=y_ * yog, islak=isl, islak_gen=ig, akis=ak, tohum=th,
+              renk_fn=renk_f(idx), yog_fn=yog_f(k_), **ayar)
+
+    def sakla(kler, yum):
+        """Saklama çiçek görünürlüğüyle aynı güçte (yarı saydam/yeni beliren çiçek arkasını tümden silmez)."""
+        tam, kismi = [], {}
+        for k_ in kler:
+            for p, i in katlar[k_]:
+                w_ = float(agirlik[k_][i])
+                if w_ >= 0.999:
+                    tam.append(p)
+                else:
+                    kismi.setdefault(round(w_, 3), []).append(p)
+        if tam:
+            _sakla(t, tam, M, yum)
+        for w_, ps in kismi.items():
+            _sakla(t, ps, M, yum, guc=w_)
+    boya('gobek', 4, 0.5, 0.5, 2.0, 0.1, tohum + 9)
+    sakla(['gobek'], 0.6)
+    boya('on', 1, 0.42, 1.1, 2.4, 0.18, tohum + 41)
+    sakla(['on'], 0.6)
+    boya('kase', 2, 0.40, 1.0, 2.4, 0.22, tohum + 31)
+    boya('ic', 3, 0.40, 1.0, 2.4, 0.22, tohum + 32)
+    sakla(['kase', 'ic'], 0.6)
+    boya('orta', 1, 0.36, 1.15, 2.6, 0.2, tohum + 37)
+    sakla(['orta'], 0.6)
+    boya('dis', 0, 0.40, 1.25, 2.6, 0.2, tohum + 43)
+    sakla(['dis'], 0.7)
+
+
+def _katman_gor(ac):
+    """Çiçek katmanlarının açılmaya (ac) göre görünürlüğü: el.sakayik'in 0.2 / 0.45 sert eşikleri yumuşatılmış."""
+    return {'gobek': 1.0, 'on': 1.0, 'kase': 1.0, 'ic': 1.0,
+            'orta': mt.sstep(0.10, 0.30, ac), 'dis': mt.sstep(0.33, 0.57, ac)}
 
 
 def _cali_yollari(cx, cy, gen, yuk, tohum, n=60, r0=13.0, yuvarlak=True):
@@ -760,22 +787,34 @@ def _cali_yollari(cx, cy, gen, yuk, tohum, n=60, r0=13.0, yuvarlak=True):
     return A, B
 
 
+GUL_DAL_AC = (0.40, 0.82)    # dalların/yaprakların açılma aralığı (kapı acilma'sı)
+GUL_ON = (160.0, -1250.0)     # dal açılma önünün başlangıç / bitiş yerel y'si
+
+
+def _gul_varis(y):
+    """Dal açılma önünün yerel y hizasını (gürültü + yaprak payıyla) geçtiği kapı acilma değeri."""
+    d = (GUL_ON[0] - y) / (GUL_ON[0] - GUL_ON[1])
+    p = (d + 0.10 - _on_r(0.0, 0.05, 0.05, 0.0)) / (_on_r(1.0, 0.05, 0.05, 0.0) - _on_r(0.0, 0.05, 0.05, 0.0))
+    return GUL_DAL_AC[0] + (GUL_DAL_AC[1] - GUL_DAL_AC[0]) * min(1.0, p)
+
+
 def _ciz_gul(t, M, ac, tohum, isik):
     """Tırmanan gül (en önde, solda). ac: 0..1 açılma (dallar/yapraklar yayılır, çiçekler en son açar)."""
-    p_dal = _p(ac, 0.40, 0.82)
-    p_cicek = _p(ac, 0.60, 1.0)
+    p_dal = _p(ac, GUL_DAL_AC[0], GUL_DAL_AC[1])
     if p_dal <= 0:
         return
-    # 1) çiçekler
+    # 1) çiçekler — her çiçek, dalların açılma önü kendi hizasını geçtikten SONRA açar (dalsız havada çiçek olmasın)
     cic = []
     for i, (x, y, r, rn, gec, eg, aci) in enumerate(GUL_CICEKLER):
-        a_c = _p(p_cicek, gec * 0.55, gec * 0.55 + 0.5)
+        bas = max(0.60 + 0.4 * gec * 0.55, _gul_varis(y))
+        a_c = _p(ac, bas, min(1.0, bas + 0.2))
         if a_c <= 0:
             continue
-        cic.append((x, y, r, rn, 0.25 + 0.75 * a_c, min(1.0, 0.15 + 1.7 * a_c), eg, aci))
+        # görünürlük 0'dan yumuşakça başlar (eski 0.15 tabanı ilk karede soluk bir çiçeği birden belirtiyordu)
+        cic.append((x, y, r, rn, 0.25 + 0.75 * a_c, mt.sstep(0.0, 0.45, a_c), eg, aci))
     _cicekler_ciz(t, M, cic, tohum + 500)
     tom, sep, A, B, G, dallar = _gul_geo(tohum)
-    with _Grup(t, p_dal, M, 160, -1250, tohum + 3, dalga=0.05, on=0.05, egri=0.0):
+    with _Grup(t, p_dal, M, GUL_ON[0], GUL_ON[1], tohum + 3, dalga=0.05, on=0.05, egri=0.0):
         _lavi(t, tom, M, '#D66F7E', yog=0.48, kenar=0.9, islak=1.0, islak_gen=2.0, gran=0.06, akis=0.2,
               tohum=tohum + 40)
         _lavi(t, sep, M, KR['yaprak'], yog=0.55, kenar=0.8, islak=0.6, islak_gen=1.6, gran=0.05, akis=0.1,
@@ -843,14 +882,6 @@ def _ciz_sag_cali(t, M, ac, tohum):
     _lavi(t, B, M, KR['cali_koyu'], yog=0.38, kenar=0.9, islak=0.9, islak_gen=2.2, gran=0.08, akis=0.2,
           tohum=tohum + 82)
     _sakla(t, A + B, M, 0.6)
-
-
-class _bos_bag:
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *a):
-        return False
 
 
 # --- basamaklar -------------------------------------------------------------------------------------------------
@@ -1137,11 +1168,22 @@ def _rozet_geo(dx, dy):
     return R_
 
 
+def _kaide_silme_yollari():
+    """Kaide silmesi (cephe boyunca ince taş bant) ve altındaki gölge şeridi; AÇIKLIK ÇIKARILMIŞ (bant açıklığın
+    alt 6 birimine taşıp orada saklama bırakmasın: dünya eşiğe kadar görünmeli)."""
+    def f():
+        g = _kapi_geo()
+        x0, x1 = KAPI_CEPHE[0], KAPI_CEPHE[2]
+        y = KAPI_KAIDE
+        silme = yol_op(yol_dikdortgen(x0, y, x1, y + 16), g['dis_yol'], 'fark')
+        golge = yol_op(yol_dikdortgen(x0, y + 9, x1, y + 16), g['dis_yol'], 'fark')
+        return silme, golge
+    return _onbellek(('kaide_silme',), f)
+
+
 def _ciz_kaide_silme(t, M, tohum):
-    x0, x1 = KAPI_CEPHE[0], KAPI_CEPHE[2]
-    y = KAPI_KAIDE
-    silme = yol_dikdortgen(x0, y, x1, y + 16)
-    _lavi(t, yol_dikdortgen(x0, y + 9, x1, y + 16), M, KR['golge'], yog=0.34, kenar=0.7, dalga=0.0, islak=0.4,
+    silme, golge = _kaide_silme_yollari()
+    _lavi(t, golge, M, KR['golge'], yog=0.34, kenar=0.7, dalga=0.0, islak=0.4,
           islak_gen=1.2, gran=0.08, akis=0.1, tohum=tohum + 151)
     _sakla(t, silme, M, 0.6)
 
@@ -1345,6 +1387,32 @@ def _ciz_kaide_zemin(t, M, tohum, isik, bant=None):
           tohum=tohum + 172, yog_fn=yf2, yog_harita=1.0 + 0.9 * dm, maske=(kz, maske_ciz([zemin], M, kz)))
 
 
+def _kapi_beyaz_yollari():
+    """Cephenin kâğıt beyazı (boş bırakılan) mimari parçalarının silüeti: kemer çerçevesi + üzengi başlıkları + kilit
+    taşı, alfiz bandı, taç kornişi, rozet diskleri, kaide silmesi, basamaklar. Açılma sırasında cephe lavisi bunları
+    BAŞTAN boş bırakır (suluboyacı beyazı önceden ayırır): sonradan krem lavinin üstünden 'beyaz silinmesi' olmaz."""
+    def f():
+        g = _kapi_geo()
+        a, ys, w = KAPI_A, g['ys'], KAPI_KG
+        ai, au, aw = KAPI_ALFIZ, KAPI_ALFIZ_UST, KAPI_ALFIZ_G
+        _, (kilit, _), _, _, _ = _kemer_tas_yollari()
+        yollar = [g['cerceve_yol'], kilit,
+                  yol_dikdortgen(-a - w - 12, ys - 5, -a + 3, ys + 17, 2),
+                  yol_dikdortgen(a - 3, ys - 5, a + w + 12, ys + 17, 2)]
+        bant = yol_op(yol_dikdortgen(-ai - aw, au - aw, ai + aw, KAPI_KAIDE),
+                      yol_dikdortgen(-ai, au, ai, KAPI_KAIDE + 1), 'fark')
+        kx = ai + aw + 46
+        y0 = au - aw
+        yollar += [bant, yol_dikdortgen(-kx, y0 - 22, kx, y0, 2), yol_dikdortgen(-kx + 2, y0 - 48, kx - 2, y0 - 22),
+                   yol_dikdortgen(-kx - 14, y0 - 66, kx + 14, y0 - 48, 2),
+                   yol_dikdortgen(-kx - 24, y0 - 82, kx + 24, y0 - 66, 2)]
+        yollar += [yol_daire(s_ * 270.0, -906.0, 50.0) for s_ in (-1, 1)]
+        yollar.append(_kaide_silme_yollari()[0])
+        yollar += [yol_dikdortgen(-hw, yu, hw, ya) for (hw, yu, yo, ya) in KAPI_KATLAR]
+        return yollar
+    return _onbellek(('kapi_beyaz',), f)
+
+
 def _kapi_siluet_sakla(t, M, g):
     """Cephenin tam silüetini saklamaya yazar. Hızlı yol: cephe ekranı kaplıyorsa açıklığın kutusu dışında saklama
     doğrudan 1 olur, yalnız açıklık kutusunda yumuşak kenarlı maske hesaplanır."""
@@ -1402,6 +1470,9 @@ def ciz_kemerli_kapi(t: Tuval, M, acilma=1.0, isik=(-0.6, -0.8), tohum=0, sakla_
             if gr.gorunur:
                 _ciz_alfiz(t, M, tohum, isik)
                 _ciz_kaide_silme(t, M, tohum)
+        if p_cephe > 0.0 and min(p_bas, p_kemer, p_alfiz) < 1.0:
+            # beyazlar baştan ayrılır: cephe lavisi henüz boyanmamış kemer/alfiz/korniş/basamak alanlarını da boş bırakır
+            _sakla(t, _kapi_beyaz_yollari(), M, 0.6)
         with _Grup(t, p_cephe, M, y_alt, y_ust, tohum + 5, **ON) as gr:
             if gr.gorunur:
                 _ciz_cephe(t, M, tohum, isik, bant)
@@ -1670,6 +1741,7 @@ def _cami_geo():
 
 def ciz_kubbe_cami(t: Tuval, M, isik=(-0.6, -0.8), nur=0.0, tohum=0, sakla_sonra=True):
     g = _onbellek(('cami',), _cami_geo)
+    sak_once = _saklama_al(t) if nur > 0.001 else None   # nur'un taş sırrı için: camiden önceki saklama
     lx, ly = _isik_birim(isik)
     sgn = 1 if lx < 0 else -1
     T0 = 3000 + tohum * 50
@@ -1797,17 +1869,22 @@ def ciz_kubbe_cami(t: Tuval, M, isik=(-0.6, -0.8), nur=0.0, tohum=0, sakla_sonra
         _sakla(t, kas, M, 0.5)
     siluet += [g['k1'], g['k1_silme'], g['k2'], g['k2_silme']]
     # ---------------- 6) kubbe: açık ilk lavi (parıltı kâğıtta), gölge yanında koyu ikinci sır, kaburgalar ----
-    def yf1(X, Y):
-        lam = _kubbe_lambert(X, Y, isik)
-        return 1.0 - 0.55 * smoothstep(0.80, 0.97, lam)
+    def kenar_u(X, Y):
+        pr = _onbellek(('kubbe_profil',), _kubbe_profil)
+        hw = np.interp(Y, pr[::-1, 1], pr[::-1, 0])
+        return np.abs(X - KUBBE_X) / np.maximum(hw, 1.0)
 
-    def yf2(X, Y):
+    def yf1(X, Y):   # ilk lavi: ışıklı üst-solda kâğıt parıltısına doğru incelir
         lam = _kubbe_lambert(X, Y, isik)
-        return smoothstep(0.72, 0.18, lam)
-    _lavi(t, g['kubbe'], M, CR['yesil'], yog=0.62, kenar=1.0, islak=1.1, islak_gen=2.6, gran=0.13, akis=0.25,
+        return 1.0 - 0.62 * smoothstep(0.84, 0.99, lam)
+
+    def yf2(X, Y):   # ikinci sır: gölge yanı + her iki kenarda hafif yuvarlanma (hacim)
+        lam = _kubbe_lambert(X, Y, isik)
+        return np.maximum(smoothstep(0.74, 0.16, lam), 0.38 * smoothstep(0.80, 0.99, kenar_u(X, Y)))
+    _lavi(t, g['kubbe'], M, CR['yesil'], yog=0.62, kenar=1.0, islak=1.1, islak_gen=2.6, gran=0.13, akis=0.17,
           tohum=T0 + 70, yog_fn=yf1)
     _lavi(t, g['kubbe'], M, CR['yesil_koyu'], yog=0.55, kenar=1.0, islak=0.6, islak_gen=2.4, gran=0.13,
-          akis=0.25, tohum=T0 + 71, yog_fn=yf2)
+          akis=0.17, tohum=T0 + 71, yog_fn=yf2)
     _lavi(t, _cizgiler(g['kaburga']), M, CR['kaburga'], yog=0.60, cizgi=_cz(M, 2.0, us=0.55, en_az=0.9),
           kenar=0.5, islak=0.0, gran=0.08, akis=0.15, tohum=T0 + 72, esik=False)
     _sakla(t, g['kubbe'], M, 0.5)
@@ -1816,7 +1893,7 @@ def ciz_kubbe_cami(t: Tuval, M, isik=(-0.6, -0.8), nur=0.0, tohum=0, sakla_sonra
     if sakla_sonra:
         _sakla(t, siluet, M, 0.6)
     if nur > 0.001:
-        _ciz_nur(t, M, nur, siluet, tohum)
+        _ciz_nur(t, M, nur, siluet, tohum, sak_once)
     yerel = {'kubbe_tepe': (kx, KUBBE_TEPE), 'alem_ucu': (float(uc_k[0]), float(uc_k[1])),
              'minare_ucu': (mx, -990.0), 'minare_alem_ucu': (float(uc_m[0]), float(uc_m[1])),
              'kubbe_merkez': (kx, KUBBE_TABAN), 'zemin_sol': (GOVDE_X0, 0.0), 'zemin_sag': (GOVDE_X1, 0.0)}
@@ -1825,7 +1902,7 @@ def ciz_kubbe_cami(t: Tuval, M, isik=(-0.6, -0.8), nur=0.0, tohum=0, sakla_sonra
     return out
 
 
-def _ciz_nur(t, M, nur, siluet, tohum):
+def _ciz_nur(t, M, nur, siluet, tohum, sak_once=None):
     """Caminin çevresinde ölçülü sıcak ışık. Silüeti saran yumuşak bir hale: (1) halede çok açık sıcak sır (camiye
     değmez), (2) aynı halede kısmi saklama — sonra boyanacak gök orada daha az boyanır, cami ışık saçar gibi görünür,
     (3) taşta ve kubbede çok ince ılık sır."""
@@ -1848,9 +1925,15 @@ def _ciz_nur(t, M, nur, siluet, tohum):
     # (1) sıcak sır (saklamaya uyar: caminin kendisine değmez)
     _lavi(t, siluet, M, '#F2CF98', yog=0.40 * nur, kenar=1.0, islak=0.0, gran=0.05, akis=0.25, tohum=tohum + 3900,
           maske=(k, np.clip(hale * 1.1, 0, 1).astype(np.float32)), esik=False)
-    # (3) taşta ılık parıltı
-    _lavi(t, siluet, M, '#F6DEB0', yog=0.14 * nur, kenar=0.8, islak=0.0, gran=0.04, akis=0.2, tohum=tohum + 3901,
-          sakla=False)
+    # (3) taşta ılık parıltı: caminin kendi saklamasını yok sayar ama camiden ÖNCE boyanmış (öndeki) nesnelerin
+    #     saklamasına uyar (eskiden sakla=False ile öndeki ağaç/çiçeklerin cami silüetine düşen kısmı da ısınıyordu)
+    sak_simdi = t.saklama
+    t.saklama = sak_once
+    try:
+        _lavi(t, siluet, M, '#F6DEB0', yog=0.14 * nur, kenar=0.8, islak=0.0, gran=0.04, akis=0.2,
+              tohum=tohum + 3901)
+    finally:
+        t.saklama = sak_simdi
     # (2) kısmi yumuşak saklama
     t.sakla_ekle(siluet, M, yumusak=0.0, maske=(k, (hale * 0.72 * nur).astype(np.float32)))
 
@@ -1911,9 +1994,10 @@ def _seccade_yollari(L, Wd, yon, egim, sx_ince, tohum):
     kemer = yol_cokgen(dis_pts)
     p['kemer_cizgi'] = yol_op(kemer, yol_cokgen(ic_pts), 'fark')
     p['kemer'] = kemer
-    yay_boy = -ys_                        # kemer yayının u boyu (niş yanlarının bittiği yer: au1 + ys_)
-    yay_boy = hn + ys_
-    p['kosebent'] = yol_op(yol_dikdortgen(-hu + bu, -hw + b, au0 + yay_boy + 6, hw - b), kemer, 'fark')
+    yay_boy = hn + ys_                    # kemer yayının u boyu (niş yanlarının bittiği yer: au1 + ys_)
+    # nişin çevresi (köşebentler + niş yanlarındaki alan) koyu sır: niş açık kalır. (Eskiden yalnız kemer yayına
+    # kadar koyuydu; yay bitiminde alanda düz bir dikey ek yeri oluşuyordu.)
+    p['kosebent'] = yol_op(p['alan'], kemer, 'fark')
     # kandil (küçük asılı lamba motifi) ve ayak ucunda küçük baklava
     kc = au0 + yay_boy * 0.78
     p['kandil'] = [yol_cokgen([(kc - tu * 5.5, 0), (kc, -aw * 0.24), (kc + tu * 7, 0), (kc, aw * 0.24)]),
@@ -1972,7 +2056,7 @@ def ciz_seccade(t: Tuval, M, uzunluk=420, egim=0.18, tohum=0, yon=-1, kayma=0.35
 
     def yf(X, Y):  # Mr-yerelinde (u, w): ışık yanına doğru hafif açık
         return 0.88 + 0.22 * smoothstep(-hu, hu, X * (-yon))
-    _lavi(t, p['kosebent'], Mr, SR['kosebent'], yog=0.42, kenar=0.8, islak=0.8, islak_gen=1.4, gran=0.12,
+    _lavi(t, p['kosebent'], Mr, SR['kosebent'], yog=0.34, kenar=0.8, islak=0.8, islak_gen=1.4, gran=0.12,
           akis=0.2, tohum=T0 + 4)
     _lavi(t, p['alan'], Mr, SR['zemin'], yog=0.60, kenar=0.9, islak=0.9, islak_gen=1.8, gran=0.14, akis=0.25,
           tohum=T0 + 5, yog_fn=yf)
@@ -1989,9 +2073,13 @@ def ciz_seccade(t: Tuval, M, uzunluk=420, egim=0.18, tohum=0, yon=-1, kayma=0.35
     _lavi(t, kalin, M, SR['kalinlik'], yog=0.55, kenar=0.6, islak=0.4, islak_gen=1.0, gran=0.1, akis=0.15,
           tohum=T0 + 7)
     _sakla(t, kalin, M, 0.4)
-    gol = yol_egri([(fx0 - 14, y_on), (fx1 + 18, y_on), (fx1 + 10, y_on + kal + 7), (0, y_on + kal + 10),
-                    (fx0 - 6, y_on + kal + 6)], kapali=True, gerilim=0.4)
-    _lavi(t, gol, M, SR['golge'], yog=0.30, kenar=1.6, islak=0.2, islak_gen=2.0, gran=0.1, akis=0.2,
+    # zemine değen yumuşak temas gölgesi: ön kenarın hemen altında ince, uçlarda incelen (seccadeden taşmaz)
+    # (Catmull-Rom kapalı eğri uzun-kısa kenarlarda uçlardan çok taşıyordu: açık çokgen kullanılır)
+    us_ = np.linspace(0.0, 1.0, 25)
+    gx = fx0 + 3 + us_ * (fx1 - fx0 + 2)
+    gol = yol_cokgen([(x_, y_on + kal * 0.5) for x_ in gx] +
+                     [(x_, y_on + kal + 0.8 + 5.2 * math.sin(math.pi * u_) ** 0.6) for x_, u_ in zip(gx[::-1], us_[::-1])])
+    _lavi(t, gol, M, SR['golge'], yog=0.26, kenar=1.5, islak=0.2, islak_gen=2.0, gran=0.1, akis=0.2,
           tohum=T0 + 8)
     if sakla_sonra:
         _sakla(t, [p['govde']] + p['sacak'], Mr, 0.5)

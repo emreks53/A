@@ -6,7 +6,8 @@ from motor import *
 import elemanlar as el
 import mimari
 
-OUT = '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/testler/'
+import os
+OUT = os.environ.get('MIMARI_OUT', '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/testler/')
 
 
 def manzara(t, M):
@@ -58,6 +59,22 @@ if __name__ == '__main__':
         t, dt, b = kare(2.0, 540, 1060)
         print('zum2', round(dt, 3))
         kaydet('kapi_z2.png', t.R)
+    if which in ('on', 'all'):
+        # açılma ortası tam çözünürlük, dünyasız: ıslak ön, önceden ayrılmış beyazlar (kemer, alfiz, korniş, rozetler)
+        t, dt, b = kare(1.0, acilma=0.66, dunya=False)
+        print('acilma .66', round(dt, 3))
+        kaydet('kapi_on_tam.png', t.R)
+    if which in ('surek', 'all'):
+        # süreklilik: videodaki gibi acilma = e_out((V + 0.22) / 0.8), 30 fps ardışık kareler arası fark
+        onceki = None
+        for i in range(0, 19):
+            V = i / 30.0
+            a = e_out(min(1.0, (V + 0.22) / 0.8))
+            t, dt, b = kare(1.0, acilma=a, dunya=False)
+            if onceki is not None:
+                d = np.abs(t.R - onceki).max(-1)
+                print('V %.3f ac %.3f  ort fark %.4f  >0.1 px %d  sure %.3f' % (V, a, d.mean(), (d > 0.1).sum(), dt))
+            onceki = t.R.copy()
     if which in ('ac', 'all'):
         ims = []
         for a in (0.0, 0.15, 0.3, 0.45, 0.6, 0.8, 1.0):
