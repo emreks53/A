@@ -726,7 +726,8 @@
         Ps = P.map(([x, y]) => [hs[0] + x * cam.z, hs[1] + y * cam.z]); path = A.shapePath(Ps, false);
       }
       if (unm) {
-        const hA = 1 - pp(t, 20.62, 20.86, 'inOutSine');
+        // the hourglass only dissolves once the bowl is mostly solid, so no frame shows neither object (bare outline)
+        const hA = 1 - pp(t, 20.76, 20.92, 'inOutSine');
         const rfl = 0.13 * (1 - pp(t, 20.6, 20.78, 'inOutSine'));
         if (rfl > 0.003) { // faint reflection of the hourglass in the glossy floor (fades as it un-morphs)
           const fy = toS(cam, 0, pos[1] + st.h / 2 + 0.2 * st.w * 0.54)[1];
@@ -734,8 +735,8 @@
           E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => hgDraw(cc, Object.assign({}, hgO, { flow: 0 }))); ctx.restore();
         }
         if (t < 16.75) neckGlints(ctx, t, DE.bowlGeo(DE.camD(t)), toS(cam, NECK[0], NECK[1]), cam);
-        // the bowl firms up inside the reshaping outline (opaque by uk 0.72, before the frame has fully gone)
-        if (uk > 0.001) drawBowlE(ctx, t, cam, pos, E.smooth((uk - 0.22) / 0.5), { path, k: 1 - pp(t, 20.9, 21.0, 'inOutSine') });
+        // the bowl firms up inside the reshaping outline (opaque by 20.84, before the frame starts to dissolve)
+        if (uk > 0.001) drawBowlE(ctx, t, cam, pos, E.smooth((t - 20.66) / 0.18), { path, k: 1 - pp(t, 20.9, 21.0, 'inOutSine') });
         const hOu = Object.assign({}, hgO, { sandTop: st.sT >= 0.03 ? st.sT : 0 });
         if (hA > 0.003) { // (not clipped: the wooden frame dissolves around the morphing glass)
           ctx.save(); ctx.globalAlpha *= hA;

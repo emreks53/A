@@ -881,7 +881,14 @@
         ctx.save(); ctx.globalAlpha = clamp(ap * 1.5);
         const tip = A.stemTip({ len: 330, t, sway: 0.25, bend: 0.12 });
         E.at(ctx, ox - tip.x, oy - tip.y, 1, 0, () => A.stem(ctx, { len: 330, t, sway: 0.25, bend: 0.12, leaves: 3, thorns: 4, width: 13 }));
-        const head = (a, sc, o) => { if (a <= 0.003) return; ctx.save(); ctx.globalAlpha *= a; E.at(ctx, ROSE.x, ROSE.y, sc, 0, () => E.at(ctx, -SIL.cx, -SIL.cy, 1, 0, () => A.heroRose(ctx, Object.assign({ R: ROSE.R, t, rot: 0 }, o)))); ctx.restore(); };
+        const head = (a, sc, o) => {
+          if (a <= 0.003) return;
+          const drawHead = (c) => E.at(c, ROSE.x, ROSE.y, sc, 0, () => E.at(c, -SIL.cx, -SIL.cy, 1, 0, () => A.heroRose(c, Object.assign({ R: ROSE.R, t, rot: 0 }, o))));
+          if (a > 0.997) { drawHead(ctx); return; }
+          // a fading rose is composited as ONE layer, so its back petals and rims never show through ("x-ray" look)
+          const m = ctx.getTransform(), ga = ctx.globalAlpha;
+          E.layer(ctx, (l) => { l.setTransform(m); drawHead(l); }, { alpha: ga * a });
+        };
         const bl = 0.55 + 0.45 * clamp(ap * 1.2), sc0 = 0.86 + 0.14 * k;
         head(1 - ghost, sc0, { bloom: bl, variant: 'paradise' });
         head(olA, sc0, { bloom: bl, variant: 'outline', col: '#F3B9C6', lw: 2.6, glow: 1 });

@@ -548,7 +548,7 @@
       ctx.fillStyle = RG(ctx, 0, 0, 0, 820, [[0, '#FF9D5C', a], [0.45, '#FF9D5C', a * 0.35], [1, '#FF9D5C', 0]]); ctx.fillRect(-900, -900, 1800, 1800); ctx.restore();
     }
     // bowl rising into frame exactly like D's (opaque, veiled, no reflection)
-    if (t > 11.3) {
+    if (t > 11.1) {   // starts below the frame edge (rim top > 1920) so it rises in, never pops in
       const dr = E.drift(t, 4, 0.3, 11), rimY = 1325 + (11.8 - t) * 1100 + dr.y;
       E.layer(ctx, (l) => {
         E.at(l, 540 + dr.x, rimY, 1, 0, () => A.iznikBowl(l, { t, rx: 330, ry: 110, depth: 220, lit: 1, litRadius: 0, reflection: false, rimCol: '#B9A6FF' }));
