@@ -877,7 +877,7 @@ window.TIMING = {
    "ws": 2.501,
    "we": 3.021,
    "in": 2.421,
-   "out": 3.681
+   "out": 3.621
   },
   {
    "src": "telezzüz",
@@ -893,7 +893,7 @@ window.TIMING = {
    "ws": 4.901,
    "we": 5.341,
    "in": 4.821,
-   "out": 6.566
+   "out": 5.961
   },
   {
    "src": "firakıyla",
@@ -925,7 +925,7 @@ window.TIMING = {
    "ws": 32.147,
    "we": 33.047,
    "in": 32.067,
-   "out": 34.162
+   "out": 33.407
   },
   {
    "src": "suretleri",
@@ -933,7 +933,7 @@ window.TIMING = {
    "ws": 40.869,
    "we": 41.349,
    "in": 40.789,
-   "out": 42.674
+   "out": 42.009
   },
   {
    "src": "nazarlarını",
@@ -941,7 +941,7 @@ window.TIMING = {
    "ws": 44.109,
    "we": 44.709,
    "in": 44.029,
-   "out": 45.4
+   "out": 45.249
   },
   {
    "src": "tezyinat",
@@ -957,7 +957,7 @@ window.TIMING = {
    "ws": 52.071,
    "we": 52.931,
    "in": 51.991,
-   "out": 54.352
+   "out": 53.851
   },
   {
    "src": "ibadına",
@@ -973,7 +973,7 @@ window.TIMING = {
    "ws": 56.252,
    "we": 57.132,
    "in": 56.172,
-   "out": 58.337
+   "out": 57.552
   },
   {
    "src": "usûl-ü daimîsine",
@@ -981,7 +981,7 @@ window.TIMING = {
    "ws": 63.673,
    "we": 64.674,
    "in": 63.593,
-   "out": 65.724
+   "out": 64.974
   }
  ]
 };
