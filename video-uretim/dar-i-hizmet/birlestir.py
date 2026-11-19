@@ -19,7 +19,7 @@ def main():
     a = ap.parse_args()
     ses = ['-i', a.ses] if os.path.exists(a.ses) else []
     kmt = ['ffmpeg', '-y', '-framerate', '30', '-i', os.path.join(a.kareler, '%05d.png'), *ses,
-           '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-tune', 'film', '-profile:v', 'high',
+           '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-tune', 'film', '-profile:v', 'high',
            '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709',
            '-g', '60', '-movflags', '+faststart']
     if ses:
