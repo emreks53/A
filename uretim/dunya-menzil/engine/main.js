@@ -92,7 +92,7 @@
     // make sure every face is actually loaded (canvas text does not trigger loading reliably)
     const faces = ['600 italic 40px "Cormorant Garamond"', '500 italic 40px "Cormorant Garamond"', '600 40px "Cormorant Garamond"',
       '600 40px "EB Garamond"', '500 40px "EB Garamond"', '500 italic 40px "EB Garamond"', '400 40px "EB Garamond"',
-      '600 40px "Caveat"', '500 40px "Caveat"', '400 40px "Amiri Quran"', '400 40px "Amiri"', '700 40px "Amiri"', '400 40px "Kalam"'];
+      '600 40px "Caveat"', '500 40px "Caveat"', '400 40px "Amiri Quran"', '400 40px "Amiri"', '700 40px "Amiri"', '400 40px "Kalam"', '400 40px "Scheherazade New"', '700 40px "Scheherazade New"'];
     await Promise.all(faces.map((f) => document.fonts.load(f, 'AaŞşĞğİıÇçÖöÜüâ نَسُوا')));
     E.readyFlag = true;
     return true;

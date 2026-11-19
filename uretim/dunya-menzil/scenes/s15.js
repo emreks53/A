@@ -15,8 +15,10 @@
   ];
   // reveal groups: [first word, last word, recitation word index in E.WORDS]
   const GROUPS = [[0, 1, 131], [2, 2, 132], [3, 3, 133], [4, 4, 134], [5, 5, 135], [6, 6, 136]];
-  const FONT_PX = 112;
-  const FONT = `400 ${FONT_PX}px "Amiri Quran"`;
+  const FONT_PX = 98;
+  // Scheherazade New (SIL, designed for Qur'anic text) seats every haraka tightly on its letter;
+  // Amiri's marks float high above medial letters at this size.
+  const FONT = `700 ${FONT_PX}px "Scheherazade New"`;
   const VC = { x: 540, y: 805 };       // verse centre (camera push-in centre)
   const DROP = { x: 540, y: 812 };     // where the ink drop lands
 
