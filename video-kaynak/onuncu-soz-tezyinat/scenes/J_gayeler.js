@@ -593,7 +593,7 @@
     if (f <= 0.002) return;
     const hk = sm(f / 0.14); // draw-on head & glow ease in (~0.2 s) instead of popping on at full strength
     const N = 90, L = [], R = [], C = [];
-    for (let i = 0; i <= N; i++) { const q = rg.at((i / N) * f); const w = q.w * (0.75 + 0.25 * Math.sin(i * 0.4 - t * 3)) * 0.5 + q.w * 0.5; L.push([q.x + q.nx * w * 0.5, q.y + q.ny * w * 0.5]); R.push([q.x - q.nx * w * 0.5, q.y - q.ny * w * 0.5]); C.push([q.x, q.y, q.w]); }
+    for (let i = 0; i <= N; i++) { const q = rg.at((i / N) * f); const w = q.w * (0.75 + 0.25 * Math.sin((i / N) * f * 36 - t * 3)) * 0.5 + q.w * 0.5; /* ripple tied to arc length: no sawtooth while the ribbon is short */ L.push([q.x + q.nx * w * 0.5, q.y + q.ny * w * 0.5]); R.push([q.x - q.nx * w * 0.5, q.y - q.ny * w * 0.5]); C.push([q.x, q.y, q.w]); }
     const s0 = C[0], s1 = C[C.length - 1];
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // wide glow (chunks with decreasing width). Drawn OPAQUE in pre-multiplied dark colours into a soft
@@ -611,7 +611,8 @@
         }
       }
     }, { lo: true, blur: 16, op: 'lighter', alpha: hk });
-    // body
+    // body (eases in with the head so a very short first segment never shows as a hard strip)
+    ctx.globalAlpha = hk;
     ctx.globalCompositeOperation = 'screen';
     ctx.fillStyle = E.lin(ctx, s0[0], s0[1], s1[0], s1[1], [[0, '#FFE7B0', 0.72], [1, '#FFFFFF', 0.85]]);
     ctx.beginPath(); L.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]); ctx.closePath(); ctx.fill();
@@ -621,6 +622,7 @@
     for (const side of [L, R]) { ctx.beginPath(); side.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.stroke(); }
     ctx.beginPath(); C.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])));
     ctx.setLineDash([12, 30]); ctx.lineDashOffset = -t * 150; ctx.strokeStyle = E.rgba('#FFFFFF', 0.85); ctx.lineWidth = 2.6; ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
     // draw-on head
     if (f < 1) { S.light(ctx, s1[0], s1[1], 40 + 24 * hk, '#FFE7B0', 0.62 * hk); S.sparkle(ctx, s1[0], s1[1], 10 + 12 * hk, hk, '#FFFFFF', t * 2); }
     // lift-off glow pool on the path

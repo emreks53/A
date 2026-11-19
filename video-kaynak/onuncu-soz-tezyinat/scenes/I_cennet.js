@@ -877,7 +877,7 @@
         // behind the growing sample); from 57.4 the growing sample itself is drawn here, at the original's depth
         // (behind the bowl, under the top light), and at g = 1 it IS the original (same R, bloom, variant, transform)
         const Gr = growInfo(t), done = Gr.g >= 1, ghost = done ? 0 : P(t, 56.98, 57.22, 'inOutSine');
-        const olA = ghost * (1 - sm(clamp((Gr.k - 0.8) / 0.2))), growA = !done && Gr.g > 0 ? P(t, 57.38, 57.46, 'inOutSine') : 0;
+        const olA = ghost * (1 - sm(clamp((Gr.k - 0.8) / 0.2))), growA = !done && Gr.g > 0 && t >= 57.38 ? 1 : 0;   // opaque under the fading front copy (coverage stays 1)
         ctx.save(); ctx.globalAlpha = clamp(ap * 1.5);
         const tip = A.stemTip({ len: 330, t, sway: 0.25, bend: 0.12 });
         E.at(ctx, ox - tip.x, oy - tip.y, 1, 0, () => A.stem(ctx, { len: 330, t, sway: 0.25, bend: 0.12, leaves: 3, thorns: 4, width: 13 }));
