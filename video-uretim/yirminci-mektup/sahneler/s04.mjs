@@ -39,7 +39,8 @@ const Z = {
 
 // dünya yerleşimi (adam sahnesi): göğüs (540, 900); kamera göğüs ekranda (540, 900) kalacak biçimde yakınlaşır
 const GX = 540, GY = 900;
-const S = 2.8; // figür ölçeği
+const S = 1.42; // figür ölçeği (tam boy: ayaklar ön çayırın otları arasında, ekranda altyazı bandının üstünde)
+const RK = 0.62; // göğüs ışığının figüre göre ölçeği
 const AYAK = GY + 274 * S; // insanOnBuyuk'te göğüs, ayak tabanından 274 birim yukarıda
 const F = { gok: 0.3, bulut: 0.35, uzak: 0.55, orta: 0.8, arka: 0.92, on: 1.06 };
 const ADAM_OLCEK = [4, 6];
@@ -51,11 +52,11 @@ function zAdam(t) {
   const a = an(t, Z.toplan, 1.15, ease.inOutSine);
   const b = an(t, Z.toplan + 1.1, T.kalb - (Z.toplan + 1.1), ease.inOutSine);
   const c = an(t, Z.itis, 0.85, ease.inOutCubic);
-  return Math.exp(Math.log(1.45) + Math.log(1.3 / 1.45) * a + Math.log(1.35 / 1.3) * b + Math.log(2.3 / 1.35) * c);
+  return Math.exp(Math.log(1.45) + Math.log(1.3 / 1.45) * a + Math.log(1.35 / 1.3) * b + Math.log(3.4 / 1.35) * c);
 }
 // kalp sahnesinin ölçeği (ekran uzayında, (540, 900) çevresinde)
 function zKalp(t) {
-  const p = 0.2 * pop(t, T.kalb, 0.42);
+  const p = 0.12 * pop(t, T.kalb, 0.42);
   const g = 0.8 * an(t, Z.iris + 0.06, 0.8, ease.inOutCubic);
   const d = 0.06 * an(t, 29.1, 2.0, ease.inOutSine);
   const zm = Math.log(2.4 / 1.06) * an(t, Z.zum, 1.0, ease.inOutSine);
@@ -169,7 +170,7 @@ export default {
 
     // 1) başlangıç: gül buğusu göğse toplanır, gül küçülerek göğse yerleşir
     if (t < Z.toplan + 1.3) {
-      const kk = lerp(1, 34 / 300, toplan);
+      const kk = lerp(1, 22 / 300, toplan);
       const gx = lerp(540, gsx, toplan), gy = lerp(900, gsy, toplan);
       if (toplan <= 0) ctx.drawImage(zG, 0, 0);
       else if (toplan < 1) maskeli(ctx, zG, gx, gy, 1 - toplan, 1100, 1.0);
@@ -320,8 +321,8 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
   M.hale(ctx, gsx, gsy, 520 * zz * (0.6 + 0.4 * ruhA + 0.25 * sur), '#FFEBD2', (0.25 * ruhA + 0.25 * sur) * (1 + 0.5 * nb));
   if (sur > 0) {
     const boy = lerp(80, 560, sur) * (1 + 0.06 * nb);
-    M.isinlar(ctx, gsx, gsy, 70 * zz, boy * zz, t, { sayi: 34, renk: '#E9B952', alfa: 0.5 * sur, kal: 2.4, hiz: 0.05, tohum: 41, titresim: 0.3 });
-    M.isinlar(ctx, gsx, gsy, 64 * zz, boy * 0.72 * zz, -t, { sayi: 22, renk: '#FFF4D8', alfa: 0.55 * sur, kal: 2.0, hiz: 0.03, tohum: 43 });
+    M.isinlar(ctx, gsx, gsy, 70 * zz * RK, boy * zz, t, { sayi: 34, renk: '#E9B952', alfa: 0.5 * sur, kal: 2.4, hiz: 0.05, tohum: 41, titresim: 0.3 });
+    M.isinlar(ctx, gsx, gsy, 64 * zz * RK, boy * 0.72 * zz, -t, { sayi: 22, renk: '#FFF4D8', alfa: 0.55 * sur, kal: 2.0, hiz: 0.03, tohum: 43 });
   }
   // adam: ayrı katmanda; göğüsten yayılan sıcak ışıkla
   const L = katman, lc = L.getContext('2d');
@@ -346,7 +347,7 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
   if (isik > 0.01) {
     lc.save();
     lc.globalCompositeOperation = 'source-atop';
-    const g = lc.createRadialGradient(gsx, gsy, 0, gsx, gsy, 300 * zz);
+    const g = lc.createRadialGradient(gsx, gsy, 0, gsx, gsy, 300 * zz * RK);
     g.addColorStop(0, `rgba(255,232,206,${Math.min(0.85, isik)})`);
     g.addColorStop(0.5, `rgba(255,224,190,${Math.min(0.5, isik * 0.45)})`);
     g.addColorStop(1, 'rgba(255,224,190,0)');
@@ -384,7 +385,7 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
     if (v > 0 && v < 1) isikHalkasi(ctx, gsx, gsy, lerp(60, 1000, ease.outCubic(v)) * zz, 130 * zz, '#FFF0D6', 0.32 * Math.pow(1 - v, 1.4), 'screen');
   }
   // göğüsteki ışık (ruh)
-  if (ruhA > 0) ruhIsigi(ctx, gsx, gsy, zz, ruhA, t, nb);
+  if (ruhA > 0) ruhIsigi(ctx, gsx, gsy, zz * RK, ruhA, t, nb);
   // ışık zerreleri (süruru izler)
   if (sur > 0) M.parcaciklar(ctx, gsx - 420, gsy - 700, 840, 900, t, { sayi: 26, renk: '#FFF0C8', boy: 3, alfa: 0.75 * sur, hiz: 30, tohum: 23 });
 }

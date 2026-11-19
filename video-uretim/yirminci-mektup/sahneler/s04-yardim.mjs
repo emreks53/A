@@ -229,6 +229,10 @@ function onParcalar(olcek) {
   if (parcalar.has(k)) return parcalar.get(k);
   const P = {};
   P.uyluk = parca('on-uyluk', kapsul(17.5, OLCU.uyluk, 13.5), R('pantolon'), olcek, { kontur: kapsulKontur(17.5, OLCU.uyluk, 13.5) });
+  P.baldir = parca('on-baldir', svg(`M-13.5 0A13.5 13.5 0 0 1 13.5 0L11.5 ${OLCU.baldir}L-11.5 ${OLCU.baldir}Z`), R('pantolon'), olcek, {
+    kontur: svg(`M13.5 0L11.5 ${OLCU.baldir}L-11.5 ${OLCU.baldir}L-13.5 0`).map((p) => ({ ...p, kapali: false })),
+  });
+  P.ayak = parca('on-ayak', svg('M-12 -6C-12 -12 12 -12 12 -6L14 8C14 13 -14 13 -14 8Z'), R('ayakkabi'), olcek, { yon: 0, aralik: 2.8, boy: [8, 18] });
   P.kol = parca('on-kol', kapsul(12.5, OLCU.kol, 10), R('gomlek'), olcek, { kontur: svg(`M-12.5 0A12.5 12.5 0 0 1 12.5 0L10 ${OLCU.kol}A10 10 0 0 1 -10 ${OLCU.kol}L-12.5 0`).map((p) => ({ ...p, kapali: false })) });
   P.onkol = parca('on-onkol', svg(`M-10 0A10 10 0 0 1 10 0L9 ${OLCU.onkol}L-9 ${OLCU.onkol}Z`), R('gomlek'), olcek, {
     kontur: svg(`M10 0L9 ${OLCU.onkol}L-9 ${OLCU.onkol}L-10 0`).map((p) => ({ ...p, kapali: false })),
@@ -249,7 +253,7 @@ function onParcalar(olcek) {
 export function insanHazirla(olcek) { onParcalar(olcek); }
 
 /**
- * Önden büyük plan erkek (bel altı çayırın arkasında kalır; bacaklar çizilmez, yalnız kalça ve uyluk başı).
+ * Önden büyük plan erkek, tam boy (ayaklar çayırın otları arasında yere basar).
  * poz: ON_DURUS alanları + basKalk -0.3..1 (çene hafifçe yukarı: saç bandı incelir, kulaklar iner, boyun uzar;
  * eksi: baş hafifçe öne eğik), nefes (birim: omuzlar yükselir, gövde hafifçe uzar), gogus 0..1 (nefeste göğüs ve
  * omuzlar hafifçe genişler), bilek [sol, sağ] (elin ön kola göre gecikme dönüşü, rad).
@@ -267,9 +271,17 @@ export function insanOnBuyuk(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 3, alfa
   ctx.rotate(p.govde * 0.3);
   ctx.globalAlpha *= alfa;
   const ky = -OLCU.kalca;
-  // uyluk başları (çayırın arkasında kalır)
-  for (const yon of [-1, 1]) ogeCiz(ctx, P.uyluk, yon * 15, ky, { r: yon * 0.05 });
   ogeCiz(ctx, P.kalca, 0, ky);
+  // bacaklar: tam boy (ayaklar çayırın otları arasında yere basar)
+  for (const yon of [-1, 1]) {
+    const a = -yon * 0.05;
+    const hx = yon * 15, hy = ky;
+    const diz = [hx + Math.sin(a) * OLCU.uyluk, hy + Math.cos(a) * OLCU.uyluk];
+    const bil = [diz[0] + Math.sin(a * 0.4) * OLCU.baldir, diz[1] + Math.cos(a * 0.4) * OLCU.baldir];
+    ogeCiz(ctx, P.uyluk, hx, hy, { r: -a });
+    ogeCiz(ctx, P.ayak, bil[0] + yon * 3, bil[1] + 1);
+    ogeCiz(ctx, P.baldir, diz[0], diz[1], { r: -a * 0.4 });
+  }
   const omuzY = ky - OLCU.govde - nef;
   const kolGeo = (yon, i) => {
     const a1 = yon * p.kol[i];
