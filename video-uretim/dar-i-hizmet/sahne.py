@@ -409,11 +409,15 @@ def ciz_bahce(V, cam: Kamera, evre=None, kapi_icinde=False):
     t.lavi(yol_dikdortgen(-2000, UFUK - 6, 3000, 4000), M, zemin_renk, yog=0.5, kenar=2.0, dalga=0.14, islak=0.4,
            islak_gen=9, gran=0.12, akis=0.15, tohum=12)
 
+    # --- fırtına pusu: uzak katmanlara (kubbe, tepeler, gök) lavanta-gri bir sır; öndekiler saklı ---
+    if s['koyuluk'] > 0.02:
+        t.lavi(yol_dikdortgen(-3000, -6000, 4000, UFUK + 8), Mu, '#8E8AA6', yog=0.30 * s['koyuluk'], kenar=6,
+               dalga=0.0, islak=0.0, gran=0.0, akis=0.15, yumusak=10, tohum=77)
+
     # --- uzak: kubbe, ağaç sırası, tepeler ---
     if s['kubbe'] > 0.01:
         Mk = mt.ufuk_M(cam, 0.45, UFUK) @ M_yerlestir(890, UFUK + 4, 0.36)
-        with t.gorunurluk(1.0 - 0.45 * s['koyuluk'], acilma_radyal(s['kubbe'], 0, -300, 900, dalga=0.2, tohum=11),
-                          M=Mk):
+        with t.gorunurluk(1.0, acilma_radyal(s['kubbe'], 0, -300, 900, dalga=0.2, tohum=11), M=Mk):
             mimari.ciz_kubbe_cami(t, Mk, nur=0.5 * s['kubbe'], tohum=2)
     el.uzak_agac_sirasi(t, Mu, -900, 2000, UFUK + 4, yuk=46, renk_=el.karistir('#A5B8B0', '#8F8DA3',
                                                                                s['koyuluk'] * 0.6), yog=0.42,
