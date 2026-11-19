@@ -18,7 +18,7 @@ export const TL = {
   rug: { spill: 21.27, roll: [21.33, 21.40], unroll: [21.43, 21.93], glow: [21.73, 21.80], flick: [21.90, 21.97] },
   coin: { show: [22.00, 22.17], tick: 22.17, swing: 22.20, back: 22.30, release: 22.43, follow: 22.57, niche: 22.87, sunk: 22.97 },
   links: { bloom: 22.90, bloomEnd: 23.10, door: 23.07, far: 23.23 },     // the three answers, 5 frames apart (687 / 692 / 697)
-  cover: [23.40, 23.50, 23.60, 23.70, 23.80],   // the covered share of each pass: light.js (COVER_P)
+  cover: [23.90, 24.00, 24.10, 24.20, 24.30],   // the covered share of each pass: light.js (COVER_P)
 };
 
 export function makeUtil(E, W) {

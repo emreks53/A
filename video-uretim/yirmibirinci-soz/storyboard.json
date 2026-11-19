@@ -1769,9 +1769,9 @@
   },
   "ACT2_TAIL": {
    "cx": 790,
-   "cy": 978.0,
-   "zoom": 1.0809,
-   "use": "Where the slow push arrives at 24.00, under the cream cover (last key of the path).",
+   "cy": 979.9565,
+   "zoom": 1.089693,
+   "use": "Where the slow push arrives at 24.50, under the cream cover (last key of the path; moved from 24.00 with the lead's last hold, same rate).",
    "derived_screen_px": {
     "man_x": 270,
     "man_head_top_y": 616,
@@ -1872,7 +1872,7 @@
     "ease": "hold"
    },
    {
-    "t": 24.0,
+    "t": 24.5,
     "framing": "ACT2_TAIL",
     "ease": "inThenLinear(1.0 s)"
    }

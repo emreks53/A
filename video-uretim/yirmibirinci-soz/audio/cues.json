@@ -1,19 +1,18 @@
 {
- "_comment": "Cue sheet v2: storyboard cues (revision 2) lifted +4 dB, duck 4 dB, end-card cues from src/acts/endcard.js timings.",
- "duration": 29.6,
+ "_comment": "Cue sheet v3: after the film review (far light 16.97, lid 18.77, links, last hold +0.5 s: cover 23.90-24.30, end card +0.5 s; film 30.1 s).",
+ "duration": 30.1,
  "voice": "voice_trim.wav",
  "cues": [
   {
-   "t": 0.07,
+   "t": 0.1,
    "sound": "dab_flurry",
    "gain_db": 2.0,
    "pan": 0.0,
    "params": {
-    "n": 4,
+    "n": 3,
     "times": [
-     0,
-     0.06,
-     0.13,
+     0.0,
+     0.1,
      0.2
     ],
     "seed": 101
@@ -127,6 +126,37 @@
    "note": "b08_hakiki_omrunu: flowers open: three soft pops, one per step"
   },
   {
+   "t": 11.53,
+   "sound": "shimmer",
+   "gain_db": 0.0,
+   "pan": 0.0,
+   "params": {
+    "duration": 0.7,
+    "brightness": 0.45,
+    "peak": 0.35,
+    "seed": 151
+   },
+   "note": "«bil»: the lit rise answers once (11.53-11.73)"
+  },
+  {
+   "t": 11.9,
+   "sound": "dab_flurry",
+   "gain_db": -1.0,
+   "pan": 0.0,
+   "params": {
+    "n": 4,
+    "times": [
+     0.0,
+     0.0667,
+     0.1333,
+     0.2
+    ],
+    "seed": 152,
+    "fall_db": 4.0
+   },
+   "note": "blaze settles + cobalt annulus 11.90-12.10"
+  },
+  {
    "t": 12.93,
    "sound": "pop_flurry",
    "gain_db": -1.0,
@@ -183,7 +213,7 @@
    "note": "b12_hakiki_istikbal: pull back and turn to the right (peak at the middle of the move)"
   },
   {
-   "t": 17.07,
+   "t": 16.97,
    "sound": "shimmer",
    "gain_db": 5.0,
    "pan": 0.3,
@@ -194,7 +224,7 @@
    "note": "b12_hakiki_istikbal: the true future (peak on the brightest pass)"
   },
   {
-   "t": 18.83,
+   "t": 18.77,
    "sound": "wood_knock",
    "gain_db": 5.0,
    "pan": 0.3,
@@ -245,13 +275,26 @@
    "pan": 0.0,
    "align": "start",
    "params": {
-    "duration": 6.6,
+    "duration": 7.1,
     "seed": 122
    },
    "note": "end-card air"
   },
   {
-   "t": 23.85,
+   "t": 23.23,
+   "sound": "shimmer",
+   "gain_db": 2.0,
+   "pan": 0.25,
+   "params": {
+    "duration": 1.1,
+    "brightness": 0.5,
+    "peak": 0.45,
+    "seed": 153
+   },
+   "note": "LINK 3: the far light swells (the hour has reached the true future)"
+  },
+  {
+   "t": 24.35,
    "sound": "rise",
    "gain_db": 4.0,
    "pan": 0.2,
@@ -262,7 +305,7 @@
    "note": "cream cover grows out of the far light (peak inside the cover)"
   },
   {
-   "t": 25.05,
+   "t": 25.55,
    "sound": "shimmer",
    "gain_db": 1.0,
    "pan": 0.0,
@@ -274,7 +317,7 @@
    "note": "end card: warm light on the Qur'an eases on (24.5-25.5)"
   },
   {
-   "t": 25.3,
+   "t": 25.8,
    "sound": "dab",
    "gain_db": -1.0,
    "pan": 0.0,
@@ -285,7 +328,7 @@
    "note": "end card: 'Risale-i Nur'"
   },
   {
-   "t": 25.767,
+   "t": 26.267,
    "sound": "dab",
    "gain_db": 1.0,
    "pan": -0.1,
@@ -296,7 +339,7 @@
    "note": "end card: 'Sözler' + accent light"
   },
   {
-   "t": 26.233,
+   "t": 26.733,
    "sound": "dab",
    "gain_db": -1.0,
    "pan": 0.05,
@@ -307,7 +350,7 @@
    "note": "end card: 'Yirmi Birinci Söz'"
   },
   {
-   "t": 26.667,
+   "t": 27.167,
    "sound": "dab",
    "gain_db": -1.0,
    "pan": 0.0,

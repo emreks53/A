@@ -1,7 +1,7 @@
 {
  "warnings": [
-  "cue 17 (dab_flurry @ 19.97 s): peak -13.4 dBFS exceeds the cap, trimmed -0.9 dB",
-  "cue 19 (coin_drop_in @ 22.87 s): peak -14.0 dBFS exceeds the cap, trimmed -0.3 dB"
+  "cue 19 (dab_flurry @ 19.97 s): peak -13.4 dBFS exceeds the cap, trimmed -0.9 dB",
+  "cue 21 (coin_drop_in @ 22.87 s): peak -14.0 dBFS exceeds the cap, trimmed -0.3 dB"
  ],
  "notes": [],
  "voice_in_lufs": -15.30908265505818,
@@ -14,11 +14,11 @@
  "cues": [
   {
    "i": 0,
-   "t": 0.07,
+   "t": 0.1,
    "sound": "dab_flurry",
    "gain_db": 2.0,
-   "start": 0.062,
-   "end": 0.33466666666666667,
+   "start": 0.092,
+   "end": 0.36139583333333336,
    "anchor": 0.008,
    "peak_db": -15.738131980416629,
    "trim_db": 0.0
@@ -124,6 +124,28 @@
   },
   {
    "i": 10,
+   "t": 11.53,
+   "sound": "shimmer",
+   "gain_db": 0.0,
+   "start": 11.285,
+   "end": 11.985,
+   "anchor": 0.24499999999999997,
+   "peak_db": -32.09822178980157,
+   "trim_db": 0.0
+  },
+  {
+   "i": 11,
+   "t": 11.9,
+   "sound": "dab_flurry",
+   "gain_db": -1.0,
+   "start": 11.892,
+   "end": 12.160104166666667,
+   "anchor": 0.008,
+   "peak_db": -16.46235559223085,
+   "trim_db": 0.0
+  },
+  {
+   "i": 12,
    "t": 12.93,
    "sound": "pop_flurry",
    "gain_db": -1.0,
@@ -134,7 +156,7 @@
    "trim_db": 0.0
   },
   {
-   "i": 11,
+   "i": 13,
    "t": 13.97,
    "sound": "pop",
    "gain_db": 5.0,
@@ -145,7 +167,7 @@
    "trim_db": 0.0
   },
   {
-   "i": 12,
+   "i": 14,
    "t": 15.37,
    "sound": "coin_land",
    "gain_db": 5.0,
@@ -156,7 +178,7 @@
    "trim_db": 0.0
   },
   {
-   "i": 13,
+   "i": 15,
    "t": 15.42,
    "sound": "coin_ting",
    "gain_db": 2.0,
@@ -167,7 +189,7 @@
    "trim_db": 0.0
   },
   {
-   "i": 14,
+   "i": 16,
    "t": 16.33,
    "sound": "whoosh",
    "gain_db": 2.0,
@@ -178,29 +200,29 @@
    "trim_db": 0.0
   },
   {
-   "i": 15,
-   "t": 17.07,
+   "i": 17,
+   "t": 16.97,
    "sound": "shimmer",
    "gain_db": 5.0,
-   "start": 16.17,
-   "end": 17.67,
+   "start": 16.07,
+   "end": 17.57,
    "anchor": 0.8999999999999999,
    "peak_db": -26.224135064546637,
    "trim_db": 0.0
   },
   {
-   "i": 16,
-   "t": 18.83,
+   "i": 18,
+   "t": 18.77,
    "sound": "wood_knock",
    "gain_db": 5.0,
-   "start": 18.825,
-   "end": 19.047,
+   "start": 18.765,
+   "end": 18.987,
    "anchor": 0.005,
    "peak_db": -14.311489900814763,
    "trim_db": 0.0
   },
   {
-   "i": 17,
+   "i": 19,
    "t": 19.97,
    "sound": "dab_flurry",
    "gain_db": 2.0,
@@ -211,7 +233,7 @@
    "trim_db": -0.8602940179931835
   },
   {
-   "i": 18,
+   "i": 20,
    "t": 21.93,
    "sound": "cloth_unroll",
    "gain_db": 4.0,
@@ -222,7 +244,7 @@
    "trim_db": 0.0
   },
   {
-   "i": 19,
+   "i": 21,
    "t": 22.87,
    "sound": "coin_drop_in",
    "gain_db": 6.0,
@@ -233,78 +255,89 @@
    "trim_db": -0.26477685412526597
   },
   {
-   "i": 20,
+   "i": 22,
    "t": 23.0,
    "sound": "room_tone",
    "gain_db": 3.0,
    "start": 23.0,
-   "end": 29.6,
+   "end": 30.1,
    "anchor": 0.0,
-   "peak_db": -43.25278601039795,
+   "peak_db": -44.68709829856699,
    "trim_db": 0.0
   },
   {
-   "i": 21,
-   "t": 23.85,
+   "i": 23,
+   "t": 23.23,
+   "sound": "shimmer",
+   "gain_db": 2.0,
+   "start": 22.735,
+   "end": 23.835,
+   "anchor": 0.49500000000000005,
+   "peak_db": -29.377400456726278,
+   "trim_db": 0.0
+  },
+  {
+   "i": 24,
+   "t": 24.35,
    "sound": "rise",
    "gain_db": 4.0,
-   "start": 22.66,
-   "end": 24.36,
+   "start": 23.16,
+   "end": 24.86,
    "anchor": 1.19,
    "peak_db": -18.860908032323618,
    "trim_db": 0.0
   },
   {
-   "i": 22,
-   "t": 25.05,
+   "i": 25,
+   "t": 25.55,
    "sound": "shimmer",
    "gain_db": 1.0,
-   "start": 24.15,
-   "end": 25.65,
+   "start": 24.65,
+   "end": 26.15,
    "anchor": 0.8999999999999999,
    "peak_db": -31.057458719650732,
    "trim_db": 0.0
   },
   {
-   "i": 23,
-   "t": 25.3,
+   "i": 26,
+   "t": 25.8,
    "sound": "dab",
    "gain_db": -1.0,
-   "start": 25.292,
-   "end": 25.387875,
+   "start": 25.792,
+   "end": 25.887875,
    "anchor": 0.008,
    "peak_db": -18.493491386275736,
    "trim_db": 0.0
   },
   {
-   "i": 24,
-   "t": 25.767,
+   "i": 27,
+   "t": 26.267,
    "sound": "dab",
    "gain_db": 1.0,
-   "start": 25.759,
-   "end": 25.824708333333334,
+   "start": 26.259,
+   "end": 26.324708333333334,
    "anchor": 0.008,
    "peak_db": -16.705218524424836,
    "trim_db": 0.0
   },
   {
-   "i": 25,
-   "t": 26.233,
+   "i": 28,
+   "t": 26.733,
    "sound": "dab",
    "gain_db": -1.0,
-   "start": 26.225,
-   "end": 26.315208333333334,
+   "start": 26.725,
+   "end": 26.815208333333334,
    "anchor": 0.008,
    "peak_db": -20.205296894151292,
    "trim_db": 0.0
   },
   {
-   "i": 26,
-   "t": 26.667,
+   "i": 29,
+   "t": 27.167,
    "sound": "dab",
    "gain_db": -1.0,
-   "start": 26.659,
-   "end": 26.743145833333333,
+   "start": 27.159,
+   "end": 27.243145833333333,
    "anchor": 0.008,
    "peak_db": -19.866661089737722,
    "trim_db": 0.0
@@ -313,9 +346,9 @@
  "st_ceiling_reduction_db": 0.0,
  "sfx_limiter_db": 0.0,
  "final_limiter_db": 0.0,
- "duration": 29.6,
- "samples": 1420800,
- "n_cues": 27,
+ "duration": 30.1,
+ "samples": 1444800,
+ "n_cues": 30,
  "speech_seconds": 17.234,
  "speech_segments": [
   [
@@ -359,21 +392,21 @@
    22.772
   ]
  ],
- "sfx_lufs_gated": -37.10525573273538,
- "sfx_lufs_whole": -40.250743454130486,
- "sfx_lufs_speech": -43.93147907457653,
- "sfx_lufs_pauses": -40.154746760164564,
- "sfx_st_max_speech": -33.87056022163553,
- "sfx_st_max_any": -33.581455064745555,
+ "sfx_lufs_gated": -37.17777244964354,
+ "sfx_lufs_whole": -40.02437896346953,
+ "sfx_lufs_speech": -43.87273984815702,
+ "sfx_lufs_pauses": -39.2528066984964,
+ "sfx_st_max_speech": -33.71512600794304,
+ "sfx_st_max_any": -33.66260187486696,
  "sfx_st_ceiling": -29.999999999999957,
- "sfx_mom_max": -29.254728026067223,
+ "sfx_mom_max": -29.23253402557805,
  "sfx_peak": -14.975205595223784,
  "sfx_tp": -14.837696367158077,
  "duck_mean_speech_db": -3.99904033398865,
  "duck_mean_pause_db": -1.4055333046887664,
  "duck_min_db": -3.999999999999998,
  "duck_max_step_db": 0.006616863520928273,
- "mix_lufs": -15.991059174764672,
+ "mix_lufs": -15.99149026312312,
  "mix_tp": -1.8478986417387344,
  "mix_peak": -1.8593446080005394
 }

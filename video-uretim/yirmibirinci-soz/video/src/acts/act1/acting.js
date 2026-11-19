@@ -117,7 +117,7 @@ export function makeActing(E, W) {
     // 0.43–0.67 the hand goes to his chest in 7 frames and lands flat (slight overshoot)
     k(13, B()), k(20, armOnly('R', chest), arrive(0.03, 0.8)),
     // 1.30–1.47 it leaves the chest and falls back to his side
-    k(38, armOnly('R', chest)), k(44, B(), e.sine.inOut),
+    k(35, armOnly('R', chest)), k(41, B(), e.sine.inOut),   // at rest before the turn begins on frame 43 (film review)
     // 5.37–5.63 the forearm rises, turning palm up: a 2-frame dip first, 7 % overshoot, settled 5.63
     k(157, B()), k(160, armOnly('R', swing(-3, -6)), e.sine.inOut), k(168, palmUp, arrive(0.06, 0.78)),
     // 6.57–6.80 the fingers curl over the empty palm

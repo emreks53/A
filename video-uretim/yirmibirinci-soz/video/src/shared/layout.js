@@ -32,14 +32,14 @@ const TIMELINE = {
   },
   sun: {
     disc: 8.77, bare: 9.17, halo: [9.57, 9.67, 9.77],
-    settle: [11.90, 11.97, 12.03, 12.10], recede: [16.83, 16.93],
+    settle: [11.90, 11.97, 12.03, 12.10], recede: [16.83, 16.90],
   },
   column: { on: [9.87, 9.97, 10.07] },          // leaves with sun.settle
   mound: { lit: 10.07 },
-  film: { acts: 12.20, cover: 23.40, plate: 23.80, end2d: 24.00 },
+  film: { acts: 12.20, cover: 23.90, plate: 24.30, end2d: 24.50 },
 };
 /** Times that the critics round moved on purpose (not in the storyboard's prose timeline): no warning for these. */
-const RETIMED = new Set(['6.93', '0.00']);
+const RETIMED = new Set(['6.93', '0.00', '16.90']);
 
 const num = (s) => (String(s).match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
 

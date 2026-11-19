@@ -30,7 +30,8 @@ import { makeBuilding } from './act2/build.js';
 import { makeRug } from './act2/rug.js';
 
 export default {
-  id: 'act2', from: 12.2, to: 23.8,
+  id: 'act2', from: 12.2, to: 24.3,   // +0.5 s: the lead's last hold (cover 23.90–24.30)
+ 
 
   async init(E, W) {
     const U = makeUtil(E, W);

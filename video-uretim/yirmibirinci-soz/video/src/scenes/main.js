@@ -15,23 +15,19 @@ const KEEP = 1.0;     // s: … and released once t is further than this from it
 const EPS = 1e-6;
 
 // THE LAST HOLD (lead, after the film review): the film's final picture — the hour placed in the niche, the
-// three links answering — had no time to rest before the cream cover. Output time is stretched between the
-// coin's landing (22.97) and the cover's first pass (23.40) by HOLD.add seconds: film time runs slower there
-// (C1, speed 1 at both ends), so the arm sinks more slowly, the links are spaced out and the tableau settles;
-// from 23.40 + add everything (cover, end card) simply runs HOLD.add later on its own unchanged clock.
-// HOLD.add must be a whole number of frames; 0 switches the stretch off.
-export const HOLD = { a: 22.97, b: 23.40, add: 0 / 30 };
-export function filmTime(T) {
-  const { a, b, add } = HOLD, B = b + add;
-  if (add <= 0 || T <= a) return T;
-  if (T >= B) return T - add;
-  const u = (T - a) / (B - a), m = (B - a) / (b - a), u2 = u * u, u3 = u2 * u;   // Hermite, slopes m (= real speed 1)
-  return a + (b - a) * ((u3 - 2 * u2 + u) * m + (3 * u2 - 2 * u3) + (u3 - u2) * m);
-}
+// three links answering, his arm at rest — had no time to rest before the cream cover. Act 2 now runs 0.5 s
+// longer: its cover starts at 23.90 instead of 23.40 (src/acts/act2/util.js TL.cover) and act 2 ends at 24.30,
+// while the living tableau simply goes on. The end card keeps its OWN unchanged clock (23.80–29.60): the
+// scene shows it CARD_SHIFT seconds later. The film is 30.10 s long.
+const FPS = 30;
+export const CARD_SHIFT = Math.round((acts[acts.length - 1].to - endcard.from) * FPS) / FPS;   // 0.5 s (15 frames)
+// (kept for tools that import them; the time stretch that was tried first is switched off)
+export const HOLD = { a: 22.97, b: 23.40, add: 0 };
+export function filmTime(T) { return T; }
 
 export default {
   id: 'main',
-  duration: 29.6 + HOLD.add,
+  duration: endcard.to + CARD_SHIFT,
   finish: false,       // the scene applies E.finish itself (the end card does its own)
   glosses: true,       // replaced in init by the storyboard's custom list (sahipsin ends 8.35)
 
@@ -39,7 +35,7 @@ export default {
     const W = await E.once('world', () => makeWorld(E));
     this.W = W;
     this.glosses = W.layout.glossList;
-    this.endAt = W.layout.ft(endcard.from);
+    this.endAt = W.layout.ft(endcard.from + CARD_SHIFT);
     this.parts = [...acts, endcard].map((mod) => ({ mod, ready: false, slots: {} }));
     globalThis.__world = W;                              // handy in the console and for test harnesses
     await this.prepare(0, E);
@@ -47,9 +43,9 @@ export default {
 
   /** Bake the part(s) that time t needs, release the ones that are far away. Awaited before every frame. */
   async prepare(T, E) {
-    const W = this.W, t = filmTime(T);
+    const W = this.W;
     for (const p of this.parts) {
-      const { mod } = p;
+      const { mod } = p, t = mod === endcard ? T - CARD_SHIFT : T;     // the end card runs on its own clock
       const need = t >= mod.from - LEAD - EPS && t < mod.to - EPS;
       const far = t < mod.from - KEEP || t > mod.to + KEEP;
       if (need && !p.ready) {
@@ -68,9 +64,9 @@ export default {
   },
 
   draw(ctx, T, E) {
-    const W = this.W, t = filmTime(T);
+    const W = this.W, t = T;
     if (t >= this.endAt - EPS) {
-      endcard.draw(ctx, t, E, W);
+      endcard.draw(ctx, Math.round((t - CARD_SHIFT) * FPS * 1e6) / (FPS * 1e6), E, W);
       return;
     }
     const mod = actAt(t), part = this.parts.find((p) => p.mod === mod);
