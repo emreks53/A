@@ -78,6 +78,7 @@ export async function makeCard(E, opts = {}) {
   let settled = null;                // the finished text layer (identical on every frame of the hold)
 
   function textLayer(t) {
+    if (opts.noText) return null;                        // look-dev / contrast measurement only
     const te = t + 1e-7;
     if (te < Math.min(TIMELINE.on.eyebrow, TIMELINE.on.rule) - 1 / FPS) return null;
     const done = lockupSettled(te, TIMELINE.on, FPS);

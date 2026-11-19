@@ -14,7 +14,7 @@
 // it if the plates are re-rendered.
 
 const FAMILY = '"EB Garamond"';
-const IVORY = '#F3EAD7', GOLD = '#E7CE9A', RULE = '#D7B36E';
+const IVORY = '#F3EAD7', GOLD = '#EDDAAE', RULE = '#D9B872';
 const HALO = [22, 12, 6];                 // deep walnut umber
 
 // Designed on a block 800 x 322 px (x 140..940, y 1328..1650); y = baseline, px from the block top.
@@ -58,7 +58,7 @@ export const LOCKUPS = {
       { id: 'sub', text: 'Yirmi Birinci Söz', font: 'italic 500', px: 56, track: 0.012, fill: IVORY, y: 238 },
       { id: 'folio', text: '291. Sayfa', font: '500', px: 44, track: 0.07, fill: IVORY, y: 300 },
     ],
-    rule: { y: 65, half: 124, t: 2.0 },
+    rule: { y: 62, half: 124, t: 2.0 },
   },
   // E — D with a semibold hero
   E: {

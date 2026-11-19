@@ -41,7 +41,7 @@ export function makeActing(E, W, U) {
   const main = M.track([
     k(366, P.back_neutral), k(437, P.back_neutral),
     k(440, ANTIC, e.sine.inOut),                                         // 14.57–14.67 a small give (counter-move) …
-    k(449, RECV, softBack),                                              // 14.67 → palm up at chest height (720, 830): upper arm 440–449, forearm +2 f, hand +2 f (settled 15.10)
+    k(452, RECV, softBack),                                              // 14.67 → palm up at chest height (720, 830): upper arm 440–452, forearm +2 f, hand +2 f (settled 15.20, five frames before the hour lands)
     k(473, RECV), k(478, SIDE, e.sine.inOut),                            // 15.77–16.07 closes over the coin, draws it in to his side
     k(482, SIDE), k(492, SIDE_T, e.sine.inOut),                          // 16.07–16.40 turns toward the right column
     k(660, SIDE_T),
@@ -86,7 +86,7 @@ export function makeActing(E, W, U) {
   function pose(t) {
     let p = t < SHOW ? main(t) : t < SINK ? cast(t) : sink(t);
     const f = t * fps;
-    if (f >= 454 - 1e-6 && f <= 473 + 1e-6) {
+    if (f >= 457 - 1e-6 && f <= 473 + 1e-6) {
       // the hour on his palm: solve the arm on the giving palm (15.37: 9 px down, recovered by 15.60)
       const n = f - LAND;
       p = M.reach(p, 'R', [RECV_AT[0], RECV_AT[1] + (n > 0 ? dip(n) : 0)], { ...recvOpts, handAngle: recvOpts.handAngle + (n > 0 ? kf(n, [[0, 0], [2, 2.5], [6, 0]]) : 0) });

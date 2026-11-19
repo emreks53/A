@@ -217,17 +217,18 @@ export function makeBuilding(E, W, U) {
       { color: P('door_core'), coverage: 0.8, size: 24, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1.1, 0.82, dR(x, y)) },
       { color: '#FFFDF6', coverage: 0.6, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.6, 0.36, dR(x, y)) },
     ] });
+    // (state 2 keeps a rim of gold inside the maroon frame: a door bleached to the wall's ivory stops reading as light)
     a.glow2 = tex(R_DOOR, { seed: 2153, layers: [
-      { color: P('door_core'), coverage: 0.84, size: 22, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1.5, 1.1, dR(x, y)) },
-      { color: '#FFFDF6', coverage: 0.84, size: 20, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.94, 0.66, dR(x, y)) },
+      { color: P('door_core'), coverage: 0.84, size: 20, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1.16, 0.96, dR(x, y)) },
+      { color: '#FFFDF6', coverage: 0.84, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(0.82, 0.6, dR(x, y)) },
     ] });
     // a few warm dabs on the stone round the arch (state 2) — the doorway's own light, no rays
     a.doorHalo = E.makeCluster({
       w: 150, h: 150, seed: 2154, anchor: [75, 110], edgeSoftness: 0.8,
       shapeFn: (x, y) => { const d = Math.hypot((x - 75) / 62, (y - 86) / 76); return clamp(Math.min((d - 0.5) / 0.2, (1.06 - d) / 0.3)) * ss(134, 112, y); },
       layers: [
-        { color: P('door_glow'), coverage: 0.34, size: 20, stamps: 'body', pores: 0.3, patch: { scale: 40, amount: 0.4 } },
-        { color: P('door_core'), coverage: 0.2, size: 13, stamps: 'open' },
+        { color: P('door_glow'), coverage: 0.5, size: 20, stamps: 'body', pores: 0.3, patch: { scale: 40, amount: 0.3 } },
+        { color: P('door_core'), coverage: 0.24, size: 13, stamps: 'open' },
       ],
       reveal: { steps: 1 },
     });
@@ -372,6 +373,8 @@ export function makeBuilding(E, W, U) {
     cutBy(ctx, bodyShape, A.stone, R_STONE, { p: cp, edge: stoneEdge, bleed: cp >= 1 ? { color: '#B9A2A4', amount: 0.7 } : null });
     // lock plate -> doorway
     const frameS = archAt(e2, lerp(0, DOOR.frame_px, clamp(e2))), innerS = archAt(e2);
+    // LINK 2: the doorway's own light on the stone round the arch — printed UNDER the maroon frame, which stays whole
+    if (cp >= 1 && doorLevel(t) >= 2) A.doorHalo.draw(ctx, cx, DOOR.y1);
     cutBy(ctx, frameS, A.frame, R_DOOR, { p: cp });
     if (cp < 1) cutBy(ctx, innerS, A.plateTex, R_DOOR, { edge: PLATE_EDGE });
     cutBy(ctx, innerS, A.glow, R_DOOR, { p: cp });
@@ -383,7 +386,6 @@ export function makeBuilding(E, W, U) {
       ctx.clip(innerS.path);
       A.core.draw(ctx, cx, DOOR.y1 - 44, { scale: (1 + 0.1 * lvl) * (1 + 0.07 * Math.sin((t - ft(m.rest)) * 2.2)) });
       ctx.restore();
-      if (lvl >= 2) A.doorHalo.draw(ctx, cx, DOOR.y1);
     }
     // lid -> dome
     const capS = shape.polygon(capPts(e1, baseY));
