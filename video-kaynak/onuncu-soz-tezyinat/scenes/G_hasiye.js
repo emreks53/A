@@ -26,7 +26,9 @@
  *   14 px walnut, spreading out from the frame), evening falls, the niche dissolves into H's own shop (H's draw,
  *   read back without its kafes and ghosts); camera eases back 1.1→1.0 then accelerates through the window,
  *   meeting H's kafes star exactly (R, speed) at 37.70; the ghosts fly onto H's shelf slots as H's own ghost
- *   drawings. From 37.70 G draws H (gecisler: cut at 37.70 between identical frames).
+ *   drawings (G's drawing dissolves into H's over the whole flight, ≥0.3 s). The kafes front travels out from the
+ *   star over ≈13 frames (in-out ease). H's still 37.60 frame is pre-rolled with H's own camera motion so the shop
+ *   doesn't start moving with a jolt at 37.60. From 37.70 G draws H (gecisler: cut at 37.70 between identical frames).
  *  Gloss 32.07–33.41: lower page in shadow before the zoom covers it; macro view is a circular lens field that
  *   falls off before the band + soft scrim ≤0.22 (lifts 33.6–33.95, after the gloss has gone).
  * ========================================================================== */
@@ -109,7 +111,7 @@
     ctx.save(); ctx.globalAlpha *= a;
     ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.9], [0.35, '#FFDC94', 0.42 + 0.08 * Math.sin(t * 3.1)], [1, '#FFE7B0', 0]]);
     ctx.fillRect(x - r * 4.4, y - r * 4.4, r * 8.8, r * 8.8);
-    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, lineW: r * 0.045, col: '#C69A42' }));
+    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, girih: false, glow: 0.7, lineW: r * 0.045, col: '#C69A42' }));
     ctx.restore();
   }
   function footMotes(ctx, t, x, y, a = 1) {
@@ -167,17 +169,19 @@
   }
   function endK(t) {
     return {
-      rev: P(t, 37.0, 37.42, 'outCubic'),     // kafes spreads out from the star frame over the page
+      rev: P(t, 37.0, 37.44, 'inOutSine'),    // kafes spreads out from the star frame over the page (front travels ≈13 frames)
       mk: P(t, 37.1, 37.42, 'inOutSine'),     // thin gold girih → walnut kafes (2 → 14 px)
       nk: P(t, 37.1, 37.36, 'inOutSine'),     // niche → H's shop behind the window
-      bgk: P(t, 37.14, 37.42, 'inOutSine'),   // the page behind the kafes → H's evening street
+      bgk: P(t, 37.18, 37.44, 'inOutSine'),   // the page behind the kafes → H's evening street (once the front is well out)
       fk: P(t, 37.16, 37.42, 'inOutSine'),    // gold star frame → H's walnut star frame
       ir: lerp(IR0, IR_H, P(t, 37.28, 37.52, 'inOutSine')),
       blur: lerp(0.8, 3.5, E.p(t, TH, 37.95, 'inQuad')),   // = H_numune drawLatticeFG
     };
   }
   const FLORD = { naut: 0, pom: 1, tul: 2, bf: 3, pea: 4, snow: 5 };
-  const flightStart = (i) => 37.12 + 0.035 * FLORD[ITEMS[i].k];
+  /** the flying ghost takes over from the gallery ghost at flightStart (same spot); it starts moving FL_LEAD later and
+   *  lands at FL1; G's drawing dissolves into H's over the whole flight on a TIME envelope (≥0.3 s, ≥9 frames) */
+  const flightStart = (i) => 37.06 + 0.03 * FLORD[ITEMS[i].k], FL_LEAD = 0.04;
   const H_GHOST_OF = [0, 1, 2, 4, 5, 3];     // H draws its ghosts butterfly, peacock, snowflake, tulip, nautilus, pomegranate
   const H_INDEX = [0, 1, 2, 6, 7, 5];        // H ITEMS index of each G item (H's ghost flicker phase)
   const hFlick = (iH, t) => 0.86 + 0.14 * Math.sin(t * 9 + iH * 1.7);
@@ -188,6 +192,11 @@
     return { bx: (x0 + x1) / 2, by: (y0 + y1) / 2, bs: Math.max(1, x1 - x0, y1 - y0) };
   }
   const hBoxes = new Map();
+  /** H holds its 37.60 frame and then starts its camera at full speed (log-zoom 1.03 → 1.0, outCubic over 0.28 s:
+   *  d ln z/dt = −3·ln1.03/0.28). G's still capture of that frame is pre-rolled with the same motion ramping up from
+   *  rest (scale about H's pivot (540,960), = 1 at 37.60), so the shop and the landed ghosts don't start with a jolt. */
+  const PRE_V = 3 * Math.log(1.03) / 0.28, PRE_D = 0.24;
+  function preF(t) { const u = clamp(t, TH - PRE_D, TH) - (TH - PRE_D); return Math.exp(PRE_V * (PRE_D * PRE_D - u * u) / (2 * PRE_D)); }
   /** H's frame at time tc (H holds 37.60 before its start) without its kafes layer and its ghosts (both drawn by
    *  G), plus H's ghost sprites with their exact screen placement and alpha — read from H's own draw, so G always
    *  lands on exactly what H shows. The 37.60 frame is kept; 37.60–37.70 is read live (3 frames). */
@@ -464,7 +473,7 @@
       /* ---- page ---- */
       if (!cap) { ek.bgk = 0; ek.nk = 0; }
       const pa = 1 - ek.bgk;   // at the end the page itself gives way to H's evening street behind the kafes
-      if (cap && (ek.bgk > 0 || ek.nk > 0)) ctx.drawImage(cap.bg, 0, 0, W, H);
+      if (cap && (ek.bgk > 0 || ek.nk > 0)) { const f = cap.tc > TH + 1e-6 ? 1 : preF(t); ctx.drawImage(cap.bg, 540 - 540 * f, 960 - 960 * f, W * f, H * f); }
       // (the page never shows inside the window: there the niche dissolves straight into H's shop)
       const pageClip = !!cap && ek.nk > 0;
       if (pageClip) { ctx.save(); applyCam(ctx, c); const pcl = new Path2D(); pcl.rect(-3000, -3000, 7000, 8000); pcl.addPath(starPathIR(ek.ir)); ctx.clip(pcl, 'evenodd'); ctx.setTransform(1, 0, 0, 1, 0, 0); }
@@ -731,7 +740,9 @@
         A.lattice(l, { w: (W + 700) / s, h: (H + 900) / s, cell: 78, lineW: 14 * lerp(0.26, 1, ek.mk), stroke: ek.mk >= 1 ? '#4A2E1C' : E.hexOf(E.mix('#D8B26E', '#4A2E1C', ek.mk)) });
         l.restore();
         if (ek.rev < 1) {   // spreads outward from the frame
-          const e = ek.rev, r2 = R * (0.95 + 3.9 * e), r1 = Math.max(0, r2 - R * 0.9);
+          // the front starts just inside the star's notches (nothing visible at e=0) and its opaque edge is past the
+          // farthest corner (≈1280 px) before the mask is dropped at e=1
+          const e = ek.rev, r2 = R * (0.74 + 3.3 * e), r1 = Math.max(0, r2 - R * 0.7);
           l.globalCompositeOperation = 'destination-in';
           l.fillStyle = E.rad(l, pc[0], pc[1], r1, r2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-300, -300, W + 600, H + 600);
         }
@@ -758,9 +769,10 @@
       const p0 = toScreen(c, it.x, it.y), k0 = c.z / 2;                  // G sprite: 2 px per world unit
       const C0 = [p0[0] + (gG.bx - 300) * k0, p0[1] + (gG.by - 300) * k0], S0 = gG.bs * k0;
       if (!cap) { const a = aG * (1 - P(t, 37.2, 37.5)); if (a > 0.003) { h.globalAlpha = base * a; h.setTransform(k0, 0, 0, k0, C0[0] - k0 * gG.bx, C0[1] - k0 * gG.by); h.drawImage(gG.c, 0, 0); } continue; }
-      const hg = cap.g[i], w = ez.inOutCubic(clamp((t - t0) / (FL1 - t0)));
+      const hg0 = cap.g[i], pf = cap.tc > TH + 1e-6 ? 1 : preF(t), hg = pf === 1 ? hg0 : Object.assign({}, hg0, { cx: 540 + (hg0.cx - 540) * pf, cy: 960 + (hg0.cy - 960) * pf, S: hg0.S * pf });
+      const w = ez.inOutSine(clamp((t - t0 - FL_LEAD) / (FL1 - t0 - FL_LEAD)));
       const Cx = lerp(C0[0], hg.cx, w), Cy = lerp(C0[1], hg.cy, w), Sz = Math.exp(lerp(lg(S0), lg(hg.S), w));
-      const x = sm((w - 0.2) / 0.55), aH = hg.a * hFlick(hg.iH, t) / hFlick(hg.iH, cap.tc);
+      const x = E.smoother((t - t0) / (FL1 - 0.03 - t0)), aH = hg.a * hFlick(hg.iH, t) / hFlick(hg.iH, cap.tc);
       if (x < 1) { const k = Sz / gG.bs; h.globalAlpha = base * aG * (1 - x); h.setTransform(k, 0, 0, k, Cx - k * gG.bx, Cy - k * gG.by); h.drawImage(gG.c, 0, 0); }
       if (x > 0) { const k = Sz / hg.bs; h.globalAlpha = base * Math.min(1, aH) * x; h.setTransform(k, 0, 0, k, Cx - k * hg.bx, Cy - k * hg.by); h.drawImage(hg.img, 0, 0); }
     }

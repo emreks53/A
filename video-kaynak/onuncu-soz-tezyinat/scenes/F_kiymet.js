@@ -104,7 +104,7 @@
     ctx.save(); ctx.globalAlpha *= a;
     ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.9], [0.35, '#FFDC94', 0.42 + 0.08 * Math.sin(t * 3.1)], [1, '#FFE7B0', 0]]);
     ctx.fillRect(x - r * 4.4, y - r * 4.4, r * 8.8, r * 8.8);
-    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, lineW: r * 0.045, col: '#C69A42' }));
+    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, girih: false, glow: 0.7, lineW: r * 0.045, col: '#C69A42' }));
     ctx.restore();
   }
   function footMotes(ctx, t, x, y, a = 1) {
