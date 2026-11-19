@@ -216,7 +216,7 @@ if COVER_RGB:
 # arka plandaki ciltler los isikta duruyor: ayni deri renginde okunmalari (bordo degil, cok acik asil kirmizi) icin
 # taban renk daha acik ve daha az doygun
 VOL_RGB = arg('--volcol', None)
-VOL_LIN = tuple(float(c) for c in VOL_RGB.split(',')) if VOL_RGB else (0.50, 0.050, 0.072)
+VOL_LIN = tuple(float(c) for c in VOL_RGB.split(',')) if VOL_RGB else (0.52, 0.060, 0.100)
 # varak: doygun sicak altin (#D4AF37 / #C9A24A civari okunacak sekilde); kenar (F82) tinti da altin
 KEYSIZE = arg('--keysize', 0.42, float)
 DESK_KEY = arg('--deskkey', 0.55, float)

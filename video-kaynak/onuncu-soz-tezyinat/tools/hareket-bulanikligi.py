@@ -12,10 +12,13 @@ for f in fs:
     if prev is not None and prev[0] == i - 1: diff[i] = float(np.mean(np.abs(im - prev[1])))
     prev = (i, im)
 mb = {}
+F0, F1 = 81, 2043   # B..J (A ve K Blender kareleri kendi bulanıklığını taşır, bulanıklıksız render edilir)
 for i in diff:
+    if not (F0 <= i < F1): continue
     m = max(diff.get(i, 0), diff.get(i + 1, 0))
-    # Az alt kare "hayalet kopya" üretir: ya hiç bulanıklık yok ya da bol alt kare (yumuşak geçişli)
-    if m > 14: mb[i] = int(min(32, max(16, round(m * 1.1))))
-    elif m > 10: mb[i] = 10
+    # Örtücü açısı sabit (0.5 kare) olduğundan iz uzunluğu zaten hızla orantılı; eşik düşük tutulur ki
+    # bulanıklık yavaş başlayan hareketlerde görünür bir anda "açılmasın". Alt kare sayısı hızla artar
+    # (az alt kare = hayalet kopya).
+    if m > 4: mb[i] = int(min(32, max(6, round(m * 1.6))))
 json.dump(mb, open(os.path.join(D, 'out', 'mb.json'), 'w'))
 print(len(mb), 'kare hareket bulanıklığı alacak; toplam alt kare', sum(mb.values()))
