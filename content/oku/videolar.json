@@ -105,6 +105,18 @@
       "video": "videolar/gul-ve-beka.mp4",
       "kapak": "videolar/gul-ve-beka-kapak.jpg",
       "onizleme": "videolar/gul-ve-beka-onizleme.jpg"
+    },
+    {
+      "id": "hayatin-kiymeti",
+      "baslik": "Barla Lâhikası'ndan",
+      "kitap": "Barla Lâhikası",
+      "bolum": "Yirmi Yedinci Mektub'un Üçüncü Zeyli",
+      "sayfa": 67,
+      "etiketler": ["hayat", "hizmet", "ahiret"],
+      "video": "videolar/hayatin-kiymeti.mp4",
+      "kapak": "videolar/hayatin-kiymeti-kapak.jpg",
+      "onizleme": "videolar/hayatin-kiymeti-onizleme.jpg",
+      "kunye": ["HDRI ve dokular: Poly Haven (CC0)"]
     }
   ]
 }
