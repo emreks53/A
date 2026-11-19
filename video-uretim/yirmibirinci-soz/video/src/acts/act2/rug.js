@@ -117,7 +117,7 @@ export function makeRug(E, W, U) {
     // --- the roll: madder red seen from above, darker underneath, an ivory spiral at its right end
     const RW = 2 * hw1 + 40, RT = [0, 0, RW, 64];                           // roll texture, local: centre line y = 32
     a.rollTex = E.bakeStencil({ shape: shape.rect(0, 0, RW, 64), base: '#9A382B', anchor: [0, 0], pad: 0, seed: 2410, bleed: false,
-      reveal: { steps: 2, mode: 'mask', order: 'random', dab: 50 },
+      reveal: { steps: 2, mode: 'mask', order: 'sweep', angle: 0, jitter: 0.3, dab: 60 },
       layers: [
         { color: '#7C2A22', coverage: 0.7, size: 30, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(34, 44, y) },
         { color: P('rug_field_dabs', 0), coverage: 0.7, size: 26, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(30, 20, y) * ss(4, 12, y) },

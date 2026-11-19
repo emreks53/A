@@ -76,7 +76,7 @@ export function makeBuilding(E, W, U) {
     const body0 = shape.rect(B0.x0, B0.y0, B0.x1 - B0.x0, B0.y1 - B0.y0);
     const PAD = [B0.x0 - 6, B0.y0 - 6, B0.x1 + 6, B0.y1 + 6];
     // pass 1: the wood base
-    a.body1 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2102, steps: 2, dabSize: 90, draw: (c) => cutBy(c, body0, a.wood, R_WOOD, { bleed: { color: P('chest_wood_dark'), amount: 0.8 }, edge: { color: '#5A3618', width: 5, opacity: 0.55 } }) });
+    a.body1 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2102, steps: 2, dabSize: 90, reveal: { order: 'sweep', angle: -Math.PI / 2, jitter: 0.3 }, draw: (c) => cutBy(c, body0, a.wood, R_WOOD, { bleed: { color: P('chest_wood_dark'), amount: 0.8 }, edge: { color: '#5A3618', width: 5, opacity: 0.55 } }) });
     // pass 2: dark straps with rivets
     const strap = (x, seed) => E.bakeStencil({
       shape: shape.rect(x - 10, B0.y0, 20, B0.y1 - B0.y0), base: P('chest_straps'), anchor: [0, 0], seed, bleed: false,
@@ -84,7 +84,7 @@ export function makeBuilding(E, W, U) {
       details: { print: 'solid', draw: (c) => { c.fillStyle = '#E8B040'; for (const y of [B0.y0 + 13, B0.y1 - 13]) { c.beginPath(); c.arc(x, y, 3.6, 0, 7); c.fill(); } } },
     });
     const straps = [strap(cx - 68, 2103), strap(cx + 68, 2104)];
-    a.body2 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2105, steps: 2, dabSize: 70, draw: (c) => { for (const s of straps) s.draw(c, 0, 0); } });
+    a.body2 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2105, steps: 2, dabSize: 70, reveal: { order: 'sweep', angle: -Math.PI / 2, jitter: 0.3 }, draw: (c) => { for (const s of straps) s.draw(c, 0, 0); } });
     // pass 3: light dabs on the upper right, gold corner plates
     const lights = E.bakeStencil({
       shape: body0, anchor: [0, 0], seed: 2106, bleed: false,
@@ -99,7 +99,7 @@ export function makeBuilding(E, W, U) {
         details: { print: 'solid', draw: (c) => { c.fillStyle = '#7A4614'; c.beginPath(); c.arc(x + sx * 8, y + sy * 8, 2.6, 0, 7); c.fill(); } } });
     };
     const corners = [corner(B0.x0, B0.y0, 1, 1, 2107), corner(B0.x1, B0.y0, -1, 1, 2108), corner(B0.x0, B0.y1, 1, -1, 2109), corner(B0.x1, B0.y1, -1, -1, 2110)];
-    a.body3 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2111, steps: 2, dabSize: 70, draw: (c) => { lights.draw(c, 0, 0); for (const k of corners) k.draw(c, 0, 0); } });
+    a.body3 = E.bakeSprite({ bounds: PAD, anchor: [0, 0], seed: 2111, steps: 2, dabSize: 70, reveal: { order: 'sweep', angle: -Math.PI / 2, jitter: 0.3 }, draw: (c) => { lights.draw(c, 0, 0); for (const k of corners) k.draw(c, 0, 0); } });
     // the finished body as a texture for the morph (wood rectangle + passes 2 and 3)
     a.bodyTex = E.bakeSprite({ bounds: R_WOOD, anchor: [R_WOOD[0], R_WOOD[1]], seed: 2112, draw: (c) => { a.wood.draw(c, 0, 0); a.body2.draw(c, 0, 0); a.body3.draw(c, 0, 0); } });
 

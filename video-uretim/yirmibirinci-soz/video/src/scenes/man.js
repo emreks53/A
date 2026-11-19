@@ -1,15 +1,16 @@
 // Review scene for THE MAN (src/shared/man.js). Not part of the film; labels exist only here.
-//   pages (one per second):  0-6  every POSE at world scale 1, labelled      7-11  front poses, turn frames and back
-//   poses at zoom 1.5        12 warm 0 vs 1        13-14 the hand silhouettes at zoom 1.5       15 opening dab-in passes
-//   16-22 single arm poses at zoom 1.5 (three with a test coin in the `hands` layer)
-//   ACT (from t = 23): continuous acting test through all poses in storyboard order (overlap rule, overshoot)
+//   pages (one per second):  0-6  every POSE at world scale 1, labelled      7-11  front poses, the two in-between
+//   drawings of the turn and back poses at zoom 1.5        12 warm 0 vs 1        13-14 the hand silhouettes (2.2x and at
+//   zoom 1.5)       15 opening dab-in passes       16-25 single arm poses at zoom 1.5 (some with a test coin in the
+//   `hands` layer)
+//   ACT (from t = 26): continuous acting test through all poses in storyboard order (overlap rule, overshoot)
 //
-//   node tools/render.mjs sheet --scene man --from 0.5 --to 13.5 --step 1 --cols 7 --out out/man/pages.png
+//   tools/r.sh sheet --scene man --from 0.5 --to 25.5 --step 1 --cols 9 --thumb 366 --out out/man/pages.png
 //   node tools/render.mjs still --scene man --t 5.5 --out out/man/p5.png
 
 import { makeMan } from '../shared/man.js';
 
-const ACT0 = 23;
+const ACT0 = 26;
 
 export default {
   id: 'man',
@@ -38,8 +39,8 @@ export default {
     const turn = (v) => ({ ...P.front_neutral, view: v });
     this.pages.push(
       zoom([{ label: 'front_neutral_bowed', pose: P.front_neutral_bowed }, { label: 'front_hand_on_chest', pose: P.front_hand_on_chest }]),
-      zoom([{ label: 'front head up', pose: P.front_neutral }, { label: 'turn v=0.2 / 0.4', pose: turn(0.3) }]),
-      zoom([{ label: 'turn v=0.6 / 0.8', pose: turn(0.7) }, { label: 'back_neutral', pose: P.back_neutral }]),
+      zoom([{ label: 'front_neutral', pose: P.front_neutral }, { label: 'turn 1/3: three-quarter front', pose: turn(1 / 3) }]),
+      zoom([{ label: 'turn 2/3: three-quarter back', pose: turn(2 / 3) }, { label: 'back_neutral', pose: P.back_neutral }]),
       zoom([{ label: 'back_head_bowed 8', pose: P.back_head_bowed_to_ground }, { label: 'back_turned_right', pose: P.back_turned_right }]),
       zoom([{ label: 'back_head_up 5', pose: P.back_head_up_small }, { label: 'back_final_stand', pose: P.back_final_stand }]),
       zoom([{ label: 'warm 0', pose: P.back_neutral, warm: 0 }, { label: 'warm 1', pose: P.back_neutral, warm: 1 }]),
@@ -49,7 +50,8 @@ export default {
       // single poses at zoom 1.5: joints, hands and foreshortened arms at the largest scale of the film
       // (a test coin shows the `hands` layer: 'rest' = standing on the palm, 'palm' = in the half-closed hand, 'front' = drawn after him)
       ...[['back_left_arm_out_palm_up', 660], ['back_right_palm_up', 470], ['back_right_reach', 400], ['back_right_palm_receive', 470, 'rest'],
-        ['back_coin_held_at_side', 480, 'palm'], ['back_coin_shown', 480, 'front'], ['back_follow_through', 440]]
+        ['back_coin_held_at_side', 480, 'palm'], ['back_coin_shown', 480, 'front'], ['back_follow_through', 440],
+        ['back_turned_right', 480], ['back_wind_up', 480, 'front'], ['back_left_reach_after', 660]]
         .map(([n, x, coin]) => zoom([{ label: n + (coin ? `  (coin: ${coin})` : ''), pose: P[n], x, lx: 540, coin }])),
     );
 
@@ -142,17 +144,18 @@ export default {
     } else if (pg.kind === 'hands') {
       // the four silhouettes against sky: one row at 3x for inspection, then at zoom 1.5 pointing outward / down / up
       // (upper of each pair: screen-right arm, warm 0; lower: screen-left arm, warm 1)
+      const N = man.HAND_SHAPES.length, dx = 1010 / N;
       man.HAND_SHAPES.forEach((h, i) => {
-        const x = 110 + i * 262;
-        man.drawHand(ctx, h, x, 330, { angle: 95, flip: pg.flip, side: 1, scale: 3 });
+        const x = 46 + i * dx;
+        man.drawHand(ctx, h, x, 330, { angle: 95, flip: pg.flip, side: 1, scale: 2.2 });
         [95, 10, 160].forEach((ang, j) => {
           const y = 640 + j * 400;
-          man.drawHand(ctx, h, x + 30, y, { angle: ang, flip: pg.flip, side: 1, scale: 1.5 });
-          man.drawHand(ctx, h, x + 150, y + 170, { angle: ang, flip: pg.flip, side: -1, scale: 1.5, warm: 1 });
+          man.drawHand(ctx, h, x + 12, y, { angle: ang, flip: pg.flip, side: 1, scale: 1.5 });
+          man.drawHand(ctx, h, x + 116, y + 170, { angle: ang, flip: pg.flip, side: -1, scale: 1.5, warm: 1 });
         });
-        this.label(ctx, `${h}  flip ${pg.flip}`, 150 + i * 262, 140, 26);
+        this.label(ctx, h, x + 60, 150, 26);
       });
-      this.label(ctx, 'top row 3x; below: zoom 1.5, pointing outward (95) / down (10) / up (160)', 540, 1840, 22);
+      this.label(ctx, `flip ${pg.flip}:  top row 2.2x; below: zoom 1.5, pointing outward (95) / down (10) / up (160)`, 540, 1840, 22);
     } else if (pg.kind === 'passes') {
       const cam = { x: 540, y: 900, zoom: 1.5, rot: 0 };
       E.withCamera(ctx, cam, 1, () => {

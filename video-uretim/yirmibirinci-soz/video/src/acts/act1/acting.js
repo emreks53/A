@@ -110,11 +110,11 @@ export function makeActing(E, W) {
   const armR = channel('R', [
     k(0, B()),
     // 0.43–0.67 the hand goes to his chest in 7 frames and lands flat (slight overshoot)
-    k(13, B()), k(19, armOnly('R', chest), arrive(0.03, 0.8)),
+    k(13, B()), k(20, armOnly('R', chest), arrive(0.03, 0.8)),
     // 1.30–1.47 it leaves the chest and falls back to his side
-    k(39, armOnly('R', chest)), k(43, B(), e.sine.inOut),
+    k(38, armOnly('R', chest)), k(44, B(), e.sine.inOut),
     // 5.37–5.63 the forearm rises, turning palm up: a 2-frame dip first, 7 % overshoot, settled 5.63
-    k(157, B()), k(160, armOnly('R', swing(-3, -6)), e.sine.inOut), k(167, palmUp, arrive(0.06, 0.76)),
+    k(157, B()), k(160, armOnly('R', swing(-3, -6)), e.sine.inOut), k(168, palmUp, arrive(0.06, 0.78)),
     // 6.57–6.80 the fingers curl over the empty palm
     k(197, palmUp), k(203, palmLook, e.sine.inOut),
     // 6.83–7.07 he stretches toward the ring (the elbow draws in first) and STOPS at (784, 896)
@@ -132,14 +132,17 @@ export function makeActing(E, W) {
   // his LEFT arm
   const sunPalm = L.yesterday.left_palm;                                                  // (270, 772)
   const out = reach('L', sunPalm, { hand: 'cupped', handAngle: 95 }, { sh: -3 });
-  const after = reach('L', [sunPalm[0], sunPalm[1] + 28], { hand: 'open', handAngle: 62, flip: 1 }, { sh: -5, lean: -0.9 });   // follows it down 28 px
-  const closedL = reach('L', [sunPalm[0] + 3, sunPalm[1] + 31], { hand: 'closed', handAngle: 66, flip: 1 }, { sh: -5, lean: -0.9 });
+  // The course of the days runs right past this hand (dots k = 6 at (234, 815) and k = 7 at (255, 753)): the hand
+  // that follows the sun down 25 px also draws 22 px in, so that its finger tips stay clear of the dot by a
+  // dot's width (a dot half under the mitten read as a crumb in his fingers).
+  const after = reach('L', [sunPalm[0] + 22, sunPalm[1] + 25], { hand: 'open', handAngle: 50, flip: 1 }, { sh: -5, lean: -0.9 });
+  const closedL = reach('L', [sunPalm[0] + 25, sunPalm[1] + 28], { hand: 'closed', handAngle: 56, flip: 1 }, { sh: -5, lean: -0.9 });
   const armL = channel('L', [
     k(0, B()),
     // 1.73–2.03 the arm sweeps out, palm up and cupped: a 2-frame counter-swing, overshoot, settled 2.10
-    k(49, B()), k(52, armOnly('L', swing(-5, 7)), e.sine.inOut), k(59, out, arrive(0.07, 0.74)),
+    k(49, B()), k(52, armOnly('L', swing(-5, 7)), e.sine.inOut), k(60, out, arrive(0.07, 0.74)),
     // 3.43–3.57 the hand follows the slipping sun down 28 px, opening after it, and stops
-    k(103, out), k(106, after, arrive(0.1, 0.7)),
+    k(103, out), k(108, after, arrive(0.1, 0.66)),
     // 3.83–4.03 it closes on nothing
     k(115, after), k(120, closedL, e.sine.inOut),
     // 4.10–4.57 the arm lowers with overlap and swings out once past the leg

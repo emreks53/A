@@ -37,17 +37,17 @@ export function makeDial(E, W, U, acting) {
       shape.polygon([[2, -6], [-26, -4.2], [-33, 0], [-26, 4.2], [2, 6]]),
       shape.ellipse(0, 0, HD.hub_r),
     );
-    const veil = (n) => [
-      { color: '#9FC8E0', coverage: 0.3, size: 30, stamps: 'soft', even: true },
-      { color: '#CFE6EC', coverage: 0.16, size: 22, stamps: 'speck', even: true },
-    ].slice(0, n);
+    // receded states (16.83 / 16.93): the hand goes one value step toward the sky — a greyer, lighter maroon with a
+    // few pale specks of the world's over-dab; its silhouette stays whole (a 15 px hand under a 30 % veil read
+    // as a corroded stick)
+    const HBASE = [P('clock_hand'), '#614048', '#73545C'], HDARK = ['#33151A', '#4A2C34', '#5C4048'], HLIT = ['#6B3A34', '#83595A', '#967074'];
     const mkHand = (n) => E.bakeStencil({
-      shape: hand, base: P('clock_hand'), anchor: [0, 0], seed: 2501, bleed: false, density: 2,
+      shape: hand, base: HBASE[n], anchor: [0, 0], seed: 2501, bleed: false, density: 2,
       layers: [
-        { color: '#33151A', coverage: 0.36, size: 26, stamps: 'open', patch: { scale: 60, amount: 0.4 } },
-        { color: '#6B3A34', coverage: 0.34, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1, -3, y), patch: { scale: 50, amount: 0.4 } },
+        { color: HDARK[n], coverage: 0.36, size: 26, stamps: 'open', patch: { scale: 60, amount: 0.4 } },
+        { color: HLIT[n], coverage: 0.34, size: 18, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1, -3, y), patch: { scale: 50, amount: 0.4 } },
         { color: P('primer'), coverage: 0.03, size: 12, stamps: 'soft' },
-        ...veil(n),
+        ...(n ? [{ color: '#B9D3E2', coverage: 0.05 * n, size: 14, stamps: 'soft' }] : []),
       ],
       details: { print: 'solid', draw: (c) => { c.fillStyle = n ? '#D8B46A' : '#E8A93A'; c.beginPath(); c.arc(0, 0, 3.8, 0, 7); c.fill(); } },
       reveal: { steps: 2, order: 'sweep', angle: 0, jitter: 0.5, dab: 60 },
@@ -107,11 +107,12 @@ export function makeDial(E, W, U, acting) {
       ],
       edge: { color: '#5E3410', width: 3.2, opacity: 0.6 },
     });
-    // --- glint: five white-gold dabs, each on a slightly larger gold under-dab (a matte wall has no shine)
-    a.glint = [11, 14, 9, 12, 10].map((r, i) => {
-      const under = E.makeGlow({ r: r + 4.5, color: '#E8A020', core: '#F4BC3A', density: 0.9, falloff: 0.5, seed: 2530 + i });
-      const over = E.makeGlow({ r, color: '#FFF6D8', core: '#FFFFFF', density: 0.92, falloff: 0.45, seed: 2540 + i });
-      return E.bakeSprite({ bounds: [-r - 12, -r - 12, r + 12, r + 12], anchor: [0, 0], seed: 2550 + i, density: 2, draw: (c) => { under.draw(c, 0, 0); over.draw(c, 0, 0); } });
+    // --- glint: five small white-gold dabs, each a crisp little print on a gold under-dab (a matte wall has no shine,
+    //     and the mist behind is pale: the gold rim carries them)
+    a.glint = [6.5, 8.5, 9.5, 8, 6].map((r, i) => {
+      const under = E.makeGlow({ r: r + 3.4, color: '#E39B24', core: '#F0B030', density: 0.96, falloff: 0.3, seed: 2530 + i });
+      const over = E.makeGlow({ r, color: '#FFF6D8', core: '#FFFFFF', density: 0.97, falloff: 0.3, seed: 2540 + i });
+      return E.bakeSprite({ bounds: [-r - 9, -r - 9, r + 9, r + 9], anchor: [0, 0], seed: 2550 + i, density: 2, draw: (c) => { under.draw(c, 0, 0); over.draw(c, 0, 0); } });
     });
     return a;
   });
@@ -240,17 +241,21 @@ export function makeDial(E, W, U, acting) {
     if (!coin || coin.slot !== slot) return;
     drawCoin(ctx, coin.x, coin.y, coin);
   }
-  /** the minting's glint (front slot): five dabs, stepped 15.40 / 15.47 / 15.53, gone 15.60 */
-  const GL = [[30, -40], [54, -14], [4, -58], [62, -50], [-34, -48]];
+  /**
+   * The minting's glint (front slot): five dabs on an arc over the coin — the middle three at 15.40, all five a
+   * little further out at 15.47, the outer pair fading at 15.53, gone 15.60. One small "ting", no gloss.
+   */
+  const GA = [-152, -118, -84, -50, -16], GR = [64, 72, 69, 74, 66];
   function drawGlint(ctx, t) {
     const k = L.count(t, T.glint);
     if (!k || on(t, T.glintOff)) return;
     const coin = coinAt(t);
     if (!coin) return;
-    const show = k === 1 ? [0, 1] : k === 2 ? [0, 1, 2, 3, 4] : [2, 3, 4];
+    const show = k === 1 ? [1, 2, 3] : k === 2 ? [0, 1, 2, 3, 4] : [0, 2, 4];
     for (const i of show) {
-      const born = i < 2 ? T.glint[0] : T.glint[1];
-      A.glint[i].draw(ctx, coin.x + GL[i][0], coin.y + GL[i][1], { scale: pop3(nf(t, born)) * (k === 3 ? 0.8 : 1), rot: i * 1.3 });
+      const born = i >= 1 && i <= 3 ? T.glint[0] : T.glint[1];
+      const a = GA[i] * DEG, r = GR[i] + 7 * (k - 1);
+      A.glint[i].draw(ctx, coin.x + Math.cos(a) * r, coin.y + Math.sin(a) * r, { scale: pop3(nf(t, born)) * (k === 3 ? 0.72 : 1), rot: i * 1.3 });
     }
   }
 

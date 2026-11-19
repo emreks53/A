@@ -21,8 +21,9 @@ export function makeProps(E, W) {
   const veil = once('veil', () => {
     const upper = (x, y) => ss(84, 0, y);                                  // the warm lining lives on the top and the shoulders
     const pts = {
-      L: [{ x: -160, y: 30, rx: 128, ry: 88 }, { x: -22, y: -44, r: 112 }, { x: -228, y: 52, r: 60 }, { x: -70, y: 30, rx: 130, ry: 92 }],
-      R: [{ x: 158, y: 34, rx: 126, ry: 84 }, { x: 52, y: -36, r: 100 }, { x: 226, y: 56, r: 58 }, { x: 70, y: 34, rx: 128, ry: 88 }],
+      // (the last ellipse of each half is the belly: it carries the white body well below the disc's lower limb, y +115)
+      L: [{ x: -160, y: 30, rx: 128, ry: 88 }, { x: -22, y: -44, r: 112 }, { x: -228, y: 52, r: 60 }, { x: -70, y: 30, rx: 130, ry: 92 }, { x: -34, y: 66, rx: 122, ry: 86 }],
+      R: [{ x: 158, y: 34, rx: 126, ry: 84 }, { x: 52, y: -36, r: 100 }, { x: 226, y: 56, r: 58 }, { x: 70, y: 34, rx: 128, ry: 88 }, { x: 40, y: 68, rx: 116, ry: 84 }],
     };
     const depthOf = (list) => (x, y) => { let f = 0; for (const q of list) { const v = 1 - Math.hypot((x - q.x) / (q.rx ?? q.r), (y - q.y) / (q.ry ?? q.r)); if (v > f) f = v; } return f; };
     const depthL = depthOf(pts.L);
@@ -42,9 +43,7 @@ export function makeProps(E, W) {
         { color: '#EFEAF5', coverage: 0.3, size: 76, band: [0.26, 1], stamps: 'open', tint: 0.01, maskFn: (x, y) => ss(0, 80, y), patch: { scale: 170, amount: 0.45 } },
       ];
     };
-    const reveal = (s) => ({ steps: 4, mode: 'mask', order: 'sweep', angle: s < 0 ? 0 : Math.PI, jitter: 0.26, dab: 118 });
-    // mask reveal; the LAST prints sit at the centre side, so the dab-out starts there
-    const half = (k, s, seed) => E.makeCluster({ points: pts[k], seed, edgeSoftness: 0.62, anchor: [0, 0], layers: layers(s), reveal: reveal(s) });
+    const half = (k, s, seed) => E.makeCluster({ points: pts[k], seed, edgeSoftness: 0.62, anchor: [0, 0], layers: layers(s) });
     // peach-gold rim, printed over the white edge of the WHOLE cloud (never inside it): the light of what
     // the cloud hides shows along its top. One sprite per half, so that it parts with its half.
     const depthR = depthOf(pts.R);
@@ -52,7 +51,7 @@ export function makeProps(E, W) {
       const outer = s < 0 ? (x, y) => ss(0.16, 0.02, depthR(x, y)) : (x, y) => ss(0.16, 0.02, depthL(x, y));
       const m = (x, y) => upper(x, y) * outer(x, y);
       return E.makeCluster({
-        points: pts[k], seed, edgeSoftness: 0.09, anchor: [0, 0], reveal: reveal(s),
+        points: pts[k], seed, edgeSoftness: 0.09, anchor: [0, 0],
         layers: [
           { color: P('yesterday_light'), coverage: 0.68, size: 62, band: [0.03, 0.23], stamps: 'open', pores: 0.3, maskFn: m, patch: { scale: 150, amount: 0.2 } },
           { color: '#F6B96A', coverage: 0.2, size: 38, band: [0.03, 0.15], stamps: 'open', maskFn: m, patch: { scale: 110, amount: 0.45 } },
@@ -72,7 +71,22 @@ export function makeProps(E, W) {
       ],
       reveal: { steps: 3, mode: 'mask', order: 'random', dab: 46 },
     });
-    return { L: half('L', -1, 6101), R: half('R', 1, 6102), rimL: rim('L', -1, 6103), rimR: rim('R', 1, 6104), glimmer: [glimmer(6111), glimmer(6117)] };
+    // One print per half (white body + its rim): it leaves in EIGHT stages from the middle outward — the prints
+    // nearest the column over today's sun (local x 0) go first, with a ragged, speckled frontier, so that the
+    // first step opens holes over the disc ("first gold shows") instead of cutting a clean window, and the
+    // cloud PARTS like a curtain (height counts for little: no arc of cloud is left standing over the disc).
+    const whole = (k, s, seed) => {
+      const body = half(k, s, seed), lining = rim(k, s, seed + 2);
+      const a = body.inkBounds, b = lining.inkBounds;
+      const bounds = [Math.floor(Math.min(a.x0, b.x0)) - 6, Math.floor(Math.min(a.y0, b.y0)) - 6, Math.ceil(Math.max(a.x1, b.x1)) + 6, Math.ceil(Math.max(a.y1, b.y1)) + 6];
+      const [fx, fy] = [0 - bounds[0], 5 - bounds[1]], far = 300, jit = 0.2;
+      return E.bakeSprite({
+        bounds, anchor: [0, 0], seed: seed + 20, steps: 8, dabSize: 62,
+        reveal: { order: (x, y, rng) => clamp((1 - clamp(Math.hypot(x - fx, (y - fy) * 0.42) / far)) * (1 - jit) + rng.next() * jit) },
+        draw: (c) => { body.draw(c, 0, 0); lining.draw(c, 0, 0); },
+      });
+    };
+    return { L: whole('L', -1, 6101), R: whole('R', 1, 6102), glimmer: [glimmer(6111), glimmer(6117)] };
   });
 
   // ------------------------------------------------------------------ call-ring dabs
@@ -81,12 +95,15 @@ export function makeProps(E, W) {
   const callDabs = once('call', () => Array.from({ length: 6 }, (_, i) => E.makeCluster({
     points: [{ x: 0, y: 0, rx: 25, ry: 23 }], seed: 6201 + i, edgeSoftness: 0.4, anchor: [0, 0],
     layers: [
-      { color: P('call_ring_under'), coverage: 0.9, size: 24, offset: [-5, 7], grow: 1.14, stamps: 'body', pores: 0.2 },
-      { color: '#9C95CC', coverage: 0.4, size: 16, offset: [-7, 9], grow: 1.1, stamps: 'soft' },
+      // the dark the light is painted on: a violet-blue print a little larger than the dab, showing all round
+      // it as a speckled rim (heavier below, as under the clouds)
+      { color: P('call_ring_under'), coverage: 0.86, size: 22, offset: [-2, 4], grow: 1.2, stamps: 'open', pores: 0.25 },
+      { color: '#A7A0D6', coverage: 0.3, size: 14, offset: [-2, 4], grow: 1.3, stamps: 'soft' },
+      // the light itself: warm white, a powdery pale-gold fringe with a few gold prints, a white-hot core
       { color: P('call_ring', 0), coverage: 0.97, size: 22, tint: 0.01, stamps: 'dense', pores: 0 },
-      { color: P('call_ring', 1), coverage: 0.66, size: 15, band: [0.0, 0.52], stamps: 'open' },
-      { color: '#FBE9B0', coverage: 0.4, size: 12, band: [0.1, 0.6], stamps: 'soft' },
-      { color: '#FFFFFF', coverage: 0.9, size: 14, band: [0.5, 1], stamps: 'body', tints: 1, pores: 0 },
+      { color: '#FBE9B0', coverage: 0.6, size: 14, band: [0.0, 0.46], stamps: 'open' },
+      { color: P('call_ring', 1), coverage: 0.34, size: 11, band: [0.0, 0.4], stamps: 'body', patch: { scale: 26, amount: 0.42, seed: 6201 + i } },
+      { color: '#FFFFFF', coverage: 0.92, size: 15, band: [0.42, 1], stamps: 'body', tints: 1, pores: 0 },
     ],
     reveal: { steps: 3, mode: 'mask', order: 'random', dab: 22 },
   })));

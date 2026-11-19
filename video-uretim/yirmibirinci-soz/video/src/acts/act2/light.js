@@ -24,7 +24,7 @@ export function makeLight(E, W, U) {
   const HW = (B.x1 - B.x0) / 2, APEX = B.y0, BASE = B.y1;                    // 200, 60, 1150
   const RAD = 2 * HW, SPRING = APEX + Math.sqrt(RAD * RAD - (RAD - HW) ** 2); // equilateral pointed arch: springs at y ~406
   const halfW = (y) => (y <= APEX ? 0 : y < SPRING ? Math.sqrt(RAD * RAD - (SPRING - y) ** 2) - (RAD - HW) : HW + (y - SPRING) * 0.035);
-  const wob = (x, y) => 10 * Math.sin(y / 71 + 1.3) + 6 * Math.sin(y / 29 + x / 90);
+  const wob = (x, y) => 13 * Math.sin(y / 71 + 1.3) + 7 * Math.sin(y / 29 + x / 90) + 9 * Math.sin(y / 173 + (x > CX ? 2.2 : 0.4));
   /** signed distance to the arch's edge (px, < 0 inside) — horizontal below the apex, radial above it */
   const sd = (x, y) => (y >= APEX ? Math.abs(x - CX) - halfW(y) : Math.hypot(x - CX, APEX - y)) + wob(x, y);
   // the white core: a smaller pointed arch round (965, 300), y 180–420, dissolving downward into the gold
@@ -48,7 +48,7 @@ export function makeLight(E, W, U) {
     //     cobalt prints at the outside so that it melts into the day sky
     const sDepth = (x, y) => clamp(Math.min(1 - sd(x, y) / 250, (x - S.x0 + 20 + 16 * Math.sin(y / 97)) / 110, (BASE + 30 - y) / 60));
     a.surround = field({ box: SBOX, depth: sDepth, seed: 2301, edge: 0.62, k: 1,
-      reveal: { steps: 3, mode: 'mask', order: 'sweep', angle: -Math.PI / 2, jitter: 0.18, dab: 170 },
+      reveal: { steps: 2, mode: 'mask', order: 'sweep', angle: -Math.PI / 2, jitter: 0.18, dab: 170 },
       layers: [
         { color: sur[0], coverage: 0.86, size: 136, tint: 0.035, pores: 0.3, patch: { scale: 300, amount: 0.2, sharp: 0.4 } },
         { color: sur[2], coverage: 0.4, size: 104, sizeJitter: 0.18, stamps: 'dense', even: true, pores: 0.3, maskFn: (x, y) => ss(60, 190, sd(x, y)), patch: { scale: 320, amount: 0.4, sharp: 0.3 } },
@@ -58,18 +58,28 @@ export function makeLight(E, W, U) {
         { color: P('primer'), coverage: 0.05, size: 60, stamps: 'soft', maskFn: (x, y) => ss(120, 220, sd(x, y)) },
       ] });
 
-    // --- pass 1 (16.83): broad peach, deepening to rose and pink toward its foot (no white, no pale gold below y 600)
-    const d1 = (x, y) => clamp((-sd(x, y) + 16) / 74);
-    a.peach = field({ box: LBOX, depth: d1, seed: 2302, edge: 0.6, reveal: { steps: 1 }, layers: [
-      { color: tf.peach, coverage: 0.92, size: 116, tint: 0.03, pores: 0.3 },
-      { color: '#F8D7AE', coverage: 0.5, size: 86, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(640, 420, y), patch: { scale: 200, amount: 0.36 } },
-      { color: '#F1B39A', coverage: 0.66, size: 100, pores: 0.3, maskFn: (x, y) => ss(560, 800, y), patch: { scale: 220, amount: 0.22 } },
-      { color: tf.rim_pink, coverage: 0.4, size: 90, stamps: 'open', pores: 0.3, maskFn: (x, y) => ss(700, 1000, y), patch: { scale: 200, amount: 0.4 } },
+    // --- pass 1 (16.83): broad peach, deepening to rose and pink toward its foot (no white, no pale gold below y 600).
+    //     Its inside is a calm, closed coat (a pore that shows the dark sky inside the light reads as dirt); only
+    //     its edge dissolves — a wide stippled frontier and a powdery spray beyond it: no hard edge anywhere.
+    const d1 = (x, y) => clamp((-sd(x, y) + 26) / 104);
+    const inner = (a, b) => (x, y) => ss(a, b, sd(x, y));
+    a.aura = field({ box: [LBOX[0] - 50, LBOX[1] - 50, LBOX[2] + 50, LBOX[3]], depth: (x, y) => clamp(1 - Math.abs(sd(x, y) - 12) / 62) * ss(BASE, BASE - 160, y), seed: 2309, edge: 0.9, reveal: { steps: 1 }, layers: [
+      { color: tf.rim_pink, coverage: 0.2, size: 44, stamps: 'open', patch: { scale: 130, amount: 0.46 } },
+      { color: tf.peach, coverage: 0.2, size: 34, stamps: 'soft', patch: { scale: 110, amount: 0.4 } },
+      { color: '#F7C6D2', coverage: 0.08, size: 40, stamps: 'speck' },
+    ] });
+    a.peach = field({ box: LBOX, depth: d1, seed: 2302, edge: 0.78, reveal: { steps: 1 }, layers: [
+      { color: tf.peach, coverage: 0.99, size: 74, even: true, tint: 0.02, pores: 0, maskFn: inner(-44, -78) },
+      { color: tf.peach, coverage: 0.92, size: 110, tint: 0.03, pores: 0.3 },
+      { color: '#F8D7AE', coverage: 0.5, size: 86, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(640, 420, y) * inner(-30, -70)(x, y), patch: { scale: 200, amount: 0.36 } },
+      { color: '#F1B39A', coverage: 0.66, size: 96, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(560, 800, y) * inner(-34, -74)(x, y), patch: { scale: 220, amount: 0.22 } },
+      { color: tf.rim_pink, coverage: 0.4, size: 84, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(700, 1000, y) * inner(-34, -74)(x, y), patch: { scale: 200, amount: 0.4 } },
+      { color: tf.rim_pink, coverage: 0.5, size: 60, stamps: 'open', maskFn: inner(-56, -8), patch: { scale: 160, amount: 0.34 } },
     ] });
     // --- pass 2 (16.93): gold inside it, round the place of the core
     const d2 = (x, y) => clamp(Math.min((-sd(x, y) - 36) / 64, (720 - y) / 230));
     a.gold = field({ box: LBOX, depth: d2, seed: 2303, edge: 0.6, reveal: { steps: 1 }, layers: [
-      { color: tf.gold, coverage: 0.9, size: 96, tint: 0.03, pores: 0.3 },
+      { color: tf.gold, coverage: 0.94, size: 96, tint: 0.03, pores: 0.3 },
       { color: '#FBEDB4', coverage: 0.6, size: 72, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(-70, -120, sd(x, y)) * ss(560, 440, y), patch: { scale: 150, amount: 0.3 } },
       { color: '#F6C56A', coverage: 0.2, size: 60, stamps: 'open', maskFn: (x, y) => ss(480, 640, y), patch: { scale: 150, amount: 0.5 } },
     ] });
@@ -80,10 +90,11 @@ export function makeLight(E, W, U) {
       { color: '#FFF6D8', coverage: 0.16, size: 30, stamps: 'soft', maskFn: (x, y) => ss(CY, C1, y) },
     ] });
     // --- pass 4 (17.07), the brightest: a pink rim along the arch's edge and a breath of pale light round the core
-    const band = (x, y) => clamp(1 - Math.abs(sd(x, y) + 8) / 34);
-    a.rim = field({ box: LBOX, depth: (x, y) => band(x, y) * ss(BASE, BASE - 120, y), seed: 2305, edge: 0.8, reveal: { steps: 1 }, layers: [
-      { color: tf.rim_pink, coverage: 0.56, size: 66, stamps: 'open', pores: 0.3, patch: { scale: 150, amount: 0.3 } },
-      { color: '#F7C6D2', coverage: 0.3, size: 40, stamps: 'soft', patch: { scale: 120, amount: 0.4 } },
+    const band = (x, y) => clamp(1 - Math.abs(sd(x, y) + 14) / 48);
+    a.rim = field({ box: LBOX, depth: (x, y) => band(x, y) * ss(BASE, BASE - 120, y), seed: 2305, edge: 0.9, reveal: { steps: 1 }, layers: [
+      { color: tf.rim_pink, coverage: 0.5, size: 62, stamps: 'open', patch: { scale: 150, amount: 0.3 } },
+      { color: '#F7C6D2', coverage: 0.34, size: 40, stamps: 'soft', patch: { scale: 120, amount: 0.36 } },
+      { color: '#FBE3C4', coverage: 0.2, size: 30, stamps: 'soft', patch: { scale: 100, amount: 0.5 } },
     ] });
     const halo = coreArch(1.42);
     a.halo = field({ box: [CX - CHW * 1.5 - 50, C0 - 130, CX + CHW * 1.5 + 50, C1 + 150], depth: (x, y) => halo(x, y) * (1 - coreArch(1)(x, y) * 0.999), seed: 2306, edge: 0.8, reveal: { steps: 1 }, layers: [
@@ -116,7 +127,7 @@ export function makeLight(E, W, U) {
   // ------------------------------------------------------------------ far slot (layer px)
   const breath = (t) => L.motion.farLightBreath(t);
   function drawFar(ctx, t) {
-    const sp = L.count(t, T.turn) / T.turn.length;
+    const sp = Math.max(0, L.count(t, T.turn) - 1) / 2;                       // one step behind the knoll: 16.73 / 16.83
     if (sp <= 0) return;
     A.surround.draw(ctx, { p: sp });
     const n = L.count(t, T.light);
@@ -124,6 +135,7 @@ export function makeLight(E, W, U) {
     ctx.save();
     const s = breath(t);
     ctx.translate(CX, CY); ctx.scale(s, s); ctx.translate(-CX, -CY);
+    A.aura.draw(ctx);
     A.peach.draw(ctx);
     if (n >= 2) A.gold.draw(ctx);
     if (n >= 4) A.rim.draw(ctx);

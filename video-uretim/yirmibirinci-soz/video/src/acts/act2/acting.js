@@ -37,7 +37,7 @@ export function makeActing(E, W, U) {
     k(366, P.back_neutral), k(438, P.back_neutral),
     k(441, ANTIC, e.sine.inOut),                                         // 14.60 a small give …
     k(448, RECV, e.back.out),                                            // 14.67 → palm up at chest height (720, 830), settled 15.07
-    k(473, RECV), k(477, SIDE, e.cubic.inOut),                           // 15.77–16.03 closes over the coin, draws it in to his side
+    k(473, RECV), k(478, SIDE, e.sine.inOut),                            // 15.77–16.07 closes over the coin, draws it in to his side
     k(482, SIDE), k(492, SIDE_T, e.sine.inOut),                          // 16.07–16.40 turns toward the right column
     k(660, SIDE_T), k(661, SHOWN),                                       // 22.00–22.17 the hand opens where it is
   ], { overlap: 2 });
@@ -92,6 +92,7 @@ export function makeActing(E, W, U) {
     return { x: h.palm[0], y: h.palm[1], rot: h.rot, shape: h.shape };
   }
   const REST_UP = C.right_palm_receive[1] - C.rest_on_palm[1];           // 46: the coin stands on the palm
+  const HELD = [20, -24], lerp = E.lerp;
   /**
    * Coin centre while it is in his hand (15.37–22.43): {x, y, open} — on the palm, then drawn in to his side
    * (in the half-closed mitten), then shown in the open hand (toward the finger tips).
@@ -99,9 +100,10 @@ export function makeActing(E, W, U) {
   function held(t) {
     const p = pose(t), h = palm(t, p), f = t * fps;
     if (f < 473) return { x: h.x, y: h.y - REST_UP, open: false };
-    if (f < 660 - 1e-6) { const u = e.cubic.inOut(E.clamp((f - 473) / 8)); return { x: h.x, y: h.y - REST_UP * (1 - u), open: false }; }
+    // in the half-closed mitten: a little up and out of the fist, so that the hub and BOTH clock-hands stay readable
+    if (f < 660 - 1e-6) { const u = e.sine.inOut(E.clamp((f - 474) / 8)); return { x: h.x + HELD[0] * u, y: h.y - REST_UP * (1 - u) + HELD[1] * u, open: false }; }
     const u = e.sine.inOut(E.clamp((f - 660) / 5));
-    return { x: h.x + Math.cos(h.rot) * COIN_OUT * u, y: h.y + Math.sin(h.rot) * COIN_OUT * u, open: h.shape === 'open' };
+    return { x: h.x + lerp(HELD[0], Math.cos(h.rot) * COIN_OUT, u), y: h.y + lerp(HELD[1], Math.sin(h.rot) * COIN_OUT, u), open: h.shape === 'open' };
   }
   return { pose, palm, held, RECV, frames: { LAND } };
 }

@@ -1,8 +1,9 @@
 # THE MAN — `src/shared/man.js` (as built)
 
 One stencil puppet, two skins (front / back), sponge-printed, 540 px tall in world px (feet y 1200, head top
-y 660, x 540). Review scene: `--scene man` (`src/scenes/man.js`): every pose, zoom 1.5 pages, hands, passes
-and a continuous acting test. Pure-maths check of all poses: `node out/man/poses.mjs`.
+y 660, x 540). Review scene: `--scene man` (`src/scenes/man.js`): every pose, zoom 1.5 pages, the two turn
+drawings, hands, passes and a continuous acting test. Pure-maths check of all poses (palms, elbows, wrists, and
+the reaches the acts make with their own options): `node out/man/poses.mjs`.
 
 ```js
 import { makeMan } from '../shared/man.js';
@@ -24,7 +25,7 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
 | `man.draw(ctx, t, {pose, warm, p, hands})` | paints him; extras for review scenes: `x, y` (root, default 540 / 1200), `scale`, `breath` (−1…1) |
 | `man.prepare(skin, warm, stage)` | pre-bake another sprite set (`'front'`, 1, 3 …); sets that were not prepared are baked on first use |
 | `man.drawHand(ctx, shape, x, y, {angle, flip, side, warm, scale})` | review helper: one hand alone |
-| `man.G`, `man.HAND_SHAPES`, `man.REST_ARM`, `man.pose(partial)` | geometry numbers, `['rest','open','cupped','closed']`, the hanging arm, fill-in of a partial pose |
+| `man.G`, `man.HAND_SHAPES`, `man.REST_ARM`, `man.pose(partial)` | geometry numbers, `['rest','open','cupped','closed','flat','hold']`, the hanging arm, fill-in of a partial pose |
 
 `'L'` / `'R'` are HIS left / right. Back view: R is on screen-right. Front view: R is on screen-left.
 `opts` of `reach` / `point` / `hand`: `{x, y}` = another root than 540 / 1200 (only review scenes need it).
@@ -32,7 +33,7 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
 ## The pose
 
 ```js
-{ view: 1,                      // 0 front skin, 1 back skin; in between = the cross-dab turn (below)
+{ view: 1,                      // 0 front skin, 1 back skin; in between = the turn drawings (below)
   root: {x: 0, y: 0},           // px. x moves the HIPS (feet stay planted); y sinks the whole figure (dips)
   step: 0,                      // 0..1 half-step: his screen-right shoe goes 22 px to the right (use with root.x = 10)
   lean: 0,                      // deg, body roll about the hips (keep |lean| <= 1)
@@ -46,8 +47,13 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
   relative to the upper arm, `w` = hand relative to the forearm. Identical numbers give mirrored arms.
 * `fa`, `fb` (0.4…1) foreshorten upper arm / forearm: the 2.5-D way to say "points toward / away from us"
   (hand at his side, coin drawn in). The stencil is re-cut shorter over the same baked print — never squashed.
-* `hand`: `'rest'` (relaxed, hanging: 27 × 56, the thumb a soft bulge on the body side) · `'open'` (the mitten 46 × 56 with a separate thumb) · `'cupped'`
-  (palm up, seen from the side: thumb standing, finger tips curling up) · `'closed'` (fist). Silhouette swaps.
+* `hand`: `'rest'` (relaxed, hanging, seen edge-on: 25 × 52 beyond the cuff, the thumb a soft bulge on the body side) ·
+  `'open'` (the mitten: fingers together as one tapered block 26 wide, a short round thumb standing off at 45°;
+  42 × 57 with the thumb) · `'cupped'` (palm up, seen from the side: a shallow bowl — thick heel, the thumb a low lobe
+  near the wrist, the fingers rising gently to the tip) · `'closed'` (fist) · `'flat'` (laid flat on something — the
+  chest: fingers together as ONE tapered shape, the thumb a low bump along the index finger) · `'hold'` (half closed
+  round a thing held at his side, seen from the back of the hand). Silhouette swaps; all about 0.75 of the head's
+  height long, as on a real figure.
   `flip: ±1` mirrors the hand across its own axis (thumb side). Hand frame: X along the hand, +Y = thumb side;
   a hanging hand has +Y toward the body, a hand pointing outward has +Y pointing DOWN (so `'cupped'` opens upward
   with `flip: 1`, and an open hand has its thumb on top with `flip: -1`).
@@ -66,33 +72,50 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
 ### `reach(pose, which, [wx, wy], opts)`
 `opts`: `hand` (shape), `flip`, `handAngle` (absolute, same convention as `a`: 90 = pointing outward
 horizontally, 100 = a little upward) or `wrist` (relative, default 0), `elbow` (deg: force the upper-arm
-direction — the forearm is then foreshortened as needed), `bend: 'out' | 'in'` (force a planar solution),
-`pin` (default 1). Default solution: planar two-bone IK with the LOWER elbow; if that would push the elbow
-across the body (`a < −16°`) the upper arm hangs (2°) and the forearm is foreshortened instead. Targets
-farther than the arm (108 + 92 + palm 18…31 px from the shoulder joint) are approached as far as it goes.
+direction — the forearm is then foreshortened as needed), `fa` (foreshortening of the upper arm that goes with a
+forced `elbow`, default 1), `bend: 'out' | 'in'` (force a planar solution), `pin` (default 1).
+Default solution: planar two-bone IK with the LOWER elbow. **The upper arm never lies inside the torso** (the
+forearm would seem to grow out of his waist):
+* by itself it never swings inward of the vertical — where the planar solution would (`a < 0`), the upper arm hangs
+  straight down (`a = 0`) and the forearm is foreshortened instead (continuous with the planar solution at `a = 0`);
+* a forced `elbow` below 3° while the hand is out at his side is replaced by the upper arm of "held at his side"
+  (`elbow: 5, fa: 0.93`: it hangs outside the torso silhouette as in the rest pose, the elbow at waist height, the
+  forearm foreshortened toward the side). So `elbow: -10` — as older calls have it — gives that arm; the palm
+  lands on the same point.
+Targets farther than the arm (108 + 92 + palm 18…31 px from the shoulder joint) are approached as far as it goes.
 The shoulder joint of the hanging stance is at world (540 ± 54, 773); `sh` moves both.
 
 ## view, the turn, warm, p
 
-* `view` 0 / 1 pick the skin. Any value in between draws the storyboard's cross-dab: BOTH skins are composed
-  and shown through one ordered set of sponge prints (the back skin through the prints that have landed, the
-  front skin through the rest), with `scaleX = 1 − 0.4·sin(π·view)` (never below 0.6) and a dip of
-  `4·sin(π·view)` px. The prints are stepped: `view < 0.1` front · `< 0.5` step 1 (≈ 37 % back) · `< 0.9` step 2
-  (≈ 70 %) · else back. Key it on twos with `view: 1/3` (1.47), `2/3` (1.53), `1` (1.60) — as the act-1 stub
-  does — or use `man.turn(t)` for a per-frame squash. Turn only with both arms hanging (figure window ±200 px).
+* `view` 0 / 1 pick the skin. Any value in between is the TURN, a paper-cut turn in two designed in-between
+  drawings — never a mix of the two skins: `view < 0.1` front · `< 0.5` drawing 1, **three-quarter front** (the
+  face slid toward screen-left, the hair mass grown round the right side, one ear; front torso with the collar
+  opening shifted left) · `< 0.9` drawing 2, **three-quarter back** (the hair mass, a sliver of cheek and the
+  ear at the left; back torso with a closed collar) · else back. He turns toward screen-left (where the first glow
+  is). On both drawings the BODY (legs, pelvis, torso, arms) is shown narrowed about the root with
+  `scaleX = 1 − 0.4·sin(π·view)` (0.65 at 1/3 and 2/3, never below 0.6) and the whole figure dips
+  `4·sin(π·view)` px; neck and head are NOT narrowed — they are their own stencil shapes (`TURN_HEAD` in man.js:
+  skin patch, hair mass, ear, neckline). Key it on twos with `view: 1/3` (1.47), `2/3` (1.53), `1` (1.60) — as
+  act 1 does — or use `man.turn(t)` for a per-frame squash. Turn only with both arms hanging.
 * `warm`: `< 0.5` normal colours, `≥ 0.5` the lit state (top #CF6E48, trousers #63473A, one extra pass of light
   dabs, stronger light band on the arms). Stepped by the world.
 * `p`: the opening dab-in, quantised to thirds: `1/3` dark base coat (stencil-sharp) · `2/3` + mid tones ·
   `1` + lit / shade dabs, edge prints and the arm light bands. `p <= 0` draws nothing.
 * Breathing is inside `draw` (pure function of absolute `t`): shoulders, neck, head ±3 px with period 3.4 s,
   torso scaleY ±0.6 %. `man.point` returns the un-breathed position (pinned palms do not breathe).
+* **Head pitch from behind** (so that 5–8° read at HOME scale without a nodding doll): a bow lifts the nape
+  hairline 0.8 px per degree (a longer neck) and drops the crown 0.45 px per degree; a lift sinks the head onto
+  the collar by 0.9 px per degree (at −5° the neck is a 4 px sliver) and lowers the crown 0.3 px per degree. The
+  ears stay where they are while the hair mass changes round them (they drift 1 px at most). Front skin: unchanged
+  (the face slides down under the hair cap).
 
 ## Draw order and the `hands` callback
 
 1. shoes, legs, pelvis, neck, torso, head (front: face + ears, hair cap; back: cheek, ears, hair)
 2. **`hands(ctx)`** — ctx is back in WORLD px (the caller's transform)
-3. screen-left arm: hand, then upper arm + forearm (the cuff overlaps the wrist), then its shade / light bands;
-   then the screen-right arm the same way.
+3. screen-left arm: the tone it casts on the torso (only when forearm or hand lie on the torso), its hand, then
+   upper arm + forearm (the cuff overlaps the wrist), each with its shade / light prints; then the screen-right arm
+   the same way.
 
 So a thing drawn in `hands` lies in front of body and head and BEHIND both arms and hands: a coin whose centre
 is on the palm is overlapped by the mitten (coin "in" the half-closed hand), a coin standing ON the cupped
@@ -108,18 +131,27 @@ after the whole figure.
   lower-left edge, light inside the upper-right edge). All parts of a garment share one fine dab size, so
   overlapping parts are statistically the same print: joints show no seam.
 * Arms and hands turn, so their light is NOT baked: each arm group (upper arm + forearm) is composed in a
-  scratch surface and gets a speckled dark band just inside the lower-left edge OF ITS UNION and a light band
-  inside the upper-right edge, in world space (6 px, palette `man_arm_inner_edge`). This is what makes a
-  forearm read on the torso (hand on chest, coin at side); it has no elbow seam and fades out at the shoulder,
-  where the joint cap (r 17) melts into the torso. The torso's shoulder line is tangent to that cap.
-* Scratch surfaces (`E.scratch`): `man:u / man:sh / man:li` (one arm's limb group: paint, shade stock, light
-  stock) and `man:uh / man:shh / man:lih` (its hand), plus `man:tf / man:tb` on turn frames. Each has ONE fixed
+  scratch surface and gets its shade just inside the lower-left edge OF ITS UNION and a light print inside the
+  upper-right edge, in world space. The shade is a tone that thins out, never a ruled line: a narrow close print
+  (3.6 px on limbs, 2.6 px on hands) with a wider fringe of loose dabs behind it (9 / 6.5 px); the light is a lacy
+  print (6 / 4.4 px). No elbow seam; all three fade out at the shoulder, where the joint cap (r 17) melts into the
+  torso. The torso's shoulder line is tangent to that cap.
+* A forearm or hand that lies ON the torso (hand on chest, a forearm crossing the waist) reads in front of it
+  through TONE, not outline: before the arm is drawn, two porous prints of the forearm + hand silhouette are
+  printed on the torso, shifted to the lower left (the light comes from the upper right) and cut to the torso's
+  own stencil (`castShadow`, palette `cast`). A hanging arm casts nothing.
+* Trousers break on the shoe 12 px above the sole; the shoe is a low dome on a flat sole with round corners (toe
+  cap in the front skin, a narrower heel in the back skin). Legs and shoes are clean stencil shapes down to the
+  sole line (y 1203.5); the hedge lip in front of him is the world's.
+* Scratch surfaces (`E.scratch`): `man:u / man:sh / man:li` (one arm's limb group: paint, shade stock — also the
+  cast tone —, light stock) and `man:uh / man:shh / man:lih` (its hand). Each has ONE fixed
   size (limb 528², hand 256² bake px) whatever the pose: the figure is baked at 2× and shown at ½ × zoom, where the
   browser resamples a canvas through mip levels of the whole canvas — a scratch whose size followed the pose (or
   the poses drawn before: engine scratches only grow) gave different pixels for the same frame depending on the
   render order (fixed at integration; `node out/world/integ.mjs det`).
-* Parts: `torso(front|back) pelvis leg(±1) shoe(view:±1) neck face hairFront hairBack ear cheek upper fore
-  hand(rest|open|cupped|closed)` + band stock for `upper fore hand`. Colours: `COL` in man.js (palette of the
+* Parts: `torso(front|back|turn1|turn2) pelvis leg(±1) shoe(view:±1) neck face hairFront hairBack ear cheek
+  turnSkin(1|2) turnHair(1|2) upper fore hand(rest|open|cupped|closed|flat|hold)` + stock prints (`sh` shade core,
+  `sf` shade fringe, `li` light, `cs` / `cf` cast tone) for `upper fore hand`. Colours: `COL` in man.js (palette of the
   storyboard: #B4553A / #4A342A / #2E1F1B / #E0A47C / #3B2620, warm #CF6E48 / #63473A).
 
 ## Example for an act
@@ -144,7 +176,11 @@ coin.draw(ctx, px, py - 46);                         // rests on the palm (720, 
 ## Limits (honest list)
 
 * Flat puppet: no yaw. "Turned right" = head `turn` + `sh: -4`. The front skin ignores `head.turn`.
-* The cross-dab turn expects hanging arms and has 4 in-between frames at most; held things are not handled in it.
+* The turn has two in-between drawings and expects hanging arms; held things are not handled in it (`hands` is
+  called after the whole figure). Its body is a narrowed front / back body, not a drawn profile.
+* Named poses that changed in polish round 1 (same palm targets): `front_hand_on_chest` uses `'flat'`,
+  `back_coin_held_at_side` / `back_turned_right` use `'hold'` with the arm of "held at his side",
+  `back_coin_shown` / `back_wind_up` the same upper arm with an open hand.
 * `'cupped'` is a side view (palm up); used with a strongly raised hand angle it reads as a hook — keep
   `handAngle` between about 85 and 110.
 * Hand shapes swap, they do not morph; a swap is hidden best inside an arm move (it happens 4 frames after the

@@ -31,6 +31,12 @@ const S = {
   dotsOut: [10.73, 10.80, 10.87, 10.93, 11.00, 11.07, 11.13, 11.20],       // both legs from the feet upward
 };
 const TAU = Math.PI * 2;
+// call-ring, per step (r 276 / 200 / 131 / 69): dab scale, dabs left out, dabs moved along the ring (deg).
+// Dab i sits at 11.25 + 22.5 i degrees: 2 = lower right, 3 / 4 = below him (his legs), 5 = lower left, 11 / 12 = above his head.
+const RING_SCALE = [1, 0.95, 0.86, 0.74];
+const RING_SKIP = [[], [3, 4], [2, 3, 4, 11, 12], []];
+const RING_SHIFT = [{ 3: -5.5, 4: 5.5 }, { 2: -5.5, 5: 5.5 }, {}, {}];
+const VEIL_LEFT = [8, 6, 5, 2], VEIL_RIGHT = [8, 6, 4, 3];   // stages (of 8) of the veil halves after each dab-out step
 
 export default {
   id: 'act1', from: 0, to: 12.2,
@@ -85,20 +91,27 @@ export default {
     }
 
     // ---- course dots: when each prints and when it leaves
+    // k = 13..17 are never drawn: 14-16 lie inside today's disc, and 13 / 17 sit tangent to its rim (5 px off) —
+    // hidden behind the veil cloud until 8.77, they would stand at the unveiled disc like two ears. The course
+    // passes BEHIND today's sun: its last visible dots (k = 12, 18) keep a dot's spacing from the rim.
     const dots = L.arc.dots, n = dots.length;                                // 27, k = 0 at the left foot
+    const behindToday = (x, y) => Math.hypot(x - L.sun.x, y - L.sun.y) < L.sun.r + 2 * L.arc.dotR + 8;
     this.dots = dots.map(([x, y], k) => {
       const on = k <= 9 ? T.dotsA[Math.floor((9 - k) / 2)] : T.dotsB[Math.min(T.dotsB.length - 1, Math.floor((k - 10) / 2))];
       // both legs leave from the feet upward at the same HEIGHT: position k on the left = position 30 - k on the right
       const m = k <= 15 ? k : 30 - k;
       const off = T.dotsOut[Math.min(T.dotsOut.length - 1, Math.floor(m / 2))];
-      return { x, y, k, on, off, sprite: this.props.dots[k % this.props.dots.length], rot: rng.next() * TAU };
-    });
+      return { x, y, k, on, off, sprite: this.props.dots[k % this.props.dots.length], rot: rng.next() * TAU, hidden: behindToday(x, y) };
+    }).filter((d) => !d.hidden);
     this.nDots = n;
 
-    // ---- call-ring: 16 dabs, four radii; a fixed small irregularity per dab (hand-printed)
+    // ---- call-ring: 16 dabs, four radii; a fixed small irregularity per dab (hand-printed).
+    // The ring is a ring of light ROUND him, never a mark ON him before it arrives: on its way in, a dab that
+    // would be printed on his face, his hanging hand, his hips or his legs is moved along the ring to the
+    // nearest free place (RING_SHIFT, degrees) or left out (RING_SKIP). Angles: 0 = screen-right, 90 = down.
     this.ring = Array.from({ length: 16 }, (_, i) => ({
-      a: (TAU * (i + 0.5)) / 16 + rng.sym(0.035), dr: rng.sym(7), rot: rng.next() * TAU,
-      sprite: this.props.callDabs[i % this.props.callDabs.length], sc: 1 + rng.sym(0.08),
+      i, deg: (360 * (i + 0.5)) / 16, da: rng.sym(0.03), dr: rng.sym(6), rot: rng.next() * TAU,
+      sprite: this.props.callDabs[i % this.props.callDabs.length], sc: 1 + rng.sym(0.07),
     }));
     this.gathered = Array.from({ length: 7 }, (_, i) => ({
       a: (TAU * i) / 7 + 0.4 + rng.sym(0.12), r: 25 + rng.sym(4), rot: rng.next() * TAU,
@@ -124,9 +137,23 @@ export default {
   },
 
   slots: {
-    // ------------------------------------------------------------ behind today's sun: the course dots
+    // ------------------------------------------------------------ behind today's sun: yesterday's glow, then the course dots
     back(ctx, t, W) {
-      const e = 1e-6;
+      const T = this.T, L = W.layout, PR = this.props, e = 1e-6;
+
+      // yesterday's halo and the afterglow lie UNDER the course dots (a halo print over a dot ate half of it);
+      // the disc itself is drawn after the dots (slots.sky), so that they come out from behind it as it leaves
+      const sun = this.sunAt(t, W);
+      if (sun) {
+        const haloOut = L.count(t, S.afterBreak);
+        if (t >= T.halo - e && haloOut < 3) PR.sun.halo.draw(ctx, sun.x, sun.y, { scale: L.motion.haloBreath(t), p: 1 - haloOut / 3 });
+      }
+      if (t >= T.afterglow[0] - e && t < T.afterBreak[2] + 2 / 30 - e) {
+        const [ax, ay] = this.afterAt, out = L.count(t, S.afterBreak);
+        const p = out ? 1 - out / 3 : L.count(t, S.afterglow) / 3;
+        if (p > 0) PR.afterglow.glow.draw(ctx, ax, ay, { p });
+      }
+
       for (const d of this.dots) {
         if (t < d.on - e || t >= d.off + 2 / 30 - e) continue;
         if (t >= d.off - e) { d.sprite.draw(ctx, d.x, d.y, { p: 0.5, rot: d.rot }); continue; }   // half dabbed out for one step, then gone
@@ -139,34 +166,23 @@ export default {
     sky(ctx, t, W) {
       const E = this.E, T = this.T, L = W.layout, PR = this.props, e = 1e-6;
 
-      // yesterday's sun, its halo and the afterglow (all behind the ridge, the man's hand and the hedge)
+      // yesterday's sun (behind the ridge, the man's hand and the hedge; its halo is in slots.back)
       const sun = this.sunAt(t, W);
-      if (sun) {
-        const haloOut = L.count(t, S.afterBreak);
-        if (t >= T.halo - e && haloOut < 3) {
-          PR.sun.halo.draw(ctx, sun.x, sun.y, { scale: L.motion.haloBreath(t), p: 1 - haloOut / 3 });
-        }
-        PR.sun.stages[sun.stage - 1].draw(ctx, sun.x, sun.y, sun.rot ? { rot: sun.rot } : undefined);
-      }
-      if (t >= T.afterglow[0] - e && t < T.afterBreak[0] + 1.2) {
-        const [ax, ay] = this.afterAt, out = L.count(t, S.afterBreak);
-        const p = out ? 1 - out / 3 : L.count(t, S.afterglow) / 3;
-        if (p > 0) PR.afterglow.glow.draw(ctx, ax, ay, { p });
-        if (out) PR.afterglow.burst.draw(ctx, ax, ay, t - T.afterBreak[0]);
-      }
+      if (sun) PR.sun.stages[sun.stage - 1].draw(ctx, sun.x, sun.y, sun.rot ? { rot: sun.rot } : undefined);
+      // the afterglow breaks into specks that drift up (4.30; gone by 4.90)
+      if (t >= T.afterBreak[0] - e && t < T.afterBreak[0] + 1.2) PR.afterglow.burst.draw(ctx, this.afterAt[0], this.afterAt[1], t - T.afterBreak[0]);
 
       // the veil cloud over (540, 335): one stepped pass at 0.07; parts and dabs out 8.77 / 8.90 / 9.03 / 9.17
       if (t >= T.veilIn - e) {
-        const out = L.count(t, S.veilOut), p = 1 - out / S.veilOut.length;
-        if (p > 0) {
+        const out = L.count(t, S.veilOut);
+        if (out < S.veilOut.length) {
           const V = L.veil, PV = PR.veil;
           const open = E.tween(t, T.veilOut[0], T.veilOut[3], 0, 1, E.ease.cubic.inOut);
           const cx = V.centre[0] + 3 * Math.sin((TAU * t) / 11.3 + 0.6), cy = V.centre[1] + 1.5 * Math.sin((TAU * t) / 7.7 + 2);
           const dx = 35 * open;
-          PV.L.draw(ctx, cx - dx, cy, { p });
-          PV.R.draw(ctx, cx + dx, cy, { p });
-          PV.rimL.draw(ctx, cx - dx, cy, { p });
-          PV.rimR.draw(ctx, cx + dx, cy, { p });
+          // eighths of each half that are still on after 0..3 steps: the halves do not leave alike (no mirror image)
+          PV.L.draw(ctx, cx - dx, cy, { p: VEIL_LEFT[out] / 8 });
+          PV.R.draw(ctx, cx + dx, cy, { p: VEIL_RIGHT[out] / 8 });
           if (!out) {
             // rim glimmer: each set shows 1, 2, 3, 2 thirds of its prints, a stage every 10 frames, the two out of step
             PV.glimmer.forEach((g, i) => {
@@ -187,16 +203,12 @@ export default {
         const [cx, cy] = L.man.chest;
         const step = L.count(t, S.ring) - 1;
         if (t < T.gather - e) {
-          const ringAt = (k, p) => {
-            const R = S.ringR[k], sc = [1, 0.95, 0.86, 0.74][k];
-            for (const d of this.ring) {
-              const a = d.a + 0.13 * k, r = R + d.dr * sc, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
-              // the ring passes BEHIND his head: no dab is printed on his face
-              if (((x - 540) / 52) ** 2 + ((y - 697) / 58) ** 2 < 1) continue;
-              d.sprite.draw(ctx, x, y, { rot: d.rot, scale: sc * d.sc, p });
-            }
-          };
-          ringAt(step, 1);
+          const R = S.ringR[step], sc = RING_SCALE[step], skip = RING_SKIP[step], shift = RING_SHIFT[step];
+          for (const d of this.ring) {
+            if (skip.includes(d.i)) continue;
+            const a = ((d.deg + (shift[d.i] ?? 0)) * Math.PI) / 180 + d.da, r = R + d.dr * sc;
+            d.sprite.draw(ctx, cx + Math.cos(a) * r, cy + Math.sin(a) * r, { rot: d.rot, scale: sc * d.sc });
+          }
         } else {
           const [px, py] = this.acting.palm('R', t);
           const n = L.count(t, S.absorb);                                                // 0 at 0.67 … 4 at 0.90
