@@ -1,0 +1,626 @@
+[
+ {
+  "w": "üçüncü",
+  "s": 0.16,
+  "e": 0.44,
+  "first_char_end": 0.18
+ },
+ {
+  "w": "nokta",
+  "s": 0.48,
+  "e": 0.74,
+  "first_char_end": 0.52
+ },
+ {
+  "w": "bu",
+  "s": 2.041,
+  "e": 2.101,
+  "first_char_end": 2.061
+ },
+ {
+  "w": "dünya",
+  "s": 2.141,
+  "e": 2.421,
+  "first_char_end": 2.161
+ },
+ {
+  "w": "darülhikmettir",
+  "s": 2.541,
+  "e": 3.421,
+  "first_char_end": 2.561
+ },
+ {
+  "w": "darülhizmettir",
+  "s": 3.921,
+  "e": 4.861,
+  "first_char_end": 3.941
+ },
+ {
+  "w": "darülücret",
+  "s": 5.462,
+  "e": 6.202,
+  "first_char_end": 5.482
+ },
+ {
+  "w": "ve",
+  "s": 6.242,
+  "e": 6.302,
+  "first_char_end": 6.262
+ },
+ {
+  "w": "mükafat",
+  "s": 6.342,
+  "e": 6.782,
+  "first_char_end": 6.362
+ },
+ {
+  "w": "değil",
+  "s": 6.862,
+  "e": 7.082,
+  "first_char_end": 6.882
+ },
+ {
+  "w": "buradaki",
+  "s": 7.942,
+  "e": 8.302,
+  "first_char_end": 7.962
+ },
+ {
+  "w": "amal",
+  "s": 8.402,
+  "e": 8.702,
+  "first_char_end": 8.442
+ },
+ {
+  "w": "ve",
+  "s": 8.742,
+  "e": 8.803,
+  "first_char_end": 8.763
+ },
+ {
+  "w": "hizmetlerin",
+  "s": 8.823,
+  "e": 9.363,
+  "first_char_end": 8.843
+ },
+ {
+  "w": "ücretleri",
+  "s": 9.463,
+  "e": 9.943,
+  "first_char_end": 9.483
+ },
+ {
+  "w": "berzahta",
+  "s": 10.203,
+  "e": 10.663,
+  "first_char_end": 10.223
+ },
+ {
+  "w": "ve",
+  "s": 10.703,
+  "e": 10.763,
+  "first_char_end": 10.723
+ },
+ {
+  "w": "ahirettedir",
+  "s": 10.863,
+  "e": 11.443,
+  "first_char_end": 10.883
+ },
+ {
+  "w": "buradaki",
+  "s": 12.304,
+  "e": 12.684,
+  "first_char_end": 12.324
+ },
+ {
+  "w": "amal",
+  "s": 12.764,
+  "e": 13.064,
+  "first_char_end": 12.804
+ },
+ {
+  "w": "berzahta",
+  "s": 13.384,
+  "e": 13.844,
+  "first_char_end": 13.404
+ },
+ {
+  "w": "ve",
+  "s": 13.884,
+  "e": 13.944,
+  "first_char_end": 13.904
+ },
+ {
+  "w": "ahirette",
+  "s": 14.044,
+  "e": 14.444,
+  "first_char_end": 14.064
+ },
+ {
+  "w": "meyve",
+  "s": 14.484,
+  "e": 14.724,
+  "first_char_end": 14.504
+ },
+ {
+  "w": "verir",
+  "s": 14.764,
+  "e": 15.004,
+  "first_char_end": 14.784
+ },
+ {
+  "w": "madem",
+  "s": 16.285,
+  "e": 16.565,
+  "first_char_end": 16.305
+ },
+ {
+  "w": "hakikat",
+  "s": 16.585,
+  "e": 16.945,
+  "first_char_end": 16.625
+ },
+ {
+  "w": "budur",
+  "s": 17.005,
+  "e": 17.245,
+  "first_char_end": 17.025
+ },
+ {
+  "w": "amali",
+  "s": 17.765,
+  "e": 18.145,
+  "first_char_end": 17.785
+ },
+ {
+  "w": "uhreviyeye",
+  "s": 18.205,
+  "e": 18.665,
+  "first_char_end": 18.225
+ },
+ {
+  "w": "ait",
+  "s": 18.745,
+  "e": 18.925,
+  "first_char_end": 18.765
+ },
+ {
+  "w": "neticeleri",
+  "s": 19.005,
+  "e": 19.526,
+  "first_char_end": 19.025
+ },
+ {
+  "w": "dünyada",
+  "s": 19.786,
+  "e": 20.186,
+  "first_char_end": 19.806
+ },
+ {
+  "w": "istememek",
+  "s": 20.266,
+  "e": 20.746,
+  "first_char_end": 20.286
+ },
+ {
+  "w": "gerektir",
+  "s": 20.806,
+  "e": 21.226,
+  "first_char_end": 20.826
+ },
+ {
+  "w": "verilse",
+  "s": 22.066,
+  "e": 22.426,
+  "first_char_end": 22.086
+ },
+ {
+  "w": "de",
+  "s": 22.466,
+  "e": 22.546,
+  "first_char_end": 22.486
+ },
+ {
+  "w": "memnunane",
+  "s": 22.827,
+  "e": 23.367,
+  "first_char_end": 22.847
+ },
+ {
+  "w": "değil",
+  "s": 23.407,
+  "e": 23.627,
+  "first_char_end": 23.427
+ },
+ {
+  "w": "mahzunane",
+  "s": 23.887,
+  "e": 24.447,
+  "first_char_end": 23.907
+ },
+ {
+  "w": "kabul",
+  "s": 24.487,
+  "e": 24.667,
+  "first_char_end": 24.507
+ },
+ {
+  "w": "etmek",
+  "s": 24.727,
+  "e": 24.967,
+  "first_char_end": 24.747
+ },
+ {
+  "w": "lazımdır",
+  "s": 25.027,
+  "e": 25.507,
+  "first_char_end": 25.047
+ },
+ {
+  "w": "çünkü",
+  "s": 26.528,
+  "e": 26.788,
+  "first_char_end": 26.548
+ },
+ {
+  "w": "cennetin",
+  "s": 26.868,
+  "e": 27.308,
+  "first_char_end": 26.888
+ },
+ {
+  "w": "meyveleri",
+  "s": 27.388,
+  "e": 27.828,
+  "first_char_end": 27.408
+ },
+ {
+  "w": "gibi",
+  "s": 27.868,
+  "e": 28.048,
+  "first_char_end": 27.888
+ },
+ {
+  "w": "kopardıkça",
+  "s": 28.248,
+  "e": 28.828,
+  "first_char_end": 28.268
+ },
+ {
+  "w": "yerine",
+  "s": 28.888,
+  "e": 29.128,
+  "first_char_end": 28.908
+ },
+ {
+  "w": "aynı",
+  "s": 29.228,
+  "e": 29.388,
+  "first_char_end": 29.248
+ },
+ {
+  "w": "gelmek",
+  "s": 29.428,
+  "e": 29.789,
+  "first_char_end": 29.448
+ },
+ {
+  "w": "sırrıyla",
+  "s": 29.829,
+  "e": 30.309,
+  "first_char_end": 29.849
+ },
+ {
+  "w": "baki",
+  "s": 30.949,
+  "e": 31.249,
+  "first_char_end": 30.969
+ },
+ {
+  "w": "hükmünde",
+  "s": 31.289,
+  "e": 31.669,
+  "first_char_end": 31.309
+ },
+ {
+  "w": "olan",
+  "s": 31.709,
+  "e": 31.909,
+  "first_char_end": 31.729
+ },
+ {
+  "w": "ameli",
+  "s": 32.029,
+  "e": 32.289,
+  "first_char_end": 32.049
+ },
+ {
+  "w": "uhrevi",
+  "s": 32.329,
+  "e": 32.669,
+  "first_char_end": 32.369
+ },
+ {
+  "w": "meyvesini",
+  "s": 32.709,
+  "e": 33.169,
+  "first_char_end": 32.729
+ },
+ {
+  "w": "bu",
+  "s": 33.81,
+  "e": 33.87,
+  "first_char_end": 33.83
+ },
+ {
+  "w": "dünyada",
+  "s": 33.91,
+  "e": 34.31,
+  "first_char_end": 33.93
+ },
+ {
+  "w": "fani",
+  "s": 34.39,
+  "e": 34.69,
+  "first_char_end": 34.41
+ },
+ {
+  "w": "bir",
+  "s": 34.75,
+  "e": 34.85,
+  "first_char_end": 34.77
+ },
+ {
+  "w": "surette",
+  "s": 34.91,
+  "e": 35.31,
+  "first_char_end": 34.93
+ },
+ {
+  "w": "yemek",
+  "s": 35.35,
+  "e": 35.59,
+  "first_char_end": 35.37
+ },
+ {
+  "w": "karı",
+  "s": 35.77,
+  "e": 36.05,
+  "first_char_end": 35.79
+ },
+ {
+  "w": "akıl",
+  "s": 36.09,
+  "e": 36.31,
+  "first_char_end": 36.13
+ },
+ {
+  "w": "değildir",
+  "s": 36.37,
+  "e": 36.75,
+  "first_char_end": 36.39
+ },
+ {
+  "w": "baki",
+  "s": 37.711,
+  "e": 38.011,
+  "first_char_end": 37.731
+ },
+ {
+  "w": "bir",
+  "s": 38.071,
+  "e": 38.191,
+  "first_char_end": 38.111
+ },
+ {
+  "w": "lambayı",
+  "s": 38.271,
+  "e": 38.671,
+  "first_char_end": 38.291
+ },
+ {
+  "w": "bir",
+  "s": 39.051,
+  "e": 39.211,
+  "first_char_end": 39.071
+ },
+ {
+  "w": "dakika",
+  "s": 39.271,
+  "e": 39.591,
+  "first_char_end": 39.291
+ },
+ {
+  "w": "yaşayacak",
+  "s": 39.651,
+  "e": 40.171,
+  "first_char_end": 39.671
+ },
+ {
+  "w": "ve",
+  "s": 40.251,
+  "e": 40.312,
+  "first_char_end": 40.271
+ },
+ {
+  "w": "sönecek",
+  "s": 40.372,
+  "e": 40.752,
+  "first_char_end": 40.392
+ },
+ {
+  "w": "bir",
+  "s": 40.832,
+  "e": 40.952,
+  "first_char_end": 40.852
+ },
+ {
+  "w": "lamba",
+  "s": 41.032,
+  "e": 41.292,
+  "first_char_end": 41.052
+ },
+ {
+  "w": "ile",
+  "s": 41.352,
+  "e": 41.492,
+  "first_char_end": 41.372
+ },
+ {
+  "w": "mübadele",
+  "s": 41.672,
+  "e": 42.172,
+  "first_char_end": 41.692
+ },
+ {
+  "w": "etmek",
+  "s": 42.232,
+  "e": 42.492,
+  "first_char_end": 42.252
+ },
+ {
+  "w": "gibidir",
+  "s": 42.552,
+  "e": 42.892,
+  "first_char_end": 42.572
+ },
+ {
+  "w": "işte",
+  "s": 44.013,
+  "e": 44.233,
+  "first_char_end": 44.033
+ },
+ {
+  "w": "bu",
+  "s": 44.273,
+  "e": 44.333,
+  "first_char_end": 44.293
+ },
+ {
+  "w": "sırra",
+  "s": 44.393,
+  "e": 44.633,
+  "first_char_end": 44.413
+ },
+ {
+  "w": "binaen",
+  "s": 44.673,
+  "e": 45.033,
+  "first_char_end": 44.693
+ },
+ {
+  "w": "ehli",
+  "s": 45.413,
+  "e": 45.593,
+  "first_char_end": 45.433
+ },
+ {
+  "w": "velayet",
+  "s": 45.633,
+  "e": 46.013,
+  "first_char_end": 45.653
+ },
+ {
+  "w": "hizmet",
+  "s": 46.533,
+  "e": 46.893,
+  "first_char_end": 46.553
+ },
+ {
+  "w": "ve",
+  "s": 47.073,
+  "e": 47.173,
+  "first_char_end": 47.093
+ },
+ {
+  "w": "meşakkat",
+  "s": 47.233,
+  "e": 47.794,
+  "first_char_end": 47.253
+ },
+ {
+  "w": "ve",
+  "s": 48.074,
+  "e": 48.134,
+  "first_char_end": 48.094
+ },
+ {
+  "w": "musibet",
+  "s": 48.194,
+  "e": 48.594,
+  "first_char_end": 48.214
+ },
+ {
+  "w": "ve",
+  "s": 48.654,
+  "e": 48.734,
+  "first_char_end": 48.674
+ },
+ {
+  "w": "külfeti",
+  "s": 48.794,
+  "e": 49.234,
+  "first_char_end": 48.814
+ },
+ {
+  "w": "hoş",
+  "s": 49.474,
+  "e": 49.634,
+  "first_char_end": 49.494
+ },
+ {
+  "w": "görüyorlar",
+  "s": 49.754,
+  "e": 50.254,
+  "first_char_end": 49.774
+ },
+ {
+  "w": "nazlanmıyorlar",
+  "s": 50.634,
+  "e": 51.415,
+  "first_char_end": 50.654
+ },
+ {
+  "w": "şekva",
+  "s": 51.655,
+  "e": 51.995,
+  "first_char_end": 51.675
+ },
+ {
+  "w": "etmiyorlar",
+  "s": 52.115,
+  "e": 52.655,
+  "first_char_end": 52.135
+ },
+ {
+  "w": "elhamdülillahi",
+  "s": 53.435,
+  "e": 54.195,
+  "first_char_end": 53.455
+ },
+ {
+  "w": "ala",
+  "s": 54.275,
+  "e": 54.476,
+  "first_char_end": 54.316
+ },
+ {
+  "w": "külli",
+  "s": 54.576,
+  "e": 54.836,
+  "first_char_end": 54.596
+ },
+ {
+  "w": "halin",
+  "s": 54.916,
+  "e": 55.236,
+  "first_char_end": 54.936
+ },
+ {
+  "w": "diyorlar",
+  "s": 55.296,
+  "e": 55.716,
+  "first_char_end": 55.316
+ }
+]

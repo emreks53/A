@@ -1,0 +1,564 @@
+{
+ "duration": 59.6,
+ "note": "All times are VIDEO seconds. level is relative loudness (1.0 = normal SFX level, which itself must stay far below the voice). pan -1..1.",
+ "changes_v2": "QA refinement: chimes replaced by off-scale glass glints; beds bridged (air_drift) + air_floor; radiant -3 dB; levels lowered on footsteps_grass, water_pour, bloom_swell, fruit_pops, scale_settle_clunk, bright_swell, thunder_soft; settle_chimes/soft_pop/sprout_pop/candle_light/puff_dissolve re-timed; dim_fade and gilding_shimmer dropped (36/32 dB under the voice, inaudible); room_tone ends 59.0",
+ "ambience": [
+  {
+   "type": "air_floor",
+   "from": 0.0,
+   "to": 54.8,
+   "level": 0.06,
+   "desc": "very low dark air floor (~-60 dBFS) under the whole narration so no pause drops into digital silence"
+  },
+  {
+   "type": "meadow",
+   "from": 0.0,
+   "to": 6.2,
+   "level": 0.38,
+   "desc": "very soft breeze + sparse distant birds (world garden, morning)"
+  },
+  {
+   "type": "air_rise",
+   "from": 6.0,
+   "to": 10.4,
+   "level": 0.38,
+   "desc": "airy, slowly brightening wind as the camera rises through the sky"
+  },
+  {
+   "type": "berzah",
+   "from": 7.9,
+   "to": 9.6,
+   "level": 0.42,
+   "desc": "hushed, slightly hollow night air (twilight realm), soft"
+  },
+  {
+   "type": "radiant",
+   "from": 9.2,
+   "to": 10.6,
+   "level": 0.24,
+   "desc": "soft high airy shimmer (garden of the hereafter) — noise-based, NOT a musical pad"
+  },
+  {
+   "type": "meadow",
+   "from": 10.8,
+   "to": 11.9,
+   "level": 0.5
+  },
+  {
+   "type": "air_rise",
+   "from": 11.9,
+   "to": 13.1,
+   "level": 0.5
+  },
+  {
+   "type": "radiant",
+   "from": 12.9,
+   "to": 14.6,
+   "level": 0.28
+  },
+  {
+   "type": "air_drift",
+   "from": 14.4,
+   "to": 17.9,
+   "level": 0.35,
+   "desc": "steady soft air for the wide zoom-out / zoom-in between the hereafter and the world (bridges the old 14.6-17.8 s hole)"
+  },
+  {
+   "type": "meadow",
+   "from": 17.8,
+   "to": 24.5,
+   "level": 0.38
+  },
+  {
+   "type": "radiant",
+   "from": 24.6,
+   "to": 31.8,
+   "level": 0.28
+  },
+  {
+   "type": "meadow",
+   "from": 31.8,
+   "to": 34.3,
+   "level": 0.4
+  },
+  {
+   "type": "room_warm",
+   "from": 34.2,
+   "to": 35.6,
+   "level": 0.35
+  },
+  {
+   "type": "lamp_flame",
+   "from": 35.7,
+   "to": 41.1,
+   "level": 0.5,
+   "desc": "quiet oil-lamp flame: soft hiss + rare tiny crackles"
+  },
+  {
+   "type": "night_wind",
+   "from": 41.1,
+   "to": 44.0,
+   "level": 0.3
+  },
+  {
+   "type": "mountain_wind",
+   "from": 43.0,
+   "to": 46.6,
+   "level": 0.36
+  },
+  {
+   "type": "rain",
+   "from": 46.6,
+   "to": 51.9,
+   "level": 0.6,
+   "desc": "wind-driven rain, mid-low band, not hissy"
+  },
+  {
+   "type": "storm_wind",
+   "from": 46.6,
+   "to": 52.0,
+   "level": 0.5
+  },
+  {
+   "type": "dawn",
+   "from": 51.8,
+   "to": 54.6,
+   "level": 0.4,
+   "desc": "storm clears: calm air, a few soft birds"
+  },
+  {
+   "type": "room_tone",
+   "from": 54.6,
+   "to": 59.0,
+   "level": 0.25,
+   "desc": "quiet warm room tone for the photographic end card"
+  }
+ ],
+ "events": [
+  {
+   "t": 0.15,
+   "type": "breath_swell",
+   "level": 0.35,
+   "desc": "gentle opening swell of air"
+  },
+  {
+   "t": 1.05,
+   "type": "sparkle_line",
+   "dur": 0.8,
+   "level": 0.35,
+   "desc": "tiny soft ticks as golden dotted lines draw (wisdom diagram)"
+  },
+  {
+   "t": 1.25,
+   "type": "light_rain",
+   "dur": 1.6,
+   "level": 0.25
+  },
+  {
+   "t": 1.75,
+   "type": "footsteps_grass",
+   "times": [
+    1.86,
+    2.18,
+    2.5,
+    2.8,
+    3.08
+   ],
+   "level": 0.3
+  },
+  {
+   "t": 3.32,
+   "type": "water_pour",
+   "dur": 0.8,
+   "level": 0.3
+  },
+  {
+   "t": 3.88,
+   "type": "soft_pop",
+   "level": 0.38,
+   "pan": -0.2,
+   "note": "80 ms before the word onset at ~3.96 s so it cannot read as a mouth click; picture pop starts 3.94"
+  },
+  {
+   "t": 4.82,
+   "type": "soft_pop",
+   "level": 0.45,
+   "pan": 0.2
+  },
+  {
+   "t": 5.38,
+   "type": "whoosh_up",
+   "dur": 1.0,
+   "level": 0.5
+  },
+  {
+   "t": 6.9,
+   "type": "motes_twinkle",
+   "dur": 2.4,
+   "level": 0.3
+  },
+  {
+   "t": 10.08,
+   "type": "settle_chimes",
+   "dur": 0.55,
+   "level": 0.3,
+   "note": "moved into the 10.04-10.81 s pause (was 9.5, under 'ahirettedir')"
+  },
+  {
+   "t": 10.5,
+   "type": "whoosh_soft",
+   "dur": 0.4,
+   "level": 0.6
+  },
+  {
+   "t": 11.1,
+   "type": "cloth_kneel",
+   "level": 0.35
+  },
+  {
+   "t": 11.42,
+   "type": "soil_pat",
+   "level": 0.36
+  },
+  {
+   "t": 11.8,
+   "type": "sprout_pop",
+   "level": 0.45,
+   "note": "80 ms before the word onset at 11.88 s"
+  },
+  {
+   "t": 11.9,
+   "type": "grow_swish_up",
+   "dur": 1.0,
+   "level": 0.5
+  },
+  {
+   "t": 12.84,
+   "type": "bloom_swell",
+   "level": 0.24
+  },
+  {
+   "t": 12.88,
+   "type": "fruit_pops",
+   "times": [
+    12.89,
+    12.965,
+    13.042,
+    13.104,
+    13.175,
+    13.25,
+    13.332,
+    13.394,
+    13.457,
+    13.54,
+    13.589,
+    13.667
+   ],
+   "level": 0.19,
+   "note": "irregular +-12 ms around the 70 ms picture grid; a diminishing ripple: the pops on the soft end of 'verir' and its tail are 2-7 dB smaller",
+   "gains_db": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -2,
+    -4,
+    -5,
+    -6,
+    -6,
+    -7
+   ]
+  },
+  {
+   "t": 16.1,
+   "type": "whoosh_soft",
+   "dur": 1.1,
+   "level": 0.35,
+   "desc": "zoom in"
+  },
+  {
+   "t": 17.95,
+   "type": "whoosh_soft",
+   "dur": 0.4,
+   "level": 0.5
+  },
+  {
+   "t": 18.1,
+   "type": "falling_shimmer",
+   "dur": 0.5,
+   "level": 0.25,
+   "desc": "a fruit descends within reach"
+  },
+  {
+   "t": 18.35,
+   "type": "cloth_move",
+   "level": 0.3
+  },
+  {
+   "t": 19.05,
+   "type": "cloth_move",
+   "level": 0.3
+  },
+  {
+   "t": 19.2,
+   "type": "airy_rise",
+   "dur": 0.6,
+   "level": 0.22,
+   "desc": "declined, the fruit floats back up"
+  },
+  {
+   "t": 20.5,
+   "type": "falling_shimmer",
+   "dur": 0.7,
+   "level": 0.4
+  },
+  {
+   "t": 21.17,
+   "type": "soft_catch",
+   "level": 0.4
+  },
+  {
+   "t": 21.3,
+   "type": "airy_rise",
+   "dur": 0.6,
+   "level": 0.3,
+   "desc": "ghost of joy appears"
+  },
+  {
+   "t": 21.9,
+   "type": "airy_fall",
+   "dur": 0.5,
+   "level": 0.3,
+   "desc": "ghost dissolves"
+  },
+  {
+   "t": 22.4,
+   "type": "low_sigh_wind",
+   "dur": 1.6,
+   "level": 0.35
+  },
+  {
+   "t": 24.25,
+   "type": "whoosh_soft",
+   "dur": 0.55,
+   "level": 0.42
+  },
+  {
+   "t": 25.0,
+   "type": "leaf_rustle",
+   "dur": 0.8,
+   "level": 0.25
+  },
+  {
+   "t": 26.96,
+   "type": "twig_snap_pluck",
+   "level": 0.45
+  },
+  {
+   "t": 27.35,
+   "type": "regrow_chime",
+   "level": 0.4
+  },
+  {
+   "t": 28.22,
+   "type": "twig_snap_pluck",
+   "level": 0.4
+  },
+  {
+   "t": 28.62,
+   "type": "regrow_chime",
+   "level": 0.4
+  },
+  {
+   "t": 29.4,
+   "type": "ring_shimmer",
+   "dur": 1.1,
+   "level": 0.35
+  },
+  {
+   "t": 31.6,
+   "type": "whoosh_soft",
+   "dur": 0.55,
+   "level": 0.42
+  },
+  {
+   "t": 33.45,
+   "type": "bite",
+   "level": 0.45
+  },
+  {
+   "t": 33.85,
+   "type": "bite",
+   "level": 0.45
+  },
+  {
+   "t": 34.05,
+   "type": "sand_crumble",
+   "dur": 0.5,
+   "level": 0.4
+  },
+  {
+   "t": 34.2,
+   "type": "scale_creak",
+   "dur": 0.6,
+   "level": 0.35
+  },
+  {
+   "t": 34.9,
+   "type": "scale_settle_clunk",
+   "level": 0.35
+  },
+  {
+   "t": 35.32,
+   "type": "bright_swell",
+   "dur": 0.5,
+   "level": 0.3,
+   "note": "blooms into the 35.29-36.18 s pause as the scale finishes settling (picture: 34.63-35.35 s)"
+  },
+  {
+   "t": 36.2,
+   "type": "ring_shimmer",
+   "dur": 1.0,
+   "level": 0.3
+  },
+  {
+   "t": 37.7,
+   "type": "clock_ticks",
+   "dur": 3.2,
+   "level": 0.25,
+   "desc": "very soft ticking of the one-minute dial"
+  },
+  {
+   "t": 37.85,
+   "type": "candle_light",
+   "level": 0.35,
+   "note": "picture: flame ignites at 37.85 s (T.dakika + 0.32)"
+  },
+  {
+   "t": 38.85,
+   "type": "flame_waver",
+   "level": 0.3
+  },
+  {
+   "t": 40.15,
+   "type": "swap_swish",
+   "times": [
+    40.15,
+    40.4
+   ],
+   "level": 0.4
+  },
+  {
+   "t": 41.03,
+   "type": "candle_out_puff",
+   "level": 0.5
+  },
+  {
+   "t": 42.45,
+   "type": "lamp_swell",
+   "dur": 0.9,
+   "level": 0.4
+  },
+  {
+   "t": 44.3,
+   "type": "footsteps_gravel",
+   "times": [
+    44.35,
+    44.75,
+    45.15,
+    45.55,
+    45.97,
+    46.42,
+    46.88,
+    47.36,
+    47.86,
+    48.36,
+    48.86,
+    49.36,
+    49.86,
+    50.36,
+    50.86,
+    51.36
+   ],
+   "level": 0.4,
+   "gains_db": [
+    0.0,
+    -6.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "note": "step 2 (44.75 s) lands on the decaying tail of 'velayet': -6 dB"
+  },
+  {
+   "t": 45.05,
+   "type": "water_pour",
+   "dur": 0.55,
+   "level": 0.35
+  },
+  {
+   "t": 46.67,
+   "type": "thunder_soft",
+   "dur": 3.0,
+   "level": 0.25
+  },
+  {
+   "t": 47.27,
+   "type": "load_thump",
+   "level": 0.35
+  },
+  {
+   "t": 47.95,
+   "type": "bloom_chimes",
+   "dur": 0.9,
+   "level": 0.3
+  },
+  {
+   "t": 49.62,
+   "type": "puff_dissolve",
+   "level": 0.4,
+   "note": "picture: the sigh cloud dissolves into light 49.6-50.0 s"
+  },
+  {
+   "t": 50.62,
+   "type": "puff_dissolve",
+   "level": 0.4,
+   "note": "picture: the grumble is blown away 50.6-51.15 s"
+  },
+  {
+   "t": 51.8,
+   "type": "clearing_swell",
+   "dur": 1.3,
+   "level": 0.45
+  },
+  {
+   "t": 52.0,
+   "type": "load_down",
+   "level": 0.3
+  },
+  {
+   "t": 54.2,
+   "type": "light_bloom",
+   "dur": 0.6,
+   "level": 0.35
+  },
+  {
+   "t": 55.1,
+   "type": "soft_page",
+   "level": 0.2
+  }
+ ]
+}
