@@ -312,8 +312,12 @@ export function agac({ boy = 600, tohum = 3, yaprakli = true, meyve = true, olce
   const govde = oge({
     ad: `agac2-govde-${boy}-${tohum}-${kuru}-${yaprakli}`, olcek, sekil: govdeSekil, arka: renk.arka, arkaAlfa: 0.85,
     tarama: { ton: TON.gurultulu(TON.silindir(-gk * 0.6, gk * 0.6), 0.1, 0.03, tohum), renkler: renk.tara, yon: -Math.PI / 2, aralik: 2.8, boy: [16, 60], esikler: [0.15, 0.45, 0.72], alfa: 0.55 },
-    kontur: renk.kontur, konturKal: 2.2,
+    kontur: null,
     detay: (c, api) => {
+      // yan konturlar (üst kenar konturlanmaz: gövde dallara kesintisiz akar)
+      const sol = svg(`M${-gk * 1.25} 0C${-gk * 0.7} ${-boy * 0.02} ${-gk * 0.55} ${-boy * 0.06} ${-gk * 0.5} ${-boy * 0.12}C${-gk * 0.45 + egri * 0.3} ${-gy * 0.5} ${-gk * 0.36 + egri} ${-gy * 0.8} ${-gk * 0.3 + egri} ${-gy}`)[0].pts;
+      const sag = svg(`M${gk * 1.3} 0C${gk * 0.7} ${-boy * 0.02} ${gk * 0.55} ${-boy * 0.06} ${gk * 0.5} ${-boy * 0.12}C${gk * 0.45 + egri * 0.3} ${-gy * 0.5} ${gk * 0.36 + egri} ${-gy * 0.8} ${gk * 0.3 + egri} ${-gy}`)[0].pts;
+      void sol; void sag; // konturu birleşik siluet çizer (konturOge)
       // kabuk çizgileri
       for (let i = 0; i < 5; i++) {
         const x = r.ara(-gk * 0.35, gk * 0.35), y0 = -r.ara(boy * 0.05, gy * 0.8), L = r.ara(boy * 0.04, boy * 0.1);
@@ -342,17 +346,19 @@ export function agac({ boy = 600, tohum = 3, yaprakli = true, meyve = true, olce
     const nx = -Math.sin(ang), ny = Math.cos(ang);
     dalSekil.push(...svg(`M${d.x + nx * d.k0 / 2} ${d.y + ny * d.k0 / 2}Q${d.bx + nx * (d.k0 + d.k1) / 4} ${d.by + ny * (d.k0 + d.k1) / 4} ${d.x2 + nx * d.k1 / 2} ${d.y2 + ny * d.k1 / 2}A${d.k1 / 2} ${d.k1 / 2} 0 0 0 ${d.x2 - nx * d.k1 / 2} ${d.y2 - ny * d.k1 / 2}Q${d.bx - nx * (d.k0 + d.k1) / 4} ${d.by - ny * (d.k0 + d.k1) / 4} ${d.x - nx * d.k0 / 2} ${d.y - ny * d.k0 / 2}Z`));
   }
+  // çatal yakası: gövdenin üstü ile dal diplerini kesintisiz birleştirir (aradaki çentikleri doldurur)
+  dalSekil.push(...svg(`M${egri - gk * 0.31} ${-gy + gk * 0.9}C${egri - gk * 0.36} ${-gy + gk * 0.2} ${egri - gk * 0.6} ${-gy - gk * 0.35} ${egri - gk * 0.55} ${-gy - gk * 0.75}L${egri + gk * 0.55} ${-gy - gk * 0.75}C${egri + gk * 0.6} ${-gy - gk * 0.35} ${egri + gk * 0.36} ${-gy + gk * 0.2} ${egri + gk * 0.31} ${-gy + gk * 0.9}Z`));
+  yonDuzelt(dalSekil); // bütün alt yollar aynı dönüş yönünde: üst üste binen yerlerde boşluk (delik) olmaz
   const dallarOge = oge({
     ad: `agac2-dal-${boy}-${tohum}-${kuru}-${yaprakli}`, olcek, sekil: dalSekil, arka: renk.arka, arkaAlfa: 0.85,
     tarama: { ton: TON.gurultulu(TON.sabit(0.5), 0.2, 0.02, tohum + 1), renkler: renk.tara, yon: -Math.PI / 2, aralik: 2.8, boy: [12, 40], esikler: [0.25, 0.6], alfa: 0.5 },
     kontur: null,
-    detay: (c, api) => {
-      for (const d of dallar) {
-        const ang = Math.atan2(d.y2 - d.y, d.x2 - d.x);
-        const nx = -Math.sin(ang), ny = Math.cos(ang);
-        for (const sg of [1, -1]) api.cizgi([[d.x + sg * nx * d.k0 / 2, d.y + sg * ny * d.k0 / 2], [d.bx + sg * nx * (d.k0 + d.k1) / 4, d.by + sg * ny * (d.k0 + d.k1) / 4], [d.x2 + sg * nx * d.k1 / 2, d.y2 + sg * ny * d.k1 / 2]], { renk: renk.kontur, kal: Math.max(1.2, Math.min(2.2, d.k0 * 0.14)), alfa: 0.85 });
-      }
-    },
+  });
+  // gövde + dallar için TEK siluet konturu: dalların çatalda birbirinin üstünden geçen çizgileri yoktur
+  const butun = [...govdeSekil, ...dalSekil];
+  const konturOge = oge({
+    ad: `agac2-kontur-${boy}-${tohum}-${kuru}-${yaprakli}`, olcek, sekil: butun, zemin: null, arka: null, tarama: null, kontur: null,
+    detay: (c) => siluetKontur(c, butun, renk.kontur, 2.1, 0.9),
   });
   // taç: kubbe biçiminde yerleşmiş kümeler (arkadan öne)
   const kumeler = [];
@@ -371,7 +377,7 @@ export function agac({ boy = 600, tohum = 3, yaprakli = true, meyve = true, olce
   }
   const kume = (R, k) => oge({
     ad: `agac2-kume-${Math.round(R)}-${k % 5}`, olcek, sekil: bulutsuKume(R, 30 + (k % 5)), arka: '#A9D49A', arkaAlfa: 0.85,
-    tarama: { ton: TON.gurultulu(TON.kure(R * 0.25, -R * 0.3, R * 1.3, { lz: 0.8, ortam: 0.18 }), 0.1, 0.03, k), renkler: [[0, PALET.yesilAcik], [0.55, PALET.yesilOrta], [1, PALET.yesil]], yonF: (x, y) => Math.atan2(y, x) * 0.3 - 0.9, aralik: 3.0, boy: [12, 34], esikler: [0.12, 0.42, 0.7], alfa: 0.55 },
+    tarama: { ton: TON.gurultulu(TON.kure(R * 0.25, -R * 0.3, R * 1.3, { lz: 0.8, ortam: 0.18 }), 0.1, 0.03, k), renkler: [[0, PALET.yesilAcik], [0.55, PALET.yesilOrta], [1, PALET.yesil]], yonF: (x, y) => -0.9 + 0.42 * clamp(x / R, -1.2, 1.2) + 0.12 * clamp(y / R, -1.2, 1.2), aralik: 3.0, boy: [12, 34], esikler: [0.12, 0.42, 0.7], alfa: 0.55 },
     kontur: PALET.yesil, konturKal: 1.8, konturAlfa: 0.8,
   });
   const kumeOgeleri = kumeler.map((k, i) => ({ ...k, oge: kume(Math.round(k.R / 4) * 4, i) }));
@@ -381,7 +387,9 @@ export function agac({ boy = 600, tohum = 3, yaprakli = true, meyve = true, olce
     for (const k of on) if (r() < 0.75) meyveler.push([k.x + r.ara(-k.R * 0.45, k.R * 0.45), k.y + r.ara(-k.R * 0.1, k.R * 0.5)]);
   }
   const tepe = kumeler.length ? kumeler.reduce((m, k) => (k.y - k.R < m[1] ? [k.x, k.y - k.R] : m), [0, 0]) : [egri, -boy];
-  return { govde, dallarOge, kumeler: kumeOgeleri, meyveler, tepe, dallar };
+  const yUst = Math.min(...dallar.map((d) => Math.min(d.y2 - d.k1, d.y))), yAlt = 0;
+  const govdeOran = clamp((gy) / (yAlt - yUst));
+  return { govde, dallarOge, konturOge, govdeOran, kumeler: kumeOgeleri, meyveler, tepe, dallar };
 }
 /** Ağacı çizer: buyume 0..1 (gövde ve dallar aşağıdan yukarı açılır, sonra kümeler patlar), yaprak 0..1, meyveA 0..1 */
 export function agacCiz(ctx, A, x, y, { s = 1, buyume = 1, yaprak = 1, meyveA = 1, t = 0, meyveOge = null, salinim = 1 } = {}) {
@@ -390,8 +398,14 @@ export function agacCiz(ctx, A, x, y, { s = 1, buyume = 1, yaprak = 1, meyveA = 
   ctx.scale(s, s);
   const gb = clamp(buyume / 0.55);
   if (gb > 0) {
-    ogeAcarak(ctx, A.dallarOge, 0, 0, clamp((buyume - 0.25) / 0.45), { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.1 });
+    const db = clamp((buyume - 0.5) / 0.42);
     ogeAcarak(ctx, A.govde, 0, 0, gb, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.08 });
+    ogeAcarak(ctx, A.dallarOge, 0, 0, db, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.1 });
+    if (A.konturOge) {
+      const go = A.govdeOran ?? 0.5;
+      const pk = db > 0 ? go + (1 - go) * db : gb * go;
+      ogeAcarak(ctx, A.konturOge, 0, 0, pk, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.08 });
+    }
   }
   A.kumeler.forEach((k, i) => {
     const u = clamp((yaprak - k.t * 0.5) / 0.5);
@@ -404,6 +418,42 @@ export function agacCiz(ctx, A, x, y, { s = 1, buyume = 1, yaprak = 1, meyveA = 
     if (u > 0) ogeCiz(ctx, meyveOge, m[0], m[1], { s: ease.outBack(u, 1.8) });
   });
   ctx.restore();
+}
+/** Kapalı alt yolların hepsini aynı dönüş yönüne çevirir (yerinde) */
+export function yonDuzelt(sekil) {
+  for (const p of sekil) {
+    let A = 0;
+    const q = p.pts;
+    for (let i = 0, j = q.length - 1; i < q.length; j = i++) A += (q[j][0] - q[i][0]) * (q[j][1] + q[i][1]);
+    if (A < 0) q.reverse();
+  }
+  return sekil;
+}
+/** Şekillerin birleşiminin dış hattına kalem konturu: iç kesişimler çizilmez. kal yerel birim. */
+export function siluetKontur(c, sekil, renk, kal = 2, alfa = 0.9) {
+  const W0 = c.canvas.width, H0 = c.canvas.height;
+  const T = c.getTransform();
+  const yol = path2d(sekil);
+  const kat = tuval(W0, H0);
+  const k = kat.getContext('2d');
+  k.setTransform(T);
+  k.lineJoin = 'round';
+  k.lineCap = 'round';
+  k.strokeStyle = rgba(renk, alfa);
+  k.lineWidth = kal * 2;
+  k.stroke(yol);
+  const maske = tuval(W0, H0);
+  const m = maske.getContext('2d');
+  m.setTransform(T);
+  m.fillStyle = '#000';
+  for (const p of sekil) m.fill(path2d([p])); // her alt yol ayrı: dönüş yönünden bağımsız birleşim
+  k.setTransform(1, 0, 0, 1, 0, 0);
+  k.globalCompositeOperation = 'destination-out';
+  k.drawImage(maske, 0, 0);
+  c.save();
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.drawImage(kat, 0, 0);
+  c.restore();
 }
 function bulutsuKume(R, tohum) {
   const r = rng(tohum);

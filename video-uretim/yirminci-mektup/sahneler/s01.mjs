@@ -46,7 +46,7 @@ export default {
     tepeArka = M.tepeOge({ w: 1700, h: 600, tohum: 11, renk: 'yesil', dalga: 70, ad: 's01-tepe-arka', olcek: 1 });
     tepeOrta = M.tepeOge({ w: 1500, h: 1000, tohum: 5, renk: 'yesil', dalga: 90, ad: 's01-tepe-orta', olcek: 1.5 });
     tepeOn = M.tepeOge({ w: 1600, h: 900, tohum: 8, renk: 'koyu', dalga: 60, ad: 's01-tepe-on', olcek: 1 });
-    A = M.agac({ boy: AGAC.boy, tohum: 21, olcek: 2.2 });
+    A = M.agac({ boy: AGAC.boy, tohum: 21, olcek: 3.0 }); // taca yakınlaşmada (z 2.5) keskin kalsın
     kirmiziMeyve = M.meyveOge(15, 2.6, 'kirmizi');
     altinMeyve = M.meyveOge(22, 3.5, 'altin');
     altinYer = [AGAC.x + A.tepe[0], AGAC.y + A.tepe[1] + 58];
@@ -78,8 +78,10 @@ export default {
       g.globalAlpha = giris;
       ogeCiz(g, gok, -210, -260);
       const gy = lerp(1250, 760, an(t, T.hilkat - 0.1, 2.2, ease.outCubic));
-      ogeCiz(g, gunes, 980, gy, { alfa: an(t, T.hilkat - 0.2, 0.8) });
-      M.hale(g, 980, gy, 260, '#FFF4D2', 0.5 * an(t, T.hilkat, 1.2));
+      // güneş: taca yakınlaşma başlarken söner (kadraj kenarında yarım kalıp ikinci bir nur gibi okunmasın)
+      const gunesA = 1 - an(t, T.netice - 0.3, 0.7, ease.inOutSine);
+      ogeCiz(g, gunes, 980, gy, { alfa: an(t, T.hilkat - 0.2, 0.8) * gunesA });
+      M.hale(g, 980, gy, 260, '#FFF4D2', 0.5 * an(t, T.hilkat, 1.2) * gunesA);
       const bx = [[180, 560], [820, 380], [1180, 640]];
       bulutlar.forEach((b, i) => {
         const gir = an(t, T.hilkat + 0.1 * i, 1.4, ease.outCubic);
@@ -115,7 +117,7 @@ export default {
     kameraIle(ctx, cam, (g) => {
       ogeAcarak(g, tepeOrta, -200, UFUK - 60, an(t, 0.38, 0.7, ease.inOutCubic), { mod: 'sil', yon: 0, yumusak: 0.12 });
       const buyume = an(t, T.bil - 0.05, 1.1, ease.outCubic);
-      const yaprak = an(t, T.bil + 0.35, 1.0, ease.lin);
+      const yaprak = an(t, T.bil + 0.72, 1.0, ease.lin); // dallar tamamlanınca taç patlar
       const meyveA = an(t, T.fitrat, 0.9, ease.lin);
       M.agacCiz(g, A, AGAC.x, AGAC.y, { buyume, yaprak, meyveA, t, meyveOge: kirmiziMeyve });
       // altın meyve: en yüce netice

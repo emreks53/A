@@ -19,6 +19,7 @@ export const YAZI = {
 };
 
 const okumaSuresi = (s) => 0.35 + s.length * 0.05;
+const CIKIS = 0.28; // sönme süresi (sn)
 
 /** Altyazı grupları: [{ bas, son, satirlar: [[{yazi, bas}]] }] */
 export const GRUPLAR = (() => {
@@ -57,8 +58,17 @@ export const GRUPLAR = (() => {
     let bit = Math.max(son, gr.sonKelime + 0.75);
     const cumle = CUMLELER.find((c) => gr.son_oge.i1 >= c.ilk && gr.son_oge.i1 <= c.son);
     bit = Math.min(bit, Math.max(cumle.bit + 0.9, son));
-    if (i + 1 < gruplar.length) bit = Math.min(bit, gruplar[i + 1].bas + 0.12);
     gr.son = Math.max(bit, gr.bas + 0.8);
+    gr.cikis = CIKIS;
+    // sonraki mana önceki tamamen sönmeden belirmesin (iki yazı aynı yerde üst üste binmez):
+    // önceki, sonrakinin ilk harfinden önce kısa bir çıkışla biter
+    if (i + 1 < gruplar.length) {
+      const sonraki = gruplar[i + 1].bas;
+      if (gr.son + CIKIS > sonraki - 0.02) {
+        gr.cikis = Math.min(CIKIS, Math.max(0.1, (sonraki - gr.bas) * 0.3));
+        gr.son = Math.max(gr.bas + 0.25, sonraki - 0.02 - gr.cikis);
+      }
+    }
     delete gr.son_oge;
   }
   return gruplar;
@@ -67,8 +77,8 @@ export const GRUPLAR = (() => {
 /** t anındaki altyazıyı çizer */
 export function altyaziCiz(ctx, t) {
   for (const g of GRUPLAR) {
-    if (t < g.bas - 0.01 || t > g.son + 0.3) continue;
-    const cikis = 1 - ease.inOutQuad(clamp((t - g.son) / 0.28));
+    if (t < g.bas - 0.01 || t > g.son + g.cikis + 0.01) continue;
+    const cikis = 1 - ease.inOutQuad(clamp((t - g.son) / g.cikis));
     ctx.save();
     ctx.font = YAZI.font(YAZI.boy);
     ctx.textBaseline = 'alphabetic';
