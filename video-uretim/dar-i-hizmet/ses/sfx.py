@@ -23,33 +23,35 @@ from scipy import ndimage, signal
 
 SR = 48000
 
-# ad: (ölçü türü, seviye)  -- miksteki db=0 karşılığı
+# ad: (ölçü türü, seviye)  -- miksteki db=0 karşılığı (ducking ÖNCESİ, tek başına).
+# Bu seviyeler, -8 dB ducking altında SFX stem'inin entegre ~-34 LUFS'a, konuşma
+# boşluklarında anlık (M) en çok ~-24 LUFS'a oturacağı biçimde seçildi.
 NOMINAL = {
-    "whoosh":        ("M",    -31.0),
-    "swish_paper":   ("M",    -33.0),
-    "bloom":         ("M",    -32.0),
-    "drop":          ("peak", -27.0),
-    "pour":          ("M",    -32.0),
-    "rain":          ("M",    -34.0),   # intensity=0.5 için; intensity +-4 dB kaydırır
-    "wind":          ("M",    -33.0),   # intensity=0.5 için; intensity +-4 dB kaydırır
-    "thunder_far":   ("M",    -35.0),
-    "pop_soft":      ("peak", -28.0),
-    "coin_clink":    ("peak", -29.0),
-    "chime":         ("peak", -27.0),
-    "shimmer":       ("M",    -36.0),
-    "lift_wash":     ("M",    -33.0),
-    "tick":          ("peak", -30.0),
-    "grow":          ("M",    -34.0),
-    "leaves_rustle": ("M",    -35.0),
-    "room_tone":     ("M",    -50.0),
-    "book_soft":     ("M",    -35.0),
+    "whoosh":        ("M",    -24.0),
+    "swish_paper":   ("M",    -26.0),
+    "bloom":         ("M",    -25.0),
+    "drop":          ("peak", -21.0),
+    "pour":          ("M",    -25.0),
+    "rain":          ("M",    -27.0),   # intensity=0.5 için; intensity +-4 dB kaydırır
+    "wind":          ("M",    -26.0),   # intensity=0.5 için; intensity +-4 dB kaydırır
+    "thunder_far":   ("M",    -28.0),
+    "pop_soft":      ("peak", -22.0),
+    "coin_clink":    ("peak", -23.0),
+    "chime":         ("peak", -21.0),
+    "shimmer":       ("M",    -29.0),
+    "lift_wash":     ("M",    -26.0),
+    "tick":          ("peak", -24.0),
+    "grow":          ("M",    -27.0),
+    "leaves_rustle": ("M",    -28.0),
+    "room_tone":     ("M",    -48.0),
+    "book_soft":     ("M",    -28.0),
 }
 
 # 'M' türü dokularda tepe/yükseklik oranı sınırı (dB): tepe <= nominal + PLR.
 # Gauss gürültüsünün seyrek tepeleri görünmez biçimde kırpılır (ileri bakışlı sınırlayıcı).
 PLR = {"thunder_far": 10.0, "room_tone": 10.0, "leaves_rustle": 9.0, "grow": 9.0,
        "swish_paper": 9.0, "rain": 9.0}
-PLR_DEFAULT = 8.0
+PLR_DEFAULT = 7.5
 
 
 # ---------------------------------------------------------------------------
@@ -978,7 +980,7 @@ def room_tone(dur=6.0, seed=0, wet=0.0):
     n = _ns(dur)
 
     def G(f, tt):
-        g = _tilt(f, 100, -0.75) * _hp_shape(f, 45, 2) * _lp_shape(f, 2200, 1)
+        g = _tilt(f, 100, -0.6) * _hp_shape(f, 60, 2) * _lp_shape(f, 1600, 2)
         return g * (1 + 0.6 * _bell(f, 170, 0.7))
 
     nz = shaped_noise(n, rng, G, ch=2, nper=4096)
@@ -1009,8 +1011,8 @@ def book_soft(dur=1.2, seed=0, wet=0.15):
     a = _ns(0.008)
     env_t = np.exp(-tt / 0.045)
     env_t[:a] *= _rise(a)
-    thud = _unit(bandpass(rng.standard_normal(m + 1024), 90, 500, 2)[1024:]) * env_t * 0.6
-    thud += _modal([175, 290, 420], [1.0, 0.5, 0.25], [0.05, 0.035, 0.02], 0.006, 0.4, rng) * 0.5
+    thud = _unit(bandpass(rng.standard_normal(m + 1024), 110, 500, 2)[1024:]) * env_t * 0.42
+    thud += _modal([175, 290, 420], [1.0, 0.5, 0.25], [0.05, 0.035, 0.02], 0.008, 0.4, rng) * 0.36
     env_p = np.exp(-tt / 0.09)
     a2 = _ns(0.01)
     env_p[:a2] *= _rise(a2)

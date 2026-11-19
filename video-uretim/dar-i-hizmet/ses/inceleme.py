@@ -28,6 +28,10 @@ _CMAP = np.array([(0, 0, 4), (31, 12, 72), (85, 15, 109), (136, 34, 106), (186, 
 
 
 def _font(size=14):
+    for fp in ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+               "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"):
+        if os.path.exists(fp):
+            return ImageFont.truetype(fp, size)
     try:
         return ImageFont.load_default(size=size)
     except TypeError:
@@ -251,12 +255,12 @@ def miks_incele(outdir, mix_path, cues_path, teshis=None):
     # konuşma sırasında / boşluklarda karşılaştırma
     nb = min(len(lv), len(ls))
     lv, ls = lv[:nb], ls[:nb]
-    sp = lv > -35
-    print(f"Konuşma blokları: {sp.sum()}  /  toplam {nb}")
+    sp = lv > -26
+    print(f"Konuşma blokları (ses M > -26): {sp.sum()}  /  toplam {nb}")
     if sp.any():
         diff = lv[sp] - ls[sp]
         print(f"Konuşma sırasında ses-SFX farkı (M, 400 ms): min {diff.min():.1f} LU, medyan {np.median(diff):.1f} LU")
-    gap = ~sp & (ts[:nb] < 27.6)
+    gap = (lv < -45) & (ts[:nb] < 27.6)
     if gap.any():
         print(f"Konuşma boşluklarında SFX M en yüksek: {ls[gap].max():.1f} LUFS")
     print(f"SFX M en yüksek (tümü): {ls.max():.1f} LUFS @ {ts[np.argmax(ls)]:.1f} s")

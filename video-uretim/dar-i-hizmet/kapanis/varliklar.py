@@ -13,7 +13,8 @@ VARLIK = os.path.join(SCRATCH, "varlik")
 
 # ad -> (tur, cozunurluk, haritalar)
 DOKULAR = {
-    "walnut_veneer": ("2k", ["Diffuse", "nor_gl", "Rough"]),        # masa ustu (acik ceviz)
+    "walnut_veneer": ("2k", ["Diffuse", "nor_gl", "Rough"]),        # (deneme) acik ceviz
+    "white_oak_veneer": ("2k", ["Diffuse", "nor_gl", "Rough"]),     # masa ustu (acik, sicak mese)
     "walnut_veneer_02": ("4k", ["Diffuse", "nor_gl", "Rough"]),     # basamakli kaide + rahle
     "plastered_wall_04": ("2k", ["Diffuse", "nor_gl", "Rough"]),    # krem siva duvar
     "leather_white": ("2k", ["Diffuse", "nor_gl", "Rough", "Displacement"]),        # Kur'an cildi deri dokusu

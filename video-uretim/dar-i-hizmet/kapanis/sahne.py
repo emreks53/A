@@ -17,6 +17,7 @@ import ayarlar as A  # noqa: E402
 import varliklar as V  # noqa: E402
 
 RND = random.Random(1405)
+cfgG = {}
 
 # ------------------------------------------------------------------ olculer
 KAIDE_W = 0.380          # basamakli kaide eni
@@ -223,7 +224,7 @@ class Malzeme:
 
     def _altin(self, b, normal_s, loc, tc):
         g = b.n("ShaderNodeBsdfPrincipled", loc)
-        g.inputs["Base Color"].default_value = srgb("#E3C27F")
+        g.inputs["Base Color"].default_value = srgb(cfgG.get("altin", "#D9B061"))
         g.inputs["Metallic"].default_value = 1.0
         nz = b.n("ShaderNodeTexNoise", (loc[0] - 400, loc[1] - 300), i_Scale=600.0, i_Detail=3.0)
         b.l(tc.outputs["Object"], nz.inputs["Vector"])
@@ -514,11 +515,11 @@ class Malzeme:
 
 
 # ===================================================================== kitap
-RENK_DERI = srgb("#C98F7E")       # cok acik, solgun gul-taba deri (kalibre edilir)
-RENK_KOYU = srgb("#9A6A5C")
+RENK_DERI = srgb("#C08573")       # cok acik, solgun gul-taba deri (kalibre edilir)
+RENK_KOYU = srgb("#8E5E50")
 RENK_SAYFA = srgb("#EFE5CF")
 RENK_ARKA_KAGIT = srgb("#EDE2CB")
-RENK_KURAN = srgb("#F2EBDD")       # inci / fildisi beyazi deri
+RENK_KURAN = srgb("#E9E0CF")       # inci / fildisi beyazi deri
 RENK_KURAN_KOYU = srgb("#D9CDB8")
 
 
@@ -644,13 +645,14 @@ class KitapUretici:
 
 # ================================================================ sahne kur
 def sahne_kur(cfg):
+    cfgG.clear(); cfgG.update(cfg)
     temizle()
     sc = bpy.context.scene
     M = Malzeme()
     KU = KitapUretici(M)
 
     # ---------------- masa
-    m_masa = M.ahsap("masa", "walnut_veneer", srgb("#F4E6D6"), 1.0 / 1.8, rough_mul=0.9, coat=0.12, normal_str=0.35)
+    m_masa = M.ahsap("masa", cfg.get("masa_doku", "white_oak_veneer"), srgb(cfg.get("masa_ton", "#F6E7D6")), 1.0 / cfg.get("masa_olcek", 0.5), rough_mul=0.9, coat=0.12, normal_str=0.35)
     bm = kutu_bm(-2.2, 2.2, -3.2, DUVAR_Y, -0.03, 0.0)
     kutu_uv(bm, ofs=(0.37, 0.11))
     masa = obj_yap("masa", bm, [m_masa], smooth=False)
@@ -662,7 +664,7 @@ def sahne_kur(cfg):
     obj_yap("duvar", bm, [m_duvar], smooth=False)
 
     # ---------------- basamakli kaide (iki parca)
-    m_kaide = M.ahsap("kaide", "walnut_veneer_02", srgb("#E9D4C2"), 1.0 / 1.0, rough_mul=0.85, coat=0.25, normal_str=0.5)
+    m_kaide = M.ahsap("kaide", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#B89D8A")), 1.0 / 1.0, rough_mul=0.85, coat=0.25, normal_str=0.5)
     w2 = KAIDE_W / 2
     bm = kutu_bm(-w2, w2, 0.0, BASAMAK_D, 0.0, H1)
     kutu_uv(bm, ofs=(0.13, 0.41))
@@ -831,74 +833,37 @@ def kuran_ve_rahle(M, KU, cfg):
     # --- Egik cerceve (L-birimi) yerel uzayi: kitap y in [-T,0] (on yuz -T), z in [0,H]
     lean = math.radians(cfg.get("kuran_egim", 15.0))
     yaw = math.radians(cfg.get("kuran_yaw", -3.0))
-    m_ahsap = M.ahsap("rahle", "walnut_veneer_02", srgb("#CDB09A"), 1.0, rough_mul=0.8, coat=0.3, normal_str=0.5)
+    m_ahsap = M.ahsap("rahle", "walnut_veneer_02", srgb(cfg.get("kaide_ton", "#B89D8A")), 1.0, rough_mul=0.8, coat=0.3, normal_str=0.5)
     # L-birimi sinirlari (yerel)
-    RW = 0.236
+    RW = 0.226
     sirt_d = 0.011
     raf_on = -T - 0.016
-    # rahle kokeni dunya: ust basamak uzerinde, kitaplarin arkasinda
+    # rahle kokeni dunya: ust basamakta, ust sira kitaplarin hemen arkasinda;
+    # ayaklar kitaplarin arkasinda gizli, egik sirtlik + raf kitaplarin ustunde gorunur.
     y_kok = BASAMAK_D + cfg.get("rahle_y", 0.252)
-    z_kok = H2 + cfg.get("rahle_z", 0.262)
+    z_kok = H2 + cfg.get("rahle_z", 0.225)
     R = Matrix.Rotation(yaw, 4, "Z") @ Matrix.Rotation(-lean, 4, "X")
     Mk = Matrix.Translation((0.0, y_kok, z_kok)) @ R
 
-    def parca(ad, x0, x1, y0, y1, z0, z1, bev=0.0016):
+    def parca(ad, x0, x1, y0, y1, z0, z1, bev=0.0016, M_=None):
         bm = kutu_bm(x0, x1, y0, y1, z0, z1)
-        bm.transform(Mk)
+        bm.transform(M_ if M_ is not None else Mk)
         kutu_uv(bm, ofs=(RND.random(), RND.random()))
         ob = obj_yap(ad, bm, [m_ahsap])
         bevel(ob, bev, 3)
         return ob
 
-    parca("rahle_sirt", -RW / 2, RW / 2, 0.0, sirt_d, -0.012, 0.215)
+    parca("rahle_sirt", -RW / 2, RW / 2, 0.0, sirt_d, -0.012, 0.205)
     parca("rahle_raf", -RW / 2, RW / 2, raf_on, sirt_d, -0.013, 0.0)
-    parca("rahle_dudak", -RW / 2, RW / 2, raf_on, raf_on + 0.010, 0.0, 0.017, bev=0.0025)
-    # yan ayaklar (dunya YZ profili), kalinlik 0.014
-    bpy.context.view_layer.update()
-    p_raf_on_alt = Mk @ Vector((0, raf_on, -0.013))
-    p_sirt_arka_alt = Mk @ Vector((0, sirt_d, -0.013))
-    p_sirt_arka_ust = Mk @ Vector((0, sirt_d, 0.12))
-    y_on_ayak = BASAMAK_D + A.KITAP_D + 0.012
-    y_arka = 2 * BASAMAK_D - 0.004
-    prof = [
-        (y_on_ayak, 0.0),
-        (y_arka, 0.0),
-        (y_arka, H2 + 0.03),
-        (p_sirt_arka_alt.y + 0.002, p_sirt_arka_alt.z),
-        (p_sirt_arka_ust.y + 0.001, p_sirt_arka_ust.z),
-        (p_sirt_arka_ust.y - 0.022, p_sirt_arka_ust.z - 0.01),
-        (p_raf_on_alt.y + 0.012, p_raf_on_alt.z + 0.010),
-        (p_raf_on_alt.y + 0.002, p_raf_on_alt.z),
-    ]
-    # on kenar: hafif bel (icbukey) egrisi
-    on_ust = prof[-1]
-    egri = []
-    for k in range(1, 12):
-        t = k / 12
-        zz = on_ust[1] + (0.0 - on_ust[1]) * t
-        yy = on_ust[0] + (y_on_ayak - on_ust[0]) * t + 0.016 * math.sin(math.pi * t)
-        egri.append((yy, zz))
-    prof = prof + egri
-    for sgn in (-1, 1):
-        bm = bmesh.new()
-        xa = sgn * (RW / 2 + 0.0005)
-        xb = sgn * (RW / 2 + 0.0145)
-        top = [bm.verts.new((xa, y, z)) for (y, z) in prof]
-        bot = [bm.verts.new((xb, y, z)) for (y, z) in prof]
-        bm.faces.new(top)
-        bm.faces.new(bot[::-1])
-        n = len(prof)
-        for i in range(n):
-            j = (i + 1) % n
-            bm.faces.new((top[i], top[j], bot[j], bot[i]))
-        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-        bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4], quad_method="BEAUTY", ngon_method="BEAUTY")
-        Mz = Matrix.Rotation(yaw, 4, "Z")
-        bm.transform(Matrix.Translation((0, y_kok, 0)) @ Mz @ Matrix.Translation((0, -y_kok, 0)))
-        kutu_uv(bm, ofs=(RND.random(), RND.random()))
-        keskin_kenar(bm)
-        ob = obj_yap("rahle_yan", bm, [m_ahsap])
-        bevel(ob, 0.0018, 3)
+    parca("rahle_dudak", -RW / 2 + 0.002, RW / 2 - 0.002, raf_on, raf_on + 0.0095, 0.0, 0.016, bev=0.0028)
+    # gizli ayaklar + taban (kitaplarin arkasinda)
+    Mz = Matrix.Translation((0, y_kok, 0)) @ Matrix.Rotation(yaw, 4, "Z") @ Matrix.Translation((0, -y_kok, 0))
+    yp = y_kok - 0.026
+    for sx in (-1, 1):
+        parca("rahle_ayak", sx * 0.070 - 0.010, sx * 0.070 + 0.010, yp - 0.009, yp + 0.009, H2 + 0.010, z_kok - 0.004,
+              bev=0.0015, M_=Mz)
+    parca("rahle_taban", -0.100, 0.100, y_kok - 0.060, min(y_kok + 0.004, 2 * BASAMAK_D - 0.003), H2, H2 + 0.012,
+          bev=0.0020, M_=Mz)
 
     # Kur'an yerlesimi: yerel kitap -> L-cerceve: Rz(+90) ile on kapak (-x) kameraya
     # kitap koken: sirt tepe (y=0), alt (z=0). Rz(90): (x,y)->(-y,x). Kitap govdesi -x yonunde.
@@ -921,7 +886,7 @@ def isiklar(cfg):
     env = nt.nodes.new("ShaderNodeTexEnvironment")
     env.image = bpy.data.images.load(V.yol("brown_photostudio_05", "hdri"), check_existing=True)
     bg = nt.nodes.new("ShaderNodeBackground")
-    bg.inputs["Strength"].default_value = cfg.get("hdri_guc", 0.35)
+    bg.inputs["Strength"].default_value = cfg.get("hdri_guc", 0.14)
     out = nt.nodes.new("ShaderNodeOutputWorld")
     nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
     nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
@@ -956,89 +921,89 @@ def isiklar(cfg):
         c = [max(0, min(255, v)) / 255 for v in (r, g, b)]
         return tuple(((x / 12.92) if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4) for x in c)
 
-    # pencere (sol-on-ust): yumusak ana isik
-    alan("pencere", (-1.55, -0.55, 1.15), (0.0, 0.25, 0.30), 1.1, 1.5, cfg.get("pencere_guc", 260), kelvin(5600))
+    # ana yumusak isik (sol on ust; buyuk difuzor / pencere yansimasi)
+    alan("ana", tuple(cfg.get("ana_konum", (-1.30, -0.45, 0.80))), (0.0, 0.2, 0.3), 0.8, 1.0,
+         cfg.get("ana_guc", 55), kelvin(5500), spread=cfg.get("ana_spread", 90))
     # sag dolgu (krem duvardan yansima gibi)
-    alan("dolgu", (1.6, -0.9, 0.7), (0.0, 0.2, 0.25), 1.4, 1.2, cfg.get("dolgu_guc", 60), kelvin(4800))
-    # arkadan hafif tepe/kenar isigi (sayfa kenarlarina parilti)
-    alan("tepe", (0.4, 0.9, 1.6), (0.0, 0.3, 0.3), 1.0, 0.6, cfg.get("tepe_guc", 25), kelvin(5000))
-    # on alt dolgu (kameranin arkasindan, masaya ve sirtlara yumusak)
-    alan("on", (0.2, -2.6, 0.9), (0.0, 0.0, 0.25), 1.6, 0.8, cfg.get("on_guc", 40), kelvin(5200))
+    alan("dolgu", (1.3, -0.6, 0.55), (0.0, 0.2, 0.25), 1.2, 1.0, cfg.get("dolgu_guc", 10), kelvin(5000))
+    # kamera tarafindan cok hafif on dolgu
+    alan("on", (0.25, -2.4, 0.7), (0.0, 0.0, 0.25), 1.4, 0.6, cfg.get("on_guc", 0), kelvin(5200))
 
-    # gunes (sabah, sol ust): pencere kasasi golgesi (gobo) ile
+    # gunes (sabah, sol ust): sol duvardaki pencereden girer
     ld = bpy.data.lights.new("gunes", "SUN")
-    ld.energy = cfg.get("gunes_guc", 3.2)
-    ld.angle = math.radians(cfg.get("gunes_aci", 2.2))
-    ld.color = kelvin(4300)
+    ld.energy = cfg.get("gunes_guc", 14.0)
+    ld.angle = math.radians(cfg.get("gunes_aci", 2.8))
+    ld.color = kelvin(4400)
     sun = bpy.data.objects.new("gunes", ld)
     sc.collection.objects.link(sun)
-    d = Vector(cfg.get("gunes_yon", (0.92, 0.42, -0.48))).normalized()
+    d = Vector(cfg.get("gunes_yon", (0.79, 0.44, -0.40))).normalized()
     sun.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+    # isik baglama: gunes yalnizca duvar, Kur'an ve rahleyi aydinlatir (kitaplar/masa pencere
+    # kasasinin alt golgesinde kalmis gibi). Golgeler normal hesaplanir.
+    if cfg.get("gunes_bagla", True):
+        alici = bpy.data.collections.new("gunes_alici")
+        for o in sc.objects:
+            if o.name.startswith(("duvar", "kuran", "rahle_sirt", "rahle_raf", "rahle_dudak")):
+                alici.objects.link(o)
+        sun.light_linking.receiver_collection = alici
+    sol_duvar(cfg)
 
-    # gobo: sol duvar + pencere acikligi (kamerada gorunmez)
-    gobo_kur(cfg, d)
 
-
-def gobo_kur(cfg, d):
-    """Pencere kasasi + tul perde golgesi. Duzlemin gunes yonune dik oldugu bir 'pencere duvari'."""
-    sc = bpy.context.scene
-    # hedef nokta: Kur'an civari; gobo, gunes yonunde geriye 1.6 m
-    hedef = Vector(cfg.get("gobo_hedef", (-0.05, 0.75, 0.62)))
-    mer = hedef - d * cfg.get("gobo_mesafe", 1.7)
-    # duzlem eksenleri
-    nrm = -d
-    up = Vector((0, 0, 1))
-    ax_u = up.cross(nrm).normalized()
-    ax_v = nrm.cross(ax_u).normalized()
+def sol_duvar(cfg):
+    """Pencereli sol duvar (kadraj disi): gunes isigini pencere kasasi/kayit golgeleriyle sinirlar."""
+    x = SOL_DUVAR_X
+    ya, yb = cfg.get("pencere_y", (-0.35, 0.80))
+    za, zb = cfg.get("pencere_z", (0.75, 1.85))
+    ym = (ya + yb) / 2
+    kayitlar = cfg.get("kayitlar", (1.05, 1.45))
     bm = bmesh.new()
-    # pencere: 2 x 3 cam, kasa 0.06, kayitlar 0.04
-    W, Hh = cfg.get("pencere_w", 0.95), cfg.get("pencere_h", 1.25)
-    du, dv = cfg.get("pencere_kaydir", (0.0, 0.0))
-    kas, kay = 0.07, 0.045
-    # buyuk duz levha + delikler yerine: cevreleyen 4 levha + kayitlar
-    def dik(u0, u1, v0, v1):
-        c = [mer + ax_u * u + ax_v * v for (u, v) in ((u0, v0), (u1, v0), (u1, v1), (u0, v1))]
-        vs = [bm.verts.new(p) for p in c]
-        bm.faces.new(vs)
-    BIG = 4.0
-    u0, u1 = du - W / 2, du + W / 2
-    v0, v1 = dv - Hh / 2, dv + Hh / 2
-    dik(-BIG, u0, -BIG, BIG)
-    dik(u1, BIG, -BIG, BIG)
-    dik(u0, u1, v1, BIG)
-    dik(u0, u1, -BIG, v0)
-    # dikey kayit (ortada) + iki yatay kayit
-    dik(du - kay / 2, du + kay / 2, v0, v1)
-    for f in (1 / 3, 2 / 3):
-        vv = v0 + (v1 - v0) * f
-        dik(u0, u1, vv - kay / 2, vv + kay / 2)
-    ob = obj_yap("gobo", bm, [], smooth=False)
+
+    def dik(y0, y1, z0, z1):
+        vs = [bm.verts.new((x, y, z)) for (y, z) in ((y0, z0), (y1, z0), (y1, z1), (y0, z1))]
+        f = bm.faces.new(vs)
+        return f
+    Y0, Y1, Z0, Z1 = -3.2, DUVAR_Y, -0.05, 2.6
+    dik(Y0, ya, Z0, Z1)
+    dik(yb, Y1, Z0, Z1)
+    dik(ya, yb, Z0, za)
+    dik(ya, yb, zb, Z1)
+    dik(ym - 0.024, ym + 0.024, za, zb)          # orta dikme
+    for zk in kayitlar:                          # yatay kayitlar
+        dik(ya, yb, zk - 0.022, zk + 0.022)
+    for f in bm.faces:
+        if f.normal.x < 0:
+            f.normal_flip()
+    ob = obj_yap("sol_duvar", bm, [], smooth=False)
+    sol = ob.modifiers.new("kalinlik", "SOLIDIFY")
+    sol.thickness = 0.12
+    sol.offset = -1.0
     ob.visible_camera = False
-    ob.visible_glossy = False
-    ob.visible_diffuse = True
-    mat = Malzeme.basit(None, "gobo_m", srgb("#E8DECE"), 0.9)
-    ob.data.materials.append(mat)
-    # tul perde: yari gecirgen, gunes isigini yumusatir
+    ob.data.materials.append(Malzeme.basit(None, "sol_duvar_m", srgb("#E9DFCF"), 0.9))
     if cfg.get("perde", True):
         bm = bmesh.new()
-        off = d * 0.05
-        c = [mer + off + ax_u * u + ax_v * v for (u, v) in ((u0, v0), (u1, v0), (u1, v1), (u0, v1))]
-        vs = [bm.verts.new(p) for p in c]
-        bm.faces.new(vs)
-        pob = obj_yap("perde", bm, [], smooth=False)
+        xp = x + 0.06
+        n = 40
+        rows = []
+        for i in range(n + 1):
+            y = ya + (yb - ya) * i / n
+            xx = xp + 0.012 * math.sin(i * 1.7) + 0.006 * math.sin(i * 0.53)
+            rows.append((bm.verts.new((xx, y, za)), bm.verts.new((xx, y, zb))))
+        for i in range(n):
+            bm.faces.new((rows[i][0], rows[i + 1][0], rows[i + 1][1], rows[i][1]))
+        pob = obj_yap("perde", bm, [], smooth=True)
         pob.visible_camera = False
         pob.visible_glossy = False
         pm = yeni_mat("perde_m")
         b = NB(pm)
         tc = b.n("ShaderNodeTexCoord", (-900, 0))
-        wv = b.n("ShaderNodeTexWave", (-700, 0), wave_type="BANDS", bands_direction="X", i_Scale=6.0,
-                 i_Distortion=3.0, i_Detail=2.0)
+        wv = b.n("ShaderNodeTexWave", (-700, 0), wave_type="BANDS", bands_direction="Y", i_Scale=3.0,
+                 i_Distortion=2.5, i_Detail=2.0)
         b.l(tc.outputs["Object"], wv.inputs["Vector"])
-        mr = b.n("ShaderNodeMapRange", (-500, 0), i_To_Min=0.55, i_To_Max=0.85)
+        mr = b.n("ShaderNodeMapRange", (-500, 0), i_To_Min=cfg.get("perde_min", 0.62), i_To_Max=cfg.get("perde_max", 0.86))
         b.l(wv.outputs["Fac"], mr.inputs["Value"])
         tr = b.n("ShaderNodeBsdfTransparent", (-200, 100))
         tl = b.n("ShaderNodeBsdfTranslucent", (-200, -100))
-        tl.inputs["Color"].default_value = srgb("#FFF6EA")
+        tl.inputs["Color"].default_value = srgb("#FFF4E6")
         ms = b.n("ShaderNodeMixShader", (100, 0))
         b.l(mr.outputs["Result"], ms.inputs["Fac"])
         b.l(tl.outputs["BSDF"], ms.inputs[1])
@@ -1076,7 +1041,7 @@ def kamera(cfg):
 
 def kamera_konum(cam, cfg, t=0.0):
     """t: 0..1 hareket ilerlemesi (dolly)."""
-    pitch = math.radians(cfg.get("pitch", 12.5))
+    pitch = math.radians(cfg.get("pitch", 14.5))
     dist = cfg.get("mesafe", 3.05)
     hedef = Vector(cfg.get("hedef", (0.0, 0.18, 0.30)))
     fwd = Vector((0.0, math.cos(pitch), -math.sin(pitch)))
@@ -1135,7 +1100,7 @@ def render_ayar(cfg):
     vs.exposure = cfg.get("pozlama", 0.0)
     vs.gamma = 1.0
     if hasattr(vs, "use_white_balance"):
-        vs.use_white_balance = True
+        vs.use_white_balance = cfg.get("beyaz_denge", False)
         vs.white_balance_temperature = cfg.get("beyaz_k", 6100)   # <6500: sicak goster
         vs.white_balance_tint = cfg.get("beyaz_tint", 4.0)
     sc.display_settings.display_device = "sRGB"

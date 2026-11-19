@@ -18,9 +18,10 @@ cues.json: nesne listesi
    "not": "..."}           # yok sayılır (açıklama için)
 
 Zincir:
-  cue'lar -> SFX bus -> EQ (HPF 80 Hz, 10 kHz üstü -4 dB raf + 16 kHz LPF)
+  cue'lar -> SFX bus -> EQ (HPF 80 Hz 24 dB/okt, 10 kHz üstü -4 dB raf + 16 kHz LPF)
           -> ducking (anlatım zarfından yan zincir: konuşurken ~-8 dB, 80 ms atak / 400 ms bırakma)
-          -> SFX yükseklik güvenliği (entegre [-36, -32] LUFS dışındaysa -34'e; tepe <= -24 dBTP sınırlayıcı)
+          -> SFX yükseklik güvenliği (entegre [-36, -32] LUFS dışındaysa -34'e; anlık M <= -24 LUFS
+             sürücüsü; gerçek tepe <= -24 dBTP: önce yavaş 'fader sürüşü', kalan için hızlı sınırlayıcı)
   anlatım (+0.30 sn) -> -16 LUFS entegre, gerçek tepe <= -1.5 dBTP (şeffaf sınırlayıcı)
   final = anlatım + SFX -> 48 kHz stereo 24-bit WAV (+ *_sfx.wav stem), ffmpeg ile ölçüm.
 """
@@ -34,7 +35,7 @@ import subprocess
 import sys
 
 import numpy as np
-from scipy import signal
+from scipy import ndimage, signal
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -146,10 +147,10 @@ def _high_shelf(f0, gain_db, S=0.8):
 
 
 def bus_eq(x):
-    """80 Hz altını kes (2. derece HPF + 30 Hz infrasonik), 10 kHz üstünü yumuşat."""
+    """80 Hz altını kes (4. derece HPF + 25 Hz infrasonik), 10 kHz üstünü yumuşat (-4 dB raf, 16 kHz LPF)."""
     sos = np.vstack([
-        signal.butter(2, 30, "highpass", fs=SR, output="sos"),
-        signal.butter(2, 80, "highpass", fs=SR, output="sos"),
+        signal.butter(2, 25, "highpass", fs=SR, output="sos"),
+        signal.butter(4, 80, "highpass", fs=SR, output="sos"),     # 24 dB/oct
         _high_shelf(10000, -4.0),
         signal.butter(2, 16000, "lowpass", fs=SR, output="sos"),
     ])
@@ -256,6 +257,52 @@ def ffmpeg_olcum(path):
     return out
 
 
+def m_guard(x, ceiling_lufs, iters=5):
+    """Anlık yükseklik (M, 400 ms) tavanı: aşan bloklarda yumuşak kazanç sürücüsü (çevrimdışı)."""
+    W, H = int(0.4 * SR), int(0.01 * SR)
+    n = x.shape[0]
+    total = np.zeros(n)
+    for _ in range(iters):
+        z, st = sfx._block_power(x, 0.4, 0.01)
+        over = sfx._lk(z) - ceiling_lufs
+        idx = np.nonzero(over > 0)[0]
+        if len(idx) == 0:
+            break
+        a = np.zeros(n)
+        for j in idx:
+            a[st[j]:st[j] + W] = np.maximum(a[st[j]:st[j] + W], over[j] + 0.15)
+        a = ndimage.uniform_filter1d(ndimage.uniform_filter1d(a, 4801), 4801)
+        x = x * sfx.db2lin(-a)[:, None]
+        total += a
+    return x, float(total.max())
+
+
+def peak_rider(x, ceiling_db, hold=0.15, smooth=0.15):
+    """Yavaş, ileri bakışlı 'fader sürüşü': gerçek tepe tavanı aşılacak bölgeyi ~300 ms'lik
+    yumuşak rampalarla kısar (dinamiği ezmez; olay bütünüyle biraz kısılır).
+    Garanti: tutma yarıçapı >= yumuşatma desteğinin yarısı -> her örnekte kazanç <= gereken."""
+    n = x.shape[0]
+    up = np.abs(signal.resample_poly(x, 4, 1, axis=0)).max(axis=1)[:4 * n].reshape(n, 4).max(axis=1)
+    pk = np.maximum(np.abs(x).max(axis=1), up)
+    att = np.maximum(0.0, sfx.lin2db(pk) - ceiling_db)
+    if att.max() <= 0:
+        return x, 0.0, 0.0
+    H = int(hold * SR)
+    a = ndimage.maximum_filter1d(att, size=2 * H + 1)
+    w = int(smooth * SR) | 1
+    a = ndimage.uniform_filter1d(ndimage.uniform_filter1d(a, w), w)
+    return x * sfx.db2lin(-a)[:, None], float(a.max()), float(np.mean(a > 0.5))
+
+
+def sfx_safety(x, a):
+    """M tavanı sürücüsü -> yavaş gerçek-tepe sürüşü -> hızlı gerçek-tepe sınırlayıcı."""
+    x, m_gr = m_guard(x, a.sfx_m_tavan)
+    x, ride_gr, ride_frac = peak_rider(x, a.sfx_tp - 0.4)
+    y, lim_gr = sfx.limiter(x, a.sfx_tp - 0.3, lookahead=0.006, release_db_s=25.0)
+    gr_db = sfx.lin2db(np.maximum(np.abs(x).max(axis=1), 1e-9) / np.maximum(np.abs(y).max(axis=1), 1e-9))
+    return y, m_gr, ride_gr, ride_frac, lim_gr, float(np.mean(gr_db > 1.0))
+
+
 def ic_olcum(x):
     return {"I_lufs": sfx.integrated_lufs(x), "M_max_lufs": sfx.momentary_max(x, 0.1),
             "S_max_lufs": sfx.shortterm_max(x), "TP_dbtp": sfx.true_peak_db(x), "peak_dbfs": sfx.peak_db(x)}
@@ -277,7 +324,10 @@ def main(argv=None):
     ap.add_argument("--sfx-lufs", type=float, default=None,
                     help="SFX stem'i bu entegre seviyeye zorla (varsayılan: yalnız [-36,-32] dışındaysa -34)")
     ap.add_argument("--sfx-aralik", type=float, nargs=2, default=(-36.0, -32.0))
-    ap.add_argument("--sfx-tavan", type=float, default=-24.0, help="SFX gerçek tepe tavanı (dBTP)")
+    ap.add_argument("--sfx-m-tavan", type=float, default=-24.0,
+                    help="SFX anlık yükseklik (M, 400 ms) tavanı, LUFS")
+    ap.add_argument("--sfx-tp", type=float, default=-24.0,
+                    help="SFX gerçek tepe sınırlayıcı tavanı (dBTP); yalnız yükseklik tavanı isteniyorsa ör. -18")
     ap.add_argument("--teshis", help="duck eğrisi vb. için .npz yolu")
     ap.add_argument("--rapor", help="ölçümleri JSON olarak yaz")
     a = ap.parse_args(argv)
@@ -302,15 +352,26 @@ def main(argv=None):
     sfx_bus = bus * gain[:, None]
 
     print("[4/5] SFX seviye güvenliği ...")
-    I0 = sfx.integrated_lufs(sfx_bus)
+    ducked = sfx_bus
+    I0 = sfx.integrated_lufs(ducked)
+    lo, hi = a.sfx_aralik
     trim = 0.0
-    if np.isfinite(I0):
+    if np.isfinite(I0) and a.sfx_lufs is not None:
+        trim = a.sfx_lufs - I0
+    for _ in range(5):          # tüm güvenlik zinciri sonrası entegre seviye aralıkta kalsın
+        sfx_bus, m_gr, ride_gr, ride_frac, sfx_gr, gr_frac = sfx_safety(ducked * sfx.db2lin(trim), a)
+        I1 = sfx.integrated_lufs(sfx_bus)
+        if not np.isfinite(I1):
+            break
         if a.sfx_lufs is not None:
-            trim = a.sfx_lufs - I0
-        elif not (a.sfx_aralik[0] <= I0 <= a.sfx_aralik[1]):
-            trim = 0.5 * (a.sfx_aralik[0] + a.sfx_aralik[1]) - I0   # aralık dışı: ortaya çek
-    sfx_bus = sfx_bus * sfx.db2lin(trim)
-    sfx_bus, sfx_gr = sfx.limiter(sfx_bus, a.sfx_tavan - 0.3, lookahead=0.004, release_db_s=40.0)
+            err = a.sfx_lufs - I1
+            if abs(err) < 0.2:
+                break
+        elif lo <= I1 <= hi:
+            break
+        else:
+            err = 0.5 * (lo + hi) - I1                 # aralık dışı: ortaya çek
+        trim += err
     sfx_bus = sfx.fade(sfx_bus, 0.0, 0.05)
 
     print("[5/5] final miks + yazma ...")
@@ -327,9 +388,13 @@ def main(argv=None):
 
     rapor = {
         "ayarlar": {"video_dur": a.video_dur, "anlatim_ofset": a.anlatim_ofset, "duck_db": a.duck_db,
-                    "duck_atak": a.duck_atak, "duck_birak": a.duck_birak, "sfx_tavan": a.sfx_tavan},
+                    "duck_atak": a.duck_atak, "duck_birak": a.duck_birak,
+                    "sfx_m_tavan": a.sfx_m_tavan, "sfx_tp": a.sfx_tp},
         "anlatim_bilgi": ninfo,
-        "sfx_trim_db": trim, "sfx_onceki_I": I0, "sfx_sinirlayici_gr_db": sfx_gr,
+        "sfx_trim_db": trim, "sfx_onceki_I": I0, "sfx_m_guard_gr_db": m_gr,
+        "sfx_tepe_surusu_gr_db": ride_gr, "sfx_tepe_surusu_zaman_orani": ride_frac,
+        "sfx_sinirlayici_gr_db": sfx_gr,
+        "sfx_sinirlayici_1dB_ustu_zaman_orani": gr_frac,
         "final_sinirlayici_gr_db": mix_gr,
         "ffmpeg": {"anlatim": ffmpeg_olcum(tmp_voice), "sfx": ffmpeg_olcum(stem), "final": ffmpeg_olcum(a.out)},
         "ic": {"anlatim": ic_olcum(narr), "sfx": ic_olcum(sfx_bus), "final": ic_olcum(mix)},
@@ -338,11 +403,12 @@ def main(argv=None):
     # konuşma sırasında ses/SFX farkı (400 ms M eğrileri)
     tv, lv = sfx.loudness_curve(narr)
     _, ls = sfx.loudness_curve(sfx_bus)
-    sp = lv > -35
+    sp = lv > a.ses_lufs - 10          # konuşmanın dolu olduğu 400 ms bloklar
     if sp.any():
         dd = lv[sp] - ls[sp]
-        rapor["konusma_sirasinda_ses_eksi_sfx_LU"] = {"min": float(dd.min()), "medyan": float(np.median(dd))}
-    gap = (~sp) & (tv < a.anlatim_ofset + ninfo["uzunluk_s"])
+        rapor["konusma_sirasinda_ses_eksi_sfx_LU"] = {"min": float(dd.min()), "p5": float(np.percentile(dd, 5)),
+                                                    "medyan": float(np.median(dd))}
+    gap = (lv < -45) & (tv < a.anlatim_ofset + ninfo["uzunluk_s"])
     rapor["konusma_bosluklarinda_sfx_M_max"] = float(ls[gap].max()) if gap.any() else None
 
     F = rapor["ffmpeg"]
@@ -356,10 +422,18 @@ def main(argv=None):
     print(f"  Ses - SFX (entegre): {F['anlatim']['I_lufs'] - F['sfx']['I_lufs']:.1f} LU")
     if "konusma_sirasinda_ses_eksi_sfx_LU" in rapor:
         k = rapor["konusma_sirasinda_ses_eksi_sfx_LU"]
-        print(f"  Konuşma sırasında ses - SFX (M): en az {k['min']:.1f} LU, medyan {k['medyan']:.1f} LU")
+        print(f"  Konuşma sırasında ses - SFX (M, ses > {a.ses_lufs - 10:.0f} LUFS blokları): en az {k['min']:.1f} LU, "
+              f"%5 {k['p5']:.1f} LU, medyan {k['medyan']:.1f} LU")
     if rapor["konusma_bosluklarinda_sfx_M_max"] is not None:
-        print(f"  Konuşma boşluklarında SFX M maks: {rapor['konusma_bosluklarinda_sfx_M_max']:.1f} LUFS")
-    print(f"  SFX trim: {trim:+.2f} dB (önce I = {I0:.1f} LUFS), SFX sınırlayıcı en çok {sfx_gr:.2f} dB, "
+        print(f"  Konuşma boşluklarında (ses M < -45) SFX M maks: {rapor['konusma_bosluklarinda_sfx_M_max']:.1f} LUFS")
+    I_ic = rapor["ic"]
+    print(f"  İç ölçüm (BS.1770): anlatım I {I_ic['anlatim']['I_lufs']:.1f}, SFX I {I_ic['sfx']['I_lufs']:.1f} / "
+          f"M maks {I_ic['sfx']['M_max_lufs']:.1f} / TP {I_ic['sfx']['TP_dbtp']:.1f}, final I {I_ic['final']['I_lufs']:.1f} "
+          f"/ TP {I_ic['final']['TP_dbtp']:.1f}")
+    print(f"  SFX M-tavan sürücüsü en çok {m_gr:.2f} dB; yavaş tepe sürüşü en çok {ride_gr:.2f} dB "
+          f"(zamanın %{100 * ride_frac:.1f}'inde > 0.5 dB); hızlı TP sınırlayıcı en çok {sfx_gr:.2f} dB "
+          f"(zamanın %{100 * gr_frac:.2f}'inde > 1 dB)")
+    print(f"  SFX trim: {trim:+.2f} dB (önce I = {I0:.1f} LUFS), SFX TP sınırlayıcı en çok {sfx_gr:.2f} dB, "
           f"final sınırlayıcı en çok {mix_gr:.2f} dB, anlatım sınırlayıcı en çok {ninfo['sinirlayici_gr_db']:.2f} dB")
     print(f"  Yazıldı: {a.out}\n           {stem}")
     if a.rapor:

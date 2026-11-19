@@ -22,7 +22,7 @@ import ayarlar as A  # noqa: E402
 CFG = {
     "tohum": 7,
     "lens": 75,
-    "pitch": 12.5,
+    "pitch": 14.5,
     "mesafe": 3.05,
     "hedef": [0.0, 0.18, 0.30],
     "fstop": 4.0,
