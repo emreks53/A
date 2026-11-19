@@ -150,7 +150,8 @@ import skia
 
 from motor import (Tuval, M_bilesik, M_oteleme, M_olcek, M_donme, yol_egri, yol_daire, yol_elips, yol_dikdortgen,
                    yol_serit, yol_op, yol_donustur, yol_cokgen, damla_blob, maske_ciz, yollar_kirp, smoothstep,
-                   acilma_radyal, renk, karistir, Kirp, nokta_donustur, W, H, e_out, e_io, sstep)
+                   acilma_radyal, renk, karistir, Kirp, nokta_donustur, W, H, e_out, e_io, sstep,
+                   _gurultu_yerel, GRAN, KAGIT)
 
 I3 = np.eye(3)
 ISIK = (-0.6, -0.8)
@@ -1805,11 +1806,167 @@ def ciz_saat(t: Tuval, M, r, dilim=0.0, gun=0.0, akrep=None, yelkovan=None, goru
 # ================================================================================================================
 # 8) KALP NURU
 # ================================================================================================================
-def ciz_kalp_nuru(t: Tuval, M, r, parlaklik=1.0, isin=0.0, zaman=0.0, isin_ust=-80.0):
-    """Göğüste sıcak altın nur (insandan SONRA çağrılır); isin 0..1 yukarı yükselen ışık sütunu. Döner: dict(merkez)."""
+def _isin_egri(p):
+    """Işın ön ucunun yolu (0..1): kalpte doğar, yukarı doğru yumuşakça hızlanır (ease-in: giriş hızı ort. 0.25, çıkış 1.75 katı)."""
+    p = min(1.0, max(0.0, float(p)))
+    return 0.25 * p + 0.75 * p * p
+
+
+def _ss1(a, b, x):
+    """smoothstep (dizi), a > b de olur."""
+    return smoothstep(a, b, x).astype(np.float32)
+
+
+def _kalp_isin(t, M, cx, cy, R, isin, kuyruk, zaman, isin_ust, hb, guc=1.0):
+    """Kalpten yükselen ışık: dar parlak çekirdek çizgi (figürün üstünden), yükselen parlak ön uç, başın üstünde
+    genişleyen yumuşak sütun. Bütün ölçüler ekran px; u = kalbin üstündeki yükseklik."""
+    p = float(np.clip(isin, 0.0, 1.0))
+    q = float(np.clip(kuyruk, 0.0, 1.0))
+    Ltop = max(4.0 * R, (cy - isin_ust) + 3.5 * R)       # 1'de ön uç ekranın (isin_ust) üstünden çıkmış olur
+    top = _isin_egri(p) * Ltop
+    bot = _isin_egri(q) * Ltop
+    if top - bot < 0.05 * R and p < 0.02:
+        return
+    gen_max = R * (0.75 + 1.45 + 0.55)
+    k = _kirp_noktalar([cx - 3.1 * gen_max, cx + 3.1 * gen_max], [cy - top - 4.5 * R, cy - bot + 1.2 * R], 0)
+    if k.bos():
+        return
+    xs = np.arange(k.x0, k.x0 + k.w, dtype=np.float32) + 0.5 - cx
+    ys = np.arange(k.y0, k.y0 + k.h, dtype=np.float32) + 0.5
+    u = (cy - ys).astype(np.float32)                      # kalbin üstündeki yükseklik (px)
+    X2 = (xs ** 2)[None, :]
+    s_c = max(0.9, 0.12 * R)                              # çekirdek çizgi
+    s_g = max(2.0, 0.55 * R)                              # çekirdeğin dar ışıması
+    # ---- düşey zarflar (1B) ------------------------------------------------------------------------------
+    kok = _ss1(bot - 0.5 * R, bot + 0.9 * R, u)           # kalpten (ya da yükselen kuyruktan) başlar
+    on = 1.0 - _ss1(top - 1.3 * R, top + 0.1 * R, u)      # ön uçta biter
+    v_core = kok * on
+    arkasi = np.exp(-np.maximum(top - u, 0.0) / (5.0 * R)).astype(np.float32)   # ön ucun hemen ardı daha parlak
+    dalga_c = 1.0 + 0.06 * np.sin(2 * math.pi * (u - 9.0 * R * zaman) / (3.4 * R))  # yukarı akan nabız
+    bas_bolge = _ss1(hb - 3.7 * R, hb - 2.9 * R, u) * (1.0 - _ss1(hb + 0.2 * R, hb + 1.1 * R, u))
+    w_ac = _ss1(hb - 1.2 * R, hb + 2.2 * R, u)             # sütun başın üstünde açılır
+    sig_w = R * (0.75 + 1.45 * _ss1(hb - 0.5 * R, hb + 6.5 * R, u)
+                 + 0.55 * np.sqrt(np.clip((u - hb) / Ltop, 0.0, 1.0)))
+    dolu = 1.0 - _ss1(top - 4.0 * R, top + 0.2 * R, u)    # sütun ön ucun ardından dolar (iz genişler)
+    v_col = (0.16 + 0.84 * w_ac) * dolu * kok
+    # ---- maskeler (2B) -----------------------------------------------------------------------------------
+    sak0 = t.sakla_maske(k)
+    sak = np.zeros((k.h, k.w), np.float32) if sak0 is None else sak0.copy()
+    sak_bas = sak * bas_bolge[:, None]
+    w_x = np.exp(-X2 / (2.0 * sig_w[:, None] ** 2)).astype(np.float32)
+    # suluboya: sütun yoğunluğunda yerel, yavaşça yukarı kayan geniş dalgalanma (CG degradesi gibi durmasın)
+    # (saklama 1-x olarak gökte büyür: dalgalanma küçük ve düşük frekanslı olmalı, yoksa boncuk gibi bantlanır)
+    Xl = (xs[None, :] / R) * 14.0
+    Yl = ((ys[:, None] - cy) / R + 1.2 * zaman) * 14.0
+    gn = _gurultu_yerel(np.broadcast_to(Xl, (k.h, k.w)), np.broadcast_to(Yl, (k.h, k.w)), (311.0, 517.0), 0.35)
+    m_col = (v_col[:, None] * w_x * np.clip(1.0 + 0.08 * gn, 0.7, 1.3)).astype(np.float32)
+    m_core = ((v_core * (0.70 + 0.30 * arkasi) * dalga_c)[:, None] * np.exp(-X2 / (2 * s_c * s_c))).astype(np.float32)
+    m_glow = ((v_core * (0.55 + 0.45 * arkasi))[:, None] * np.exp(-X2 / (2 * s_g * s_g))).astype(np.float32)
+    a_bas = sstep(0.0, 0.07, p)
+    du = (u - top)
+    sy = np.where(du > 0, 1.2 * R, 2.6 * R).astype(np.float32)
+    m_bas = (a_bas * np.exp(-du ** 2 / (2 * sy ** 2))[:, None] * np.exp(-X2 / (2 * (0.6 * R) ** 2))).astype(np.float32)
+    m_hale = (a_bas * np.exp(-(du ** 2)[:, None] / (2 * (2.1 * R) ** 2)) *
+              np.exp(-X2 / (2 * (2.1 * R) ** 2))).astype(np.float32)
+    g = float(np.clip(guc, 0.0, 1.0))
+    # ---- 1) açık sıcak ton (SONRA boyanacak gökte; figürü boyamaz) ------------------------------------------------
+    t.lavi([], M, '#F7DA94', yog=0.12 * g, maske=(k, np.clip(m_col + 0.5 * m_glow + 0.5 * m_hale, 0, 1)),
+           kenar=0.0, dalga=0.0, islak=0.0, gran=0.05, akis=0.0, sakla=True)
+    # ---- 2) önceden boyanmış yeri (figür, damlalar) parlatma -----------------------------------------------
+    # sütun figürü ağartmaz (yalnız gökte); çekirdek çizgi figürün üstünden geçer, başta ışıması kısılır
+    t.isik([], I3, '#FFE7B0', guc=0.36 * g, yumusak=0.0, maske=(k, m_col * (1.0 - 0.92 * sak)))
+    t.isik([], I3, '#FFD98E', guc=0.34 * g, yumusak=0.0, maske=(k, m_glow * (1.0 - 0.90 * sak_bas)))
+    t.isik([], I3, '#FFF6DE', guc=0.88 * g, yumusak=0.0, maske=(k, m_core * (1.0 - 0.55 * sak_bas)))
+    t.isik([], I3, '#FFE0A0', guc=0.42 * g, yumusak=0.0, maske=(k, m_hale * (1.0 - 0.85 * sak_bas)))
+    t.isik([], I3, '#FFF5DC', guc=0.88 * g, yumusak=0.0, maske=(k, m_bas * (1.0 - 0.65 * sak_bas)))
+    # ---- 3) kısmi saklama: SONRA boyanan arka plan ışıkta açık kalır ---------------------------------------
+    sk_m = np.maximum.reduce([m_col * 0.56, np.clip(m_glow, 0, 1) * 0.72, np.clip(m_core, 0, 1) * 0.97,
+                              np.clip(m_bas + 0.5 * m_hale, 0, 1) * 0.92])
+    t.sakla_ekle([], I3, yumusak=0.0, guc=g, maske=(k, sk_m.astype(np.float32)))
+    # ---- 4) sütunda yükselen zerreler (sayı sabit; görünürlük sütunun o yükseklikteki yoğunluğu) ------------
+    rng = np.random.default_rng(31)
+    n = 16
+    pts, sc, sh, gc = [], [], [], []
+    u0, u1 = hb + 0.8 * R, Ltop
+    for j in range(n):
+        bx = rng.uniform(-1.0, 1.0)
+        faz = rng.random()
+        v = rng.uniform(0.035, 0.08)
+        sal = rng.uniform(0.2, 0.55) * R
+        sf, sp = rng.uniform(0.25, 0.6), rng.uniform(0, 2 * math.pi)
+        kf, kp = rng.uniform(0.4, 1.0), rng.uniform(0, 2 * math.pi)
+        sz = rng.uniform(0.7, 1.3)
+        f = _frac(faz + zaman * v)
+        uj = u0 + f * (u1 - u0)
+        vis = sstep(0.0, 0.12, f) * (1.0 - sstep(0.85, 1.0, f))
+        vis *= sstep(bot + R, bot + 3 * R, uj) * (1.0 - sstep(top - 5.0 * R, top - 1.0 * R, uj))
+        vis *= (0.16 + 0.84 * sstep(hb - 1.2 * R, hb + 2.2 * R, uj))
+        if vis <= 0.01:
+            continue
+        sw = R * (0.75 + 1.45 * sstep(hb - 0.5 * R, hb + 6.5 * R, uj))
+        x = cx + bx * 0.9 * sw + sal * math.sin(2 * math.pi * sf * zaman + sp)
+        a = vis * (0.65 + 0.35 * (0.5 + 0.5 * math.sin(2 * math.pi * kf * zaman + kp)))
+        pts.append((x, cy - uj))
+        sc.append(max(0.7, 0.075 * R * sz * 1.0))
+        sh.append(max(2.0, 0.26 * R * sz))
+        gc.append(a * g)
+    if pts:
+        kz = _kirp_noktalar([p_[0] for p_ in pts], [p_[1] for p_ in pts], 4 * max(sh))
+        if not kz.bos():
+            mh = _gauss_maske(kz, pts, sh, [a * 0.85 for a in gc])
+            mc = _gauss_maske(kz, pts, sc, gc)
+            _parilti(t, kz, mh, renk_='#FFE3A3', guc=0.5, sakla_guc=0.75, ton=0.30, ton_renk='#F4CC78')
+            _parilti(t, kz, mc, renk_='#FFF6DC', guc=0.55, sakla_guc=0.9, ton=0.10, ton_renk='#F7DC9A')
+
+
+def _kalp_kalkan(t, M, cx, cy, s, r, kalkan, zaman, tohum=0):
+    """Kalbin çevresinde, yağmurun geçemediği sınır: ince, nabızlı altın suluboya kenar (yumuşak ışıma + soluk,
+    ıslak kenarlı halka). kalkan: yerel yarıçap."""
+    K = float(kalkan) * s
+    a = sstep(0.4 * r, 1.6 * r, float(kalkan))
+    if a <= 0.005 or K < 2.0:
+        return
+    puls = 0.5 + 0.5 * math.sin(2 * math.pi * zaman / 1.7 - 0.9)     # kalp nabzını hafif gecikmeyle izler
+    Kp = K * (1.0 + 0.014 * (puls - 0.5))
+    pad = 0.30 * Kp + 10
+    k = _kirp_noktalar([cx - Kp - pad, cx + Kp + pad], [cy - Kp - pad, cy + Kp + pad], 0)
+    if k.bos():
+        return
+    xs = np.arange(k.x0, k.x0 + k.w, dtype=np.float32) + 0.5 - cx
+    ys = np.arange(k.y0, k.y0 + k.h, dtype=np.float32) + 0.5 - cy
+    d = np.sqrt(xs[None, :] ** 2 + ys[:, None] ** 2)
+    th = np.arctan2(ys[:, None], xs[None, :])
+    rng = np.random.default_rng(tohum + 61)
+    f1, f2 = rng.uniform(0, 2 * math.pi, 2)
+    # elle boyanmış daire: açıya bağlı çok hafif dalga (sabit; yalnız yavaşça döner)
+    wob = 1.0 + 0.009 * np.sin(5 * th + f1 + 0.15 * zaman) + 0.006 * np.sin(9 * th + f2 - 0.1 * zaman)
+    dd = (d / wob - Kp).astype(np.float32)
+    sig = max(1.0, 0.030 * Kp)
+    glow = np.exp(-dd ** 2 / (2 * sig ** 2)).astype(np.float32)
+    glow_w = np.exp(-dd ** 2 / (2 * (3.4 * sig) ** 2)).astype(np.float32)
+    ic = (np.exp(-np.minimum(dd, 0.0) ** 2 / (2 * (0.20 * Kp) ** 2)) * (dd < 0)).astype(np.float32)
+    gg = a * (0.74 + 0.26 * puls)
+    # ıslak kenarlı soluk halka (ince bant: iki kenarında pigment birikir); figürün ve arka planın üstünden geçer
+    w = max(1.4, 0.022 * Kp)
+    bant = (_ss1(-w - 1.0, -w + 1.0, dd) * (1.0 - _ss1(w - 1.0, w + 1.0, dd))).astype(np.float32)
+    t.lavi([], M, '#E3AE4E', yog=0.16 * a, maske=(k, bant), kenar=0.5, dalga=0.06, islak=1.5,
+           islak_gen=max(1.0, 0.5 * w), gran=0.14, akis=0.25, sakla=False, tohum=tohum + 62)
+    # yumuşak ışıma: önceden boyanmışı parlatır, SONRA boyanan gökte kısmi saklama + açık altın ton
+    t.lavi([], M, '#F6D27A', yog=0.12 * a, maske=(k, glow_w), kenar=0.0, dalga=0.0, islak=0.0, gran=0.05,
+           akis=0.0, sakla=True)
+    t.isik([], I3, '#FFD88A', guc=0.20 * gg, yumusak=0.0, maske=(k, glow_w))
+    t.isik([], I3, '#FFEFC6', guc=0.42 * gg, yumusak=0.0, maske=(k, glow))
+    t.isik([], I3, '#FFE6B0', guc=0.07 * gg, yumusak=0.0, maske=(k, ic))
+    t.sakla_ekle([], I3, yumusak=0.0, guc=0.6 * gg, maske=(k, np.maximum(glow, 0.55 * glow_w)))
+
+
+def ciz_kalp_nuru(t: Tuval, M, r, parlaklik=1.0, isin=0.0, zaman=0.0, isin_ust=-80.0, kalkan=0.0, isin_kuyruk=0.0,
+                  bas_ust=None):
+    """Göğüste sıcak altın nur (insandan SONRA çağrılır); isin 0..1 kalpten yükselen ışık; kalkan>0: yağmurun
+    geçemediği altın sınır halkası (yerel yarıçap). Döner: dict(merkez) | None. Ayrıntı: modül belgesi (8)."""
     M = np.asarray(M, np.float64)
     b = float(np.clip(parlaklik, 0, 1.5))
-    if b <= 0.005 and isin <= 0.005:
+    if b <= 0.005 and isin <= 0.005 and kalkan <= 0.0:
         return None
     s = _olcek(M)
     c = M @ np.array([0.0, 0.0, 1.0])
@@ -1818,40 +1975,13 @@ def ciz_kalp_nuru(t: Tuval, M, r, parlaklik=1.0, isin=0.0, zaman=0.0, isin_ust=-
     nabiz = 0.5 + 0.5 * math.sin(2 * math.pi * zaman / 1.7)
     bb = b * (0.88 + 0.12 * nabiz)
     Rp = R * (1.0 + 0.05 * nabiz)
-    # ---- ışın sütunu (önce: çekirdek onun üstüne biner) ------------------------------------------------------
-    if isin > 0.005:
-        ie = e_out(min(1.0, isin))
-        ust = cy - ie * (cy - isin_ust + 40)
-        gen0 = R * 1.05
-        gen1 = R * 2.1
-        k = _kirp_noktalar([cx - gen1 * 3.4, cx + gen1 * 3.4], [ust - gen1 * 2, cy + R * 0.5], 0)
-        if not k.bos():
-            xs = np.arange(k.x0, k.x0 + k.w, dtype=np.float32) + 0.5 - cx
-            ys = np.arange(k.y0, k.y0 + k.h, dtype=np.float32) + 0.5
-            f = np.clip((cy - ys) / max(cy - isin_ust, 1.0), 0, 1)        # 0 kalpte, 1 yukarıda
-            sig = (gen0 + (gen1 - gen0) * np.sqrt(f))[:, None]
-            yan = np.exp(-(xs[None, :] ** 2) / (2 * sig ** 2))
-            bas = smoothstep(0, 1, np.clip((ys - ust) / (R * 4.0), 0, 1))[:, None]   # yumuşak ön uç
-            kok = smoothstep(cy + R * 0.3, cy - R * 1.2, ys)[:, None]
-            # yükselen, çok yumuşak ışık dalgaları (titreşimsiz: yalnız zamanla kayar)
-            dal = 1.0 + 0.12 * np.sin((ys[:, None] + zaman * 160.0) / (R * 2.6))
-            m = (yan * bas * kok * dal * ie).astype(np.float32)
-            # Önceden boyanmış figür (saklamadaki silüet: baş, omuz) ışında ağarıp hayaletleşmesin: orada parlatma
-            # ölçülü, sıcak bir ışıltı olarak kalır; sütunun asıl parlaklığı SONRA boyanan gökte (kısmi saklama).
-            sak = t.sakla_maske(k)
-            on_k = 1.0 if sak is None else (1.0 - 0.6 * sak)
-            yan2 = np.exp(-(xs[None, :] ** 2) / (2 * (sig * 0.45) ** 2))
-            m2 = (yan2 * bas * kok * ie).astype(np.float32)
-            t.lavi([], I3, '#F7DA94', yog=0.15, maske=(k, m), kenar=0.0, dalga=0.0, islak=0.0, gran=0.04, akis=0.0,
-                   sakla=True)
-            t.isik([], I3, '#FFE9B4', guc=0.50 * min(1.0, b + 0.3), yumusak=0.0, maske=(k, m * on_k))
-            t.isik([], I3, '#FFF7E4', guc=0.32, yumusak=0.0, maske=(k, m2 * (on_k if sak is None else
-                                                                                 1.0 - 0.75 * sak)))
-            t.sakla_ekle([], I3, yumusak=0.0, guc=0.78, maske=(k, m))
-            t.sakla_ekle([], I3, yumusak=0.0, guc=0.9, maske=(k, m2))
-            # sütunda yükselen zerreler (sayı sabit: zerre sonradan belirip sıçramaz; sütunla birlikte solar)
-            ciz_isik_zerreleri(t, I3, zaman, 14, (cx - gen1 * 1.2, ust + R * 2, cx + gen1 * 1.2, cy - R),
-                               tohum=31, boyut=max(0.8, R * 0.075), hiz=0.45, guc=0.55 * smoothstep(0.0, 0.5, ie))
+    # ---- ışın (önce: kalkan ve çekirdek onun üstüne biner) -------------------------------------------------
+    if isin > 0.005 and isin_kuyruk < 0.999:
+        hb = (cy - float(bas_ust)) if bas_ust is not None else 6.2 * R
+        _kalp_isin(t, M, cx, cy, R, isin, isin_kuyruk, zaman, isin_ust, max(hb, 1.5 * R))
+    # ---- kalkan ------------------------------------------------------------------------------------------
+    if kalkan > 0.0:
+        _kalp_kalkan(t, M, cx, cy, s, r, kalkan, zaman)
     if b <= 0.005:
         return dict(merkez=(cx, cy))
     # ---- çekirdek: katmanlı yumuşak ışık ---------------------------------------------------------------------

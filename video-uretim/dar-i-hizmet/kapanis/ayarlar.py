@@ -37,16 +37,17 @@ ORAN = {
     "Muhâkemat": 0.0614,
 }
 
-UST_SIRA = ["Sözler", "Mektubat", "Şuâlar", "Mesnevî-i Nûriye", "İşârâtü’l-İ’câz",
+# Kararli piramit: genis 7'li sira (0.194 m) alt/on basamakta, 6'li sira (0.130 m) ust basamakta.
+ALT_SIRA = ["Sözler", "Mektubat", "Şuâlar", "Mesnevî-i Nûriye", "İşârâtü’l-İ’câz",
             "Barla Lâhikası", "Kastamonu Lâhikası"]
-ALT_SIRA = ["Emirdağ Lâhikası", "Sikke-i Tasdîk-i Gaybî", "Tarihçe-i Hayat", "Asâ-yı Mûsâ",
+UST_SIRA = ["Emirdağ Lâhikası", "Sikke-i Tasdîk-i Gaybî", "Tarihçe-i Hayat", "Asâ-yı Mûsâ",
             "İman ve Küfür Muvâzeneleri", "Muhâkemat"]
 YATAN = "Lem’alar"
 
-# Kur'an-i Kerim: 21 x 29 cm, 5 cm kalinlik
-KURAN_H = 0.290
-KURAN_D = 0.210
-KURAN_T = 0.050
+# Kur'an-i Kerim (cami boy): 19 x 27 cm, 4.5 cm kalinlik - rahle sirtligi 6'li siradan genis olmasin
+KURAN_H = 0.270
+KURAN_D = 0.190
+KURAN_T = 0.045
 KURAN_BT = 0.0030
 
 # ASCII dosya adlari

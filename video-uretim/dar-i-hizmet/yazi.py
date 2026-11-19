@@ -122,11 +122,17 @@ with open(os.path.join(KOK, 'zaman.json'), encoding='utf-8') as f:
     _Z = json.load(f)
 
 # her mananın ekrandan çekildiği an (ses zamanı): bir sonraki mana gelmeden ya da öbek bitince
-_CIKIS = [1.27, 2.55, 4.25, 7.35, 9.62, 11.05, 18.62, 19.90, 25.95]
+_CIKIS = [1.27, 2.40, 4.05, 6.80, 9.62, 10.95, 18.62, 19.50, 25.45]
+_CIKIS_SURE = [0.42, 0.42, 0.42, 0.30, 0.42, 0.42, 0.42, 0.42, 0.30]
 MANALAR = []
 for i, m in enumerate(_Z['manalar']):
+    sonraki = _Z['manalar'][i + 1]['an'] if i + 1 < len(_Z['manalar']) else 1e9
     MANALAR.append(dict(metin=m['mana'], giris=m['an'] + SES_GECIKME, cikis=_CIKIS[i] + SES_GECIKME,
-                        ard_arda=(i + 1 < len(_Z['manalar']) and abs(_Z['manalar'][i + 1]['an'] - _CIKIS[i]) < 0.01)))
+                        cikis_sure=_CIKIS_SURE[i], ard_arda=(sonraki - _CIKIS[i] < 0.5)))
+# güvence: iki mana aynı anda görünmesin
+for _a, _b in zip(MANALAR, MANALAR[1:]):
+    _bitis = (_a['cikis'] - 0.05 if _a['ard_arda'] else _a['cikis'] + _a['cikis_sure'])
+    assert _bitis <= _b['giris'] - 1.0 / 30 + 1e-6, (_a['metin'], _b['metin'])
 
 
 def _zemin_parlakligi(R):
@@ -145,9 +151,9 @@ def manalari_ciz(R, V):
             continue
         gir = e_out((V - g0) / 0.30)
         if m['ard_arda']:
-            cik = min(1.0, max(0.0, (V - (m['cikis'] - 0.16)) / 0.13))
+            cik = min(1.0, max(0.0, (V - (m['cikis'] - 0.18)) / 0.13))
         else:
-            cik = e_in((V - m['cikis']) / 0.42)
+            cik = e_in((V - m['cikis']) / m['cikis_sure'])
         if cik >= 1:
             continue
         alfa = gir * (1 - cik)

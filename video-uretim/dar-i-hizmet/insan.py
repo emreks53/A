@@ -239,6 +239,7 @@ ANAHTARLAR = (
     'kalca_on', 'diz_on', 'ayak_bilek_on', 'parmak_on',
     'kalca_ar', 'diz_ar', 'ayak_bilek_ar', 'parmak_ar',
     'etek_on', 'etek_ar', 'etek_ar_boy', 'bel_kambur', 'onkol_kisalt_on', 'onkol_kisalt_ar',
+    'duz_on', 'duz_ar',
 )
 
 
@@ -444,14 +445,30 @@ _EL_KENAR = np.array([
     (-6.0, -6.6)])
 
 
-def _el_yolu(kivrim, yan):
+# yüzeye (yer, uyluk) avuç içiyle düz basmış el, kenardan (avuç +y yanında): taban düz, bilek üstü ince, parmaklar
+# bitişik ve uca doğru incelir; başparmak avucun arkasında kalır (silüette görünmez)
+_EL_DUZ = np.array([
+    (-6.0, 7.6), (3.0, 10.0), (12.0, 10.6), (22.0, 10.6), (31.0, 10.5), (40.0, 10.4), (48.0, 10.3), (55.0, 10.1),
+    (60.0, 9.4), (62.8, 7.6), (62.4, 5.4), (59.6, 3.8),
+    (55.0, 2.8), (48.0, 1.6), (41.0, 0.0), (33.0, -2.0), (24.0, -3.6), (14.0, -4.6), (4.0, -5.0),
+    (-6.0, -5.2)])
+
+
+def _el_yolu(kivrim, yan, duz=0.0):
     """El çerçevesinde (köken bilek, +x parmaklara, -y başparmak/ön kenar) eldiven biçimi: tek parça yumuşak gövde
     + başparmak. yan 0: elin sırtı/avucu görünür (geniş), +-1: kenardan (ince; avuç +y (+1) ya da -y (-1) yanında).
-    kivrim: 0 açık .. 1 yumruk (geniş görünüşte parmaklar kısalır, kenar görünüşte avuca doğru bükülür)."""
+    kivrim: 0 açık .. 1 yumruk (geniş görünüşte parmaklar kısalır, kenar görünüşte avuca doğru bükülür).
+    duz: 0..1 avuç içiyle bir yüzeye düz basmış el (kenar görünüşte avuç tarafı dümdüz, başparmak silüetin içinde);
+    yan'ın işaretindeki yana yatar (yan≈+1: avuç yere/uyluğa)."""
     w = min(1.0, abs(yan))
     sg = 1.0 if yan >= 0 else -1.0
     kv = min(1.0, max(0.0, kivrim))
+    dz = min(1.0, max(0.0, duz)) * w
     kenar = _EL_KENAR if sg > 0 else np.stack([_EL_KENAR[:, 0], -_EL_KENAR[:, 1]], 1)[::-1]
+    if dz > 1e-4:
+        duz_b = _EL_DUZ if sg > 0 else np.stack([_EL_DUZ[:, 0], -_EL_DUZ[:, 1]], 1)[::-1]
+        kenar = kenar * (1.0 - dz) + duz_b * dz
+        kv = kv * (1.0 - dz)
     pts = _EL_GENIS * (1.0 - w) + kenar * w
     # parmaklar: eklem hattı (x≈31) ötesi kısalır (geniş) ve avuca doğru döner (kenar)
     x, y = pts[:, 0].copy(), pts[:, 1].copy()
@@ -468,6 +485,9 @@ def _el_yolu(kivrim, yan):
     b_g0, b_g1 = np.array([6.0, -9.0]), np.array([25.5, -15.2])
     b_g1 = b_g1 + (np.array([29.0, -10.0]) - b_g1) * _ss(0.35, 1.0, kv)
     b_k0, b_k1 = np.array([5.0, 4.0 * sg]), np.array([26.0, 8.8 * sg])
+    if dz > 1e-4:                        # düz basan elde başparmak avucun arkasında (silüetin içinde)
+        b_k0 = b_k0 + (np.array([6.0, 2.5 * sg]) - b_k0) * dz
+        b_k1 = b_k1 + (np.array([22.0, 4.5 * sg]) - b_k1) * dz
     b0 = b_g0 + (b_k0 - b_g0) * w
     b1 = b_g1 + (b_k1 - b_g1) * w
     p_bas = _kapsul(b0, b1, 5.8 - 1.0 * w, 4.5 - 0.6 * w, n=6, nc=7)
@@ -1013,7 +1033,7 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
         B.golge(kol_on, R['gomlek_golge'], 0.36, 9.0)
         _kol_kivrimi(B, sk, 'on', R)
         B.sakla(kol_on)
-        el_on = _el_yolu(poz['kivrim_on'], poz['yan_on'])
+        el_on = _el_yolu(poz['kivrim_on'], poz['yan_on'], poz.get('duz_on', 0.0))
         M_el_on = M_bilesik(Mf, sk['M_el_on'])
         B.lavi(el_on, R['ten'], YOG['ten'] + 0.04, M=M_el_on)
         B.golge(el_on, R['ten_golge'], 0.30, 5.0, M=M_el_on)
@@ -1087,7 +1107,7 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
     B.lavi(kol_ar, _uzak(R['gomlek']), YOG['gomlek'] * 1.25)
     B.golge(kol_ar, R['gomlek_golge'], 0.36, 9.0)
     B.sakla(kol_ar)
-    el_ar = _el_yolu(poz['kivrim_ar'], poz['yan_ar'])
+    el_ar = _el_yolu(poz['kivrim_ar'], poz['yan_ar'], poz.get('duz_ar', 0.0))
     M_el_ar = M_bilesik(Mf, sk['M_el_ar'])
     B.lavi(el_ar, _uzak(R['ten']), YOG['ten'] * 1.22, M=M_el_ar)
     B.golge(el_ar, R['ten_golge'], 0.30, 5.0, M=M_el_ar)
@@ -1305,12 +1325,17 @@ def _poz_diz_dua():
     return p
 
 
-def _bas_yere(p, a_h=104.7, alin=(29.6, -31.0), yuk=-0.6):
-    """Secde: baş açısı a_h iken alın yere (y=yuk) değecek boyun açısını çözer (boyun ve bas anahtarları)."""
+def _bas_yere(p, a_h=106.0, alin=None, yuk=-0.4):
+    """Secde: baş açısı a_h iken alın (ve a_h≈106'da burun ucu da) yere (y=yuk) değecek boyun açısını çözer (boyun
+    ve bas anahtarları). alin verilmezse deri silüetinin o açıda en alttaki noktası kullanılır."""
     sk = iskelet(p)
     N, aN = sk['N'], sk['a_N']
-    ofs = _uygula(M_bilesik(M_donme(a_h), M_olcek(BAS_OLCEK)), [alin])[0]
-    py = yuk - ofs[1]                        # baş pivotunun olması gereken y
+    Mr = M_bilesik(M_donme(a_h), M_olcek(BAS_OLCEK))
+    if alin is None:
+        ofs_y = float(np.max(_uygula(Mr, _BAS_DERI)[:, 1]))
+    else:
+        ofs_y = float(_uygula(Mr, [alin])[0][1])
+    py = yuk - ofs_y                         # baş pivotunun olması gereken y
     c = (N[1] - py) / L_BOYUN               # -cos(a_n) * L = py - N.y  ->  cos a_n = (N.y - py)/L
     c = max(-1.0, min(1.0, c))
     a_n = math.degrees(math.acos(c))
@@ -1319,19 +1344,72 @@ def _bas_yere(p, a_h=104.7, alin=(29.6, -31.0), yuk=-0.6):
     return p
 
 
-def _poz_secde():
+def kol_2d(p, taraf, dirsek, bilek):
+    """Kolu GÖRÜNEN (yandan izdüşüm) dirsek ve bilek noktalarına kurar: omuz/dirsek açıları ile üst kol / ön kol
+    kısaltmaları (ust_kisalt, onkol_kisalt, gerekirse kol_kisalt) birlikte çözülür. Dirsek yana açıldığında (secde)
+    kol yandan kısa görünür; bu yardımcı o izdüşümü doğrudan yazar."""
+    sk = iskelet(p)
+    St = sk['S_' + taraf]
+    E = np.asarray(dirsek, float)
+    Wr = np.asarray(bilek, float)
+    a = float(np.hypot(*(E - St)))
+    b = float(np.hypot(*(Wr - E)))
+    kk = max(0.5, min(1.0, a / (0.35 * L_UST), b / (0.5 * L_ON)))
+    ku = min(1.0, max(0.35, a / (L_UST * kk)))
+    kf = min(1.0, max(0.5, b / (L_ON * kk)))
+    p['kol_kisalt_' + taraf] = (1.0 - kk) / 0.5
+    p['ust_kisalt_' + taraf] = (1.0 - ku) / 0.65
+    p['onkol_kisalt_' + taraf] = (1.0 - kf) / 0.5
+    tu = _aci_asg(E - St)
+    tf = _aci_asg(Wr - E)
+    p['omuz_' + taraf] = tu + sk.A(sk['s_om'])
+    p['dirsek_' + taraf] = tf - tu
+    return p
+
+
+SECDE_UYLUK = 4.0      # secde'de uyluk açısı (0 dik; kalça dizin biraz gerisinde)
+
+
+def _secde_govde():
+    """Secde gövdesi (kollar hariç): dizler DIZ'de, kalça yukarıda, sırt hafif yay (bel -> göğüs aşağı kıvrılır,
+    omuz silüette okunur), alın ve burun yerde."""
     p = bos_poz()
-    kok = DIZ - L_UYLUK * _asg(6.0)
-    p.update(kx=kok[0], ky=kok[1], bel=122.0, gogus=8.0,
-             kivrim_on=0.0, yan_on=1.0, kivrim_ar=0.0, yan_ar=1.0, kol_kisalt_on=1.0, kol_kisalt_ar=1.0,
-             ust_kisalt_on=0.66, ust_kisalt_ar=0.66, etek_ar=7.6, etek_ar_boy=75.0)
+    kok = DIZ - L_UYLUK * _asg(SECDE_UYLUK)
+    p.update(kx=kok[0], ky=kok[1], bel=SECDE_BEL, gogus=SECDE_GOGUS, bel_kambur=SECDE_KAMBUR,
+             kivrim_on=0.0, yan_on=1.0, kivrim_ar=0.0, yan_ar=1.0, duz_on=1.0, duz_ar=1.0,
+             etek_ar=7.6, etek_ar_boy=60.0)
     _ayak_parmakta(p, 'on')
     _ayak_parmakta(p, 'ar', dx=-3.0)
     _bas_yere(p)
+    return p
+
+
+SECDE_BEL, SECDE_GOGUS, SECDE_KAMBUR = 104.0, 36.0, 8.0
+
+
+def _secde_el_hedefleri(p):
+    """Secde'de (dirsek, bilek) hedefleri: avuç başın yanında, kulak-alın hizasında yerde düz, parmaklar öne; ön kol
+    ~35° eğik, dirsek yerden kalkık (yana açık olduğundan yandan kısa görünür)."""
     sk = iskelet(p)
-    bx = sk['Hp'][0]
-    for t, dx in (('on', 0.0), ('ar', 5.0)):
-        kol_ik(p, t, (bx - 20.0 + dx, -7.6), isaret=-1)   # avuç kulak hizasında, parmak uçları alın önünde
+    kulak = _nokta(sk['M_bas'], (-9.0, -12.0))
+    out = {}
+    for t, dx, aci, lf in (('on', 0.0, 36.0, 58.0), ('ar', 7.0, 40.0, 56.0)):
+        av_x = kulak[0] + SECDE_AVUC_DX + dx
+        Wr = _v(av_x - AVUC_X * EL_OLCEK, SECDE_BILEK_Y)
+        r = math.radians(aci)
+        E = Wr + lf * _v(-math.cos(r), -math.sin(r))
+        out[t] = (E, Wr)
+    return out
+
+
+SECDE_AVUC_DX = 16.0   # secde'de avuç merkezi kulağın bu kadar önünde
+SECDE_BILEK_Y = -9.3     # düz basan elin tabanı (bilekten 10.5 * EL_OLCEK) zeminde
+
+
+def _poz_secde():
+    p = _secde_govde()
+    for t, (E, Wr) in _secde_el_hedefleri(p).items():
+        kol_2d(p, t, E, Wr)
         el_aci(p, t, 90.0)
     return p
 

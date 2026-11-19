@@ -18,12 +18,12 @@ PLAKA_SAYISI = 192
 
 SATIRLAR = [
     # metin, yazı tipi, boyut, renk, y merkezi, giriş gecikmesi (sn), izleme
-    ('Risale-i Nur', 'eb-garamond-600', 88, '#3A2A22', 1408, 0.55, 0.015),
-    ('Lem’alar', 'eb-garamond-500', 66, '#3A2A22', 1497, 0.95, 0.01),
-    ('İkinci Lem’a', 'eb-garamond-500-italic', 56, '#4A3A30', 1566, 1.25, 0.01),
-    ('11. Sayfa', 'eb-garamond-500', 46, '#5A4636', 1630, 1.55, 0.07),
+    ('Risale-i Nur', 'eb-garamond-600', 84, '#3A2A22', 1372, 0.55, 0.015),
+    ('Lem’alar', 'eb-garamond-500', 62, '#3A2A22', 1478, 0.95, 0.01),
+    ('İkinci Lem’a', 'eb-garamond-500-italic', 52, '#4A3A30', 1540, 1.25, 0.01),
+    ('11. Sayfa', 'eb-garamond-500', 44, '#5A4636', 1594, 1.55, 0.07),
 ]
-CIZGI_Y = 1455  # "Risale-i Nur" altındaki ince süs çizgisi
+CIZGI_Y = 1424  # "Risale-i Nur" altındaki ince süs çizgisi
 
 
 def plaka(i):
@@ -42,15 +42,9 @@ def plaka(i):
     return im
 
 
-_GREN = None
-
-
-def _gren(i):
-    global _GREN
-    if _GREN is None:
-        rng = np.random.default_rng(7)
-        _GREN = [cv2.GaussianBlur(rng.standard_normal((H, W)).astype(np.float32), (0, 0), 0.6) for _ in range(8)]
-    return _GREN[i % 8]
+def _gren(kare_no):
+    rng = np.random.default_rng(1000 + int(kare_no))
+    return cv2.GaussianBlur(rng.standard_normal((H, W)).astype(np.float32), (0, 0), 0.55)
 
 
 def susleme_cizgisi(R, alfa, gen=150, y=CIZGI_Y):
@@ -86,19 +80,20 @@ def susleme_cizgisi(R, alfa, gen=150, y=CIZGI_Y):
     bindir(R, int(W / 2 - w / 2), int(y - h / 2), arr)
 
 
-def kapanis_kare(t):
-    """t: kapanışın başından beri geçen süre (sn). Plaka + gren + yazı."""
-    i = int(t * 30) + 1
+def kapanis_kare(t, kare_no=None):
+    """t: kapanışın başından beri geçen süre (sn). Plaka (yuvarlanmış kare indeksi: tekrar/atlama yok) + yazı +
+    yazıyı da kapsayan çok hafif kare başı gren (yazı görüntüyle aynı 'filmde' dursun)."""
+    i = int(round(t * 30)) + 1
     R = plaka(i)
-    # çok hafif film greni (kamerayla çekilmiş hissi)
-    R = np.clip(R + _gren(i)[..., None] * 0.010, 0, 1)
     for (metin, ad, boyut, rk, y, gec, izl) in SATIRLAR:
         g = e_out((t - gec) / 0.65)
         if g <= 0:
             continue
         x0, y0, rgba = yazi_katmani(metin, ad=ad, boyut=boyut, renk_=rk, merkez=(W / 2, y), alfa=g,
-                                    dy=(1 - g) * 14, bulanik=(1 - g) * 2.5, izleme=izl + (1 - g) * 0.03,
-                                    hale=0.55, hale_renk='#F6EFE6')
+                                    dy=(1 - g) * 14, bulanik=0.35 + (1 - g) * 2.5, izleme=izl + (1 - g) * 0.03,
+                                    hale=0.5, hale_renk='#F6EFE6')
         bindir(R, x0, y0, rgba)
     susleme_cizgisi(R, e_out((t - 0.8) / 0.6), gen=150 * (0.6 + 0.4 * e_out((t - 0.8) / 0.8)))
+    no = i if kare_no is None else kare_no
+    R = np.clip(R + _gren(no)[..., None] * 0.0045, 0, 1)
     return R

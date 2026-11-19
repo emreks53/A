@@ -71,8 +71,8 @@ def gok(t: Tuval, M, bulutlar=(), ust='#5F8FC4', orta='#8DB2D7', alt='#EAD6CB', 
             continue
         m = maske_ciz([p], M, kk)
         # üst kenar keskin, alt kenar ıslak karışır
-        mb_s = cv2.GaussianBlur(m, (0, 0), 1.6)
-        mb_y = cv2.GaussianBlur(m, (0, 0), 9.0)
+        mb_s = cv2.GaussianBlur(m, (0, 0), 2.6)
+        mb_y = cv2.GaussianBlur(m, (0, 0), 12.0)
         yy = np.linspace(0, 1, kk.h, dtype=np.float32)[:, None]
         alt_k = smoothstep(0.45, 0.95, yy)
         mm = mb_s * (1 - alt_k) + mb_y * alt_k
@@ -92,12 +92,17 @@ def gok(t: Tuval, M, bulutlar=(), ust='#5F8FC4', orta='#8DB2D7', alt='#EAD6CB', 
     t.degrade_lavi([(0.0, ust, 1.0), (0.42, orta, 0.85), (ufuk, alt, alt_yog), (1.0, alt, alt_yog * 0.8)],
                    yog=yog, gran=gran, akis=0.10, M=M, tohum=tohum, maske=gm, kirp=k, dunya_y=True)
     # bulutların altına lila gölge
+    # bulutların içi tam kâğıt değil: çok hafif soğuk bir sır (kâğıt yine nefes alır)
+    if bulut_alfa > 0.02:
+        for (p, cx, cy, g, y, s) in alt_golge:
+            t.lavi(p, M, '#CBD5E2', yog=0.07 * bulut_alfa, kenar=3.0, dalga=0.2, islak=0.35, islak_gen=6, gran=0.12,
+                   akis=0.3, tohum=s + 9)
     for (p, cx, cy, g, y, s) in alt_golge:
         def yf(X, Y, cy=cy, y=y):
             return smoothstep(cy - y * 0.25, cy + y * 0.42, Y)
         if bulut_alfa > 0.02:
-            t.lavi(p, M, '#BDB6D6', yog=0.30 * bulut_alfa, kenar=2.0, dalga=0.18, islak=0.25, islak_gen=8, gran=0.10,
-                   akis=0.2, tohum=s + 5, yog_fn=yf)
+            t.lavi(p, M, '#BDB6D6', yog=0.30 * bulut_alfa, kenar=3.0, dalga=0.22, islak=0.6, islak_gen=10, gran=0.12,
+                   akis=0.3, tohum=s + 5, yog_fn=yf)
 
 
 def uzak_agac_sirasi(t: Tuval, M, x0, x1, taban, yuk=60, renk_='#A5B8B0', yog=0.5, tohum=3, yogunluk=0.9,

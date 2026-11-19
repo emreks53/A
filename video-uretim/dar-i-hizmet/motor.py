@@ -799,8 +799,11 @@ def _vinyet():
     return _VIN
 
 
-def son_islem(R, kabartma=0.032, leke=0.010, vinyet=True):
-    out = R * (1.0 + kabartma * KABARTMA[..., None]) * (1.0 + leke * LEKE[..., None])
+def son_islem(R, kabartma=0.030, leke=0.010, vinyet=True):
+    # kâğıt kabartması açık (boş kâğıt) alanlarda zayıflar: bulutlar kabartma çıkartma gibi durmasın
+    L = (0.2126 * R[..., 0] + 0.7152 * R[..., 1] + 0.0722 * R[..., 2])
+    kab = kabartma * (1.0 - 0.55 * np.clip((L - 0.55) / 0.4, 0, 1))
+    out = R * (1.0 + (kab * KABARTMA)[..., None]) * (1.0 + leke * LEKE[..., None])
     if vinyet:
         out *= _vinyet()[..., None]
     return np.clip(out, 0, 1)
