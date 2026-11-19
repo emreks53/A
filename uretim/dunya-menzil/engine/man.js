@@ -102,10 +102,10 @@
   // ---------- SIDE VIEW ----------
   function sideSkeleton(h, P) {
     const hip = [P.hipX * h || 0, -(R.hipY * h) + (P.hipDrop || 0) * h];
-    const torsoDir = dirOf(Math.PI + (P.lean || 0)); // upward, leaning forward with + lean
+    const torsoDir = dirOf(Math.PI - (P.lean || 0)); // upward, leaning forward with + lean
     const neckBase = add(hip, torsoDir, R.torso * h);
     const shoulder = add(neckBase, rot([-0.012 * h, 0.03 * h], P.lean || 0), 1);
-    const headDir = dirOf(Math.PI + (P.lean || 0) + (P.head || 0));
+    const headDir = dirOf(Math.PI - (P.lean || 0) - (P.head || 0));
     const headC = add(add(neckBase, headDir, R.neck * h + R.headH * h * 0.5), rot([0.012 * h, 0], (P.lean || 0) + (P.head || 0)), 1);
     const limb = (root, a1, bend, l1, l2, sign) => {
       const j = add(root, dirOf(a1), l1);
@@ -145,7 +145,7 @@
       return Math.max(ankle[1] + q1[1], ankle[1] + q2[1]);
     };
     const nFA = P.nF ?? 0, fFA = P.fF ?? 0;
-    const low = Math.max(footY(S.nLeg, nFA), footY(S.fLeg, fFA));
+    const low = Math.max(footY(S.nLeg, nFA), footY(S.fLeg, fFA), S.nLeg.j[1] + wTh1, S.fLeg.j[1] + wTh1);
     const dy = P.float ? 0 : -low;
     E.save(L);
     E.translate(L, 0, dy);
@@ -215,7 +215,7 @@
     }
     // neck
     const neck = new Path2D();
-    const nb = S.neckBase, hb = add(S.headC, dirOf(Math.PI + lean + (P.head || 0)), -R.headH * h * 0.35);
+    const nb = S.neckBase, hb = add(S.headC, dirOf(Math.PI - lean - (P.head || 0)), -R.headH * h * 0.35);
     capsule(neck, add(nb, [0, 1], 0.01 * h), hb, 0.02 * h, 0.019 * h);
     part(L, neck, C.skin, o, [nb[0], nb[1], 0.04 * h], 0.4);
     // collar band
@@ -387,7 +387,7 @@
     embrace: (k = 1) => ({ lean: 0.08 * k, head: 0.18 * k, nS: 0.06 + 0.95 * k, nE: 0.12 + 1.3 * k, fS: -0.04 + 0.85 * k, fE: 0.14 + 1.35 * k, nH: 0.03, nK: 0.05 * k, fH: -0.05, fK: 0.08 * k }),
     lookUp: (k = 1) => ({ lean: -0.05 * k, head: -0.42 * k, nS: 0.06, nE: 0.12, fS: -0.04, fE: 0.14, nH: 0.03, nK: 0.03, fH: -0.03, fK: 0.03 }),
     handOnHeart: (k = 1) => ({ lean: 0.03 * k, head: 0.18 * k, nS: 0.06 + 0.25 * k, nE: 0.12 + 1.75 * k, nW: 0.4 * k, fS: -0.04, fE: 0.14, nH: 0.03, nK: 0.03, fH: -0.03, fK: 0.03 }),
-    kneel: (k = 1) => ({ lean: 0.1 * k, head: 0.2 * k, hipDrop: 0.2 * k, nS: 0.2 * k, nE: 0.5 * k, fS: 0.1, fE: 0.3, nH: 1.3 * k, nK: 1.45 * k, fH: -0.1 * k, fK: 1.6 * k, nF: 0, fF: -0.9 * k }),
+    kneel: (k = 1) => ({ lean: 0.06 * k, head: 0.15 * k, nS: 0.25 * k, nE: 0.6 * k, fS: 0.12 * k, fE: 0.45 * k, nH: 1.42 * k, nK: 1.42 * k, fH: -0.12 * k, fK: 1.52 * k, nF: 0, fF: -0.35 * k }),
     clutch: (k = 1) => ({ lean: 0.22 * k, head: 0.28 * k, nS: 0.06 + 0.9 * k, nE: 0.12 + 1.7 * k, fS: -0.04 + 0.8 * k, fE: 0.14 + 1.75 * k, nH: 0.1 * k, nK: 0.2 * k, fH: -0.12 * k, fK: 0.12 * k }),
     proud: (k = 1) => ({ lean: -0.07 * k, head: -0.18 * k, nS: -0.12 * k, nE: 0.25 * k, fS: -0.2 * k, fE: 0.3 * k, nH: 0.05, nK: 0.02, fH: -0.06, fK: 0.02 }),
     // front / back view

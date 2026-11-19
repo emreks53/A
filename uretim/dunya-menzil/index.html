@@ -43,6 +43,7 @@
     const solo = (location.hash.match(/solo=([\w-]+)/) || [])[1];
     if (solo) {
       E.SHOTS = [{ id: solo, start: 0, end: E.TOTAL, dur: E.TOTAL, tail: 0, trans: null }];
+      E.GLOSSES = [];
     }
     const ids = E.SHOTS.map((s) => s.id).concat(['_test']);
     window.__scenesPending = ids.length;
