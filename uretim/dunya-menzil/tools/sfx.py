@@ -316,11 +316,16 @@ def main():
     venv = venv / (venv.max() or 1)
     duck = 1.0 - 0.5 * np.clip(venv * 4, 0, 1)
     bus *= duck[:, None]
-    # SFX bus level: peaks around -27 dBFS (voice peaks near -1 dBFS)
-    sfx_gain = 10 ** (-27 / 20) / (np.max(np.abs(bus)) or 1) if np.max(np.abs(bus)) > 10 ** (-27 / 20) else 1.0
-    bus *= sfx_gain
+    # SFX bus level: clearly below the voice. RMS of the active SFX parts sits ~17 dB under the voice RMS,
+    # and peaks are softly limited to -17 dBFS so no effect ever competes with the narrator.
     vpk = np.max(np.abs(v)) or 1
     v *= 10 ** (-1.5 / 20) / vpk
+    active = np.abs(bus).max(1) > 1e-4
+    rms_v = np.sqrt(np.mean(v[np.abs(v).max(1) > 1e-3] ** 2))
+    rms_b = np.sqrt(np.mean(bus[active] ** 2)) if active.any() else 1
+    bus *= (rms_v * 10 ** (-17 / 20)) / (rms_b or 1)
+    lim = 10 ** (-17 / 20)
+    bus = lim * np.tanh(bus / lim)
     mix = v + bus
     mix = np.clip(mix, -0.999, 0.999)
     import wave
