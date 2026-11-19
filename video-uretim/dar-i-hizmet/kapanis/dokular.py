@@ -455,6 +455,35 @@ def kuran_kapak(ppm=10):
     return out
 
 
+def lemalar_kapak(ppm=10):
+    """Yatan Lem'alar on kapagi icin kor (yaldizsiz) baski: ince cift cerceve + kose cicekleri.
+    R = baski maskesi (derinin hafifce bastirildigi yerler)."""
+    p = A.cilt_parametreleri(A.kalinlik(A.YATAN))
+    W = (A.KITAP_D - p["ys"] - p["gw"]) * 1000.0
+    H = A.KITAP_H * 1000.0
+    Wp, Hp = int(round(W * ppm)), int(round(H * ppm))
+    surf, c = _skia_canvas(Wp, Hp)
+    s = ppm
+
+    def cerceve(inset, t):
+        o = skia.Path(); o.addRect(skia.Rect(inset * s, inset * s, (W - inset) * s, (H - inset) * s))
+        i = skia.Path(); i.addRect(skia.Rect((inset + t) * s, (inset + t) * s, (W - inset - t) * s, (H - inset - t) * s))
+        return _op(o, i, D)
+    g = cerceve(9.0, 0.9)
+    g = _op(g, cerceve(11.2, 0.5), U)
+    for (kx, ky, dx, dy) in ((11.7, 11.7, 1, 1), (W - 11.7, 11.7, -1, 1), (11.7, H - 11.7, 1, -1), (W - 11.7, H - 11.7, -1, -1)):
+        for k, a_ in enumerate((math.pi / 4, math.pi / 4 - 0.6, math.pi / 4 + 0.6)):
+            ax, ay = math.cos(a_) * dx, math.sin(a_) * dy
+            g = _op(g, _yaprak(kx * s + ax * 1.5 * s, ky * s + ay * 1.5 * s, math.atan2(ay, ax), (7.0 if k == 0 else 5.0) * s, (1.8 if k == 0 else 1.3) * s), U)
+    c.drawPath(g, _beyaz())
+    m = _surf_to_np(surf)
+    yuk = ndimage.gaussian_filter(m, 0.3 * ppm)
+    rgb = np.stack([m, yuk, np.zeros_like(m)], -1)
+    out = os.path.join(A.DOKU, "lemalar_kapak.png")
+    Image.fromarray((rgb * 255 + 0.5).astype(np.uint8), "RGB").save(out, compress_level=3)
+    return out
+
+
 def hepsi():
     os.makedirs(A.DOKU, exist_ok=True)
     bilgi = {}
@@ -464,6 +493,7 @@ def hepsi():
         bilgi[ad] = inf
         print(f"{ad:30s} arc={inf['arc_mm']:.1f}mm cap={inf['cap_mm']:.2f}mm -> {out}")
     print(kuran_kapak())
+    print(lemalar_kapak())
     return bilgi
 
 

@@ -31,7 +31,18 @@ def kirp(img, x0, y0, x1, y1):
     return img[max(0, y0):y1, max(0, x0):x1]
 
 
-def pafta(parcalar, ad, etiketler=None, bosluk=10, arka=(244, 240, 233)):
+def pafta(parcalar, ad, etiketler=None, bosluk=10, arka=(244, 240, 233), sutun=None):
+    if sutun and len(parcalar) > sutun:
+        satirlar = []
+        for i in range(0, len(parcalar), sutun):
+            et = etiketler[i:i + sutun] if etiketler else None
+            satirlar.append(pafta(parcalar[i:i + sutun], None, et, bosluk, arka))
+        w = max(r.shape[1] for r in satirlar)
+        satirlar = [np.hstack([r, np.full((r.shape[0], w - r.shape[1], 3), arka, np.uint8)]) for r in satirlar]
+        out = np.vstack(satirlar)
+        if ad:
+            cv2.imwrite(f'{CIKTI}/{ad}.png', cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
+        return out
     h = max(p.shape[0] for p in parcalar)
     cols = []
     for i, p in enumerate(parcalar):
@@ -44,5 +55,6 @@ def pafta(parcalar, ad, etiketler=None, bosluk=10, arka=(244, 240, 233)):
         cols.append(p)
         cols.append(np.full((h, bosluk, 3), arka, np.uint8))
     out = np.hstack(cols[:-1])
-    cv2.imwrite(f'{CIKTI}/{ad}.png', cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
+    if ad:
+        cv2.imwrite(f'{CIKTI}/{ad}.png', cv2.cvtColor(out, cv2.COLOR_RGB2BGR))
     return out

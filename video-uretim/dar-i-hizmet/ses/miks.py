@@ -446,4 +446,8 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (KeyError, FileNotFoundError, json.JSONDecodeError, RuntimeError) as e:
+        print(f"hata: {e}", file=sys.stderr)
+        sys.exit(2)

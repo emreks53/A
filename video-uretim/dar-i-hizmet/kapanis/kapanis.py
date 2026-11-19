@@ -31,7 +31,7 @@ CFG = {
     "rx": 540,
     "ry": 960,
     "dolly": 0.055,              # hareket boyunca mesafenin %5.5'i kadar yaklas
-    "kaydir": [0.0, 0.0, 0.006],
+    "kaydir_v": 0.006,           # kamera yukari ekseninde 6 mm kayma (cok hafif dikey suruklenme)
     "hedef_kuran_ust": 0.115,    # kadraj: Kur'an ust kenari (ustten oran)
     "hedef_lem_alt": 0.668,      # kadraj: Lem'alar on alt kenari
 }
@@ -169,14 +169,29 @@ def main():
         dt = render_kare(os.path.join(A.TEST, "tam_zaman.png"), cfg, 0.0)
         print(f"TAM_KARE_SURE {dt:.1f}s")
     if cmd in ("kare1", "hepsi"):
-        cfg = cfg_yukle(dict(ek or {}, samples=160, esik=0.015))
-        # 1.25x cozunurluk, %3 genis goruntu alani (hareket payi)
+        import bpy
+        import numpy as np
+        cfg = cfg_yukle(dict(ek or {}, samples=ek.get("samples", 160) if ek else 160, esik=0.015))
+        # 1.25x cozunurluk, %3 genis goruntu alani (hareket/salinim payi)
         pay = 1.03
         cfg_b = dict(cfg, rx=1350, ry=2400)
         sahne, sc, k = kur(cfg_b)
-        cam = sc.camera
-        cam.data.lens = cfg_b["lens"] / pay
-        dt = render_kare(os.path.join(A.SCRATCH, "kare1_buyuk.png"), cfg_b, 0.0, z_pass=True)
+        sc.camera.data.lens = cfg_b["lens"] / pay
+        sc.render.image_settings.color_depth = "16"
+        dt = render_kare(os.path.join(A.SCRATCH, "kare1_buyuk.png"), cfg_b, 0.0)
+        # derinlik gecisi
+        sahne.derinlik_modu()
+        exr = os.path.join(A.SCRATCH, "kare1_derinlik.exr")
+        sc.render.filepath = exr
+        t0 = time.time()
+        bpy.ops.render.render(write_still=True)
+        im = bpy.data.images.load(exr)
+        w, h = im.size
+        px = np.empty(w * h * 4, np.float32)
+        im.pixels.foreach_get(px)
+        dep = px.reshape(h, w, 4)[::-1, :, 0].copy()
+        np.save(os.path.join(A.SCRATCH, "kare1_derinlik.npy"), dep)
+        print("DERINLIK", dep.min(), np.median(dep), dep.max(), f"{time.time() - t0:.1f}s")
         json.dump(dict(cfg_b, pay=pay, kadraj=k, sure=dt), open(os.path.join(A.SCRATCH, "kare1_bilgi.json"), "w"), indent=1)
         print(f"KARE1 {dt:.1f}s")
     if cmd in ("son", "hepsi"):

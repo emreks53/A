@@ -75,7 +75,7 @@ def _smooth(t):
 
 
 def cilt_parametreleri(T, D=KITAP_D, bt=0.0027):
-    R = min(max(0.10 * T, 0.0012), 0.0042)      # sirt bombesi
+    R = min(max(0.13 * T, 0.0016), 0.0050)      # sirt bombesi
     ys = R + 0.0012                              # sirt - mafsal birlesimi
     e = 0.00035                                  # sirt, kapaktan biraz dar
     gw = 0.0068                                  # mafsal oluk genisligi

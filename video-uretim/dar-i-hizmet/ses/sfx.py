@@ -684,7 +684,8 @@ def pour(dur=3.0, flow=0.6, seed=0, wet=0.2):
     nz = shaped_noise(n, rng, G, ch=2)
     gurgle = np.clip(1 + 0.4 * slow_noise(n, rng, 18), 0.2, None)   # akışın çalkantısı
     stream = _ms(_unit(nz[:, 0]), _unit(nz[:, 1]), 0.3) * (fl ** 1.2 * gurgle)[:, None] * 0.22
-    bub = _bubble_cloud(n, rng, (160 + 320 * flow) * fl, 450, 2400, (0.2, 0.7), 0.4, (0.06, 0.18), 0.9)
+    bub = _bubble_cloud(n, rng, (160 + 320 * flow) * fl, 450, 2400, (0.2, 0.7), 0.4, (0.06, 0.18), 0.9,
+                        env=np.clip(fl, 0, 1) ** 0.5)
     spl = np.zeros((n, 2))
     for p in _events(6 * fl, rng):                 # yapraklara sıçrama
         g = lowpass(_burst(rng, rng.uniform(0.008, 0.02), 1200, 4500), 4500, 2) * rng.uniform(0.12, 0.28)
@@ -705,7 +706,7 @@ def pour(dur=3.0, flow=0.6, seed=0, wet=0.2):
         _add(y, g, _ns(tt), _pan_gains(rng.uniform(-0.3, 0.3)))
         tt += rng.uniform(0.08, 0.22) * (1.25 ** _)
         amp *= rng.uniform(0.55, 0.8)
-    y = lowpass(y, 7500, 2)
+    y = highpass(lowpass(y, 7500, 2), 150, 2)
     return _finish(y, "pour", wet, rt60=1.0, seed=seed, fade_in=0.01, fade_out=0.06)
 
 
@@ -912,7 +913,7 @@ def lift_wash(dur=1.6, seed=0, wet=0.2):
     nz = shaped_noise(n, rng, G, ch=2)
     base = _ms(_unit(nz[:, 0]), _unit(nz[:, 1]), 0.4)
     am = np.clip(1 + 0.35 * slow_noise(n, rng, 9), 0.2, None)
-    gur = _bubble_cloud(n, rng, 70 * E, 280, 1100, (0.2, 0.7), 0.5, (0.2, 0.45), 1.4)
+    gur = _bubble_cloud(n, rng, 70 * E, 280, 1100, (0.2, 0.7), 0.5, (0.2, 0.45), 1.4, env=E ** 0.5)
     sw = 0.45 * np.sin(2 * np.pi * t / dur + rng.uniform(0, 6.28))
     y = pan(base * (E * am)[:, None], sw) * 0.6 + gur * 0.5
     return _finish(y, "lift_wash", wet, rt60=1.0, seed=seed, fade_out=0.06)
