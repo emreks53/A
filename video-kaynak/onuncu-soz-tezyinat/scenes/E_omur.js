@@ -75,33 +75,180 @@
     const h = lerp(520, 600, r), w = lerp(640, 420, r), sT = sandTop(t);
     return { h, w, sT, sB: 0.04 + (0.32 - sT) * 2.3, flow: flowAt(t) };
   }
-  /** geometry mirror of A.hourglass internals (for placing things inside the bulbs) */
+  /** geometry mirror of the local hourglass (hgDraw below; narrowed bulb GK) for placing things inside the bulbs */
   function hgGeo(st) {
-    const h = st.h, w = st.w, neck = w * 0.06, capH = h * 0.05, H2 = h / 2 - capH, nr = neck / 2, Wr = w / 2;
+    const h = st.h, w = st.w, neck = w * 0.06, capH = h * 0.05, H2 = h / 2 - capH, nr = neck / 2, Wr = (w / 2) * GK;
     const sm = (x) => { x = cl(x); return x * x * (3 - 2 * x); };
     const X = (y) => { const u = cl(1 - Math.abs(y) / H2); const g = Math.pow(Math.max(0, 1 - Math.pow(u, 2.3)), 0.62); const sh = 0.84 + 0.16 * sm(u / 0.17); return nr + (Wr - nr) * g * sh; };
     const yL = lerp(-nr * 2, -H2 + capH * 0.3, Math.pow(Math.max(0, st.sT), 0.72));
     const baseH = st.sB * H2 * 0.4, coneH = st.sB * H2 * 0.36 + 3, yPk = H2 - baseH - coneH;
-    return { h, w, nr, H2, capH, X, yL, yPk, capR: w * 0.54 };
+    return { h, w, nr, H2, capH, X, yL, yPk, Wr, capR: w * 0.54 };
   }
   // un-morph / slide (20.62–21.15)
   const unK = (t) => A.morphEase(pp(t, 20.62, 21.04, 'linear'), 0.05);
   function objPos(t) { const e = pp(t, 20.62, 21.04, 'inOutCubic'); return [lerp(NECK[0], BOWL_FOOT[0], e), lerp(NECK[1], BOWL_FOOT[1], e)]; }
   /** circular moving-average smoothing: removes the cap/glass notches from a silhouette (outline use only) */
   function smoothSil(P, it = 3) { let Q = P; for (let k = 0; k < it; k++) { const n = Q.length; Q = Q.map((p, i) => { const a = Q[(i + n - 2) % n], b = Q[(i + n - 1) % n], c2 = Q[(i + 1) % n], d = Q[(i + 2) % n]; return [(a[0] + b[0] + p[0] + c2[0] + d[0]) / 5, (a[1] + b[1] + p[1] + c2[1] + d[1]) / 5]; }); } return Q; }
-  /** A.hourglass with the glass tucked behind the brass posts (the asset's bulb otherwise bulges past them) */
-  function hgDraw(ctx, o) {
-    const w = o.w, h = o.h, capR = w * 0.54, ry = capR * 0.2, capH = h * 0.05;
-    ctx.save(); ctx.beginPath();
-    ctx.rect(-capR - 6, -h / 2 - ry - 6, 2 * capR + 12, capH + 2 * ry + 12);
-    ctx.rect(-capR - 6, h / 2 - capH - ry - 6, 2 * capR + 12, capH + 2 * ry + 14);
-    ctx.rect(-w * 0.452, -h / 2, w * 0.904, h); // posts sit at ±0.421w (r 0.024w)
-    ctx.clip(); A.hourglass(ctx, o); ctx.restore();
+  /* ------------------------------------------------------------------ local hourglass
+   * A.hourglass redrawn here (same plates, posts, sand and glass passes as engine/assets_objects.js)
+   * with one change: the bulb half-width is GK·w/2 ≈ 0.385w, so the glass sits wholly inside the
+   * front brass posts (inner edge 0.397w). The asset's bulb (0.5w) bulges past the posts, and clipping
+   * it left glass tabs and straight cuts beside the posts. Drawn in three parts so overlays (the morph
+   * outline) can sit between the glass and the front posts / top plate:
+   *   HG_FB bottom plate + back post · HG_GL glass + sand · HG_FF front posts + top plate. */
+  const GK = 0.77, HG_FB = 1, HG_GL = 2, HG_FF = 4, HG_ALL = 7;
+  const hgSm = (x) => { x = cl(x); return x * x * (3 - 2 * x); };
+  function hgG(o) {
+    const h = o.h, w = o.w, neck = w * 0.06, capH = h * 0.05, s = 0.2, capR = w * 0.54;
+    const H2 = h / 2 - capH, nr = neck / 2, Wr = (w / 2) * GK;
+    const X = (y) => { const u = cl(1 - Math.abs(y) / H2); const g = Math.pow(Math.max(0, 1 - Math.pow(u, 2.3)), 0.62); const sh = 0.84 + 0.16 * hgSm(u / 0.17); return nr + (Wr - nr) * g * sh; };
+    return { h, w, neck, capH, s, capR, H2, nr, Wr, X };
+  }
+  function hgGlassPts(G, n = 40) {
+    const R = [];
+    for (let i = 0; i <= n; i++) { const y = -G.H2 * Math.pow(1 - i / n, 1.6); R.push([G.X(y), y]); }
+    for (let i = n - 1; i >= 0; i--) { const y = G.H2 * Math.pow(1 - i / n, 1.6); R.push([G.X(y), y]); }
+    const L = R.map((p) => [-p[0], p[1]]).reverse();
+    // straight rims on the plates, sampled densely near the corners: the closed Catmull-Rom path then rounds the
+    // corners instead of overshooting into a pointed lip (the asset's 2-point rim spikes outward at the glass foot)
+    const xb = G.X(G.H2), RU = [0.015, 0.04, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.96, 0.985];
+    return R.concat(RU.map((u) => [lerp(xb, -xb, u), G.H2]), L, RU.map((u) => [lerp(-xb, xb, u), -G.H2]));
+  }
+  const BRASS = (ctx, x0, x1) => E.lin(ctx, x0, 0, x1, 0, [[0, '#5E3E14'], [0.22, '#E8C27A'], [0.36, '#FFF0C0'], [0.55, '#C99A4A'], [0.82, '#8A6428'], [1, '#4A3010']]);
+  const woodSide = (ctx, x0, x1) => E.lin(ctx, x0, 0, x1, 0, [[0, '#3E2414'], [0.24, '#A87448'], [0.4, '#C48C58'], [0.62, '#7A4E2E'], [1, '#2E1A0E']]);
+  function hgCap(ctx, G, yA) {
+    const { capR, capH, s } = G, ry = capR * s;
+    const side = new Path2D();
+    side.moveTo(-capR, yA); side.lineTo(-capR, yA + capH); side.ellipse(0, yA + capH, capR, ry, 0, PI, 0, true); side.lineTo(capR, yA); side.closePath();
+    ctx.fillStyle = woodSide(ctx, -capR, capR); ctx.fill(side);
+    ctx.strokeStyle = BRASS(ctx, -capR, capR); ctx.lineWidth = capH * 0.18;
+    ctx.beginPath(); ctx.ellipse(0, yA + capH * 0.55, capR, ry, 0, 0, PI); ctx.stroke();
+    ctx.strokeStyle = 'rgba(20,10,4,0.4)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(0, yA + capH, capR, ry, 0, 0, PI); ctx.stroke();
+    ctx.fillStyle = E.rad(ctx, -capR * 0.3, yA - ry * 0.4, 0, capR * 1.2, [[0, '#C79060'], [0.6, '#94603A'], [1, '#6A4026']]);
+    ctx.beginPath(); ctx.ellipse(0, yA, capR, ry, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(60,30,14,0.45)'; ctx.lineWidth = 1.2;
+    for (const k of [0.78, 0.55]) { ctx.beginPath(); ctx.ellipse(0, yA, capR * k, ry * k, 0, 0, TAU); ctx.stroke(); }
+    ctx.strokeStyle = BRASS(ctx, -capR, capR); ctx.lineWidth = Math.max(1.5, capH * 0.14);
+    ctx.beginPath(); ctx.ellipse(0, yA, capR * 0.985, ry * 0.985, 0, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,240,200,0.55)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(0, yA, capR * 0.97, ry * 0.95, 0, PI * 1.05, PI * 1.6); ctx.stroke();
+  }
+  function hgPost(ctx, G, x, dy) {
+    const pr = G.w * 0.024, y0 = -G.H2 + dy, y1 = G.H2 + dy;
+    const beads = [-G.H2 * 0.62, -G.H2 * 0.08, G.H2 * 0.08, G.H2 * 0.62].map((b) => b + dy);
+    const prof = (y) => { let r = pr; for (const b of beads) r += pr * 0.75 * Math.exp(-Math.pow((y - b) / (pr * 1.3), 2)); r += pr * 0.6 * (Math.exp(-Math.pow((y - y0) / (pr * 1.6), 2)) + Math.exp(-Math.pow((y - y1) / (pr * 1.6), 2))); return r; };
+    const pts = [], n = 60;
+    for (let i = 0; i <= n; i++) { const y = lerp(y0, y1, i / n); pts.push([x + prof(y), y]); }
+    for (let i = n; i >= 0; i--) { const y = lerp(y0, y1, i / n); pts.push([x - prof(y), y]); }
+    ctx.fillStyle = woodSide(ctx, x - pr * 1.8, x + pr * 1.8);
+    ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = BRASS(ctx, x - pr * 1.8, x + pr * 1.8);
+    for (const b of [beads[1], beads[2]]) { ctx.beginPath(); ctx.ellipse(x, (b + (b < dy ? -pr * 0.2 : pr * 0.2)), prof(b) * 1.02, pr * 0.32, 0, 0, TAU); ctx.fill(); }
+  }
+  /** o: { t, h, w, sandTop, sandBottom, flow, glassA (glass + sand), frameA (plates + posts) } · parts: HG_* bit mask */
+  function hgDraw(ctx, o, parts = HG_ALL) {
+    const G = hgG(o), t = o.t || 0, gA = o.glassA === undefined ? 1 : o.glassA, fA = o.frameA === undefined ? 1 : o.frameA;
+    const sT = cl(o.sandTop === undefined ? 0.6 : o.sandTop), sB = cl(o.sandBottom === undefined ? 0.3 : o.sandBottom);
+    const flow = Math.max(0, o.flow === undefined ? (sT > 0 ? 0.8 : 0) : o.flow);
+    const { h, capH, capR, s, H2, X } = G;
+    if ((parts & HG_FB) && fA > 0.003) {
+      ctx.save(); ctx.globalAlpha *= fA; hgCap(ctx, G, H2);
+      ctx.globalAlpha *= 0.5; hgPost(ctx, G, 0, -capR * 0.9 * s * 0.5); ctx.restore();
+    }
+    if ((parts & HG_GL) && gA > 0.003) {
+      const glass = new Path2D(); A.crPath(glass, hgGlassPts(G), true);
+      ctx.save(); ctx.globalAlpha *= gA;
+      ctx.fillStyle = E.rgba('#9FD8EA', 0.08); ctx.fill(glass);
+      ctx.save(); ctx.clip(glass);
+      const sandG = (x0, x1) => E.lin(ctx, x0, 0, x1, 0, [[0, '#FFDF8E'], [0.47, '#F5C25E'], [0.53, '#DDA042'], [1, '#A86E28']]);
+      let yPk = H2 - 2;
+      if (sB > 0.004) {
+        const yBot = H2 + 2, baseH = sB * H2 * 0.4, coneH = sB * H2 * 0.36 + 3;
+        const yB = H2 - baseH, xr = X(yB); yPk = yB - coneH;
+        const pts = [];
+        for (let i = 0; i <= 10; i++) { const y = lerp(yBot, yB, i / 10); pts.push([-X(y) - 2, y]); }
+        for (let i = 0; i <= 24; i++) { const u = i / 24, x = lerp(-xr - 2, xr + 2, u), q = Math.abs(u * 2 - 1); pts.push([x, yB - coneH * Math.pow(1 - q, 1.35) + coneH * 0.04 * Math.sin(u * PI)]); }
+        for (let i = 0; i <= 10; i++) { const y = lerp(yB, yBot, i / 10); pts.push([X(y) + 2, y]); }
+        ctx.fillStyle = sandG(-xr, xr); ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(120,70,20,0.18)'; ctx.fillRect(-G.Wr, yB, G.Wr * 2, H2);
+        ctx.strokeStyle = 'rgba(255,240,190,0.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-xr * 0.7, yB - coneH * 0.25); ctx.lineTo(0, yPk + 1); ctx.stroke();
+      }
+      if (sT > 0.004) {
+        const yL = lerp(-G.nr * 2, -H2 + capH * 0.3, Math.pow(sT, 0.72));
+        const pts = [], n = 22;
+        for (let i = 0; i <= n; i++) { const y = lerp(yL, 2, i / n); pts.push([X(y) + 1, y]); }
+        for (let i = n; i >= 0; i--) { const y = lerp(yL, 2, i / n); pts.push([-X(y) - 1, y]); }
+        ctx.fillStyle = sandG(-X(yL), X(yL)); ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); ctx.fill();
+        const xr = X(yL), er = Math.max(1, xr * s);
+        ctx.fillStyle = E.lin(ctx, -xr, 0, xr, 0, [[0, '#FFEDB0'], [0.5, '#F9D683'], [1, '#E2AE55']]);
+        ctx.beginPath(); ctx.ellipse(0, yL, xr, er, 0, 0, TAU); ctx.fill();
+        if (flow > 0.01) {
+          const dr = xr * cl(0.18 + 0.25 * flow, 0, 0.6);
+          ctx.fillStyle = E.rad(ctx, 0, yL + er * 0.1, 0, dr, [[0, '#B07A34', 0.75], [0.55, '#D9A250', 0.4], [1, '#E9BC6C', 0]]);
+          ctx.beginPath(); ctx.ellipse(0, yL + er * 0.1, dr, er * 0.7, 0, 0, TAU); ctx.fill();
+        }
+      }
+      if (flow > 0.01 && sT > 0.002) A.sand(ctx, t, { x: 0, y: -G.nr, len: yPk + G.nr, flow, w: Math.max(1.2, G.w * 0.004), speed: h * 0.9 });
+      ctx.restore();
+      // glass front (widths follow the bulb, not the frame)
+      const Wg = G.Wr * 2;
+      ctx.fillStyle = E.rgba('#CFF3FF', 0.16); ctx.fill(glass);
+      ctx.save(); ctx.clip(glass);
+      ctx.lineWidth = Wg * 0.12; ctx.strokeStyle = E.rgba('#E6FBFF', 0.16); ctx.stroke(glass);
+      ctx.lineWidth = Wg * 0.035; ctx.strokeStyle = E.rgba('#FFFFFF', 0.22); ctx.stroke(glass);
+      for (const sg of [-1, 1]) {
+        const st = [], st2 = [];
+        for (let i = 0; i <= 14; i++) { const u = lerp(0.1, 0.78, i / 14), y = sg * H2 * (1 - u); st.push([-X(y) * 0.66, y]); st2.push([-X(y) * 0.5, y]); }
+        for (let i = 14; i >= 0; i--) { const u = lerp(0.1, 0.78, i / 14), y = sg * H2 * (1 - u); st.push([-X(y) * 0.52, y]); st2.push([-X(y) * 0.46, y]); }
+        ctx.fillStyle = E.lin(ctx, 0, sg * H2 * 0.9, 0, sg * H2 * 0.2, [[0, '#FFFFFF', 0.55], [1, '#FFFFFF', 0.05]]);
+        ctx.beginPath(); A.crPath(ctx, st, true); ctx.fill();
+        ctx.fillStyle = E.rgba('#FFFFFF', 0.3); ctx.beginPath(); A.crPath(ctx, st2, true); ctx.fill();
+        const hy = sg * H2 * 0.72; ctx.fillStyle = E.rgba('#FFFFFF', 0.8);
+        ctx.beginPath(); ctx.ellipse(X(hy) * 0.55, hy, Wg * 0.012, Wg * 0.03, 0.2, 0, TAU); ctx.fill();
+      }
+      ctx.strokeStyle = E.lin(ctx, G.Wr * 0.3, 0, G.Wr, 0, [[0, '#7FE0D2', 0], [1, '#7FE0D2', 0.7]]); ctx.lineWidth = Wg * 0.025; ctx.stroke(glass);
+      ctx.restore();
+      ctx.strokeStyle = E.rgba('#EFFDFF', 0.6); ctx.lineWidth = Math.max(1.2, G.w * 0.004); ctx.stroke(glass);
+      ctx.restore();
+    }
+    if ((parts & HG_FF) && fA > 0.003) {
+      const fx = capR * 0.9 * 0.866, fdy = capR * 0.9 * s * 0.5;
+      ctx.save(); ctx.globalAlpha *= fA;
+      hgPost(ctx, G, -fx, fdy); hgPost(ctx, G, fx, fdy);
+      hgCap(ctx, G, -h / 2);
+      ctx.restore();
+    }
+    return G;
   }
 
   /* ------------------------------------------------------------------ silhouettes */
   const silC = new Map();
-  function hgSil(h, w) { const k = Math.round(h) + '|' + Math.round(w); let s = silC.get(k); if (!s) { if (silC.size > 120) silC.clear(); s = smoothSil(A.hourglassSilhouette({ h: Math.round(h), w: Math.round(w) })); silC.set(k, s); } return s; }
+  /** caps + (narrowed) glass, smoothed: only for the soft floor shadow */
+  function hgSil(h, w) {
+    const k = Math.round(h) + '|' + Math.round(w); let s = silC.get(k);
+    if (!s) {
+      if (silC.size > 240) silC.clear();
+      const G = hgG({ h: Math.round(h), w: Math.round(w) }), { capR, capH, s: vs } = G, hh = G.h, ry = capR * vs, pts = [];
+      for (let i = 0; i <= 16; i++) { const a = PI * 1.5 + (i / 16) * PI * 0.5; pts.push([capR * Math.cos(a), -hh / 2 + ry * Math.sin(a)]); }
+      pts.push([capR, -hh / 2 + capH]);
+      const gp = hgGlassPts(G, 30), nR = 61, gL = gp.slice(nR + 13, nR + 13 + nR); // right side (top→bottom), left side (bottom→top)
+      for (let i = 0; i < nR; i++) pts.push(gp[i]);
+      pts.push([capR, hh / 2 - capH]);
+      for (let i = 0; i <= 32; i++) { const a = (i / 32) * PI; pts.push([capR * Math.cos(a), hh / 2 + ry * Math.sin(a)]); }
+      pts.push([-capR, hh / 2 - capH]);
+      for (const q of gL) pts.push(q);
+      pts.push([-capR, -hh / 2 + capH]);
+      for (let i = 0; i <= 16; i++) { const a = PI + (i / 16) * PI * 0.5; pts.push([capR * Math.cos(a), -hh / 2 + ry * Math.sin(a)]); }
+      s = smoothSil(A.resample(pts, 128)); silC.set(k, s);
+    }
+    return s;
+  }
+  /** the glass bulbs exactly as hgDraw paints them (inside the posts, between the plates), 128 pts from the top centre:
+   *  the morph / un-morph outline lands on the real glass edge, never on the wood */
+  function glassSil(h, w) {
+    const k = 'g' + Math.round(h) + '|' + Math.round(w); let s = silC.get(k);
+    if (!s) { if (silC.size > 240) silC.clear(); const G = hgG({ h: Math.round(h), w: Math.round(w) }); s = A.resample(hgGlassPts(G, 40), 128); silC.set(k, s); }
+    return s;
+  }
   function bowlSilD(c) { // D's bowl (+mirror) at camera state c, in NECK-relative screen px (foot at 0)
     const o = { rx: 330, ry: 110 + 90 * c.crane, depth: 220, tilt: c.tilt, widen: c.widen };
     const k = [o.ry, o.tilt, o.widen].map((v) => v.toFixed(3)).join('|');
@@ -109,8 +256,18 @@
     const depth = 220 * (1 + 0.3 * c.widen);
     return s.map(([x, y]) => [x * c.z, (y - depth) * c.z]);
   }
+  /** un-morph target: the bowl alone (no mirror lobe, not smoothed, so it follows the drawn bowl's edge). The
+   *  silhouette's reflection lobe is folded into the foot ring: the lower bulb retracts into the foot. */
   let BOWL_E = null;
-  const bowlSilE = () => BOWL_E || (BOWL_E = smoothSil(A.bowlSilhouette({}), 2).map(([x, y]) => [x * BOWL_S, (y - 220) * BOWL_S]));
+  const bowlSilE = () => {
+    if (BOWL_E) return BOWL_E;
+    const D = 220, raw = A.bowlSilhouette({}), lobe = [];
+    raw.forEach((p, i) => { if (p[1] > D + 0.5) lobe.push(i); });
+    const P = raw.map((p) => [p[0], p[1]]), n = lobe.length, m = raw.length;
+    const fR = 0.5 * (Math.abs(raw[(lobe[0] - 1 + m) % m][0]) + Math.abs(raw[(lobe[n - 1] + 1) % m][0])); // the foot's half-width
+    lobe.forEach((i, j) => { const u = (j + 1) / (n + 1); P[i] = [lerp(fR, -fR, u), D + fR * 0.16 * Math.sin(PI * u)]; });
+    return (BOWL_E = P.map(([x, y]) => [x * BOWL_S, (y - D) * BOWL_S]));
+  };
   function polyLen(P) { const c = [0]; for (let i = 1; i <= P.length; i++) { const a = P[i - 1], b = P[i % P.length]; c.push(c[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1])); } return c; }
   /** symmetric draw-on of a closed shape from its top-most point (index 0) both ways */
   function strokeDrawOn(ctx, P, k) {
@@ -196,28 +353,52 @@
   }
 
   /* ------------------------------------------------------------------ kandil + stand */
+  /** turned column: lathe profile from the dish (y0) down to the base disc (y1), closed by the front half of its
+   *  foot ellipse (a round footprint, no flat cut-off with pointed tips) */
+  const STAND_EY = 0.18; // ellipse ratio of the stand's turned rings (camera looks slightly down)
   function standPath(x, y0, y1) {
-    const p = new Path2D(), n = 40, pts = [];
-    const prof = (u) => { const y = lerp(y0, y1, u); let r = 10 + 3 * u; r += 30 * Math.exp(-Math.pow(u / 0.05, 2)); r += 13 * Math.exp(-Math.pow((u - 0.2) / 0.045, 2)); r += 17 * Math.exp(-Math.pow((u - 0.5) / 0.07, 2)); r += 10 * Math.exp(-Math.pow((u - 0.74) / 0.04, 2)); r += 44 * Math.exp(-Math.pow((u - 1) / 0.09, 2)); return [r, y]; };
-    for (let i = 0; i <= n; i++) { const [r, y] = prof(i / n); pts.push([x + r, y]); }
-    for (let i = n; i >= 0; i--) { const [r, y] = prof(i / n); pts.push([x - r, y]); }
-    p.moveTo(pts[0][0], pts[0][1]); for (const q of pts) p.lineTo(q[0], q[1]); p.closePath();
+    const p = new Path2D(), n = 44, R = [];
+    const prof = (u) => { const y = lerp(y0, y1, u); let r = 10 + 3 * u; r += 30 * Math.exp(-Math.pow(u / 0.05, 2)); r += 13 * Math.exp(-Math.pow((u - 0.2) / 0.045, 2)); r += 17 * Math.exp(-Math.pow((u - 0.5) / 0.07, 2)); r += 10 * Math.exp(-Math.pow((u - 0.74) / 0.04, 2)); r += 22 * Math.exp(-Math.pow((u - 1) / 0.13, 2)); return [r, y]; };
+    for (let i = 0; i <= n; i++) R.push(prof(i / n));
+    p.moveTo(x - R[0][0], R[0][1]); p.lineTo(x + R[0][0], R[0][1]);
+    for (let i = 1; i <= n; i++) p.lineTo(x + R[i][0], R[i][1]);
+    const rf = R[n][0]; p.ellipse(x, y1, rf, rf * STAND_EY, 0, 0, PI, false); // round foot
+    for (let i = n; i >= 0; i--) p.lineTo(x - R[i][0], R[i][1]);
+    p.closePath();
     return p;
   }
   let STAND = null;
   function drawStand(ctx, warm) {
-    const hgt = (STAND_B - KAN.y) / KS;
-    if (!STAND) STAND = standPath(0, 0, hgt);
-    ctx.fillStyle = E.lin(ctx, -54, 0, 54, 0, [[0, '#0A1A1E'], [0.28, '#3A2A22'], [0.56, '#7A5634'], [0.8, '#2E1E16'], [1, '#0A0E10']]); ctx.fill(STAND);
+    const hgt = (STAND_B - KAN.y) / KS, bT = hgt - 7, rb = 47, ryb = rb * STAND_EY; // base disc: top face at bT, floor at hgt
+    if (!STAND) STAND = standPath(0, 0, bT);
+    const woodG = (x0, x1) => E.lin(ctx, x0, 0, x1, 0, [[0, '#0A1A1E'], [0.28, '#3A2A22'], [0.56, '#7A5634'], [0.8, '#2E1E16'], [1, '#0A0E10']]);
+    // turned base disc on the floor: elliptical footprint, side band, lit top face
+    const side = new Path2D();
+    side.moveTo(-rb, bT); side.lineTo(-rb, hgt); side.ellipse(0, hgt, rb, ryb, 0, PI, 0, true); side.lineTo(rb, bT); side.ellipse(0, bT, rb, ryb, 0, 0, PI, false); side.closePath();
+    ctx.fillStyle = woodG(-rb, rb); ctx.fill(side);
+    ctx.fillStyle = E.lin(ctx, -rb, 0, -rb * 0.45, 0, [[0, PAL.rim, 0.35], [1, PAL.rim, 0]]); ctx.fill(side);
+    ctx.fillStyle = E.rad(ctx, -rb * 0.25, bT - ryb * 0.5, 0, rb * 1.1, [[0, '#8A6038'], [0.6, '#5A3C24'], [1, '#2E1E14']]);
+    ctx.beginPath(); ctx.ellipse(0, bT, rb, ryb, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,214,150,0.32)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(0, bT, rb - 0.6, ryb - 0.3, 0, PI * 0.05, PI * 0.95); ctx.stroke();
+    ctx.fillStyle = 'rgba(8,6,10,0.35)'; ctx.beginPath(); ctx.ellipse(0, bT + 0.5, 32, 32 * STAND_EY, 0, 0, TAU); ctx.fill(); // column seat
+    // column
+    ctx.fillStyle = woodG(-54, 54); ctx.fill(STAND);
     ctx.save(); ctx.clip(STAND);
     ctx.fillStyle = E.lin(ctx, -54, 0, -18, 0, [[0, PAL.rim, 0.4], [1, PAL.rim, 0]]); ctx.fillRect(-54, 0, 40, hgt);
     ctx.strokeStyle = 'rgba(255,214,150,0.18)'; ctx.lineWidth = 1.2; // turned grooves
-    for (const u of [0.12, 0.2, 0.28, 0.43, 0.57, 0.74, 0.9]) { ctx.beginPath(); ctx.ellipse(0, u * hgt, 50, 3, 0, 0, PI); ctx.stroke(); }
+    for (const u of [0.12, 0.2, 0.28, 0.43, 0.57, 0.74, 0.9]) { ctx.beginPath(); ctx.ellipse(0, u * bT, 50, 3, 0, 0, PI); ctx.stroke(); }
     if (warm > 0.01) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = E.lin(ctx, 0, 0, 0, hgt * 0.7, [[0, PAL.flame, 0.5 * warm], [1, PAL.flame, 0]]); ctx.fillRect(-54, 0, 108, hgt); }
     ctx.restore();
-    // top dish
-    ctx.fillStyle = E.lin(ctx, -50, 0, 50, 0, [[0, '#2A1A10'], [0.6, '#A87A3E'], [1, '#2A1A10']]);
-    ctx.beginPath(); ctx.ellipse(0, 3, 50, 10, 0, 0, TAU); ctx.fill();
+    if (warm > 0.01) { ctx.save(); ctx.clip(side); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = E.rgba(PAL.flame, 0.12 * warm); ctx.fillRect(-rb, bT - ryb, rb * 2, hgt - bT + ryb * 2 + 2); ctx.restore(); }
+    // top dish: a turned brass-rimmed plate (side band + lit rim), not a dark hole under the kandil
+    const dr = 50, dry = 10, dy = 3, dth = 4;
+    const dish = new Path2D();
+    dish.moveTo(-dr, dy); dish.lineTo(-dr, dy + dth); dish.ellipse(0, dy + dth, dr, dry, 0, PI, 0, true); dish.lineTo(dr, dy); dish.ellipse(0, dy, dr, dry, 0, 0, PI, false); dish.closePath();
+    ctx.fillStyle = BRASS(ctx, -dr, dr); ctx.fill(dish);
+    ctx.fillStyle = E.lin(ctx, 0, dy - dry, 0, dy + dry, [[0, '#6E4A26'], [0.55, '#B8894A'], [1, '#D8AE66']]);
+    ctx.beginPath(); ctx.ellipse(0, dy, dr, dry, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,236,190,0.7)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(0, dy, dr - 0.8, dry - 0.4, 0, PI * 0.04, PI * 0.96); ctx.stroke();
+    if (warm > 0.01) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = E.rgba(PAL.flame, 0.25 * warm); ctx.fill(dish); ctx.restore(); }
   }
   function kandilOpts(t) {
     const lit = cl(pp(t, 18.9, 18.98, 'linear'));
@@ -309,10 +490,12 @@
   /* ------------------------------------------------------------------ bowl (end of E) */
   function bowlEOpts(t) { return { t, dim: 1, lit: 0, reflection: true, rimCol: PAL.rim, shadow: true }; }
   const Q10 = 0.316; // normalised floor radius of a 10 % fill (depth 1−q² = 0.9)
-  function drawBowlE(ctx, t, cam, pos, alpha) {
+  /** clip (optional): { path (screen Path2D), k 0..1 } — while the outline still reshapes, the bowl only shows inside it;
+   *  k eases the clip off (everything outside is faded by k, never hard-cut on the frame it ends) */
+  function drawBowlE(ctx, t, cam, pos, alpha, clip) {
     const rimW = [pos[0], pos[1] - 220 * BOWL_S], s = BOWL_S * cam.z, rp = toS(cam, rimW[0], rimW[1]);
     const veil = 0.42 + 0.3 * pp(t, 20.9, 21.6);
-    E.layer(ctx, (l) => {
+    if (alpha > 0.003) E.layer(ctx, (l) => {
       E.at(l, rp[0], rp[1], s, 0, (c) => {
         A.iznikBowl(c, bowlEOpts(t));
         // the thin layer of sand (≈10 %)
@@ -327,6 +510,10 @@
         }
       });
       l.globalCompositeOperation = 'source-atop'; l.fillStyle = `rgba(5,22,30,${veil.toFixed(3)})`; l.fillRect(0, 0, W, H);
+      if (clip && clip.k > 0.003) {
+        const out = new Path2D(); out.rect(-10, -10, W + 20, H + 20); out.addPath(clip.path);
+        l.globalCompositeOperation = 'destination-out'; l.fillStyle = `rgba(0,0,0,${Math.min(1, clip.k).toFixed(3)})`; l.fill(out, 'evenodd');
+      }
     }, { alpha });
     // gauge ring climbing the inner wall, stopping at ≈10 % ("kâfi")
     const gk = pp(t, 20.98, 21.16, 'linear');
@@ -472,10 +659,11 @@
     if (morph) {
       const k = A.morphEase(pp(t, 16.08, 16.3, 'linear'), 0.07);
       const hp = toS(cam, NECK[0], NECK[1]);
-      const P = A.lerpShape(bowlSilD(c), hgSil(st.h, st.w).map(([x, y]) => [x * cam.z, y * cam.z]), k).map(([x, y]) => [x + hp[0], y + hp[1]]);
+      // the outline lands on the glass bulbs exactly as hgDraw paints them (not on the plates / posts)
+      const P = A.lerpShape(bowlSilD(c), glassSil(st.h, st.w).map(([x, y]) => [x * cam.z, y * cam.z]), k).map(([x, y]) => [x + hp[0], y + hp[1]]);
       const path = A.shapePath(P, false);
-      // porcelain bowl (+ its reflection turning solid), squeezed by the glass outline
-      const bA = 1 - pp(t, 16.12, 16.34, 'inOutSine');
+      // 1) porcelain bowl (+ its reflection turning solid), squeezed by the tightening glass outline, dissolves first
+      const bA = 1 - pp(t, 16.1, 16.3, 'inOutSine');
       if (bA > 0.003) {
         const rs = 0.7 * pp(t, 15.98, 16.16, 'inOutSine');
         E.layer(ctx, (l) => {
@@ -490,20 +678,29 @@
           l.restore();
         }, { alpha: bA });
       }
-      // the hourglass materialises (with its faint floor reflection)
-      const hA = ease.inQuad(pp(t, 16.1, 16.32, 'linear'));
-      if (hA > 0.003) {
+      // 2) glass + sand materialise inside the outline, 3) the wooden frame grows in around them
+      const gA = pp(t, 16.11, 16.31, 'inOutSine'), fA = pp(t, 16.18, 16.38, 'inOutSine');
+      const hO = Object.assign({}, hgO, { glassA: gA, frameA: fA });
+      if (gA > 0.003 || fA > 0.003) { // faint floor reflection
         const fy = toS(cam, 0, NECK[1] + st.h / 2 + 0.2 * st.w * 0.54)[1];
-        ctx.save(); ctx.globalAlpha *= 0.13 * hA; ctx.translate(0, 2 * fy); ctx.scale(1, -1);
-        E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => hgDraw(cc, Object.assign({}, hgO, { flow: 0 }))); ctx.restore();
-        ctx.save(); ctx.globalAlpha *= hA;
-        E.at(ctx, hp[0], hp[1], cam.z, 0, (cc) => hgDraw(cc, hgO));
-        ctx.restore();
+        ctx.save(); ctx.globalAlpha *= 0.13; ctx.translate(0, 2 * fy); ctx.scale(1, -1);
+        E.at(ctx, hp[0], hp[1], cam.z, 0, (cc) => hgDraw(cc, Object.assign({}, hO, { flow: 0 }))); ctx.restore();
       }
-      // glass body + glowing outline
+      if (fA > 0.003) E.at(ctx, hp[0], hp[1], cam.z, 0, (cc) => hgDraw(cc, hO, HG_FB));
+      if (gA > 0.003) {
+        const ck = 1 - pp(t, 16.27, 16.33, 'inOutSine'); // the outline holds the glass until it has settled on the real edge
+        if (ck > 0.003) {
+          E.layer(ctx, (l) => {
+            E.at(l, hp[0], hp[1], cam.z, 0, (cc) => hgDraw(cc, hO, HG_GL));
+            const out = new Path2D(); out.rect(-10, -10, W + 20, H + 20); out.addPath(path);
+            l.globalCompositeOperation = 'destination-out'; l.fillStyle = `rgba(0,0,0,${ck.toFixed(3)})`; l.fill(out, 'evenodd');
+          });
+        } else E.at(ctx, hp[0], hp[1], cam.z, 0, (cc) => hgDraw(cc, hO, HG_GL));
+      }
+      // glass body + glowing outline: on the glass edge, beneath the front posts and the top plate
       const gf = E.env(t, 15.95, 16.5, 0.15, 0.2);
       ctx.save(); ctx.fillStyle = E.rgba(PAL.glass, 0.1 * gf); ctx.fill(path); ctx.restore();
-      const drawK = pp(t, 15.86, 16.12, 'inOutSine'), la = Math.min(1, drawK * 3) * (1 - pp(t, 16.3, 16.5, 'inOutSine'));
+      const drawK = pp(t, 15.86, 16.12, 'inOutSine'), la = Math.min(1, drawK * 3) * (1 - pp(t, 16.24, 16.4, 'inOutSine'));
       glassLine(ctx, P, drawK, la, 2.4);
       const sw = pp(t, 16.12, 16.42, 'inOutSine');
       if (sw > 0 && sw < 1) { // shimmer sweep while the glass forms
@@ -512,42 +709,51 @@
         gr.addColorStop(0, 'rgba(207,243,255,0)'); gr.addColorStop(0.5, `rgba(235,252,255,${(0.45 * Math.sin(PI * sw)).toFixed(3)})`); gr.addColorStop(1, 'rgba(207,243,255,0)');
         ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); ctx.restore();
       }
+      if (fA > 0.003) E.at(ctx, hp[0], hp[1], cam.z, 0, (cc) => hgDraw(cc, hO, HG_FF));
       // hanging motes pour into the bowl (they become the top sand); four glide to the neck
       DE.drawMotes(ctx, t, g, { gather: pp(t, 15.72, 16.2, 'inCubic'), alpha: 1, skip: (i) => i < 4 && t > 15.98 });
       neckGlints(ctx, t, g, hp, cam);
-    } else if (uk < 0.999) {
-      const Ph = hgSil(st.h, st.w);
-      const P = uk > 0.001 ? A.lerpShape(Ph, bowlSilE(), uk) : Ph;
-      const Ps = P.map(([x, y]) => [hs[0] + x * cam.z, hs[1] + y * cam.z]);
-      const path = A.shapePath(Ps, false);
-      const hA = 1 - pp(t, 20.62, 20.86, 'inOutSine');
-      const rfl = 0.13 * (1 - pp(t, 20.6, 20.78, 'inOutSine'));
-      if (rfl > 0.003) { // faint reflection of the hourglass in the glossy floor (fades as it un-morphs)
-        const fy = toS(cam, 0, pos[1] + st.h / 2 + 0.2 * st.w * 0.54)[1];
-        ctx.save(); ctx.globalAlpha *= rfl; ctx.translate(0, 2 * fy); ctx.scale(1, -1);
-        E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => hgDraw(cc, Object.assign({}, hgO, { flow: 0 }))); ctx.restore();
-      }
-      if (t < 16.75) neckGlints(ctx, t, DE.bowlGeo(DE.camD(t)), toS(cam, NECK[0], NECK[1]), cam);
-      ctx.save(); ctx.globalAlpha *= hA; // (not clipped: the wooden frame dissolves around the morphing glass)
-      E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => { hgDraw(cc, Object.assign({}, hgO, { sandTop: st.sT >= 0.03 ? st.sT : 0 })); if (st.sT > 0 && st.sT < 0.03) drawTopLens(cc, G, st); drawMiniLife(cc, t, G); });
-      ctx.restore();
-      if (flameK > 0.02 && hA > 0.02) { // warm kandil light on the glass (right edge)
-        ctx.save(); ctx.clip(path); ctx.globalCompositeOperation = 'lighter';
-        const xr = hs[0] + G.capR * cam.z;
-        ctx.fillStyle = E.lin(ctx, xr - 170 * cam.z, 0, xr, 0, [[0, PAL.flame, 0], [1, PAL.flame, 0.28 * flameK * hA]]); ctx.fillRect(xr - 200 * cam.z, 0, 220 * cam.z, H);
-        ctx.restore();
-      }
-      if (uk > 0.001) drawBowlE(ctx, t, cam, pos, E.smooth((uk - 0.42) / 0.55)); // the bowl firms up once the frame has gone
     } else {
-      drawBowlE(ctx, t, cam, pos, 1);
-    }
-    // glass outline of the un-morph: upper half fades 21.05–21.35; the mirrored lower half dissolves earlier
-    const la = E.env(t, 20.6, 21.35, 0.08, 0.3);
-    if (!morph && la > 0.01) {
-      const P = A.lerpShape(hgSil(st.h, st.w), bowlSilE(), uk).map(([x, y]) => [hs[0] + x * cam.z, hs[1] + y * cam.z]);
-      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, hs[1]); ctx.clip(); glassLine(ctx, P, 1, la, 2.2); ctx.restore();
-      const lb = la * (1 - pp(t, 20.82, 21.06, 'inOutSine'));
-      if (lb > 0.01) { ctx.save(); ctx.beginPath(); ctx.rect(0, hs[1], W, H - hs[1]); ctx.clip(); glassLine(ctx, P, 1, lb, 2.2); ctx.restore(); }
+      // un-morph (20.60–21.06): the outline starts on the real glass edge, reshapes into the bowl (its lower
+      // bulb retracting into the foot) and is gone by ≈21.05; the bowl firms up inside it while the frame dissolves
+      const la = pp(t, 20.6, 20.68) * (1 - pp(t, 20.9, 21.06, 'inOutSine'));
+      const unm = t < 21.04;
+      let Ps = null, path = null;
+      if (unm || la > 0.01) {
+        // the lower bulb (the "reflection") retracts into the foot a little ahead of the upper bulb widening into the bowl
+        const Pg = glassSil(st.h, st.w), Pb = bowlSilE(), uq = uk >= 1 ? uk : 1 - (1 - uk) * (1 - uk);
+        const P = uk > 0.001 ? Pg.map((q, i) => { const kk = lerp(uk, uq, hgSm(q[1] / (st.h * 0.15))); return [lerp(q[0], Pb[i][0], kk), lerp(q[1], Pb[i][1], kk)]; }) : Pg;
+        Ps = P.map(([x, y]) => [hs[0] + x * cam.z, hs[1] + y * cam.z]); path = A.shapePath(Ps, false);
+      }
+      if (unm) {
+        const hA = 1 - pp(t, 20.62, 20.86, 'inOutSine');
+        const rfl = 0.13 * (1 - pp(t, 20.6, 20.78, 'inOutSine'));
+        if (rfl > 0.003) { // faint reflection of the hourglass in the glossy floor (fades as it un-morphs)
+          const fy = toS(cam, 0, pos[1] + st.h / 2 + 0.2 * st.w * 0.54)[1];
+          ctx.save(); ctx.globalAlpha *= rfl; ctx.translate(0, 2 * fy); ctx.scale(1, -1);
+          E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => hgDraw(cc, Object.assign({}, hgO, { flow: 0 }))); ctx.restore();
+        }
+        if (t < 16.75) neckGlints(ctx, t, DE.bowlGeo(DE.camD(t)), toS(cam, NECK[0], NECK[1]), cam);
+        // the bowl firms up inside the reshaping outline (opaque by uk 0.72, before the frame has fully gone)
+        if (uk > 0.001) drawBowlE(ctx, t, cam, pos, E.smooth((uk - 0.22) / 0.5), { path, k: 1 - pp(t, 20.9, 21.0, 'inOutSine') });
+        const hOu = Object.assign({}, hgO, { sandTop: st.sT >= 0.03 ? st.sT : 0 });
+        if (hA > 0.003) { // (not clipped: the wooden frame dissolves around the morphing glass)
+          ctx.save(); ctx.globalAlpha *= hA;
+          E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => { hgDraw(cc, hOu, HG_FB | HG_GL); if (st.sT > 0 && st.sT < 0.03) drawTopLens(cc, G, st); drawMiniLife(cc, t, G); });
+          ctx.restore();
+        }
+        if (flameK > 0.02 && hA > 0.02) { // warm kandil light on the glass (right edge)
+          ctx.save(); ctx.clip(path); ctx.globalCompositeOperation = 'lighter';
+          const xr = hs[0] + G.Wr * cam.z;
+          ctx.fillStyle = E.lin(ctx, xr - 170 * cam.z, 0, xr, 0, [[0, PAL.flame, 0], [1, PAL.flame, 0.28 * flameK * hA]]); ctx.fillRect(xr - 200 * cam.z, 0, 220 * cam.z, H);
+          ctx.restore();
+        }
+        if (la > 0.01) glassLine(ctx, Ps, 1, la, 2.2);
+        if (hA > 0.003) { ctx.save(); ctx.globalAlpha *= hA; E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => hgDraw(cc, hOu, HG_FF)); ctx.restore(); }
+      } else {
+        drawBowlE(ctx, t, cam, pos, 1);
+        if (la > 0.01) glassLine(ctx, Ps, 1, la, 2.2);
+      }
     }
     // ---------- the last grain ("değil") ----------
     if (t > 21.2 && t < 21.75) {
@@ -609,18 +815,18 @@
     }
     const ea = pp(t, 21.5, 21.72);
     if (ea > 0.003) {
-      // 21.85–22.12 drifts off the wick to hang low over the bowl; 22.12–22.47 rises straight up 155 px to (540,760)
-      const u1 = pp(t, 21.85, 22.12, 'inOutSine'), u2 = pp(t, 22.12, 22.47, 'inOutSine'), u = pp(t, 21.85, 22.47, 'linear');
-      let x = lerp(wick[0], EMBER_RISE[0], u1) + 12 * Math.sin(u1 * PI * 2) * (1 - u1), y = lerp(wick[1], EMBER_RISE[1], u1) - 28 * Math.sin(PI * u1);
+      // 21.74–22.12 lifts off the wick and floats over to hang above the bowl (F's contract point (548,915), arrived at
+      // with zero speed); 22.12–22.47 rises straight up 155 px to (540,760) — that half must stay identical to F's emberPos()
+      const v1 = pp(t, 21.74, 22.12, 'linear'), u2 = pp(t, 22.12, 22.47, 'inOutSine'), u = pp(t, 21.85, 22.47, 'linear');
+      const ex = ease.inOutSine(v1), ey = ease.inOutCubic(v1), lift = Math.pow(Math.sin(PI * v1), 2) * (1 - v1);
+      let x = lerp(wick[0], EMBER_RISE[0], ex) + 10 * Math.sin(v1 * PI * 2) * (1 - v1), y = lerp(wick[1], EMBER_RISE[1], ey) - 90 * lift;
       if (u2 > 0) { x = lerp(EMBER_RISE[0], 540, u2) + 6 * Math.sin(u2 * PI * 1.5) * (1 - u2); y = lerp(EMBER_RISE[1], 760, u2); }
       const r = lerp(11 * (0.92 + 0.08 * E.noise(t * 3, 7)), 34, ease.outCubic(pp(t, 22.2, 22.47, 'linear')));
       const gk = pp(t, 22.34, 22.46, 'linear');
       const vb = pp(t, 22.24, 22.5, 'outCubic'); // violet bloom behind the gem
       if (vb > 0.002) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = E.rad(ctx, x, y, 0, 560 * vb + 40, [[0, '#7A44B8', 0.5 * vb], [0.3, FPAL[2], 0.4 * vb], [1, FPAL[2], 0]]); ctx.fillRect(0, 0, W, H); ctx.restore(); }
       S.light(ctx, x, y, 60 * cam.z + r * 3, '#FF7A3D', 0.32 * ea * (1 - gk * 0.7));
-      // its reflection in the glossy floor (only while it is still low)
-      const hzN = toS(cam, 0, HZ)[1], ry2 = 2 * hzN - y, rfa = ea * (1 - pp(t, 21.95, 22.25)) * 0.5;
-      if (rfa > 0.01 && ry2 < H) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, ry2); ctx.scale(0.35, 1.6); S.light(ctx, 0, 0, 40, '#FF7A3D', rfa); ctx.restore(); }
+      // (no floor reflection: the ember floats in mid-air, its true mirror point lies far below the frame)
       if (u < 0.25) A.wisps(ctx, t, { x, y: y - 6, n: 3, seed: 77, col: '#9C8CA8', rise: 30, life: 2.4, spread: 3, w: 2.2, curl: 6, op: 'source-over', alpha: 0.25 * ea * (1 - u / 0.25) });
       drawEmberGem(ctx, x, y, r, gk, t, ea);
     }
