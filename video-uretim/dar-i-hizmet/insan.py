@@ -9,7 +9,9 @@ uzuvlar bir ton koyu) -> zemin gölgesi. Battaniye varsa: baş -> battaniye -> y
 Sonuçta figürün bütün silüeti saklamadadır (sakla_sonra=False ile çağrı öncesi saklama geri yüklenir).
 Uyluk göğse çekildiğinde (oturma, çömelme) yakın uyluk gövdenin önüne geçer (gömlek maskesi oyulur); ayakta ve
 yürürken gömlek eteği uyluk kökünü örter. Eklem iç köşeleri köprü kapsüllerle yuvarlanır (kırık diz/dirsek yok).
-Sabitler: RENK, YOG (renk/yoğunluk), EL_OLCEK, BAS_OLCEK, DIZ, KALKIS_DX, YURUYUS_ADIM, IBRIK_ALT_EL.
+Bol gömlek: gövde öne eğikken (sulama) önü göğüsten dikey sarkar; çömelince arka etek gerilip kısalır; kumaş
+silüetinde sivri köşe olmasın diye gömlek maskesi ~4.5 birim yuvarlanır. Uzak uzuvlar bir ton koyu ve serin.
+Sabitler: RENK, YOG (renk/yoğunluk), EL_OLCEK, BAS_OLCEK, DIZ, KALKIS_DX, YURUYUS_ADIM, IBRIK_ALT_EL, SECDE_EL.
 
 YEREL KOORDİNAT (bütün ölçüler "yerel birim")
   * köken: ayakta duruşta kalçanın altındaki zemin noktası; y = 0 zemin.  +x = yüzün baktığı yön, y AŞAĞI (ekran).
@@ -45,7 +47,10 @@ ANA FONKSİYON
       'el_on' / 'el_arka' avuç merkezleri, 'el_on_aci' yakın el ekseninin ekran açısı (derece, atan2(dy, dx)),
       'diz' / 'diz_arka' diz eklemleri, 'kalca' kalça eklemi (pelvis kökü), 'ayak_on' / 'ayak_arka' taban ortası,
       'yerel' : aynı noktalar yerel koordinatta (dict), 'iskelet' : Iskelet (bütün eklemler, yerel).
-    Süre: ~500 px boyda 0.03–0.06 sn, ~1000 px 0.1 sn, ~2000 px 0.3 sn (tek çekirdek).
+    Süre (tek çekirdek): ~570 px 0.04–0.05 sn, ~1350 px 0.08–0.15 sn, ~1750 px 0.2–0.26 sn; battaniyeli 2600 px
+    yakın plan ~0.65 sn.
+  capalar(poz, M, yon=1, nefes=0.0) -> dict : ciz_insan'ın dönüşüyle aynı çapalar, BOYAMADAN (yalnız iskelet;
+            ~1 ms). Kamera/efekt konumlamak için figürü ayrıca çizmeyin.
 
 POZ = sözlük (ANAHTARLAR; bos_poz() hepsini 0'la doldurur). Açılar derece:
   kx, ky       : kalça ekleminin (pelvis kökü) yerel konumu (ayakta 0, -318).
@@ -71,18 +76,22 @@ iskelet(poz, nefes=0) -> Iskelet: 'kok','N','Hp','S_on','E_on','Wr_on','H_on','K
 POZLAR (sözlük; hepsi +x'e bakar)
   ayakta       : rahat duruş.                     ayakta_dik : dimdik, göğüs açık, çene hafif yukarıda (kuvvet).
   yuru_0..3    : yuruyus(0, .25, .5, .75) anlık görüntüleri.
-  sula         : ~25° öne eğik, iki elle ibrik bel-göğüs hizasında önde (yakın el sapı tutar, uzak el altından
-                 destekler), dökmeye hazır.  sula_dok: bilekler öne dönmüş (ibrik ~40° eğik, döküyor).
+  sula         : ~25° öne eğik, kalça karşı ağırlık için geride; iki elle ibrik bel-göğüs hizasında önde (yakın el
+                 sapı tutar: üst kol dünyada ~dik sarkar, dirsek gövde silüetinin içinde; uzak el altından destekler),
+                 dökmeye hazır.  sula_dok: bilekler öne dönmüş (ibrik ~40° eğik, döküyor).
                  Sulama hareketi için sula_pozu(dok) kullanın (dok 0..1; uzak el her değerde ibriğin altına IK ile oturur;
                  alt_el= ile ibriğin alt noktası değiştirilebilir).
-  kiyam        : namazda ayakta, eller göbek altında bağlı, baş hafif eğik.
-  ruku         : bel yatay, eller dizlerde, baş sırtla bir hizada (ayaklar ayakta ile aynı yerde).
-  secde        : dizler, ayak parmakları, eller ve alın+burun yerde, kalça yukarıda (dirsekler yerden kalkık).
+  kiyam        : namazda ayakta, eller karın önünde bağlı (ön kollar profilde kısalır, dirsekler gövde yanında),
+                 baş hafif eğik.
+  ruku         : bel yatay, dizler kilitli, kollar omuzdan dizlere neredeyse düz, eller dizlerde, baş sırtla bir
+                 hizada (ayaklar ayakta ile aynı yerde).
+  secde        : dizler, ayak parmakları, eller (avuçlar kulak hizasında, SECDE_EL) ve alın+burun yerde, kalça
+                 yukarıda (dirsekler yerden kalkık).
   oturus_hasta : yerde oturmuş, dizler çekik, kollar dizlere sarılı, sırt yuvarlak, baş eğik (hasta, yorgun).
   oturus_dik   : aynı oturuş, sırt doğrulmuş, baş dik, sakin (sabır). Bu ikisi poz_karistir ile sorunsuz geçişir.
   diz_dua      : topuklar üstünde diz çökmüş, sırt dik, ön kollar göğüs önünde kalkık, avuçlar yukarı/yüze (dua, şükür).
   kalkis_1..4  : oturus_dik -> ayakta_dik ara pozları (kalkis_4 = ayakta_dik, x'te KALKIS_DX=72 öne kaymış).
-  diz_secde_1,2: diz_dua -> secde ara pozları.
+  diz_secde_1,2: diz_dua -> secde ara pozları (diz_secde_2'de avuçlar secde'deki yerlerine, SECDE_EL, iner).
   Aileler ve kökler: AYAKTA ailesi (ayakta, ayakta_dik, sula*, kiyam, ruku): ayaklar x≈±10'da, köken kalçanın altı.
   OTURMA ailesi: kalça yerde (0, -44), ayaklar x≈+90..+96. DİZ ailesi (diz_dua, secde, ara pozlar): dizler sabit
   DIZ=(124, -21), ayak parmakları x≈-45..-50'de; köken diz_dua'da kalçanın altı (secde'de kalça x≈+109, alın x≈+311).
@@ -97,7 +106,8 @@ HAREKET / GEÇİŞ
   kalkis(t)  : oturus_dik -> ayakta_dik (t 0..1, içeride yumuşatılmış; ayaklar ilk ~%20'de çekilir, sonra yerde sabit;
                t=1 sonucu ayakta_dik'in KALKIS_DX kadar +x'e kaymışıdır: sonrasında ayakta_dik çizilecekse yerleşimi
                KALKIS_DX * olcek * yon kadar kaydırın).
-  secdeye(t) : diz_dua -> secde (dizler ve parmaklar sabit); secde -> diz_dua için secdeye(1 - t).
+  secdeye(t) : diz_dua -> secde (dizler ve parmaklar sabit; avuçlar yere değdikten sonra (t ≳ 0.6) IK ile
+               yerinde kalır, kaymaz); secde -> diz_dua için secdeye(1 - t).
   Bütün animasyon parametrelerle: aynı girdi = aynı kare. Zaman durumu yok.
 """
 from __future__ import annotations
@@ -587,9 +597,29 @@ def _gomlek_yolu(sk, p):
     c0 = sk.C(s_alt)
     wf0, wb0 = _govde_genislik(s_alt / LT)
     F0a = c0 + f_b * wf0
+    # ön yüz noktaları; gövde öne eğikken bol gömlek göğüsten DİKEY sarkar (karına yapışıp kalçada içe kırılmaz)
+    on_s = np.linspace(s_on_men, LT, 20)
+    on = []
+    for s_ in on_s:
+        wf, _ = _govde_genislik(s_ / LT, nf)
+        on.append(sk.C(s_) + _onn(sk.A(s_)) * wf)
+    on = np.array(on)
+    w_d = 0.7 * _ss(4.0, 16.0, a_b) * (1.0 - _ss(40.0, 60.0, a_b)) * (1.0 - wk)
+    dx0 = 0.0
+    if w_d > 1e-3:
+        ust = on_s / LT > 0.4
+        i_t = int(np.argmax(np.where(ust, on[:, 0], -1e9)))
+        xt, yt = on[i_t]
+        x_once = float(on[0, 0])
+        for i in range(i_t - 1, -1, -1):
+            x_d = max(on[i, 0], xt - (on[i, 1] - yt) * 0.26)
+            on[i, 0] += (x_d - on[i, 0]) * w_d
+        dx0 = float(on[0, 0]) - x_once           # etek menteşesi de aynı kadar öne (w_d ile sürekli)
+    F0a = F0a + _v(dx0, 0.0)
     L_on, L_ar = 25.0, 26.0
     phi_g = 0.28 * max(-60.0, min(60.0, phi_govde))      # kumaş gövdeyi kısmen izler, kısmen sarkar
     phi_f = _smax(phi_g, tt_max - 3.0, 10.0) + p.get('etek_on', 0.0)
+    phi_f = phi_f + (max(phi_f, 0.0) - phi_f) * w_d      # sarkan ön etek geriye kaçmaz
     F1a = F0a + L_on * _asg(phi_f)
     Hj = sk['H_on'] if tt_on >= tt_ar else sk['H_ar']
     dt = _asg(tt_max)
@@ -623,11 +653,8 @@ def _gomlek_yolu(sk, p):
     Bm = orta_b + nb * max(1.5, ihtiyac)
     orta = 0.5 * (F1 + B1) + _v(0, 2.0)
     orta[1] = min(orta[1], -1.5)
-    on, ar = [], []
-    for s in np.linspace(s_on_men, LT, 20):
-        c = sk.C(s)
-        wf, _ = _govde_genislik(s / LT, nf)
-        on.append(c + _onn(sk.A(s)) * wf)
+    on = list(on)
+    ar = []
     for s in np.linspace(s_alt, LT, 22):
         c = sk.C(s)
         _, wb = _govde_genislik(s / LT, nf)
@@ -886,7 +913,7 @@ def _battaniye_yolu(sk, b, dus=0.0):
     el_x = K[0] + 18.0
     for t_ in ('on', 'ar'):
         av = sk['avuc_' + t_]
-        w_ = _ss(95.0, 60.0, float(np.hypot(*(av - K))))
+        w_ = _ss(112.0, 82.0, float(np.hypot(*(av - K))))
         if w_ > 0:
             el_x = max(el_x, K[0] + 18.0 + (av[0] - K[0] - 18.0) * w_)
     on_diz = K + _v(38.0, -10.0)
@@ -1045,7 +1072,7 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
     for t_, uzak in (('on', False), ('ar', True)):
         bac = _bacak_yolu(sk, t_)
         cp = _uzak(R['pantolon']) if uzak else R['pantolon']
-        B.lavi(bac, cp, YOG['pantolon'] * (1.12 if uzak else 1.0))
+        B.lavi(bac, cp, YOG['pantolon'] * (1.24 if uzak else 1.0))
         B.golge(bac, R['pantolon_golge'], 0.32, 11.0)
         _bacak_kivrimi(B, sk, t_, R, bac)
         B.sakla(bac)
@@ -1057,12 +1084,12 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
         B.sakla(ay, M=M_ay)
     # uzak kol + el
     kol_ar = _kol_yolu(sk, 'ar')
-    B.lavi(kol_ar, _uzak(R['gomlek']), YOG['gomlek'] * 1.15)
+    B.lavi(kol_ar, _uzak(R['gomlek']), YOG['gomlek'] * 1.25)
     B.golge(kol_ar, R['gomlek_golge'], 0.36, 9.0)
     B.sakla(kol_ar)
     el_ar = _el_yolu(poz['kivrim_ar'], poz['yan_ar'])
     M_el_ar = M_bilesik(Mf, sk['M_el_ar'])
-    B.lavi(el_ar, _uzak(R['ten']), YOG['ten'] * 1.15, M=M_el_ar)
+    B.lavi(el_ar, _uzak(R['ten']), YOG['ten'] * 1.22, M=M_el_ar)
     B.golge(el_ar, R['ten_golge'], 0.30, 5.0, M=M_el_ar)
     B.sakla(el_ar, M=M_el_ar)
     # zemin gölgesi (figürün arkasında; saklamaya yazılmaz)
@@ -1094,13 +1121,16 @@ def _kol_kivrimi(B, sk, t, R):
 def _bacak_kivrimi(B, sk, t, R, bac):
     dz = sk['tt_' + t] - sk['ts_' + t]
     K, Hj, A = sk['K_' + t], sk['H_' + t], sk['A_' + t]
-    if dz > 28.0:   # diz arkasında kıvrım
+    if dz > 28.0:   # diz arkasında kıvrım: iç köşedeki V'nin tepesinden dize doğru kısa bir kat
         du = (Hj - K) / (np.hypot(*(Hj - K)) + 1e-9)
         dl = (A - K) / (np.hypot(*(A - K)) + 1e-9)
         ic = du + dl
         ic = ic / (np.hypot(*ic) + 1e-9)
         g = min(1.0, (dz - 28.0) / 60.0)
-        B.kat([K + ic * 14.0 + du * 6.0, K + ic * 7.0, K + ic * 12.0 + dl * 8.0], 1.5, 0.9,
+        yarim = math.radians(0.5 * max(20.0, 180.0 - dz))
+        d = min(80.0, 23.0 / max(0.2, math.sin(yarim)))      # V tepesi (iç kenarların kesiştiği yer)
+        yan = np.array([-ic[1], ic[0]])
+        B.kat([K + ic * (d + 4.0), K + ic * (d - 7.0) + yan * 1.5, K + ic * (d - 18.0)], 1.5, 0.9,
               R['pantolon_golge'], 0.24 * g, kirp=bac)
 
 
@@ -1123,6 +1153,13 @@ def _capalar(sk, Mf):
     out['yerel'] = yer
     out['iskelet'] = sk
     return out
+
+
+def capalar(poz, M, yon=1, nefes=0.0):
+    """ciz_insan'ın döndürdüğü çapa sözlüğünün AYNISI, boyamadan (ucuz: yalnız iskelet). Sahnede kamera/efekt
+    konumlamak için figürü ayrıca çizmeye gerek yok: capalar(poz, M, yon)['kalp'] ..."""
+    Mf = M_bilesik(np.asarray(M, np.float64), M_olcek(float(yon), 1.0))
+    return _capalar(iskelet(poz, nefes), Mf)
 
 
 def sinir_kutusu(poz, pay=6.0):
@@ -1294,7 +1331,7 @@ def _poz_secde():
     sk = iskelet(p)
     bx = sk['Hp'][0]
     for t, dx in (('on', 0.0), ('ar', 5.0)):
-        kol_ik(p, t, (bx - 12.0 + dx, -7.6), isaret=-1)
+        kol_ik(p, t, (bx - 20.0 + dx, -7.6), isaret=-1)   # avuç kulak hizasında, parmak uçları alın önünde
         el_aci(p, t, 90.0)
     return p
 

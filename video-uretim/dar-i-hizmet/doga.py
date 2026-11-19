@@ -11,7 +11,10 @@ Genel kurallar
 * Deterministik: rastgelelik yalnız ``tohum``dan; zamanla değişen her şey parametreden (titreme yok).
 * İçeride ``_Boya`` adlı yerel katman kullanılır: bir öğenin bütün geçişleri kendi kırpıntısında birikir
   (aynı lavi zinciri: kenar gürültüsü, ıslak kenar, granülasyon, akış; üst üste binen biçimler koyulaşır), sonunda
-  tuvale tek seferde çarpılır. Böylece büyük öğeler hızlıdır.
+  tuvale tek seferde çarpılır. Böylece büyük öğeler hızlıdır. Nesne içindeki gerçek boşluklar (ör. taçtaki gök
+  delikleri) ``sakla_yol(..., delik=True)`` ile silüetin dışında kalır: arkadan boyanan gök o deliklerden görünür.
+* Yumuşak (ıslak-üstüne-ıslak) kenarlı geçişler silüete eşiksiz yazılmaz (yalnız boyanın gerçekten örttüğü kadar):
+  arkadan gelen gök/zemin kenarda öğeyle karışır, arada kâğıt beyazı bir hale kalmaz.
 * ``isik=(lx, ly)``: ışığa doğru birim yön (varsayılan sol-üst (-0.6, -0.8)); gölge sırları karşı yanda.
 
 1. ciz_agac(t, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6,-0.8), yaprak=1.0, damla=0.0, sakla_sonra=True)
@@ -22,7 +25,10 @@ Genel kurallar
      genişlemesi ~2x, taç ~850x700). Dallar uzar, kalınlaşır (boru modeli), yeni dallar filizlenir, kümeler açar;
      sıçrama yok (ardışık kareler sürekli).
    * sallanma -1..1: rüzgârla eğilme (+ sağa). Genç ağaç daha çok eğilir. Sahnede ör. 0.5 + 0.15*sin(2πft).
-   * yaprak 0..1: yaprak yoğunluğu (rüzgârda yaprak kaybı; 0 = çıplak dallar).
+   * yaprak 0..1: yaprak yoğunluğu (rüzgârda yaprak kaybı; kümeler de fidanın tek yaprakları da tek tek gider;
+     0 = çıplak dallar).
+   * Genç evre (0.2-0.5): dal uçlarında yaprak öbekleri, uç kümeleri küçük öbek olarak başlayıp büyür; tek
+     yapraklar ön/orta kümelerin ARKASINDA (dalların önünde) boyanır, kümeler açınca boşluklarda kalır.
    * damla 0..1: ıslaklık (renkler biraz doygun + küme altlarında asılı su damlaları).
    * Döner: dict(merkez=(x,y) taç merkezi [ekran], kutu=(x0,y0,x1,y1) taç sınırı [ekran], tepe=(x,y) en üst nokta,
      taban=(x,y) gövde tabanı [ekran], olcek=iç yapı ölçeği, govde_r=gövde taban yarıçapı [yerel]).
@@ -41,18 +47,20 @@ Genel kurallar
 
 4. ciz_firtina_bulutu(t, M, cx, cy, gen, yuk, koyuluk=1.0, gelis=1.0, tohum=0, yon=0.0, sakla_sonra=True)
    Islak-üstüne-ıslak fırtına bulutu. (cx,cy) gövde merkezi; gen x yuk kabaca genişlik/yükseklik (üst loblar cy-yuk
-   kadar yükselir, taban ~cy+0.4*yuk). Net ışıklı üst kenar, yumuşak dağılan taban, koyu karın, lob gölgeleri,
-   geri akış (çiçeklenme) halkaları.
+   kadar yükselir, taban ~cy+0.4*yuk, uçlarda yuvarlak omuz lobları). Net ışıklı üst kenar (gök doğrudan değer,
+   hale yok), yumuşak dağılan taban, koyu karın, her lobun alt yanında yumuşak geçişli gölge (hacim), geri akış
+   (çiçeklenme) halkaları.
    * koyuluk 0..1: 1 koyu çivit-mor fırtına, 0 açık mavi-gri yağmur bulutu (sürekli geçiş; boyayarak animasyon).
    * gelis 0..1: bulutun kendini boyaması (merkezden organik yayılma, karın ve koyu vurgular sonra gelir);
      yon -1/+1 verilirse aynı sırada soldan/sağdan kayarak gelir (0 = kaymaz).
    * Döner: dict(kutu=..., taban_y=..., merkez=...) [ekran].
 
 5. ciz_yagmur(t, M, zaman, yogunluk, alan=(x0,y0,x1,y1), ruzgar=0.0, tohum=0, zemin_y=None, korunan=None,
-              hiz=2300, renk_='#6F7F9E', yog=0.5)
-   İnce, saydam mavi-gri fırça izi damlalar (uzak/yakın iki katman, farklı boy ve kalınlık); konumlar ``zaman``
-   (saniye) ile sürekli ilerler. yogunluk 0..1.5; ruzgar -1..1 (eğim, + sağa). zemin_y: damlalar burada biter,
-   küçük sıçrama halkaları ve damlacıklar (yerel). korunan=(cx,cy,r) yerel: koruyucu nur küresi — damlalar yüzeyde
+              hiz=2300, renk_='#76869F', yog=0.42, zemin_bant=70)
+   İnce, saydam mavi-gri iğ biçimli fırça izi damlalar (kuyruk kıl inceliğinde, uzak/yakın iki katman, farklı boy ve
+   kalınlık); konumlar ``zaman`` (saniye) ile sürekli ilerler. yogunluk 0..1.5 (artınca mevcut damlalar yerinde
+   kalır, yenileri eklenir); ruzgar -1..1 (eğim, + sağa). zemin_y: yakın damlalar burada, uzak damlalar zemin_bant
+   kadar yukarıda biter (sıçrama halkaları ve damlacıklar tek bir çizgide dizilmez; yerel). korunan=(cx,cy,r) yerel: koruyucu nur küresi — damlalar yüzeyde
    biter (çizgi küre sınırında kesilir), yanından geçenler hafifçe dışa sapar, yakındakiler ışıkta erir, değdiği
    yerde kısa altın-beyaz parıltı. Saklamaya yazmaz/uymaz. Döner: dict(sayi=görünen damla).
 
@@ -66,9 +74,11 @@ Genel kurallar
    Şakayık/gül fidanı: (x,y) zemindeki taban; boy = en uzun çiçeğin yüksekliği (yerel). 1-3 çiçek
    (elemanlar.sakayik), kapalı tomurcuklar, yapraklı saplar, 3'lü bileşik yapraklar (ön kat açık, arka kat koyu).
    renk_: 'allik' | 'seftali' | 'beyaz' | 'gul'.
-   * acilma 0..1 (sürekli): 0 kapalı tomurcuklar; tomurcuk şişer, çanaklar ayrılır; çiçek merkezden radyal açılır
-     (tomurcuk içinde erir); 1 tam açık. Çiçekler kendi aralarında biraz gecikmeli açar.
-   * sallanma -1..1 rüzgâr; solgunluk 0..1 yağmurda hafif sarkma (saplar ve başlar eğilir, yapraklar düşer).
+   * acilma 0..1 (sürekli): 0 kapalı tomurcuklar; tomurcuk şişer, çanaklar ayrılır; açılırken tomurcuk ÖNDE kalır,
+     taç yaprakları onun arkasından ve çevresinden radyal açılır, sonra tomurcuk (önce çanaklar) çiçeğin göbeğine
+     eriyerek kaybolur; 1 tam açık. Çiçekler kendi aralarında biraz gecikmeli açar.
+   * sallanma -1..1 rüzgâr; solgunluk 0..1 yağmurda sarkma (saplar ve başlar eğilir, yapraklar düşer; 1 belirgin
+     ama ezilmiş/yatmış değil).
    * Döner: dict(cicekler=[((x,y) ekran merkez, yarıçap_ekran, açılma), ...], kutu=...). (Damla-çiçek eşleşmesi için.)
 
 8. Zemin öğeleri (meydan-ı imtihan geniş planı ve bahçe):
@@ -83,22 +93,25 @@ Genel kurallar
      Döner: dict(taslar=[(x,y) ekran], omurga=[...]).
    * ciz_cimen(t, M, x0, x1, y, yogunluk=1.0, sallanma=0.0, tohum=0, boy=(14,34)): y zemin çizgisi boyunca çimen
      tutamları (boy aralığı yerel birim; yakın plan için büyütün). sallanma -1..1.
-   * ciz_tarh(t, M, x0, x1, y, tohum=0, yuk=None, bolum='hepsi'|'on'|'arka'): koyu, zengin topraklı tarh; y =
+   * ciz_tarh(t, M, x0, x1, y, tohum=0, yuk=None, bolum='hepsi'|'on'|'arka'): koyu, zengin topraklı tarh (topaklı
+     üst kenar, alt kenar zemine solarak biter); y =
      bitkilerin dikildiği üst yüzey çizgisi, yuk = tarh kalınlığı (varsayılan ~0.09*(x1-x0)). Bitkiler tarhın
      İÇİNDE dursun diye: önce bolum='on' (ön dudak), sonra bitkiler, sonra bolum='arka'. Döner: dict(ust_y=...).
    * ciz_yokus(t, M, x0, x1, taban, tepe_x, tepe_y, tohum=0, isik=..., renk1, renk2, cimen=True): dik yokuş/tepe
-     (solda dik yamaç, (tepe_x,tepe_y) doruk, x1'e doğru yavaş iniş); ışıklı ve gölge yamaç, çimen izleri; etekte
-     (taban) ovaya yumuşakça karışır. Döner: dict(tepe=..., siluet=[...]).
+     (solda etekte içbükey, ortada dik yamaç, (tepe_x,tepe_y) yuvarlak doruk, x1'e doğru yavaş, yuvarlak iniş);
+     ışıklı yamaç ve yumuşak kenarlı gölge yamacı (kubbe hacmi), çimen izleri; etekte (taban) ovaya tamamen karışır.
+     Döner: dict(tepe=..., siluet=[...]).
    * ciz_cayir(t, M, x0, y0, x1, y1, tohum=0, ufuk_y=None, renk_uzak, renk_yakin, leke=True): ova/çayır zemini;
      ufka (ufuk_y, varsayılan y0) doğru açılan havadar degrade + yumuşak yeşil lekeler. Üstündeki her şeyden sonra
      çağırın (saklamaya yazar, gök arkasına karışmaz).
 
 Denemeler: testler/doga_*_test.py (çıktılar scratchpad/testler/*.png).
 
-Hız (1080x1920, tek çekirdek, yüklü makinede ölçüldü): olgun ağaç tam boy (950 px) ~0.25 s, 0.4-0.6 ölçekte
-0.05-0.12 s, ekranı dolduran yakın plan (zum 3.5) ~0.6 s; kökler ~0.05; toprak kesiti ~0.11; fırtına bulutu (900 px)
-~0.15; yağmur (tam ekran) ~0.1; uçuşan yapraklar ~0.1; fidan ~0.06; yol ~0.18; dere ~0.05; çayır ~0.1-0.15;
-taş/çimen ~0.01-0.03.
+Hız (1080x1920, tek çekirdek; başka render'lar sürerken, yük ~4.5-5 / 4 çekirdek ölçüldü — boş makinede daha
+hızlı): olgun ağaç tam boy (950 px) ~0.29 s, sahne ölçeğinde (0.86) ~0.21-0.25 s, genç ağaç 0.02-0.14 s, ekranı
+dolduran yakın plan (zum 3.5; sahnede kullanılmıyor, en çok 2.4 zum fidanda) ~0.64 s; kökler ~0.09; toprak kesiti
+~0.15; fırtına bulutu (900 px) ~0.13; yağmur (tam ekran) ~0.13; uçuşan yapraklar (14) ~0.17; fidan ~0.07; yol ~0.08;
+dere ~0.04; yokuş ~0.06; çayır ~0.11; taş/çimen/tarh ~0.01-0.03.
 """
 from __future__ import annotations
 
@@ -193,8 +206,9 @@ class _Boya:
             self._gk = _doku_ornekle(G_KENAR, self.Mi, k.x0, k.y0, k.w, k.h, self.olc, self.kay)
         return self._gk
 
-    def _yumusak_doku(self, doku, olc, kay, f=4):
-        """Düşük frekanslı dokuyu 1/f çözünürlükte örnekleyip büyütür (hız)."""
+    def _yumusak_doku(self, doku, olc, kay, f=4, fn=None):
+        """Düşük frekanslı dokuyu 1/f çözünürlükte örnekleyip büyütür (hız). fn: büyütmeden önce uygulanan
+        noktasal dönüşüm (düşük çözünürlükte hesaplanır)."""
         k = self.k
         w, h = max(2, (k.w + f - 1) // f), max(2, (k.h + f - 1) // f)
         A = np.array([[f, 0, k.x0 + 0.5 * f - 0.5], [0, f, k.y0 + 0.5 * f - 0.5], [0, 0, 1]], np.float64)
@@ -202,6 +216,8 @@ class _Boya:
         T = S @ self.Mi @ A
         sm = cv2.warpAffine(doku, T[:2].astype(np.float32), (w, h), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP,
                             borderMode=cv2.BORDER_WRAP)
+        if fn is not None:
+            sm = fn(sm).astype(np.float32)
         big = cv2.resize(sm, (w * f, h * f), interpolation=cv2.INTER_LINEAR)
         return np.ascontiguousarray(big[:k.h, :k.w])
 
@@ -213,8 +229,10 @@ class _Boya:
 
     @property
     def gr(self):
+        """İki pigment ıslak karışımının oranı (0..1), nesneye bağlı yumuşak alan."""
         if self._gr is None:
-            self._gr = self._yumusak_doku(G_AKIS, self.olc * 0.55, (self.kay[0] * 0.37 + 300, self.kay[1] * 0.61 + 500))
+            self._gr = self._yumusak_doku(G_AKIS, self.olc * 0.55, (self.kay[0] * 0.37 + 300, self.kay[1] * 0.61 + 500),
+                                          fn=lambda a: smoothstep(-0.9, 0.9, a))
         return self._gr
 
     def xy_dilim(self, sl):
@@ -243,19 +261,20 @@ class _Boya:
             self._tamp[key] = buf
         return buf[:shape[0], :shape[1]]
 
-    def _carpan(self, tur, miktar, sl):
-        """(1 + miktar*doku) çarpanı, nesne başına önbellekli (granülasyon ekrana, akış nesneye bağlı)."""
-        if not hasattr(self, '_carp'):
-            self._carp = {}
-        key = (tur, round(float(miktar), 4))
-        c = self._carp.get(key)
-        if c is None:
-            if tur == 'gran':
-                c = np.clip(1.0 + miktar * GRAN[self.k.dilim], 0.2, 2.2).astype(np.float32)
-            else:
-                c = np.clip(1.0 + miktar * self.ga, 0.3, 1.9).astype(np.float32)
-            self._carp[key] = c
-        return c[sl]
+    def _carpan_uygula(self, D, tur, miktar, sl):
+        """D *= (1 + miktar*doku) — granülasyon ekrana, akış nesneye bağlı. Yalnız dilimde hesaplanır (tam kırpıntı
+        önbelleği yok); küçük miktarlarda çarpan zaten sınırlar içinde kaldığından kırpma atlanır."""
+        if tur == 'gran':  # GRAN ~[-4.3, 4.9]: miktar <= 0.18 iken 1+m*g zaten [0.2, 2.2] içinde
+            tex = GRAN[self.k.dilim][sl]
+            lo, hi, esik_ = 0.2, 2.2, 0.18
+        else:  # G_AKIS ~[-3.1, 2.6]: miktar <= 0.22 iken [0.3, 1.9] içinde
+            tex = self.ga[sl]
+            lo, hi, esik_ = 0.3, 1.9, 0.22
+        t1 = np.multiply(tex, np.float32(miktar), out=self._tmp(1, D.shape))
+        t1 += 1.0
+        if miktar > esik_:
+            np.clip(t1, lo, hi, out=t1)
+        D *= t1
 
     def lavi(self, yollar, renk_, yog=0.5, Mloc=None, kenar=1.0, dalga=0.08, islak=0.8, islak_gen=3.0, gran=0.10,
              akis=0.15, yumusak=0.0, cizgi=None, toplam=False, alfalar=None, ust=0.8, renk2=None, karisim=None,
@@ -361,9 +380,9 @@ class _Boya:
             b += 1.0
             D *= b
         if gran > 0:
-            D *= self._carpan('gran', gran, sl)
+            self._carpan_uygula(D, 'gran', gran, sl)
         if akis > 0:
-            D *= self._carpan('akis', akis, sl)
+            self._carpan_uygula(D, 'akis', akis, sl)
         if yog_fn is not None:
             X, Y = self.xy_dilim(sl)
             D *= yog_fn(X, Y)
@@ -377,9 +396,7 @@ class _Boya:
         t1 = self._tmp(0, shp)
         if renk2 is not None:
             if karisim is None or karisim == 'akis':
-                if not hasattr(self, '_kf'):
-                    self._kf = smoothstep(-0.9, 0.9, self.gr).astype(np.float32)
-                f = self._kf[sl]
+                f = self.gr[sl]
             else:
                 X, Y = self.xy_dilim(sl)
                 f = np.clip(np.broadcast_to(karisim(X, Y), shp), 0, 1).astype(np.float32)
@@ -909,7 +926,6 @@ def _agac_durum(isk, g, sallanma):
         fr = kac - tam
         if d.ana < 0:
             taban, th0 = np.array([0.0, 0.0]), 0.0
-            ana_bukum = 0.0
         else:
             P = out[d.ana]
             if P is None:
@@ -1047,7 +1063,13 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
     if lider is not None and g < 0.72:
         pp, th, r, ss = lider
 
-        def yaprak_ekle(px, py, thl, Lf, kiv, a):
+        def yaprak_ekle(px, py, thl, Lf, kiv, a, kimlik=0):
+            # 'yaprak' yoğunluğu tek yapraklara da uyar (rüzgârda fidanın yaprakları tek tek kopar). Kopma sırası
+            # yaprağın kalıcı kimliğinden (büyüme ilerledikçe değişmez: yaprak < 1 iken büyüme animasyonunda titreme yok)
+            q = (kimlik * 0.6180339887 + 0.137) % 1.0
+            a *= min(1.0, max(0.0, (yaprak - q * 0.82) / 0.18))
+            if a <= 0.01:
+                return None
             aci_deg = math.degrees(thl) - 90.0
             sx, sy = px + math.sin(thl) * Lf * 0.10, py - math.cos(thl) * Lf * 0.10
             pts = _yaprak_np(sx, sy, Lf, Lf * 0.25, aci_deg, kivrim=kiv)
@@ -1064,7 +1086,7 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
 
         saplar = []
         solma = 1.0 - sstep(0.24, 0.44, g)
-        for y_ in isk['yapraklar']:
+        for yi, y_ in enumerate(isk['yapraklar']):
             Dl = durum[y_['bi']]
             if Dl is None:
                 continue
@@ -1083,13 +1105,14 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
             f = (s - ssl[j]) / max(ssl[j + 1] - ssl[j], 1e-6)
             px, py = ppl[j] + (ppl[j + 1] - ppl[j]) * f
             thl = thl_[j] + y_['taraf'] * y_['aci'] + sallanma * 0.4
-            saplar.append(yaprak_ekle(px, py, thl, y_['L'] * (0.35 + 0.65 * bl), y_['kiv'] * y_['taraf'], a))
+            saplar.append(yaprak_ekle(px, py, thl, y_['L'] * (0.35 + 0.65 * bl), y_['kiv'] * y_['taraf'], a, yi))
         # tepe tomurcuğu: iki küçük yaprak
         a = solma
         if a > 0.01:
             px, py = pp[-1]
             for sgn in (-1, 1):
-                saplar.append(yaprak_ekle(px, py, th[-1] + sgn * 0.42 + sallanma * 0.4, 40, -0.08 * sgn, a))
+                saplar.append(yaprak_ekle(px, py, th[-1] + sgn * 0.42 + sallanma * 0.4, 40, -0.08 * sgn, a,
+                                          5000 + sgn))
         # dal uçlarında yaprak öbeği (genç ağacın dal uçları çıplak diken gibi kalmasın; kümeler gelince arkada kalır)
         uc_sol = 1.0 - sstep(0.40, 0.60, g)
         if uc_sol > 0.01:
@@ -1106,7 +1129,7 @@ def ciz_agac(t: Tuval, M, buyume, sallanma=0.0, tohum=0, isik=(-0.6, -0.8), yapr
                 sg0 = 1 if i % 2 else -1
                 for k_, (da, lk) in enumerate(((0.5, 1.0), (-0.5, 0.92), (0.05, 0.8))):
                     saplar.append(yaprak_ekle(px, py, thd[-1] + sg0 * da + sallanma * 0.4, Lb * lk,
-                                              -0.08 * sg0 * np.sign(da + 1e-6), a))
+                                              -0.08 * sg0 * np.sign(da + 1e-6), a, 7000 + i * 3 + k_))
 
     def yapraklari_boya():
         if lider is not None and g < 0.72 and yy:
@@ -1536,7 +1559,6 @@ def ciz_toprak_kesiti(t: Tuval, M, x0, x1, y_zemin, y_alt, tohum=0, cimen=True, 
             u_[:, 1] += ic * 0.3
         # sınırları yanlarla kesiştir
         yb = y_sinir_pts.copy()
-        yb[0, 0], yb[-1, 0] = sl_[0, 0] if False else yb[0, 0], yb[-1, 0]
         sgk = sg[(sg[:, 1] > u_[-1, 1]) & (sg[:, 1] < yb[-1, 1])]
         slk = sl_[(sl_[:, 1] > u_[0, 1]) & (sl_[:, 1] < yb[0, 1])]
         u_[0, 0] += ic * 0.7
@@ -1550,15 +1572,15 @@ def ciz_toprak_kesiti(t: Tuval, M, x0, x1, y_zemin, y_alt, tohum=0, cimen=True, 
 
     def solma(X, Y):
         return 1.0 - 0.45 * np.clip((Y - (y_alt - Hh * 0.22)) / (Hh * 0.22), 0, 1)
-    B.lavi(tum, '#DCC3A0', yog=0.5, kenar=1.4, dalga=0.14, islak=0.8, islak_gen=4, gran=0.2, akis=0.22,
+    B.lavi(tum, '#DCC3A0', yog=0.5, kenar=1.4, dalga=0.14, islak=0.8, islak_gen=4, gran=0.13, akis=0.22,
            renk2='#D7B994', yog_fn=solma)
     # 2) orta katman: sıcak siena
     orta = _dalgali_cizgi(rng, x0, x1, y_zemin + Hh * 0.58, Hh * 0.05)
-    B.lavi(bolge(orta, 3.5), '#C49A72', yog=0.40, kenar=1.4, dalga=0.14, islak=0.9, islak_gen=4, gran=0.22, akis=0.2,
+    B.lavi(bolge(orta, 3.5), '#C49A72', yog=0.40, kenar=1.4, dalga=0.14, islak=0.9, islak_gen=4, gran=0.14, akis=0.2,
            renk2='#BE8F6A', siluet=False)
     # 3) üst humus: koyu, zengin
     hum = _dalgali_cizgi(rng, x0, x1, y_zemin + Hh * 0.17, Hh * 0.025, frek=(3, 7))
-    B.lavi(bolge(hum, 7.0), '#9C7A60', yog=0.40, kenar=1.2, dalga=0.12, islak=1.0, islak_gen=3, gran=0.25,
+    B.lavi(bolge(hum, 7.0), '#9C7A60', yog=0.40, kenar=1.2, dalga=0.12, islak=1.0, islak_gen=3, gran=0.16,
            akis=0.2, renk2='#8F7060', siluet=False)
     # 4) ince katman çizgileri
     serit = []
@@ -1780,12 +1802,14 @@ def ciz_yagmur(t: Tuval, M, zaman, yogunluk, alan=(0, 0, W, H), ruzgar=0.0, tohu
     n = int(n_max * min(yg, 1.5))
     if n <= 0:
         return None
-    # her damla: x, faz, hız çarpanı, boy, kalınlık, derinlik
-    X0 = rng.uniform(0, 1, n_max)[:n]
-    FZ = rng.uniform(0, 1, n_max)[:n]
-    HZ = rng.uniform(0.8, 1.2, n_max)[:n]
-    BY = rng.uniform(0.6, 1.25, n_max)[:n]
-    DR = rng.uniform(0, 1, n_max)[:n]  # 0 uzak (ince, soluk) .. 1 yakın
+    # her damla: x, faz, hız çarpanı, boy, kalınlık, derinlik. Diziler en yüksek yoğunluk (1.5) için üretilip
+    # kesilir: yoğunluk artınca mevcut damlalar yerinde kalır, yenileri eklenir (yoğunluk animasyonunda titreme yok)
+    n_cap = max(n, int(n_max * 1.5))
+    X0 = rng.uniform(0, 1, n_cap)[:n]
+    FZ = rng.uniform(0, 1, n_cap)[:n]
+    HZ = rng.uniform(0.8, 1.2, n_cap)[:n]
+    BY = rng.uniform(0.6, 1.25, n_cap)[:n]
+    DR = rng.uniform(0, 1, n_cap)[:n]  # 0 uzak (ince, soluk) .. 1 yakın
     ust = y0 - 120
     yol_boy = taban - ust
     egim = ruzgar * 0.55  # dx/dy
@@ -1870,7 +1894,6 @@ def ciz_yagmur(t: Tuval, M, zaman, yogunluk, alan=(0, 0, W, H), ruzgar=0.0, tohu
     # sıçrama halkaları: son 0.28 sn içinde zemine değen damlalar
     if zemin_y is not None:
         halkalar, h_alf = [], []
-        cevrim = (yol_boy + L) / v
         gecen = ((FZ * (yol_boy + L) + v * zaman - (zem - ust)) % (yol_boy + L)) / v  # zemine değeli geçen süre
         for i in np.flatnonzero((gecen < 0.28) & (DR > 0.25))[:400]:
             if korunan is not None and alfa[i] < 0.3:
@@ -2426,7 +2449,7 @@ def ciz_tarh(t: Tuval, M, x0, x1, y, tohum=0, yuk=None, bolum='hepsi', sakla_son
             yb = y + hh * 0.55 * (0.4 + 0.6 * yv)
             yy = rng.uniform(yt + 2, yb - 2)
             ben.append(_poly(_cakil(rng, xx, yy, rng.uniform(0.8, 2.2))))
-        izb = B.lavi(ben, '#5C463D', yog=0.4, kenar=0.6, dalga=0.05, islak=0.5, islak_gen=1, gran=0.1, akis=0.1,
+        B.lavi(ben, '#5C463D', yog=0.4, kenar=0.6, dalga=0.05, islak=0.5, islak_gen=1, gran=0.1, akis=0.1,
                      siluet=False)
         if bolum == 'on':
             govde(on, lambda X, Y: 0.62 + 0.55 * np.clip((Y - (y - hh * 0.35)) / (hh * 0.8), 0, 1))

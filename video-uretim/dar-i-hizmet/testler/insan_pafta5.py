@@ -31,3 +31,21 @@ parca.append(kirp(img, 0, 150, 1080, 1900))
 pafta(parca, 'insan_pafta5_yakin_plan', ['oturus_hasta, battaniye=1', 'sula + ibrik (elde)'])
 img, c, dt = tek(insan.sula_pozu(1.0), 1720, x=330, y=1880, elde=ibrik)
 cv2.imwrite(f'{CIKTI}/insan_pafta5_yakin_sula_dok.png', cv2.cvtColor(kirp(img, 0, 150, 1080, 1900), cv2.COLOR_RGB2BGR))
+
+# entegrasyon: esyalar.ciz_ibrik gerçek ibriğiyle sulama (sahnedeki gibi alt_el=ibrik_alt_nokta(egim)); dirsek gövde
+# silüetinin içinde, uzak el kaidenin altında olmalı
+try:
+    import esyalar
+except Exception as e:      # esyalar yoksa bu bölüm atlanır
+    esyalar = None
+    print('esyalar yok, gerçek ibrik atlandı:', e)
+if esyalar is not None:
+    parca = []
+    for egim, dok in ((35.0, 0.0), (42.0, 0.25)):
+        def elde_g(t, M, egim=egim):
+            esyalar.ciz_ibrik(t, M, egim=egim, tohum=1)
+        img, c, dt = tek(insan.sula_pozu(dok, alt_el=esyalar.ibrik_alt_nokta(egim)), 1140, x=330, y=1860,
+                         elde=elde_g)
+        print('sula+gercek ibrik', egim, round(dt, 3))
+        parca.append(kirp(img, 60, 640, 1000, 1900))
+    pafta(parca, 'insan_pafta5_gercek_ibrik', ['egim 35', 'egim 42, dok .25'])

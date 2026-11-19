@@ -318,10 +318,8 @@ _KALP = None
 def kalp_dunya():
     global _KALP
     if _KALP is None:
-        t = Tuval()
         M = M_yerlestir(ADAM_X, ADAM_Y, ADAM_OLCEK)
-        bilgi = insan.ciz_insan(t, M, insan.POZLAR['oturus_hasta'], yon=-1, battaniye=1.0, sakla_sonra=False)
-        _KALP = bilgi['kalp']
+        _KALP = insan.capalar(insan.POZLAR['oturus_hasta'], M, yon=-1)['kalp']
     return _KALP
 
 
@@ -461,10 +459,8 @@ def ciz_damlalar(t, V, s, M):
 
 
 def adam_capasi(V, s, ad, M):
-    t = Tuval()
     Madam = M @ M_yerlestir(s['x'], ADAM_Y, ADAM_OLCEK)
-    bilgi = insan.ciz_insan(t, Madam, s['poz'], yon=-1, battaniye=s['battaniye'], sakla_sonra=False)
-    return bilgi[ad]
+    return insan.capalar(s['poz'], Madam, yon=-1)[ad]
 
 
 def ciz_adam(t, V, s, M):
