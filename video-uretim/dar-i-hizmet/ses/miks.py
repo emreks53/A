@@ -286,20 +286,21 @@ def peak_rider(x, ceiling_db, hold=0.15, smooth=0.15):
     pk = np.maximum(np.abs(x).max(axis=1), up)
     att = np.maximum(0.0, sfx.lin2db(pk) - ceiling_db)
     if att.max() <= 0:
-        return x, 0.0, 0.0
+        return x, 0.0, 0.0, np.zeros(n)
     H = int(hold * SR)
     a = ndimage.maximum_filter1d(att, size=2 * H + 1)
     w = int(smooth * SR) | 1
     a = ndimage.uniform_filter1d(ndimage.uniform_filter1d(a, w), w)
-    return x * sfx.db2lin(-a)[:, None], float(a.max()), float(np.mean(a > 0.5))
+    return x * sfx.db2lin(-a)[:, None], float(a.max()), float(np.mean(a > 0.5)), a
 
 
 def sfx_safety(x, a):
     """M tavanı sürücüsü -> yavaş gerçek-tepe sürüşü -> hızlı gerçek-tepe sınırlayıcı."""
     x, m_gr = m_guard(x, a.sfx_m_tavan)
-    x, ride_gr, ride_frac = peak_rider(x, a.sfx_tp - 0.4)
+    x, ride_gr, ride_frac, ride = peak_rider(x, a.sfx_tp - 0.4)
     y, lim_gr = sfx.limiter(x, a.sfx_tp - 0.3, lookahead=0.006, release_db_s=25.0)
     gr_db = sfx.lin2db(np.maximum(np.abs(x).max(axis=1), 1e-9) / np.maximum(np.abs(y).max(axis=1), 1e-9))
+    sfx_safety.ride = ride
     return y, m_gr, ride_gr, ride_frac, lim_gr, float(np.mean(gr_db > 1.0))
 
 
@@ -384,7 +385,9 @@ def main(argv=None):
     tmp_voice = os.path.join(os.path.dirname(os.path.abspath(a.out)), ".anlatim_olcum_tmp.wav")
     write_wav24(tmp_voice, narr, 3)
     if a.teshis:
-        np.savez_compressed(a.teshis, t_ctrl=t_ctrl, duck_db=g_db, key=key)
+        ride = getattr(sfx_safety, "ride", np.zeros(n))
+        np.savez_compressed(a.teshis, t_ctrl=t_ctrl, duck_db=g_db, key=key,
+                            ride_db=-ride[::SR // 1000][:len(t_ctrl)], trim_db=trim)
 
     rapor = {
         "ayarlar": {"video_dur": a.video_dur, "anlatim_ofset": a.anlatim_ofset, "duck_db": a.duck_db,

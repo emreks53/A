@@ -620,7 +620,6 @@ def ciz_insan(t, M, poz, yon=1, isik=(-0.6, -0.8), battaniye=0.0, sakla_sonra=Tr
     deri, sac, sakal, kulak = bas_yollari()
     M_bas = M_bilesik(Mf, sk['M_bas'])
     sac_sakal = _birlesim(sac, sakal)
-    B.lavi(sac_sakal, R['sac'], YOG['sac'])  if False else None
     B.lavi(sac_sakal, R['sac'], YOG['sac'], M=M_bas)
     B.golge(sac_sakal, R['sac_golge'], 0.30, 7.0, M=M_bas)
     B.sakla(sac_sakal, M=M_bas)

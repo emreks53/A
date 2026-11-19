@@ -248,6 +248,9 @@ def miks_incele(outdir, mix_path, cues_path, teshis=None):
     if teshis and os.path.exists(teshis):
         z = np.load(teshis)
         extra.append((z["t_ctrl"], z["duck_db"] * 5 - 20, (130, 60, 160), "duck kazancı (x5, -20 = 0 dB)", -90, -10))
+        if "ride_db" in z:
+            rd = z["ride_db"]
+            extra.append((z["t_ctrl"][:len(rd)], rd * 5 - 20, (230, 150, 0), "tepe sürüşü (x5, -20 = 0 dB)", -90, -10))
     plot_sound(sx, os.path.join(outdir, "inceleme", "miks_sfx.png"),
                "SFX stem (ducking sonrası) - cue işaretleri", markers=markers, extra=extra)
     plot_sound(mix, os.path.join(outdir, "inceleme", "miks_final.png"),
