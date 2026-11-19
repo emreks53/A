@@ -105,6 +105,17 @@
       "video": "videolar/gul-ve-beka.mp4",
       "kapak": "videolar/gul-ve-beka-kapak.jpg",
       "onizleme": "videolar/gul-ve-beka-onizleme.jpg"
+    },
+    {
+      "id": "kimsesiz-hasta",
+      "baslik": "Yirmi Beşinci Lem'a'dan",
+      "kitap": "Lem'alar",
+      "bolum": "Yirmi Beşinci Lem'a",
+      "sayfa": 255,
+      "etiketler": ["gurbet", "hastalık", "rahmet"],
+      "video": "videolar/kimsesiz-hasta.mp4",
+      "kapak": "videolar/kimsesiz-hasta-kapak.jpg",
+      "onizleme": "videolar/kimsesiz-hasta-onizleme.jpg"
     }
   ]
 }
