@@ -12,8 +12,8 @@ index.html                 Uygulama iskeleti (arka plan, ekranlar, alt menü)
 src/main.ts                Yönlendirme (#/ ana ekran, #/oku, #/kenz, #/gunes, #/gunes/<kitap>/<sayfa>), geri tuşu, Capacitor ve PWA kurulumu
 src/styles.css             Renkler, yazı tipleri, ana ekran ve alt menü ölçüleri (390 genişliğe göre, --u ile ölçeklenir)
 src/assets/bg/             Ana ekranın arka planı: 12 en-boy oranı × 2 genişlik (AVIF / WebP), bir JPG yedek
-src/assets/icons/          Düğüm (kullanıcının logosu; videolardaki soluk im). Alt menünün dünya ve güneş simgeleri
-                           ve düğüm (#dugum) index.html'in içindedir
+src/assets/icons/          Düğüm (kullanıcının logosu; videolardaki soluk im). Alt menünün simgeleri (karası belli
+                           sade dünya, güneş) ve düğüm (#dugum) index.html'in içindedir
 src/assets/fonts/          EB Garamond 500/600/500 italik (başlıklar, kitap sırtları), Tinos Bold Italic (yedek) ve
                            Encode Sans 500/600/700 (arayüz) — kendi sunucumuzdan
 src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts)

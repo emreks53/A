@@ -206,14 +206,20 @@ await adim('ana ekran: yalnız arka plan görseli (söz görselin içinde) ve al
   assert.equal(await page.locator('#view-kenz').getAttribute('hidden'), '');
   assert.equal(await page.locator('.tab[aria-current]').count(), 0);
   const sekmeler = await page.locator('.tab').evaluateAll((l) =>
-    l.map((t) => [t.textContent.trim(), getComputedStyle(t.querySelector('.tab__label')).color, getComputedStyle(t, '::before').opacity]),
+    l.map((t) => [
+      t.textContent.trim(),
+      getComputedStyle(t).color,
+      getComputedStyle(t, '::before').content,
+      t.querySelector('.tab__label').getBoundingClientRect().width,
+    ]),
   );
-  // Üç sekmenin yazısı da lacivert; seçili kapsül yok
+  // Çerçevesiz menü: üç sekme de yalnız beyaz kabartma simge; yazılar ekran okuyucu için (1 px, görünmez); kapsül yok
   assert.deepEqual(sekmeler, [
-    ['Oku', 'rgb(2, 32, 100)', '0'],
-    ['Kenz', 'rgb(2, 32, 100)', '0'],
-    ['Güneş', 'rgb(2, 32, 100)', '0'],
+    ['Oku', 'rgb(255, 255, 255)', 'none', 1],
+    ['Kenz', 'rgb(255, 255, 255)', 'none', 1],
+    ['Güneş', 'rgb(255, 255, 255)', 'none', 1],
   ]);
+  assert.equal(await page.locator('.tabbar').evaluate((m) => getComputedStyle(m).backgroundColor), 'rgba(0, 0, 0, 0)');
   assert.equal(await temaRengi(), '#5AA2EC');
 });
 
@@ -221,7 +227,8 @@ await adim('telefon tarayıcısında (390 x 664) menü küçülmez', async () =>
   await page.setViewportSize({ width: 390, height: 664 });
   await page.waitForTimeout(100);
   const m = await page.locator('.tabbar').boundingBox();
-  assert.ok(Math.abs(m.width - 358) < 0.5 && Math.abs(m.height - 64) < 0.5, `menü ${m.width}×${m.height}`);
+  // (çerçevesiz: üç simge ortada bir küme, merkezler arası 100 px; her dokunma alanı 100 x 64)
+  assert.ok(Math.abs(m.width - 300) < 0.5 && Math.abs(m.height - 64) < 0.5, `menü ${m.width}×${m.height}`);
   assert.ok(m.y + m.height <= 664 - 16, 'menü ekranın altına yapışık');
   await page.setViewportSize({ width: 390, height: 844 });
 });
@@ -687,7 +694,15 @@ await adim('Kenz ayrı ekran: açık ten rengi zeminde sade kütüphane; videola
   assert.equal(await page.locator('.tab--kenz').getAttribute('aria-current'), 'page');
   assert.equal(await temaRengi(), '#FBF6F2');
   await page.waitForTimeout(300);
-  assert.equal(await page.locator('.tab--kenz').evaluate((t) => getComputedStyle(t, '::before').opacity), '1');
+  // seçili sekme kapsülsüz: koyu lacivert ve biraz kalın çizgili; öbürleri soluk lacivert
+  const secim = await page.locator('.tab').evaluateAll((l) =>
+    l.map((t) => [t.dataset.tab, getComputedStyle(t).color, getComputedStyle(t.querySelector('.tab__icon--dugum, .tab__deniz, .tab__icon--gunes')).strokeWidth]),
+  );
+  assert.deepEqual(secim, [
+    ['oku', 'rgb(91, 104, 144)', '1.25px'],
+    ['kenz', 'rgb(2, 32, 100)', '26px'],
+    ['gunes', 'rgb(91, 104, 144)', '1.2px'],
+  ]);
   // açık ten zemin, lacivert başlık
   assert.match(await page.locator('#view-kenz').evaluate((v) => getComputedStyle(v).backgroundImage), /linear-gradient/);
   assert.equal(await page.locator('.kenz__baslik').evaluate((b) => getComputedStyle(b).color), 'rgb(2, 32, 100)');

@@ -30,15 +30,16 @@ hakikatler") görselin içinde yazılıdır, HTML'de yalnız ekran okuyucular i�
 
 ## Alt menü
 
-Açık ten temasıyla her ekranda aynı fildişi cam (ilk tasarımdaki krem çubuk ve altın seçili sekme kaldırıldı). Ölçüler 390 genişliğe göre,
+Çerçevesiz: çubuk, cam zemin, kapsül, nokta ya da çizgi yok; yalnız üç simge yan yana. Ölçüler 390 genişliğe göre,
 `--u` ile ölçeklenir.
 
 | Öğe | Değer |
 | --- | --- |
-| Çubuk | genişlik min(ekran − 32, 420), 390'da 358 × 64; köşe 22; alttan 16 (en az güvenli alan + 6); iç boşluk 5 |
-| Zemin | her ekranda fildişi cam rgba(251,248,241,.94); ana ekranda lacivert gölge, öteki ekranlarda sıcak gölge |
-| Seçili sekme | kum rengi #F3E9DF kapsül, .5 px altın kıl çizgi rgba(130,97,42,.3), köşe 17; simge ve yazı #022064 (ana ekranda seçili sekme yok) |
-| Simgeler | 24 × 24, tek renk çizgi (1,1): dünya ve güneş; Kenz kullanıcının düğümü (`#dugum`, dolgu) |
-| Etiketler | Encode Sans 600, 11, büyük harf, harf aralığı .12em; ana ekranda #022064, öteki ekranlarda seçili olmayanlar #022064 %64 |
+| Yerleşim | genişlik min(ekran − 32, 300), 390'da 300 × 64; alttan 16 (en az güvenli alan + 6); üç sekme 100 × 64 (merkezler arası 100) |
+| Ana ekran | fildişi beyazı kabartma: simge üstte #fff, alta doğru #f0eadf (`#isik-24`, `#isik-dugum`); gölgeler 0 1 .5 rgba(0,8,34,.7), 0 3 5 rgba(0,10,40,.42), 0 7 12 rgba(0,10,40,.22); seçili sekme yok |
+| Açık zemin (Kenz, Güneş) | seçili #022064, çizgi +0,2 (düğüm konturu 26), sıcak hafif kalkık gölge; öbürleri #5b6890, altta ince beyaz ışık |
+| Simgeler | dünya 29 (halka 1,25; Natural Earth karaları, ortografik, 20°D 16°K ortada; kara dolu, deniz boş); düğüm 27 (kullanıcının `#dugum`'u aynen, aynı renkte kontur 20); güneş 30 (çizgi 1,2). 390'da çizgiler ≈ 1,5 px |
+| Etiketler | Oku / Kenz / Güneş görünmez; ekran okuyucu için durur |
+| Odak, basma | yalnız klavye odağında 50 × 50 yumuşak köşeli halka; basınca 1 px iner ve .94 küçülür (hareket azaltılmışsa yalnız solar) |
 
 Tasarımla karşılaştırma: `npm run build && npm run test:visual`.

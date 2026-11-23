@@ -284,110 +284,199 @@ h2[tabindex='-1']:focus {
     visibility 0s linear 0.35s;
 }
 
-/* ---------- alt menü: her ekranda fildişi cam (ana ekrandakiyle aynı yüzey), üç eşit sekme ---------- */
+/* ---------- alt menü: çerçevesiz; yalnız üç simge yan yana (yazılar ekran okuyucu için durur) ----------
+   Kapsül, cam zemin, kenar, nokta ya da çizgi yok. Ana ekranda fotoğrafın denizinin üstünde fildişi beyazı
+   kabartma (ışık üstten: simge üstte saf beyaz, alta doğru fildişi; altında temas gölgesi ve iki yumuşak gölge).
+   Açık zeminde (Kenz, Güneş) lacivert: seçili sekme koyu lacivert, biraz kalın çizgili ve kâğıttan hafifçe kalkık;
+   öbürleri soluk lacivert, kâğıda düz basılmış. Üç simgede çizgi göze aynı kalınlıkta (390 px'te ≈ 1,5 px).
+   Menünün yeri ve yüksekliği (--menu-h) değişmez: Kenz ve Güneş ölçüleri --menu-ust'e bağlıdır. */
 .tabbar {
   position: absolute;
   left: 50%;
   bottom: var(--menu-alt);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  width: min(calc(100% - 32px), 420px);
+  /* üç simge ortada bir küme: merkezler arası 100 referans px (her sekmenin dokunma alanı 100 x 64) */
+  width: min(calc(100% - 32px), calc(300 * var(--u)));
   height: var(--menu-h);
   margin: 0;
-  padding: calc(5 * var(--u));
+  padding: 0;
   transform: translateX(-50%);
-  border-radius: calc(22 * var(--u));
-  background: rgba(251, 248, 241, 0.94);
-  -webkit-backdrop-filter: blur(22px) saturate(110%);
-  backdrop-filter: blur(22px) saturate(110%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(2, 32, 100, 0.12),
-    0 1px 3px rgba(96, 52, 40, 0.06),
-    0 16px 32px -18px rgba(96, 52, 40, 0.42);
   user-select: none;
   -webkit-user-select: none;
 }
 
 .tab {
+  /* çizgi kalınlıkları, simgenin kendi biriminde (seçili sekmede biraz kalınlaşır) */
+  --cizgi-dunya: 1.25; /* 24'lük alan, 29u kutu: 1,51u */
+  --cizgi-gunes: 1.2; /* 24'lük alan, 30u kutu: 1,5u */
+  --cizgi-dugum: 20; /* düğümün aynı renkte konturu: bant ≈ 23 → 43 birim, 27u kutuda 1,34u */
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: calc(5 * var(--u));
-  border-radius: calc(17 * var(--u));
-  color: rgba(2, 32, 100, 0.64); /* 4.87:1 */
+  color: #5b6890; /* soluk lacivert: zeminde 4,6–5,1:1 */
   text-decoration: none;
   outline: none;
   -webkit-touch-callout: none;
-}
-/* seçili sekme: kum rengi kapsül, altın kıl çizgi; ana ekranda hiçbiri seçili değildir */
-.tab::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: #f3e9df;
-  box-shadow: inset 0 0 0 0.5px rgba(130, 97, 42, 0.3);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: color 0.2s ease;
 }
 .tab[aria-current='page'] {
-  color: var(--lacivert);
+  --cizgi-dunya: 1.45;
+  --cizgi-gunes: 1.4;
+  --cizgi-dugum: 26;
+  color: var(--lacivert); /* 12,7–14:1 */
 }
-.tab[aria-current='page']::before {
-  opacity: 1;
-}
+/* klavye odağı: yalnız odaklanınca görünen yumuşak köşeli halka (kalıcı çerçeve yok); dışta ince beyaz kıl */
 .tab:focus-visible::after {
   content: '';
   position: absolute;
-  inset: 2px;
-  border-radius: inherit;
-  box-shadow: 0 0 0 1.5px rgba(2, 32, 100, 0.55);
+  left: 50%;
+  top: 50%;
+  width: calc(50 * var(--u));
+  height: calc(50 * var(--u));
+  margin: calc(-25 * var(--u)) 0 0 calc(-25 * var(--u));
+  border-radius: calc(15 * var(--u));
+  box-shadow:
+    0 0 0 2px var(--lacivert),
+    0 0 0 3.5px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+.tab:not([aria-current]):focus-visible {
+  color: #3c4d7e;
 }
 
 .tab__icon {
-  position: relative;
   display: block;
   flex: none;
-  width: calc(24 * var(--u));
-  height: calc(24 * var(--u));
+  width: calc(29 * var(--u)); /* dünya: halka dış çapı 20,65/24 → 25u */
+  height: calc(29 * var(--u));
   overflow: visible;
   pointer-events: none;
+  /* kâğıda düz basılmış: altta ince beyaz ışık */
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8));
+  transition: transform 0.14s ease;
 }
-/* Kenz: kullanıcının düğümü (#dugum), aynı şekil, yalnız rengi değişir */
-.tab__icon--dugum {
+/* seçili: kâğıttan hafifçe kalkmış kabartma; gölge zeminin gül tonunda */
+.tab[aria-current='page'] .tab__icon {
+  filter: drop-shadow(0 1px 0.5px rgba(74, 44, 34, 0.28)) drop-shadow(0 2px 3px rgba(74, 44, 34, 0.14));
+}
+/* dünya: halka (deniz, içi boş) ve dolu kara */
+.tab__deniz {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--cizgi-dunya);
+  transition: stroke-width 0.2s ease;
+}
+.tab__kara {
   fill: currentColor;
+}
+/* Kenz: kullanıcının düğümü (#dugum) aynen; yalnız aynı renkte bir kontur çizgileri biraz kalınlaştırır (sık bir
+   şekil olduğundan bant öbür ikisinin çizgisinden biraz ince: göze eşit). Kontur sembolün kutusunun dışına
+   taşabilsin diye #dugum'da overflow: visible (çizimin kendisi kutuya tam sığar: konturu olmayan öbür kullanımlarda
+   görünüş değişmez). */
+.tab__icon--dugum {
+  width: calc(27 * var(--u));
+  height: calc(27 * var(--u));
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: var(--cizgi-dugum);
+  stroke-linejoin: round;
+  transition:
+    transform 0.14s ease,
+    stroke-width 0.2s ease;
+}
+#dugum {
+  overflow: visible;
+}
+/* güneş: seyrek şekil olduğundan kutusu biraz büyük */
+.tab__icon--gunes {
+  width: calc(30 * var(--u));
+  height: calc(30 * var(--u));
+  stroke-width: var(--cizgi-gunes);
+  transition:
+    transform 0.14s ease,
+    stroke-width 0.2s ease;
 }
 
 .tab__label {
-  position: relative;
-  font-family: var(--sans);
-  font-weight: 600;
-  font-size: calc(11 * var(--u));
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-indent: 0.12em;
-  text-transform: uppercase;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
   white-space: nowrap;
+  border: 0;
 }
 
-/* ana ekran (ve ana ekrandan açılan Oku): bugünkü gibi; hepsi logo laciverti, seçili sekme yok, lacivert gölge */
-.app[data-zemin='ana'] .tabbar {
-  -webkit-backdrop-filter: blur(22px) saturate(90%);
-  backdrop-filter: blur(22px) saturate(90%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(2, 32, 100, 0.12),
-    0 18px 36px -18px rgba(2, 24, 72, 0.5);
+/* basınca simge hafifçe içeri gömülür */
+.tab:active .tab__icon {
+  transform: translateY(1px) scale(0.94);
 }
+.tab[aria-current='page']:active .tab__icon {
+  filter: drop-shadow(0 0.5px 0.5px rgba(74, 44, 34, 0.24));
+}
+@media (hover: hover) and (pointer: fine) {
+  .tab:not([aria-current]):hover {
+    color: #3c4d7e;
+  }
+  /* ana ekranda fareyle üstüne gelince kabartma hafifçe yükselir */
+  .app[data-zemin='ana'] .tab:hover:not(:active) .tab__icon {
+    transform: translateY(-1px);
+  }
+}
+
+/* ana ekran (ve ana ekrandan açılan Oku): fotoğrafın üstünde fildişi beyazı kabartma; seçili sekme yok.
+   Işık üstten: simge üstte saf beyaz, alt kenarına doğru fildişi (#isik-24, #isik-dugum: index.html; geçiş
+   bulunamazsa düz beyaz). Altında keskin bir temas gölgesi ve iki yumuşak gölge: koyu denizde de açık gökte de
+   kabarık görünür. Dünyanın denizi fotoğrafın kendi denizi. */
 .app[data-zemin='ana'] .tab {
-  color: var(--lacivert);
+  color: #fff;
+}
+.app[data-zemin='ana'] .tab__icon {
+  filter: drop-shadow(0 1px 0.5px rgba(0, 8, 34, 0.7)) drop-shadow(0 3px 5px rgba(0, 10, 40, 0.42))
+    drop-shadow(0 7px 12px rgba(0, 10, 40, 0.22));
+}
+.app[data-zemin='ana'] .tab__deniz {
+  stroke: url(#isik-24) #fff;
+}
+.app[data-zemin='ana'] .tab__kara {
+  fill: url(#isik-24) #fff;
+}
+.app[data-zemin='ana'] .tab__icon--gunes {
+  stroke: url(#isik-24) #fff;
+}
+.app[data-zemin='ana'] .tab__icon--dugum {
+  fill: url(#isik-dugum) #fff;
+  stroke: url(#isik-dugum) #fff;
+}
+/* basınca kabartma gömülür: gölge kısalır */
+.app[data-zemin='ana'] .tab:active .tab__icon {
+  filter: drop-shadow(0 0.5px 0.5px rgba(0, 8, 34, 0.6)) drop-shadow(0 1.5px 3px rgba(0, 10, 40, 0.35));
+}
+.app[data-zemin='ana'] .tab:focus-visible::after {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 3.5px rgba(0, 10, 40, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .view,
   .view[hidden],
-  .tab::before {
+  .tab,
+  .tab__icon,
+  .tab__icon--dugum,
+  .tab__icon--gunes,
+  .tab__deniz {
     transition: none;
+  }
+  .tab:active .tab__icon,
+  .app[data-zemin='ana'] .tab:hover:not(:active) .tab__icon {
+    transform: none;
+  }
+  .tab:active .tab__icon {
+    opacity: 0.7;
   }
 }
