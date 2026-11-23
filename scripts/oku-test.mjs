@@ -191,19 +191,18 @@ const opaklik = (secici) => page.locator(secici).evaluate((e) => Number(getCompu
 
 console.log('Ana ekran');
 
-await adim('ana ekran: yalnız gökyüzü, söz ve alt menü; üstte yazı yok, hiçbir sekme seçili değil; video indirilmez', async () => {
+await adim('ana ekran: yalnız arka plan görseli (söz görselin içinde) ve alt menü; hiçbir sekme seçili değil; video indirilmez', async () => {
   await page.goto(base);
   await page.waitForSelector('.quote');
   // Oku'yu birkaç saniye sonra aç: gizli Oku hiçbir şey oynatmamalı.
   await page.waitForTimeout(3000);
   const kaynaklar = await page.evaluate(() => Array.from(document.querySelectorAll('.reel video'), (v) => v.getAttribute('src')));
   assert.deepEqual(kaynaklar, [null, null]);
-  const yazilar = await gorunenYazilar(page, '#view-ana');
-  assert.deepEqual(
-    yazilar.map((y) => y.yazi),
-    ['Güneşten daha parlak', 've cennet gibi güzel', 've saadet-i ebediye gibi', 'şirin hakikatler'],
-  );
-  assert.ok(yazilar.every((y) => y.ust > 844 * 0.25), 'ekranın üstünde yazı var');
+  // söz arka plan görselinin içinde yazılı: ekranda HTML yazı yok, ekran okuyucu için gizli metin var
+  assert.deepEqual(await gorunenYazilar(page, '#view-ana'), []);
+  assert.equal(await page.locator('#view-ana .quote').textContent(), 'Güneşten daha parlak ve cennet gibi güzel hakikatler');
+  // ekranın oranına en yakın görsel (390 x 844 ≈ 9:19,5)
+  assert.match(await page.locator('.bg__img').evaluate((i) => i.currentSrc), /bg-9x19-/);
   assert.equal(await page.locator('#view-kenz').getAttribute('hidden'), '');
   assert.equal(await page.locator('.tab[aria-current]').count(), 0);
   const sekmeler = await page.locator('.tab').evaluateAll((l) =>

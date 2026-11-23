@@ -27,39 +27,37 @@
       </symbol>
     </svg>
     <div class="app" id="app">
+      <!-- Ana ekranın arka planı: kullanıcının 12 oranlı görseli (söz görselin içinde). Ekranın en-boy oranına en
+           yakın görsel seçilir (sınırlar iki komşu oranın geometrik ortası); object-fit: cover ile kalan fark
+           yalnız birkaç yüzdedir. Genişten dara sıralı: ilk uyan kaynak kullanılır. -->
       <picture class="bg" aria-hidden="true">
-        <source
-          media="(min-aspect-ratio: 4/5)"
-          type="image/avif"
-          srcset="/src/assets/bg/bg-wide-1280.avif 1280w, /src/assets/bg/bg-wide-2560.avif 2560w"
-          sizes="max(100vw, 139vh)"
-        />
-        <source
-          media="(min-aspect-ratio: 4/5)"
-          type="image/webp"
-          srcset="/src/assets/bg/bg-wide-1280.webp 1280w, /src/assets/bg/bg-wide-2560.webp 2560w"
-          sizes="max(100vw, 139vh)"
-        />
-        <source
-          media="(min-aspect-ratio: 4/5)"
-          srcset="/src/assets/bg/bg-wide-1280.jpg 1280w, /src/assets/bg/bg-wide-2560.jpg 2560w"
-          sizes="max(100vw, 139vh)"
-        />
-        <source
-          type="image/avif"
-          srcset="/src/assets/bg/bg-portrait-854.avif 854w, /src/assets/bg/bg-portrait-1708.avif 1708w"
-          sizes="max(100vw, 46.4vh)"
-        />
-        <source
-          type="image/webp"
-          srcset="/src/assets/bg/bg-portrait-854.webp 854w, /src/assets/bg/bg-portrait-1708.webp 1708w"
-          sizes="max(100vw, 46.4vh)"
-        />
+        <source media="(min-aspect-ratio: 21602/10000)" type="image/avif" srcset="/src/assets/bg/bg-21x9-1440.avif 1440w, /src/assets/bg/bg-21x9-2576.avif 2576w" sizes="max(100vw, 233.3vh)" />
+        <source media="(min-aspect-ratio: 21602/10000)" type="image/webp" srcset="/src/assets/bg/bg-21x9-1440.webp 1440w, /src/assets/bg/bg-21x9-2576.webp 2576w" sizes="max(100vw, 233.3vh)" />
+        <source media="(min-aspect-ratio: 18856/10000)" type="image/avif" srcset="/src/assets/bg/bg-2x1-1440.avif 1440w, /src/assets/bg/bg-2x1-2576.avif 2576w" sizes="max(100vw, 200vh)" />
+        <source media="(min-aspect-ratio: 18856/10000)" type="image/webp" srcset="/src/assets/bg/bg-2x1-1440.webp 1440w, /src/assets/bg/bg-2x1-2576.webp 2576w" sizes="max(100vw, 200vh)" />
+        <source media="(min-aspect-ratio: 16865/10000)" type="image/avif" srcset="/src/assets/bg/bg-16x9-1440.avif 1440w, /src/assets/bg/bg-16x9-2576.avif 2576w" sizes="max(100vw, 177.8vh)" />
+        <source media="(min-aspect-ratio: 16865/10000)" type="image/webp" srcset="/src/assets/bg/bg-16x9-1440.webp 1440w, /src/assets/bg/bg-16x9-2576.webp 2576w" sizes="max(100vw, 177.8vh)" />
+        <source media="(min-aspect-ratio: 15492/10000)" type="image/avif" srcset="/src/assets/bg/bg-16x10-1440.avif 1440w, /src/assets/bg/bg-16x10-2576.avif 2576w" sizes="max(100vw, 160vh)" />
+        <source media="(min-aspect-ratio: 15492/10000)" type="image/webp" srcset="/src/assets/bg/bg-16x10-1440.webp 1440w, /src/assets/bg/bg-16x10-2576.webp 2576w" sizes="max(100vw, 160vh)" />
+        <source media="(min-aspect-ratio: 14142/10000)" type="image/avif" srcset="/src/assets/bg/bg-3x2-1440.avif 1440w, /src/assets/bg/bg-3x2-2576.avif 2576w" sizes="max(100vw, 150vh)" />
+        <source media="(min-aspect-ratio: 14142/10000)" type="image/webp" srcset="/src/assets/bg/bg-3x2-1440.webp 1440w, /src/assets/bg/bg-3x2-2576.webp 2576w" sizes="max(100vw, 150vh)" />
+        <source media="(min-aspect-ratio: 1/1)" type="image/avif" srcset="/src/assets/bg/bg-4x3-1440.avif 1440w, /src/assets/bg/bg-4x3-2576.avif 2576w" sizes="max(100vw, 133.3vh)" />
+        <source media="(min-aspect-ratio: 1/1)" type="image/webp" srcset="/src/assets/bg/bg-4x3-1440.webp 1440w, /src/assets/bg/bg-4x3-2576.webp 2576w" sizes="max(100vw, 133.3vh)" />
+        <source media="(min-aspect-ratio: 7071/10000)" type="image/avif" srcset="/src/assets/bg/bg-3x4-1200.avif 1200w, /src/assets/bg/bg-3x4-1932.avif 1932w" sizes="max(100vw, 75vh)" />
+        <source media="(min-aspect-ratio: 7071/10000)" type="image/webp" srcset="/src/assets/bg/bg-3x4-1200.webp 1200w, /src/assets/bg/bg-3x4-1932.webp 1932w" sizes="max(100vw, 75vh)" />
+        <source media="(min-aspect-ratio: 6455/10000)" type="image/avif" srcset="/src/assets/bg/bg-2x3-1200.avif 1200w, /src/assets/bg/bg-2x3-1717.avif 1717w" sizes="max(100vw, 66.7vh)" />
+        <source media="(min-aspect-ratio: 6455/10000)" type="image/webp" srcset="/src/assets/bg/bg-2x3-1200.webp 1200w, /src/assets/bg/bg-2x3-1717.webp 1717w" sizes="max(100vw, 66.7vh)" />
+        <source media="(min-aspect-ratio: 5929/10000)" type="image/avif" srcset="/src/assets/bg/bg-10x16-1200.avif 1200w, /src/assets/bg/bg-10x16-2048.avif 2048w" sizes="max(100vw, 62.5vh)" />
+        <source media="(min-aspect-ratio: 5929/10000)" type="image/webp" srcset="/src/assets/bg/bg-10x16-1200.webp 1200w, /src/assets/bg/bg-10x16-2048.webp 2048w" sizes="max(100vw, 62.5vh)" />
+        <source media="(min-aspect-ratio: 5095/10000)" type="image/avif" srcset="/src/assets/bg/bg-9x16-860.avif 860w, /src/assets/bg/bg-9x16-1290.avif 1290w" sizes="max(100vw, 56.2vh)" />
+        <source media="(min-aspect-ratio: 5095/10000)" type="image/webp" srcset="/src/assets/bg/bg-9x16-860.webp 860w, /src/assets/bg/bg-9x16-1290.webp 1290w" sizes="max(100vw, 56.2vh)" />
+        <source media="(min-aspect-ratio: 4557/10000)" type="image/avif" srcset="/src/assets/bg/bg-9x19-860.avif 860w, /src/assets/bg/bg-9x19-1290.avif 1290w" sizes="max(100vw, 46.2vh)" />
+        <source media="(min-aspect-ratio: 4557/10000)" type="image/webp" srcset="/src/assets/bg/bg-9x19-860.webp 860w, /src/assets/bg/bg-9x19-1290.webp 1290w" sizes="max(100vw, 46.2vh)" />
+        <source type="image/avif" srcset="/src/assets/bg/bg-9x20-860.avif 860w, /src/assets/bg/bg-9x20-1290.avif 1290w" sizes="max(100vw, 45vh)" />
+        <source type="image/webp" srcset="/src/assets/bg/bg-9x20-860.webp 860w, /src/assets/bg/bg-9x20-1290.webp 1290w" sizes="max(100vw, 45vh)" />
         <img
           class="bg__img"
-          src="/src/assets/bg/bg-portrait-854.jpg"
-          srcset="/src/assets/bg/bg-portrait-854.jpg 854w, /src/assets/bg/bg-portrait-1708.jpg 1708w"
-          sizes="max(100vw, 46.4vh)"
+          src="/src/assets/bg/bg-9x19-860.jpg"
           alt=""
           decoding="async"
           fetchpriority="high"
@@ -69,12 +67,8 @@
       <main class="views">
         <section class="view view--ana" id="view-ana" data-view="ana" aria-label="Nur-u Hakikat">
           <h1 class="visually-hidden" tabindex="-1">Nur-u Hakikat</h1>
-          <p class="quote">
-            <span class="quote__line">Güneşten daha parlak</span>
-            <span class="quote__line">ve cennet gibi güzel</span>
-            <span class="quote__line">ve saadet-i ebediye gibi</span>
-            <span class="quote__line">şirin hakikatler</span>
-          </p>
+          <!-- söz arka plan görselinin içinde yazılı; ekran okuyucular için burada da -->
+          <p class="quote visually-hidden">Güneşten daha parlak ve cennet gibi güzel hakikatler</p>
         </section>
 
         <section class="view view--kenz" id="view-kenz" data-view="kenz" aria-labelledby="kenz-baslik" hidden>

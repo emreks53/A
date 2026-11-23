@@ -1,5 +1,5 @@
 /*
- * Ana ekran (design/mockup-ana-ekran.png tasarımına göre ölçülmüştür) ve alt menü.
+ * Ana ekran ve alt menü. Ana ekranın arka planı ve sözü kullanıcının 12 oranlı görselindedir (index.html <picture>).
  * Ölçüler 390 px genişliğe göredir ve --u ile ölçeklenir (390 x 844'lük telefonda --u = 1px).
  * Ölçüm ayrıntıları: design/OLCULER.md
  */
@@ -137,8 +137,6 @@
 
 :root {
   --sky: #5aa2ec;
-  --quote-shadow-near: rgba(40, 148, 225, 0.2);
-  --quote-shadow-far: rgba(40, 148, 225, 0.45);
 
   /* Külliyat ciltlerinin tek rengi */
   --cilt: #d7787b;
@@ -182,10 +180,6 @@
   --menu-alt: max(calc(16 * var(--u)), calc(var(--safe-bottom) + 6px));
   --menu-h: calc(64 * var(--u));
   --menu-ust: calc(var(--menu-alt) + var(--menu-h));
-
-  /* alıntının ince konum ayarı (referans px) */
-  --quote-dx: 1.2;
-  --quote-dy: -2.28;
 }
 @supports (height: 100dvh) {
   :root {
@@ -288,33 +282,6 @@ h2[tabindex='-1']:focus {
   transition:
     opacity 0.35s ease,
     visibility 0s linear 0.35s;
-}
-
-/* ---------- alıntı ---------- */
-.quote {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 35.8%;
-  margin: 0;
-  color: #fff;
-  font-family: 'Tinos', 'Times New Roman', Times, serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: calc(27.85 * var(--u));
-  line-height: calc(29.49 * var(--u));
-  text-align: center;
-  white-space: nowrap;
-  font-kerning: normal;
-  text-shadow:
-    0 0 calc(8 * var(--u)) var(--quote-shadow-near),
-    0 0 calc(24 * var(--u)) var(--quote-shadow-far);
-  transform: translate(calc(var(--quote-dx, 0) * var(--u)), calc(-50% + var(--quote-dy, 0) * var(--u))) scaleY(1.11);
-  transform-origin: 50% 50%;
-  pointer-events: none;
-}
-.quote__line {
-  display: block;
 }
 
 /* ---------- alt menü: her ekranda fildişi cam (ana ekrandakiyle aynı yüzey), üç eşit sekme ---------- */
