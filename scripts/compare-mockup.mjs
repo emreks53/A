@@ -1,4 +1,5 @@
-// Ana ekranı tasarımla (design/mockup-ana-ekran.png) karşılaştırır.
+// Ana ekranın ekran görüntüsünü alır ve ilk tasarım maketiyle (design/mockup-ana-ekran.png; eski söz ve menü)
+// yan yana koyar.
 // Kullanım: npm run build && npm run test:visual   (Playwright + Chromium gerekir)
 // Çıktı: test-results/ altında ekran görüntüsü, yan yana karşılaştırma ve fark haritası.
 import { createRequire } from 'node:module';

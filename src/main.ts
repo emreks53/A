@@ -244,6 +244,8 @@ for (const link of links) {
   });
 }
 show(rotaCoz(location.hash));
+// ilk gösterim geçişsiz (styles.css .app[data-ilk]); sonraki ekran değişimlerinde simge renkleri geçişle değişir
+requestAnimationFrame(() => requestAnimationFrame(() => app.removeAttribute('data-ilk')));
 
 /** Paylaşılan bağlantıyla (…/v/<id>/) uygulama açılınca o videoya git */
 function baglantiylaAc(adres: string | undefined): void {

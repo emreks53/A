@@ -1,24 +1,20 @@
 # Nur-u Hakikat
 
 Tek kod tabanından çıkan **web sitesi** ve **mobil uygulama** (Android + iOS).
-Ana ekranın arka planı ve sözü `design/mockup-ana-ekran.png` tasarımıyla birebir örtüşecek şekilde ölçülerek
-kurulmuştur (alt menü sonradan sadeleştirildi: aşağıya ve `design/OLCULER.md`'ye bakın); uygulama simgesi
-`design/logo-kaynak.png` sarı logodur.
-
-| Tasarım | Uygulama |
-| --- | --- |
-| `design/mockup-ana-ekran.png` | `npm run test:visual` → `test-results/ana-ekran.png` |
+Ana ekranın arka planı kullanıcının "Ege Kıyısı Ufuk" görselidir: 12 en-boy oranında hazırlanmıştır, her ekranda
+oranı en yakın olanı gösterilir ve söz görselin içinde yazılıdır (`design/OLCULER.md`). Uygulama simgesi
+`design/logo-kaynak.png` sarı logodur. Ana ekranın ekran görüntüsü: `npm run test:visual` → `test-results/ana-ekran.png`.
 
 ## Yapı
 
 ```
-index.html                 Uygulama iskeleti (arka plan, alıntı, ekranlar, alt menü)
+index.html                 Uygulama iskeleti (arka plan, ekranlar, alt menü)
 src/main.ts                Yönlendirme (#/ ana ekran, #/oku, #/kenz, #/gunes, #/gunes/<kitap>/<sayfa>), geri tuşu, Capacitor ve PWA kurulumu
 src/styles.css             Renkler, yazı tipleri, ana ekran ve alt menü ölçüleri (390 genişliğe göre, --u ile ölçeklenir)
-src/assets/bg/             Temizlenmiş arka plan (dikey + geniş ekran; AVIF / WebP / JPG)
-src/assets/icons/          Düğüm (kullanıcının logosu; videolardaki soluk im). Alt menünün dünya ve güneş simgeleri
-                           ve düğüm (#dugum) index.html'in içindedir
-src/assets/fonts/          EB Garamond 500/600/500 italik (başlıklar, kitap sırtları), Tinos Bold Italic (alıntı) ve
+src/assets/bg/             Ana ekranın arka planı: 12 en-boy oranı × 2 genişlik (AVIF / WebP), bir JPG yedek
+src/assets/icons/          Düğüm (kullanıcının logosu; videolardaki soluk im). Alt menünün simgeleri (karası belli
+                           sade dünya, güneş) ve düğüm (#dugum) index.html'in içindedir
+src/assets/fonts/          EB Garamond 500/600/500 italik (başlıklar, kitap sırtları), Tinos Bold Italic (okuyucu başlıkları) ve
                            Encode Sans 500/600/700 (arayüz) — kendi sunucumuzdan
 src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts)
 src/gunes/                 Güneş: Risale-i Nur kütüphanesi (gunes.ts) ve PDF okuyucu (okuyucu.ts, pdf.ts: pdf.js)
@@ -34,12 +30,12 @@ public/icons/              Favicon, PWA ve Apple simgeleri (sarı logo)
 resources/                 Android/iOS simge ve açılış ekranı kaynakları (sarı logo)
 android/, ios/             Capacitor yerel projeleri
 design/                    Tasarım kaynakları ve vektör logo (logo.svg, knot.svg)
-scripts/compare-mockup.mjs Ana ekranın tasarımla karşılaştırma ekran görüntüsü
+scripts/compare-mockup.mjs Ana ekranın ekran görüntüsü (ilk tasarım maketiyle yan yana)
 scripts/oku-test.mjs       Uygulamayı (ana ekran, Oku, Kenz, Güneş, okuyucu) gerçek tarayıcıda baştan sona deneyen test
 scripts/kitap-ekle.mjs     Güneş'e kitap ekler: PDF'i kopyalar, sayfa sayısını ve içindekileri listeye yazar
 ```
 
-Açılış **ana ekrandır** (`#/`): yalnız gökyüzü, alıntı ve alt menü; üstte yazı yoktur, hiçbir sekme seçili
+Açılış **ana ekrandır** (`#/`): yalnız arka plan görseli (söz görselin içinde) ve alt menü; hiçbir sekme seçili
 değildir. Alt menüdeki üç sekme ayrı ekranlar açar: **Oku** kâinat kitabını "okumak" için tam ekran kısa video
 akışıdır, **Kenz** Risale-i Nur'dan videoların kütüphanesidir, **Güneş** Risale-i Nur Külliyatı'nın kendisidir:
 kitaba dokununca dijital okuyucuda açılır.
@@ -255,7 +251,7 @@ genişletilir.
 npm install
 npm run dev          # http://localhost:5173
 npm run build        # dist/ klasörüne üretim derlemesi
-npm run test:visual  # derlemeyi tasarım ölçüsünde (854 × 1842) ekran görüntüsü olarak alır
+npm run test:visual  # derlemenin ana ekranını 854 × 1842 ekran görüntüsü olarak alır (ilk maketle yan yana)
 npm test             # birim testleri (video ve kitap listesi, paylaşım sayfası, yönlendirme)
 npm run test:oku     # deneme derlemesi yapıp gerçek tarayıcıda dener: ana ekran, Oku, Neşret, Menba, Kenz, Güneş,
                      # okuyucu (örnek PDF ve sabit kitap/video listeleri: scripts/fixtures/; Risale metni
@@ -303,14 +299,12 @@ npm run assets:native
 
 - Uygulama kimliği `com.nuruhakikat.app`, adı `Nur-u Hakikat` (`capacitor.config.ts`, Android `build.gradle` /
   `strings.xml`, iOS proje dosyası). Mağazaya ilk gönderimden sonra kimlik değiştirilemez.
-- Alıntı yazı tipi Tinos (Apache 2.0), başlık ve sırt yazı tipi EB Garamond (OFL), menü yazı tipi Encode Sans (OFL);
+- Başlık ve sırt yazı tipi EB Garamond (OFL), arayüz yazı tipi Encode Sans (OFL), okuyucu başlıklarında Tinos (Apache 2.0);
   hepsi uygulamayla birlikte gelir.
 - Videolar `emreks53/B` deposundan: *On Birinci Şuâ'dan* (Altıncı Mesele, fenler Hâlık'ı tanıttırır;
   `claude/kurzgesagt-style-turkish-video-2on8vi` dalı) ve *On Yedinci Lem'a'dan* (ihlas;
   `claude/kurzgesagt-style-video-p5a1gi` dalı). Kaynakları ve lisansları o dallarda; künyesi Menba'da.
 - Telefon tarayıcısı: ölçü birimi dikeyde boy 640 px'e göre sınırlanır (`--u`), adres ve araç çubukları ekranı
-  kısalttığında menü ve alıntı küçülmez. Geniş arka plana 4/5 oranında geçilir; dikey telefonda hep dikey
-  fotoğraf kullanılır. Geniş arka planın (yatay telefon, tablet, masaüstü) iki yanı fotoğrafın aynı yükseklikteki
-  keskin parçalarından doku dikişiyle örülmüştür; yanlarda bulanık bant yoktur. Arka plan fotoğrafının menünün altında kalan, bozuk (elle doldurulmuş) ön planı yeniden
-  kuruldu (çimen dokusu perspektifle uzatılıp alan derinliğiyle bulanıklaştırıldı); hiçbir ekran oranında
-  bozuk bölge görünmez. Reels videosu dar ekranlarda kenardan kenara, geniş ekranlarda ortada 9:16'dır.
+  kısalttığında menü küçülmez. Ana ekranın arka planı ekranın oranına en yakın görseldir (12 oran: 9:20'den 21:9'a);
+  görselin içindeki söz hiçbir ekranda kesilmez (sınırlar ve kırpma payları `design/OLCULER.md`'de). Reels videosu
+  dar ekranlarda kenardan kenara, geniş ekranlarda ortada 9:16'dır.

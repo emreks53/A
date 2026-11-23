@@ -191,30 +191,39 @@ const opaklik = (secici) => page.locator(secici).evaluate((e) => Number(getCompu
 
 console.log('Ana ekran');
 
-await adim('ana ekran: yalnız gökyüzü, söz ve alt menü; üstte yazı yok, hiçbir sekme seçili değil; video indirilmez', async () => {
+await adim('ana ekran: yalnız arka plan görseli (söz görselin içinde) ve alt menü; hiçbir sekme seçili değil; video indirilmez', async () => {
   await page.goto(base);
   await page.waitForSelector('.quote');
   // Oku'yu birkaç saniye sonra aç: gizli Oku hiçbir şey oynatmamalı.
   await page.waitForTimeout(3000);
   const kaynaklar = await page.evaluate(() => Array.from(document.querySelectorAll('.reel video'), (v) => v.getAttribute('src')));
   assert.deepEqual(kaynaklar, [null, null]);
-  const yazilar = await gorunenYazilar(page, '#view-ana');
-  assert.deepEqual(
-    yazilar.map((y) => y.yazi),
-    ['Güneşten daha parlak', 've cennet gibi güzel', 've saadet-i ebediye gibi', 'şirin hakikatler'],
-  );
-  assert.ok(yazilar.every((y) => y.ust > 844 * 0.25), 'ekranın üstünde yazı var');
+  // söz arka plan görselinin içinde yazılı: ekranda HTML yazı yok, ekran okuyucu için gizli metin var
+  assert.deepEqual(await gorunenYazilar(page, '#view-ana'), []);
+  assert.equal(await page.locator('#view-ana .quote').textContent(), 'Güneşten daha parlak ve cennet gibi güzel hakikatler');
+  // ekranın oranına en yakın görsel (390 x 844 ≈ 9:19,5)
+  assert.match(await page.locator('.bg__img').evaluate((i) => i.currentSrc), /bg-9x19-/);
   assert.equal(await page.locator('#view-kenz').getAttribute('hidden'), '');
   assert.equal(await page.locator('.tab[aria-current]').count(), 0);
   const sekmeler = await page.locator('.tab').evaluateAll((l) =>
-    l.map((t) => [t.textContent.trim(), getComputedStyle(t.querySelector('.tab__label')).color, getComputedStyle(t, '::before').opacity]),
+    l.map((t) => [
+      t.textContent.trim(),
+      getComputedStyle(t).color,
+      getComputedStyle(t, '::before').content,
+      t.querySelector('.tab__label').getBoundingClientRect().width,
+    ]),
   );
-  // Üç sekmenin yazısı da lacivert; seçili kapsül yok
+  // Çerçevesiz menü: üç sekme de yalnız beyaz kabartma simge; yazılar ekran okuyucu için (1 px, görünmez); kapsül yok
   assert.deepEqual(sekmeler, [
-    ['Oku', 'rgb(2, 32, 100)', '0'],
-    ['Kenz', 'rgb(2, 32, 100)', '0'],
-    ['Güneş', 'rgb(2, 32, 100)', '0'],
+    ['Oku', 'rgb(255, 255, 255)', 'none', 1],
+    ['Kenz', 'rgb(255, 255, 255)', 'none', 1],
+    ['Güneş', 'rgb(255, 255, 255)', 'none', 1],
   ]);
+  // simgeler aria-hidden: bağlantıların erişilebilir adı gizli yazılardan gelir
+  for (const ad of ['Oku', 'Kenz', 'Güneş']) {
+    assert.equal(await page.getByRole('link', { name: ad, exact: true }).count(), 1, `"${ad}" bağlantısı`);
+  }
+  assert.equal(await page.locator('.tabbar').evaluate((m) => getComputedStyle(m).backgroundColor), 'rgba(0, 0, 0, 0)');
   assert.equal(await temaRengi(), '#5AA2EC');
 });
 
@@ -222,9 +231,47 @@ await adim('telefon tarayıcısında (390 x 664) menü küçülmez', async () =>
   await page.setViewportSize({ width: 390, height: 664 });
   await page.waitForTimeout(100);
   const m = await page.locator('.tabbar').boundingBox();
-  assert.ok(Math.abs(m.width - 358) < 0.5 && Math.abs(m.height - 64) < 0.5, `menü ${m.width}×${m.height}`);
+  // (çerçevesiz: üç simge ortada bir küme, merkezler arası 100 px; her dokunma alanı 100 x 64)
+  assert.ok(Math.abs(m.width - 300) < 0.5 && Math.abs(m.height - 64) < 0.5, `menü ${m.width}×${m.height}`);
   assert.ok(m.y + m.height <= 664 - 16, 'menü ekranın altına yapışık');
   await page.setViewportSize({ width: 390, height: 844 });
+});
+
+await adim('görselin içindeki söz hiçbir ekranda yanlardan kesilmez (9:16 sınırında, 9:20\'den dar ve 32:9\'dan geniş ekranda)', async () => {
+  const gorsel = () =>
+    page.locator('.bg__img').evaluate((i) => {
+      const r = i.getBoundingClientRect();
+      const oran = i.naturalWidth / i.naturalHeight;
+      // object-fit: cover ile görselin ekrana düşen eni ve yanlardan kırpılan pay
+      const en = Math.max(r.width, r.height * oran);
+      return { src: i.currentSrc, x: r.x, w: r.width, h: r.height, kirpma: (en - r.width) / 2 / en };
+    });
+  const bekle = (desen) => page.waitForFunction((d) => new RegExp(d).test(document.querySelector('.bg__img').currentSrc) && document.querySelector('.bg__img').complete, desen.source);
+  // 412 x 808 (oran 0,51): 9:16 yanlardan %4,7 kırpılırdı; 9:19,5 seçilir, fark alttaki denizden gider
+  await page.setViewportSize({ width: 412, height: 808 });
+  await bekle(/bg-9x19-/);
+  let g = await gorsel();
+  assert.ok(g.kirpma < 0.001, `412 x 808: yanlardan %${(g.kirpma * 100).toFixed(1)} kırpıldı`);
+  // 344 x 882 (Galaxy Z Fold dış ekranı, oran 0,39): görsel tam genişlikte üstte, altında deniz rengi
+  await page.setViewportSize({ width: 344, height: 882 });
+  await bekle(/bg-9x20-/);
+  g = await gorsel();
+  assert.ok(g.x === 0 && g.w === 344 && Math.abs(g.h - 344 / 0.45) < 2, `344 x 882: ${JSON.stringify(g)}`);
+  assert.ok(g.kirpma < 0.001, `344 x 882: yanlardan %${(g.kirpma * 100).toFixed(1)} kırpıldı`);
+  assert.equal(await page.locator('.bg').evaluate((b) => getComputedStyle(b).backgroundColor), 'rgb(4, 38, 86)');
+  // 9:16'nın yeni alt sınırında (0,536) yanlardan en çok %2,4
+  await page.setViewportSize({ width: 429, height: 800 });
+  await bekle(/bg-9x16-/);
+  g = await gorsel();
+  assert.ok(g.kirpma <= 0.025, `429 x 800: yanlardan %${(g.kirpma * 100).toFixed(1)} kırpıldı`);
+  // 3840 x 950 (32:9 monitörde tam pencere, oran 4,04): görsel 32:9 enle ortada, yanlarda renk bantları
+  await page.setViewportSize({ width: 3840, height: 950 });
+  await bekle(/bg-21x9-/);
+  g = await gorsel();
+  assert.ok(Math.abs(g.w - 950 * 3.56) < 2 && Math.abs(g.x - (3840 - 950 * 3.56) / 2) < 2, `3840 x 950: ${JSON.stringify(g)}`);
+  assert.match(await page.locator('.bg').evaluate((b) => getComputedStyle(b).backgroundImage), /linear-gradient/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await bekle(/bg-9x19-/);
 });
 
 console.log('Oku akışı');
@@ -688,7 +735,15 @@ await adim('Kenz ayrı ekran: açık ten rengi zeminde sade kütüphane; videola
   assert.equal(await page.locator('.tab--kenz').getAttribute('aria-current'), 'page');
   assert.equal(await temaRengi(), '#FBF6F2');
   await page.waitForTimeout(300);
-  assert.equal(await page.locator('.tab--kenz').evaluate((t) => getComputedStyle(t, '::before').opacity), '1');
+  // seçili sekme kapsülsüz: koyu lacivert ve biraz kalın çizgili; öbürleri soluk lacivert
+  const secim = await page.locator('.tab').evaluateAll((l) =>
+    l.map((t) => [t.dataset.tab, getComputedStyle(t).color, getComputedStyle(t.querySelector('.tab__icon--dugum, .tab__deniz, .tab__icon--gunes')).strokeWidth]),
+  );
+  assert.deepEqual(secim, [
+    ['oku', 'rgb(91, 104, 144)', '1.25px'],
+    ['kenz', 'rgb(2, 32, 100)', '26px'],
+    ['gunes', 'rgb(91, 104, 144)', '1.2px'],
+  ]);
   // açık ten zemin, lacivert başlık
   assert.match(await page.locator('#view-kenz').evaluate((v) => getComputedStyle(v).backgroundImage), /linear-gradient/);
   assert.equal(await page.locator('.kenz__baslik').evaluate((b) => getComputedStyle(b).color), 'rgb(2, 32, 100)');

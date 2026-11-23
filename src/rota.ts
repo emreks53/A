@@ -1,4 +1,4 @@
-/** "ana" giriş ekranıdır (gökyüzü ve alıntı); oku, kenz ve gunes alt menüdeki sekmeler; "kitap" Güneş'te açılan
+/** "ana" giriş ekranıdır (arka plan görseli ve alt menü); oku, kenz ve gunes alt menüdeki sekmeler; "kitap" Güneş'te açılan
  *  kitabın okuyucusudur (tam ekran, adresi #/gunes/<kitap>[/<sayfa>]). */
 export type Sekme = 'ana' | 'oku' | 'kenz' | 'gunes' | 'kitap';
 
