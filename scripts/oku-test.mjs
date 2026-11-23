@@ -237,7 +237,7 @@ await adim('telefon tarayıcısında (390 x 664) menü küçülmez', async () =>
   await page.setViewportSize({ width: 390, height: 844 });
 });
 
-await adim('görselin içindeki söz hiçbir ekranda yanlardan kesilmez (9:16 sınırında ve 9:20\'den dar ekranda)', async () => {
+await adim('görselin içindeki söz hiçbir ekranda yanlardan kesilmez (9:16 sınırında, 9:20\'den dar ve 32:9\'dan geniş ekranda)', async () => {
   const gorsel = () =>
     page.locator('.bg__img').evaluate((i) => {
       const r = i.getBoundingClientRect();
@@ -264,6 +264,12 @@ await adim('görselin içindeki söz hiçbir ekranda yanlardan kesilmez (9:16 s�
   await bekle(/bg-9x16-/);
   g = await gorsel();
   assert.ok(g.kirpma <= 0.025, `429 x 800: yanlardan %${(g.kirpma * 100).toFixed(1)} kırpıldı`);
+  // 3840 x 950 (32:9 monitörde tam pencere, oran 4,04): görsel 32:9 enle ortada, yanlarda renk bantları
+  await page.setViewportSize({ width: 3840, height: 950 });
+  await bekle(/bg-21x9-/);
+  g = await gorsel();
+  assert.ok(Math.abs(g.w - 950 * 3.56) < 2 && Math.abs(g.x - (3840 - 950 * 3.56) / 2) < 2, `3840 x 950: ${JSON.stringify(g)}`);
+  assert.match(await page.locator('.bg').evaluate((b) => getComputedStyle(b).backgroundImage), /linear-gradient/);
   await page.setViewportSize({ width: 390, height: 844 });
   await bekle(/bg-9x19-/);
 });

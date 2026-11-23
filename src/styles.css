@@ -271,6 +271,8 @@ h2[tabindex='-1']:focus {
 @media (max-aspect-ratio: 4284/10000) {
   .bg {
     background: #042656;
+    /* zorunlu renk kipinde de deniz rengi kalsın: beyaz simgeler beyaz zemine düşmesin */
+    forced-color-adjust: none;
   }
   .bg__img {
     bottom: auto;
@@ -278,6 +280,40 @@ h2[tabindex='-1']:focus {
     aspect-ratio: 9 / 20;
     -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent);
     mask-image: linear-gradient(to bottom, #000 88%, transparent);
+  }
+}
+
+/* 32:9'dan da geniş ekranlar (en-boy > 3,56: 32:9 monitörde tam pencere, kısa ve geniş pencereler): 21:9 görsel
+   üst/alttan daha çok kırpılırsa güneş üst kenarda kesilir, kıyı menünün altına iner. Görsel 32:9 enle ortada
+   durur, kenarları yanlardaki renk bantlarına yumuşakça geçer. Bantlar görselin sol ve sağ kenarından alınmış
+   renkler (gök, ufuk, kara, deniz), görselin bu genişlikte görünen yüksekliğine denk. */
+@media (min-aspect-ratio: 356/100) {
+  .bg {
+    background:
+      linear-gradient(
+        to bottom,
+        #589eec 0%, #61a6f3 5%, #6caff7 10%, #7abafb 15%, #9fcdfd 20%, #a1d0fd 25%, #b9dbfc 30%,
+        #6aa8e8 35%, #4277ab 40%, #4f7698 45%, #517086 50%, #4b677c 55%, #3b5969 60%, #226490 65%,
+        #0c569c 70%, #3a6d95 75%, #0a498b 80%, #094383 85%, #083e7c 90%, #073a77 95%, #063775 100%
+      )
+      left / 50% 100% no-repeat,
+      linear-gradient(
+        to bottom,
+        #60a4f2 0%, #68acf6 5%, #75b5fb 10%, #81befd 15%, #a0cdfc 20%, #a4d2fe 25%, #aed5fa 30%,
+        #649fe0 35%, #487bb3 40%, #406a8e 45%, #45657d 50%, #415a6e 55%, #5b645f 60%, #54626c 65%,
+        #57768d 70%, #14599f 75%, #115095 80%, #0e4a8d 85%, #0d4586 90%, #0d4282 95%, #0b3e7c 100%
+      )
+      right / 50% 100% no-repeat;
+    forced-color-adjust: none;
+  }
+  .bg__img {
+    left: 50%;
+    right: auto;
+    width: auto;
+    aspect-ratio: 356 / 100;
+    transform: translateX(-50%);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
   }
 }
 
@@ -343,6 +379,12 @@ h2[tabindex='-1']:focus {
   --cizgi-gunes: 1.4;
   --cizgi-dugum: 26;
   color: var(--lacivert); /* 12,7–14:1 */
+}
+/* ilk açılışta (ör. #/kenz bağlantısı) simgeler ana ekran renginden geçişle gelmesin: main.ts ilk gösterimden
+   sonra data-ilk'i kaldırır */
+.app[data-ilk] .tab,
+.app[data-ilk] .tab * {
+  transition: none !important;
 }
 /* klavye odağı: yalnız odaklanınca görünen yumuşak köşeli halka (kalıcı çerçeve yok); dışta ince beyaz kıl */
 .tab:focus-visible::after {
@@ -476,6 +518,8 @@ h2[tabindex='-1']:focus {
   filter: drop-shadow(0 0.5px 0.5px rgba(0, 8, 34, 0.6)) drop-shadow(0 1.5px 3px rgba(0, 10, 40, 0.35));
 }
 .app[data-zemin='ana'] .tab:focus-visible::after {
+  /* zorunlu renk kipinde de beyaz halka: sistemin bağlantı rengi koyu denizde görünmez */
+  forced-color-adjust: none;
   box-shadow:
     0 0 0 2px #fff,
     0 0 0 3.5px rgba(0, 10, 40, 0.35);

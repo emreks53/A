@@ -34,7 +34,8 @@ hakikatler") görselin içinde yazılıdır, HTML'de yalnız ekran okuyucular i�
     En çok 9:19,5'te (%14, 0,51–0,54 arası ekranlar) ve 3:4'te (%12).
   - 9:20'den de dar ekranlarda (0,4284 altı: Galaxy Z Fold dış ekranı, iPad'de Split View / Slide Over) görsel
     tam genişlikte üste dayanır, altında deniz görselin alt kenarındaki #042656 ile sürer.
-  - 21:9'dan geniş ekranlarda (32:9 monitör) fark üst/alttan kırpılır.
+  - 32:9'dan da geniş ekranlarda (3,56 üstü: 32:9 monitörde tam pencere) 21:9 görsel 32:9 enle ortada durur;
+    kenarları, görselin sol ve sağ kenarından alınmış renk bantlarına yumuşakça geçer. Güneş ve kıyı yerinde kalır.
 
 ## Alt menü
 
