@@ -13,10 +13,11 @@
 //                   light.js   five light-beads
 //                   build.js   chest -> mescid (minaret first: it rises from behind the plateau's edge)
 //                   rug.js     rolled rug, the unrolling seccade, its glowing niche (22.90: the glow swells — LINK 1)
-//   hands   1.0     dial.js    the hour floating down / on his palm / in his half-closed hand / standing in the open palm of
-//                              the dua: BEHIND his hand as long as he holds it (thumb and fingers in front of the rim)
+//   hands   1.0     dial.js    the hour floating down / on his palm / in his half-closed hand / standing in the cupped right
+//                              hand of the dua, close before his chest: BEHIND his hand as long as he holds it (thumb and
+//                              fingers in front of the rim; in the dua his sleeve touches its left rim)
 //                   give.js    22.57–22.97 the soft gold light the hour turns into, and what is left of the coin
-//   front   1.0     give.js    the eight dabs of light rising from his palm (while they are near him)
+//   front   1.0     give.js    the eight dabs of light rising from his hand, past his bowed head (while they are near him)
 //                   dial.js    the minting's glint
 //   (mid)           give.js    … and the same dabs once they have gone BEHIND the minaret, into the far light
 //   top     frame   light.js   the cream cover 23.90–24.30 (frame 729 = the bare primer plate, drawn by the scene)

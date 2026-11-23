@@ -74,6 +74,15 @@ const HANDS = {
       [67.2, -12.4], [64, -13.6], [60, -12], [54, -8.8], [47, -6], [40, -4.2], [35.6, -3.8],
       [35.6, -6.4], [34.2, -9.8], [30.6, -12], [25, -12.2], [18, -11], [10, -10], [2, -9.2], [-7, -9]],
   },
+  pray: {
+    // ADDED in the pose rework of the new ending (the dua read as a shrug; nothing else uses it): the cupped hand of
+    // prayer held BEFORE him - the forearm points forward, away from us, so the hand is seen foreshortened (48 px instead
+    // of 67): a chunky bowl, fingers together as one block curling up to a blunt tip, the thumb a low lobe on the bowl
+    // side. Made to be raised to 130-150 deg (fingers up, the bowl open toward his face) close beside the chest.
+    palm: [22, -4],
+    pts: [[-7, 9], [3, 11.4], [12, 13], [21, 13.2], [29, 11.6], [36, 8.2], [42, 3.4], [46, -2.6], [47.6, -9], [46.6, -14.6], [43.2, -17.4], [39, -16.4],
+      [35.4, -12.6], [31, -9.6], [26.6, -8.4], [25.4, -11.4], [23.4, -15.2], [19.4, -17.2], [14.6, -16.4], [9, -13.6], [2, -10.8], [-7, -9]],
+  },
 };
 export const HAND_SHAPES = Object.keys(HANDS);
 
@@ -922,6 +931,19 @@ export async function makeMan(E, opts = {}) {
     sh: -3, head: head({ turn: 1, pitch: 12, tilt: 1.5 }),
     armR: { a: 12, fa: 0.85, b: 138, fb: 0.80, w: -36, hand: 'dua', flip: 1, pin: 0 },
     armL: { a: 13, fa: 0.86, b: 134, fb: 0.78, w: -36, hand: 'dua', flip: 1, pin: 0 },
+  });
+  // ADDED in the pose rework (lead's review: `back_dua` reads as a shrug - forearms splayed 30 deg, flat hands 140 px
+  // out at shoulder height; it is kept above, unchanged, but the film no longer uses it): THE DUA, COMPACT. The upper
+  // arms hang where they hang (elbows by the ribs), the forearms point forward - drawn SHORT (0.52 / 0.48 of their
+  // length) and steep (23 / 21 deg from the vertical) -, and the two cupped hands (`pray`) stand close beside the chest,
+  // fingers up, the bowls open toward his bowed face: palms at (640, 814) and (437, 816), i.e. 103 / 100 px either side
+  // of the shoulders' middle (x 537) and 41 px BELOW the shoulder line (finger tips ~15 px below it). Head bowed 14 deg.
+  // This is the HOLD (the film's last held picture); while the hour stands on his right palm act 2 holds the hands 6 px
+  // lower and flatter (135 / 142 deg), see acting.js.
+  POSES.back_pray = P0({
+    sh: -3, head: head({ turn: 1, pitch: 14, tilt: 1.5 }),
+    armR: { a: 11.5, fa: 1, b: 145.4, fb: 0.522, w: -9.9, hand: 'pray', flip: 1, pin: 0 },
+    armL: { a: 12, fa: 1, b: 147.4, fb: 0.484, w: -10.4, hand: 'pray', flip: 1, pin: 0 },
   });
   man.POSES = POSES;
   man.REST_ARM = REST;

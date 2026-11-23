@@ -1,6 +1,7 @@
 // give.js — THE HOUR IS GIVEN (act 2, 22.57–23.67; client round: «seccadeye at» is figurative).
 //
-// He stands in prayer with open hands, the gold hour on his right palm. Nothing is thrown and nothing lands anywhere:
+// He stands in prayer, the cupped hands close before his chest, the gold hour in his right hand. Nothing is thrown and
+// nothing lands anywhere:
 //
 //   22.57 / 22.67 / 22.77 / 22.87   the hour lifts 7 px off his palm and is DABBED OUT in four passes (the sponge takes
 //                   a quarter of it each time, from the top down); behind what is left a soft gold light is printed,
@@ -25,12 +26,12 @@ export function makeGive(E, W, U, acting, dial) {
   const coinAtFrame = (f) => { const h = acting.held(f / fps); return [h.x, h.y]; };
 
   // ------------------------------------------------------------------ the stream's spine (world px, plane 1.0)
-  // from the coin: straight up (breath), then bending over to the right in one long curve — clear of the dial's bead
-  // ring (the spine passes >= 65 px from the beads' edges), behind the minaret just under its cap (x 858–886,
-  // y ~398) and into the white core, left of its middle
+  // from the coin (pose rework: it now stands close before him, centre ~(633, 788) — 60 px right of his head's edge):
+  // straight up past his head (breath), then bending over to the right in one long curve — clear of the dial's bead
+  // ring, behind the minaret just under its cap (x 858–886, y ~398) and into the white core, left of its middle
   const C0 = coinAtFrame(F0);
   const END = [1030, 324];                                                  // (the core's centre is at ~(1035, 316) on this plane)
-  const spine = E.curve([C0, [C0[0] + 6, C0[1] - 61], [C0[0] + 24, C0[1] - 119], [C0[0] + 56, C0[1] - 173], [772, 524], [826, 462], [878, 398], [950, 350], END], { tension: 0.5 });
+  const spine = E.curve([C0, [C0[0] + 5, C0[1] - 60], [C0[0] + 20, C0[1] - 118], [C0[0] + 50, C0[1] - 174], [C0[0] + 94, C0[1] - 219], [772, 524], [826, 462], [878, 398], [950, 350], END], { tension: 0.5 });
   const LEN = spine.length;
   const at = (s) => spine.at(clamp(s / LEN));
   const sWhere = (pred) => { for (let s = 0; s <= LEN; s += 2) if (pred(at(s))) return s; return LEN; };

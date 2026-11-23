@@ -25,7 +25,7 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
 | `man.draw(ctx, t, {pose, warm, p, hands})` | paints him; extras: `squash: {sx, dip}` (the body narrowed to `sx` about the root, the hips sunk `dip` px — the world eases the turn with it, see "the turn"), and for review scenes `x, y` (root, default 540 / 1200), `scale`, `breath` (−1…1) |
 | `man.prepare(skin, warm, stage)` | pre-bake another sprite set (`'front'`, 1, 3 …); sets that were not prepared are baked on first use |
 | `man.drawHand(ctx, shape, x, y, {angle, flip, side, warm, scale})` | review helper: one hand alone |
-| `man.G`, `man.HAND_SHAPES`, `man.REST_ARM`, `man.pose(partial)` | geometry numbers, `['rest','open','cupped','closed','flat','hold','dua']` (`dua` added for the new ending, see the last section), the hanging arm, fill-in of a partial pose |
+| `man.G`, `man.HAND_SHAPES`, `man.REST_ARM`, `man.pose(partial)` | geometry numbers, `['rest','open','cupped','closed','flat','hold','dua','pray']` (`dua` and `pray` added for the new ending, see the last two sections), the hanging arm, fill-in of a partial pose |
 
 `'L'` / `'R'` are HIS left / right. Back view: R is on screen-right. Front view: R is on screen-left.
 `opts` of `reach` / `point` / `hand`: `{x, y}` = another root than 540 / 1200 (only review scenes need it).
@@ -54,8 +54,10 @@ man.draw(ctx, t, { pose, warm = 0, p = 1, hands = null });   // world px, camera
   near the wrist, the fingers rising gently to the tip) · `'closed'` (fist) · `'flat'` (laid flat on something — the
   chest: fingers together as ONE tapered shape, the thumb a low bump along the index finger) · `'hold'` (half closed
   round a thing held at his side, seen from the back of the hand) · `'dua'` (ADDED: the open hand of prayer, palm up,
-  seen from the side like `'cupped'` but open and at ease; same palm point as `'cupped'`). Silhouette swaps; all about
-  0.75 of the head's height long, as on a real figure.
+  seen from the side like `'cupped'` but open and at ease; same palm point as `'cupped'`) · `'pray'` (ADDED in the pose
+  rework: the cupped hand held BEFORE him, seen foreshortened — a chunky bowl 48 px long, made to be raised to
+  130–150° close beside the chest; see the last section). Silhouette swaps; all about 0.75 of the head's height long,
+  as on a real figure (`'pray'` is shorter: it points away from us).
   `flip: ±1` mirrors the hand across its own axis (thumb side). Hand frame: X along the hand, +Y = thumb side;
   a hanging hand has +Y toward the body, a hand pointing outward has +Y pointing DOWN (so `'cupped'` opens upward
   with `flip: 1`, and an open hand has its thumb on top with `flip: -1`).
@@ -267,3 +269,41 @@ Nothing that existed was changed: every pose, name, palm target, hand outline, s
 Limits of the addition: `'dua'` is a side view, like `'cupped'` — from behind a real praying hand would be seen from
 below; the film's convention (the hour received on a cupped palm at 15.37) is kept instead. The front skin has no use
 for it yet (it would work: the shape is baked for every sprite set that `prepare` bakes).
+
+## Pose rework of the new ending (Nov 23): the COMPACT dua — ADDITIONS only
+
+The lead's review: `POSES.back_dua` reads as a SHRUG (forearms splayed 30° from the vertical, flat palm-up hands 140 px
+either side of his centre at shoulder height). Nothing that existed was changed — `'dua'` and `back_dua` are still in
+man.js exactly as they were, but the film no longer uses them (checked: frames 0–660 and 729 → of the film are
+pixel-identical with the man.js before this round). Two things were ADDED, again by the act-2 team:
+
+* **Hand shape `'pray'`** (last entry of `HANDS`, after `'dua'`; seed `25 + index`, the others did not move). The cupped
+  hand of prayer when the forearm points FORWARD, away from us: the bowl of `'cupped'` seen foreshortened — 48 px long
+  instead of 65–67, 21 px thick, the fingers one block curling up to a blunt tip, the thumb a low lobe on the bowl
+  side near the wrist. Palm point `[22, -4]`. Use `flip: 1` and hand angles of 130–150° (fingers UP and a little
+  outward; the bowl then opens toward his face, the convex back of the hand is the outer contour). A coin of r 33
+  stands in it with its centre 33 px above the palm point (finger block and thumb lobe in front of its lower rim when
+  the coin is drawn in `hands`). Below about 120° it is a short flat hand — only use that inside a move.
+* **Pose `POSES.back_pray`** — THE DUA as a praying man is seen from behind, and the film's last held picture. He stands
+  turned to screen-right (`sh: -3`, head `turn 1`), head bowed (`pitch 14`, `tilt 1.5`); the upper arms hang where they
+  hang (11.5° / 12°, full length: the elbows by the ribs, at y 879); the forearms point forward — drawn SHORT (`fb`
+  0.52 / 0.48) and steep (absolute 157° / 159°: 23° / 21° from the vertical) — and both hands are `'pray'` at
+  147° / 149°. Palms at world (640, 814) and (437, 816): 103 / 100 px either side of the shoulders' middle (x 537),
+  41 px BELOW the shoulder line (y 773); the finger tips end about 15 px below it, the hands' outer contour is about
+  120 px from the middle. `pin: 0` on both arms (the hands breathe with the shoulders).
+  Why it is not a shrug: nothing goes out sideways (the wrists are 16–19 px outside the elbows, the forearms are half
+  hidden in their own foreshortening), the fingers point UP, the hands are close to the body and below the shoulders,
+  the shoulders are down. Why it is not "hands up": the hands stay below the shoulder line and are bowls turned to his
+  face. What it is, honestly: "he holds both cupped hands up before his chest" — which, with the bowed head, is prayer.
+* How act 2 uses it (`src/acts/act2/acting.js`, frames 660–717): while the hour stands in his right hand (675–686) the
+  hands are held 6 px lower and flatter — palms (643, 820) / (437, 822), 135° / 142°, right palm pinned; after the
+  hour is given both rise and tilt into `back_pray` (684–701). The way in: the right hand `hold` → `pray` (665.5) while
+  the short forearm swings up through the horizontal (`fb` never below 0.36: a pinned arm is re-solved with a forearm
+  of at least 0.34, see `MINF`); the left arm is authored by its WRIST path (straight up along his side, forearm down
+  to 0.16 as it points away from us), `rest` → `closed` (666–669, the hand seen end-on) → `pray` (670).
+
+Limits of the addition: the forearm folded up along the upper arm is a thick wedge with the hand on top (no elbow
+drawing: the limb is one print); `'pray'` has no fingers, like every hand here; the pose is a convention — from exactly
+behind a praying man's hands are hidden by his back (lab variant H: it reads as a man with short arms). The lab's
+comparison of the variants: `out/act2/ne/pose_variants.png`; notes: `out/act2/NOTES.md`, last section.
+
