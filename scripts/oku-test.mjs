@@ -219,6 +219,10 @@ await adim('ana ekran: yalnız arka plan görseli (söz görselin içinde) ve al
     ['Kenz', 'rgb(255, 255, 255)', 'none', 1],
     ['Güneş', 'rgb(255, 255, 255)', 'none', 1],
   ]);
+  // simgeler aria-hidden: bağlantıların erişilebilir adı gizli yazılardan gelir
+  for (const ad of ['Oku', 'Kenz', 'Güneş']) {
+    assert.equal(await page.getByRole('link', { name: ad, exact: true }).count(), 1, `"${ad}" bağlantısı`);
+  }
   assert.equal(await page.locator('.tabbar').evaluate((m) => getComputedStyle(m).backgroundColor), 'rgba(0, 0, 0, 0)');
   assert.equal(await temaRengi(), '#5AA2EC');
 });
@@ -231,6 +235,37 @@ await adim('telefon tarayıcısında (390 x 664) menü küçülmez', async () =>
   assert.ok(Math.abs(m.width - 300) < 0.5 && Math.abs(m.height - 64) < 0.5, `menü ${m.width}×${m.height}`);
   assert.ok(m.y + m.height <= 664 - 16, 'menü ekranın altına yapışık');
   await page.setViewportSize({ width: 390, height: 844 });
+});
+
+await adim('görselin içindeki söz hiçbir ekranda yanlardan kesilmez (9:16 sınırında ve 9:20\'den dar ekranda)', async () => {
+  const gorsel = () =>
+    page.locator('.bg__img').evaluate((i) => {
+      const r = i.getBoundingClientRect();
+      const oran = i.naturalWidth / i.naturalHeight;
+      // object-fit: cover ile görselin ekrana düşen eni ve yanlardan kırpılan pay
+      const en = Math.max(r.width, r.height * oran);
+      return { src: i.currentSrc, x: r.x, w: r.width, h: r.height, kirpma: (en - r.width) / 2 / en };
+    });
+  const bekle = (desen) => page.waitForFunction((d) => new RegExp(d).test(document.querySelector('.bg__img').currentSrc) && document.querySelector('.bg__img').complete, desen.source);
+  // 412 x 808 (oran 0,51): 9:16 yanlardan %4,7 kırpılırdı; 9:19,5 seçilir, fark alttaki denizden gider
+  await page.setViewportSize({ width: 412, height: 808 });
+  await bekle(/bg-9x19-/);
+  let g = await gorsel();
+  assert.ok(g.kirpma < 0.001, `412 x 808: yanlardan %${(g.kirpma * 100).toFixed(1)} kırpıldı`);
+  // 344 x 882 (Galaxy Z Fold dış ekranı, oran 0,39): görsel tam genişlikte üstte, altında deniz rengi
+  await page.setViewportSize({ width: 344, height: 882 });
+  await bekle(/bg-9x20-/);
+  g = await gorsel();
+  assert.ok(g.x === 0 && g.w === 344 && Math.abs(g.h - 344 / 0.45) < 2, `344 x 882: ${JSON.stringify(g)}`);
+  assert.ok(g.kirpma < 0.001, `344 x 882: yanlardan %${(g.kirpma * 100).toFixed(1)} kırpıldı`);
+  assert.equal(await page.locator('.bg').evaluate((b) => getComputedStyle(b).backgroundColor), 'rgb(4, 38, 86)');
+  // 9:16'nın yeni alt sınırında (0,536) yanlardan en çok %2,4
+  await page.setViewportSize({ width: 429, height: 800 });
+  await bekle(/bg-9x16-/);
+  g = await gorsel();
+  assert.ok(g.kirpma <= 0.025, `429 x 800: yanlardan %${(g.kirpma * 100).toFixed(1)} kırpıldı`);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await bekle(/bg-9x19-/);
 });
 
 console.log('Oku akışı');

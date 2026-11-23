@@ -24,9 +24,17 @@ hakikatler") görselin içinde yazılıdır, HTML'de yalnız ekran okuyucular i�
 | 21:9 | ultra geniş monitörler, uzun telefonlar (yatay) | 1440, 2576 |
 
 - Dosyalar `src/assets/bg/bg-<oran>-<genişlik>.avif|webp` (`9x19` = 9:19,5).
-- `index.html` `<picture>`: ekranın oranına en yakın görsel seçilir; sınırlar iki komşu oranın geometrik
-  ortasıdır (ör. 9:16 ile 10:16 arası 0,5929). `object-fit: cover` ile kalan fark en çok %3–4'tür
-  (ör. 844 × 390 yatay telefonda yanlardan %3,6).
+- `index.html` `<picture>`: ekranın oranına en yakın görsel seçilir, `object-fit: cover` kalan farkı kırpar.
+  Sınırlar çoğunlukla iki komşu oranın geometrik ortasıdır; söz ve güneş kesilmesin diye ikisi kaydırıldı:
+  - Dikey görsellerde (9:20–2:3) söz kenarlara %4,5 yakındır. Bu görseller yanlardan en çok %2,4 kırpılır:
+    9:16 0,5355'ten, 10:16 0,595'ten seçilir.
+  - Yatay görsellerde söz ortadadır (kenarlara %22–41). 4:3, 0,85'ten seçilir; kareye yakın ekranda yanlardan
+    en çok %18 kırpılır, söz ve güneş görünür kalır.
+  - Fark üst/alttaysa beşte biri üstteki gökten, gerisi alttaki denizden gider (`object-position: 50% 20%`).
+    En çok 9:19,5'te (%14, 0,51–0,54 arası ekranlar) ve 3:4'te (%12).
+  - 9:20'den de dar ekranlarda (0,4284 altı: Galaxy Z Fold dış ekranı, iPad'de Split View / Slide Over) görsel
+    tam genişlikte üste dayanır, altında deniz görselin alt kenarındaki #042656 ile sürer.
+  - 21:9'dan geniş ekranlarda (32:9 monitör) fark üst/alttan kırpılır.
 
 ## Alt menü
 
@@ -42,4 +50,5 @@ hakikatler") görselin içinde yazılıdır, HTML'de yalnız ekran okuyucular i�
 | Etiketler | Oku / Kenz / Güneş görünmez; ekran okuyucu için durur |
 | Odak, basma | yalnız klavye odağında 50 × 50 yumuşak köşeli halka; basınca 1 px iner ve .94 küçülür (hareket azaltılmışsa yalnız solar) |
 
-Tasarımla karşılaştırma: `npm run build && npm run test:visual`.
+Ekran görüntüsü: `npm run build && npm run test:visual` (ilk tasarım maketiyle yan yana koyar; maket eski
+sözü ve menüyü gösterir, fark beklenir).

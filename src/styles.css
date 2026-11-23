@@ -258,10 +258,27 @@ h2[tabindex='-1']:focus {
 .bg__img {
   display: block;
   object-fit: cover;
-  object-position: 50% 50%;
+  /* ekran görselden genişse fark üst/alttan kırpılır: beşte biri üstteki gökten, gerisi alttaki denizden
+     (güneş üst kenara yakın; deniz kırpılınca bir şey kaybolmaz). Yanlardan kırpma ortadan. */
+  object-position: 50% 20%;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
+}
+/* 9:20'den de dar ekranlar (en-boy < 0,4284: Galaxy Z Fold dış ekranı, iPad'de Split View / Slide Over): görsel
+   yanlardan %2,4'ten çok kırpılırsa içindeki söz kesilir. Görsel tam genişlikte üste dayanır; altta deniz, görselin
+   alt kenarındaki koyu lacivertle sürer (görselin son %12'si o renge yumuşakça geçer). */
+@media (max-aspect-ratio: 4284/10000) {
+  .bg {
+    background: #042656;
+  }
+  .bg__img {
+    bottom: auto;
+    height: auto;
+    aspect-ratio: 9 / 20;
+    -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, #000 88%, transparent);
+  }
 }
 
 /* ---------- görünümler ---------- */
@@ -340,6 +357,8 @@ h2[tabindex='-1']:focus {
   box-shadow:
     0 0 0 2px var(--lacivert),
     0 0 0 3.5px rgba(255, 255, 255, 0.9);
+  /* zorunlu renk (Yüksek Karşıtlık) kipinde gölge silinir; saydam çizgi orada sistem rengiyle görünür */
+  outline: 2px solid transparent;
   pointer-events: none;
 }
 .tab:not([aria-current]):focus-visible {
