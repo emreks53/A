@@ -1,12 +1,15 @@
-// endcard.js — END CARD, 23.80–29.60: the film's cream primer wall turns out to be the wall of a room;
-// a photograph of the Qur'an above the Risale-i Nur Külliyatı fades up out of it while the source of
-// the quote appears as four lines on the dark walnut:  Risale-i Nur / Sözler / Yirmi Birinci Söz / 291. Sayfa
+// endcard.js — END CARD, 23.80–29.60 on its own clock (the film shows it 0.5 s later: CARD_SHIFT in main.js):
+// a photograph of a quiet reading place — the sea-blue Qur'an on its stand at the window, four volumes of the
+// Risale-i Nur, one open — develops out of the film's cream primer plate while the source of the quote appears as
+// four lines on the dark desk:  Risale-i Nur / Sözler / Yirmi Birinci Söz / 291. Sayfa
+// The plate is the client's photograph (endcard/comp/bake_ai.py, meta.json -> kind 'photo'); the first card, the
+// Blender room (endcard/comp/bake.py), still works as the fallback: the module follows meta.json -> kind.
 //
 // Frame 714 (t = 23.80) is EXACTLY the film's last painted frame: the bare primer plate
 // (W.wall + E.finish). Everything after it is a pure function of absolute t (see TIMELINE):
 //   endcard/comp.js   the photographic comp in float (light states, push-in, vignette, dissolve, grain = dither)
 //   endcard/type.js   the lockup (EB Garamond; the film's gloss style)
-// Data: /home/user/work/endcard/comp/ (re-bake with ONE command: python3 /home/user/work/endcard/comp/bake.py)
+// Data: /home/user/work/endcard/comp/ (re-bake with ONE command: python3 /home/user/work/endcard/comp/bake_ai.py)
 // Notes for the sound team and the lead: /home/user/work/video/out/endcard/NOTES.md
 
 import { loadPlates, makeComp } from './endcard/comp.js';
@@ -38,6 +41,10 @@ const LOCKUP = 'G';
 // of the window (dark wood first, then the shadows on the wall, the books last), the hand-over to the true
 // photograph (wall falloff, the last of the books, the white Qur'an) runs from DIS.mix[0] to DIS.mix[1].
 const DIS = { ev: 4.6, evMin: 0.6, evEnd: 1.0, evPow: 1.3, on: 0.52, mix: [0.26, 1.0], sat: 0.65 };   // on / mix overlap (lead): the two stages no longer butt at u = 0.4 (a velocity kink on the dark wood)
+// The dissolve of the PHOTOGRAPH (meta.json -> kind 'photo', baked by endcard/comp/bake_ai.py): the dark, warm
+// picture develops out of the cream plate as a generalised mean with exponent q (comp.js); s = smoothstep(u)^gamma
+// puts the frame mean's 10 / 50 / 90 % at 24.00 / 24.26 / 24.51 — the times of the first card, so the sound fits.
+const DIS_PHOTO = { q: 0.3, gamma: 1.22 };
 
 const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const span = (t, [a, b]) => clamp((t - a) / (b - a));
@@ -59,14 +66,14 @@ export function pushScale(t) {
 }
 const smooth = (u) => u * u * (3 - 2 * u);
 
-/** All animated numbers of the card at time t (pure). */
-export function stateAt(t) {
+/** All animated numbers of the card at time t (pure). kind = meta.json -> kind ('photo' or the Blender card). */
+export function stateAt(t, kind) {
   t = onFrame(t);
   const te = t + 1e-7;               // frame times are n / 30: keep the frame on its side of a key
   const u = span(te, TIMELINE.dissolve);
   return {
     w: u < 1e-5 ? 0 : smoother(u),   // exactly 0 on frame 714: that frame is the film's primer plate, untouched
-    dis: {                           // the dissolve's own numbers (used while w < 1)
+    dis: kind === 'photo' ? { q: DIS_PHOTO.q, s: Math.pow(smooth(u), DIS_PHOTO.gamma) } : {   // the dissolve's own numbers (used while w < 1)
       g: Math.pow(2, DIS.evMin + (DIS.ev - DIS.evMin) * Math.pow(1 - clamp(u / DIS.evEnd), DIS.evPow)),
       m: smooth(span(u, DIS.mix)),
       c: smooth(clamp(u / DIS.on)),
@@ -87,6 +94,7 @@ export async function makeCard(E, opts = {}) {
   const res = E.res;
   const cw = Math.round(E.W * res), ch = Math.round(E.H * res);
   const P = await loadPlates(res);
+  const kind = P.meta.kind || 'card';
   const comp = makeComp(P, cw, ch, res);
   const block = P.meta.positions_1080x1920.suggested_text_block;
   const lock = bakeLockup(E, block, opts.variant ?? LOCKUP, opts);
@@ -114,7 +122,7 @@ export async function makeCard(E, opts = {}) {
 
   /** Paint frame t on ctx (the frame canvas). primer() must return the RGBA bytes of the primer plate. */
   function paint(ctx, t, primer) {
-    const st = stateAt(t);
+    const st = stateAt(t, kind);
     const out = comp.compose({
       scale: st.scale, pivX: PIVOT[0], pivY: PIVOT[1], q: st.q, a: st.a, w: st.w, dis: st.dis,
       primer: st.w < 1 ? primer() : null, text: textLayer(t), frame: st.frame,
@@ -123,7 +131,7 @@ export async function makeCard(E, opts = {}) {
     return st;
   }
 
-  return { paint, lock, comp, plates: P, block, cw, ch };
+  return { paint, lock, comp, plates: P, block, cw, ch, kind, primer: null };
 }
 
 export default {
@@ -139,14 +147,16 @@ export default {
   },
 
   draw(ctx, t, E, W) {
-    const st = stateAt(t);
-    if (st.w < 1) {
+    const card = this.card, st = stateAt(t, card.kind);
+    if (st.w < 1 && (st.w <= 0 || !card.primer)) {
       // the film's last painted frame: the bare primer plate (frame 714 is exactly this, nothing else)
       E.blit(ctx, W.wall, 0, 0);
       E.finish(ctx);
       if (st.w <= 0) return;
+      // the plate is static (W.wall x the engine's finishing layer): it is read back ONCE per card, whichever
+      // frame of the dissolve is drawn first (a readback on every frame makes Chromium warn in the console)
+      card.primer = ctx.getImageData(0, 0, card.cw, card.ch).data;
     }
-    const card = this.card;
-    card.paint(ctx, t, () => ctx.getImageData(0, 0, card.cw, card.ch).data);
+    card.paint(ctx, t, () => card.primer);
   },
 };

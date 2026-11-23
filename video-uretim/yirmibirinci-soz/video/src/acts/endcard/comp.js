@@ -10,9 +10,10 @@
 // Per frame, for every device pixel (so --scale 0.5 / 1 / --ss 2 are the same picture):
 //   1. light state      cur = base + q * dq + a * da                         (16-bit, plate resolution)
 //   2. camera           Catmull-Rom resample of cur, a pure scale about (pivX, pivY)
-//   3. vignette         -0.34 EV in the corners, r^2.2, in linear light, anchored to the FRAME
-//   4. dissolve         the room comes up as LIGHT on the primer plate (the film's last painted frame):
-//                       an exposure that comes down from a white-out, see `dissolve` in compose()
+//   3. vignette         -0.34 EV (card) / -0.26 EV (photo) in the corners, r^2.2, in linear light, anchored to the FRAME
+//   4. dissolve         card:  the room comes up as LIGHT on the primer plate (the film's last painted frame):
+//                              an exposure that comes down from a white-out, see `o.dis` in compose()
+//                       photo: the photograph develops out of the primer plate (generalised mean, `o.dis.q`)
 //   5. titles           the text layer (RGBA read back from its own canvas) composited "over"
 //   6. grain            luminance grain sigma 2.0 / 255 in the mid-tones (2.3 shadows, 1.0 highlights)
 //                       + chroma grain 0.5 / 255, about 1.5 px clumps, a NEW field on every frame
@@ -25,7 +26,17 @@ const FW = 1080, FH = 1920;
 const TS = 2048, TMASK = TS - 1;          // grain field: a 2048 x 2048 torus, larger than the frame
 // finish.py's law, half as strong again and slightly coarser (review round 1: "it must read as a photograph")
 const GRAIN = { shadow: 2.3, mid: 2.0, high: 1.0, chroma: 0.5, size: 1.5, seed: 2100 };
-const VIG_EV = 0.34, VIG_POW = 2.2;
+const VIG_POW = 2.2;
+// The look of the camera per kind of plate (meta.json -> kind). `grain` = sigma in 8-bit levels at luminance
+// 0 / 0.12 / 0.5 / 0.85 / 1; `vig` = lens falloff in the corners (EV).
+//   card   the Blender room (bake.py): a cream wall, grain as in review round 1
+//   photo  the client's photograph (bake_ai.py): a dark, warm picture — the grain is film-like (less in the deep
+//          blacks, which are a third of the frame and would only cost the encoder), the falloff a little lighter
+//          (the photograph has its own dark foreground)
+const LOOKS = {
+  card: { grain: [GRAIN.shadow, GRAIN.shadow, GRAIN.mid, GRAIN.high, GRAIN.high * 0.8], chroma: GRAIN.chroma, vig: 0.34 },
+  photo: { grain: [1.25, 2.0, 1.9, 1.05, 0.85], chroma: 0.5, vig: 0.26 },
+};
 const GRAIN_Q = 32;                       // int8 grain: 32 counts per sigma
 // The supersampled film (canvas 2x, lanczos to 1080) low-passes the grain a little; this restores
 // the strength measured on the delivered 1080 frame (see NOTES.md, "grain").
@@ -162,13 +173,14 @@ export function makeComp(P, cw, ch, res) {
   const P2L = new Float32Array(256);                    // the primer plate's 8-bit values -> linear 0..1
   for (let i = 0; i < 256; i++) P2L[i] = s2l(i / 255);
   const [WR, WG, WB] = P.wallRef;
+  const LOOK = LOOKS[P.meta.kind] || LOOKS.card;
   const VN = 4096, VIG = new Float32Array(VN + 1);
-  for (let i = 0; i <= VN; i++) VIG[i] = Math.pow(2, -VIG_EV * Math.pow(i / VN, VIG_POW / 2));   // index = r^2 * VN
+  for (let i = 0; i <= VN; i++) VIG[i] = Math.pow(2, -LOOK.vig * Math.pow(i / VN, VIG_POW / 2));   // index = r^2 * VN
   const grain = makeGrainField(GRAIN.seed);
   const gain = res > 1.5 ? GRAIN_GAIN_SS : 1;
   // luminance-dependent amplitude (8-bit levels per sigma), finish.py's curve
   const AMP0 = new Float32Array(256);
-  const xs = [0, 0.12, 0.5, 0.85, 1], ys = [GRAIN.shadow, GRAIN.shadow, GRAIN.mid, GRAIN.high, GRAIN.high * 0.8];
+  const xs = [0, 0.12, 0.5, 0.85, 1], ys = LOOK.grain;
   for (let i = 0; i < 256; i++) {
     const l = i / 255;
     let k = 1;
@@ -185,6 +197,20 @@ export function makeComp(P, cw, ch, res) {
     lxg[X] = Math.floor(X / res);
   }
   const T = new Float32Array((P.PW + 4) * 3), R = new Float32Array(cw * 3);
+  // the photo dissolve's tables (built on first use for its exponent q): primer byte -> lin^q, linear 16 bit -> lin^q,
+  // (lin^q) 16 bit -> sRGB 0..255
+  let QL = null;
+  const qLuts = (q) => {
+    if (QL && QL.q === q) return QL;
+    const PQ = new Float32Array(256), RQ = new Float32Array(65536), Q2S = new Float32Array(65536);
+    for (let i = 0; i < 256; i++) PQ[i] = Math.pow(s2l(i / 255), q) * 65535;
+    for (let i = 0; i < 65536; i++) {
+      RQ[i] = Math.pow(i / 65535, q) * 65535;
+      Q2S[i] = l2s(Math.pow(i / 65535, 1 / q)) * 255;
+    }
+    QL = { q, PQ, RQ, Q2S };
+    return QL;
+  };
   const out = new ImageData(cw, ch);
   const data = out.data;
   let camKey = '';
@@ -207,6 +233,7 @@ export function makeComp(P, cw, ch, res) {
    *                               out = (primer + m * (wall tone - primer)) * T
    *                             so the wall IS the primer plate until the light of the room has formed on it, and
    *                             at m = 1 the frame is the photograph exactly.
+   *                             PHOTO plates (meta.kind 'photo') pass { q, s } instead: see the photo branch below
    *   o.primer                  Uint8ClampedArray RGBA of the film's primer plate (needed while w < 1)
    *   o.text                    null or { data, x, y, w, h } — RGBA (not premultiplied) text layer in device px
    *   o.frame                   integer frame number (grain seed)
@@ -245,7 +272,8 @@ export function makeComp(P, cw, ch, res) {
     }
     const g0 = gxs[0], g1 = gxs[1], g2 = gxs[2], g3 = gxs[3];
     for (let i = 0; i < 256; i++) AMP[i] = (AMP0[i] * w * gain) / GRAIN_Q;
-    const CH = (GRAIN.chroma * w * gain) / GRAIN_Q;
+    const CH = (LOOK.chroma * w * gain) / GRAIN_Q;
+    const photoDis = dis && dis.q > 0 ? qLuts(dis.q) : null;
     const text = o.text, td = text ? text.data : null;
     const stride = PW * 3, last = (PW + 3) * 3;
 
@@ -286,7 +314,19 @@ export function makeComp(P, cw, ch, res) {
       }
       // ---- dissolve: the room comes up as light on the primer plate (see o.dis above)
       const row = Y * cw * 4;
-      if (dis) {
+      if (photoDis) {
+        // the PHOTOGRAPH develops out of the primer plate: a generalised mean of the two pictures, per channel in
+        // linear light,  out = ((1 - s) * primer^q + s * photo^q)^(1/q).  q = 1/2.2 would be the classical dissolve
+        // (even in code values), q = 1 a double exposure whose darks arrive last; with q = 0.3 the darks lead a
+        // little — the room's shapes come up first — and every pixel of every channel moves monotonically from
+        // the plate to the photograph (out^q is linear in s). No clipping, no second look in between.
+        const { PQ, RQ, Q2S } = photoDis, sA = dis.s, sB = 1 - sA;
+        for (let X = 0, m = 0, p = row; X < cw; X++, m += 3, p += 4) {
+          R[m] = Q2S[(sB * PQ[primer[p]] + sA * RQ[R[m] | 0]) | 0];
+          R[m + 1] = Q2S[(sB * PQ[primer[p + 1]] + sA * RQ[R[m + 1] | 0]) | 0];
+          R[m + 2] = Q2S[(sB * PQ[primer[p + 2]] + sA * RQ[R[m + 2] | 0]) | 0];
+        }
+      } else if (dis) {
         for (let X = 0, m = 0, p = row; X < cw; X++, m += 3, p += 4) {
           const r0 = (R[m] * I16) / WR, r1 = (R[m + 1] * I16) / WG, r2 = (R[m + 2] * I16) / WB;
           const y = (0.2126 * r0 + 0.7152 * r1 + 0.0722 * r2) * (1 - dsat);
