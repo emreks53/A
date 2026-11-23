@@ -5,7 +5,8 @@
 
 Prints PASS/FAIL lines (exit code 1 on any FAIL):
   library : every sound - stereo float32, deterministic, zero first/last sample, soft edges, no DC,
-            default peak well under the -14 dBFS cap, little energy above 10 kHz   (--bands prints the table)
+            default peak well under the peak cap, no hiss (energy above 6 kHz / 10 kHz), nothing struck
+            (10-90 % attack of at least 8 ms)                                     (--bands prints the table)
   files   : mix.wav / sfx_bus.wav / voice_bus.wav - 48 kHz stereo 16-bit, exact duration, up to date with the
             cue sheet, no clipped samples, zero at the file edges
   loudness: voice -16 LUFS, true peaks, SFX short-term ceiling while speaking, SFX peak cap
@@ -21,6 +22,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+import audit  # noqa: E402
 import meter  # noqa: E402
 import mix as mixer  # noqa: E402
 import sfx  # noqa: E402
@@ -69,7 +71,7 @@ CLICK_LIMIT = 0.006
 
 def library_checks(show_bands):
     print("--- library (%d sounds x 3 seeds) ---" % len(sfx.SOUNDS))
-    worst = dict(edge=-200.0, dc=-200.0, peak=-200.0, hf=-200.0, click=0.0)
+    worst = dict(edge=-200.0, dc=-200.0, peak=-200.0, hf=-200.0, hf6=-200.0, click=0.0, att=1e9, attname="")
     ok_shape = ok_det = ok_zero = True
     rows = []
     for name in sfx.SOUNDS:
@@ -87,6 +89,10 @@ def library_checks(show_bands):
             be = meter.band_energies_db(x)
             worst["hf"] = max(worst["hf"], be[-1])
             worst["click"] = max(worst["click"], click_score(x)[0])
+            m = audit.intrinsic(x)
+            worst["hf6"] = max(worst["hf6"], m["hf6"])
+            if m["att"] < worst["att"]:
+                worst["att"], worst["attname"] = m["att"], name
             if seed == 0:
                 rows.append((name, be))
     if show_bands:
@@ -99,8 +105,15 @@ def library_checks(show_bands):
     check(ok_zero, "first and last sample of every sound are exactly 0")
     check(worst["edge"] < -40.0, "edges are soft: first/last 0.5 ms <= %.0f dB re the sound's peak" % worst["edge"])
     check(worst["dc"] < -60.0, "no DC: worst mean offset %.0f dB re peak" % worst["dc"])
-    check(worst["peak"] < -15.0, "default peaks leave headroom under the -14 dBFS cap: loudest %.1f dBFS" % worst["peak"])
-    check(worst["hf"] < -18.0, "gentle top end: energy above 10 kHz <= %.1f dB re total in every sound" % worst["hf"])
+    cap = mixer.DEFAULTS["sfx_peak_max"]
+    check(worst["peak"] < cap - 1.0, "default peaks leave headroom under the %.0f dBFS cap: loudest %.1f dBFS" % (cap, worst["peak"]))
+    # v4 (was: above 10 kHz <= -18 dB): no hiss at all
+    check(worst["hf"] < -40.0 and worst["hf6"] < -25.0,
+          "no hiss: energy above 6 kHz <= %.1f dB, above 10 kHz <= %.1f dB re total in every sound (limits -25 / -40)"
+          % (worst["hf6"], worst["hf"]))
+    # v4, new: nothing is struck
+    check(worst["att"] >= 8.0, "nothing is struck: the fastest 10-90 %% attack in the palette is %.1f ms (%s; limit >= 8 ms)"
+          % (worst["att"], worst["attname"]))
     check(worst["click"] < CLICK_LIMIT, "no discontinuity inside any sound (max click score %.4f, limit %g)" % (worst["click"], CLICK_LIMIT))
 
 
@@ -195,21 +208,27 @@ def main():
               % (lev_speech, g[0] + 0.45, g[1] - 0.08, lev_pause, lev_pause - lev_speech))
 
     one = dict(sheet)
-    one["cues"] = [{"t": 10.0, "sound": "pop", "seed": 1}, {"t": 26.0, "sound": "whoosh", "seed": 1}]
+    # v4: the palette has no struck sound any more, so the test uses the glint (its anchor is the middle of a
+    # 19 ms attack: the waveform peak follows within 25 ms) and the air (was: pop +-5 ms, whoosh +-80 ms)
+    one["cues"] = [{"t": 10.0, "sound": "glint", "seed": 1}, {"t": 26.0, "sound": "air", "seed": 1}]
     o = mixer.build(one, None, base)["sfx_raw"]
-    t_pop = np.abs(o[:15 * SR]).max(axis=1).argmax() / SR
+    t_gl = np.abs(o[:15 * SR]).max(axis=1).argmax() / SR
     env = np.convolve((o[20 * SR:] ** 2).sum(axis=1), np.ones(4800) / 4800.0, "same")
     t_wh = 20.0 + env.argmax() / SR
-    check(abs(t_pop - 10.0) <= 0.005 and abs(t_wh - 26.0) <= 0.08,
-          "anchors land on t: pop cued at 10.000 s peaks at %.4f s; whoosh cued at 26.00 s is loudest at %.2f s" % (t_pop, t_wh))
+    check(0.0 <= t_gl - 10.0 <= 0.025 and abs(t_wh - 26.0) <= 0.08,
+          "anchors land on t: glint cued at 10.000 s peaks at %.4f s; air cued at 26.00 s is loudest at %.2f s" % (t_gl, t_wh))
 
     print("--- clicks ---")
     g = np.random.default_rng(0)
     cuts = []
-    for name in ("rise", "whoosh", "dab", "room_tone"):   # deliberate hard cuts at random points = clicks
+    for name in ("rise", "air", "glow", "room_tone"):   # deliberate hard cuts = clicks (v4 names; was rise / whoosh / dab / room_tone)
         w = np.asarray(sfx.render(name), dtype=np.float64)
         for _ in range(6):
-            cuts.append(click_score(np.concatenate([w[:int(len(w) * g.uniform(0.15, 0.7))], np.zeros((480, 2))]))[0])
+            # cut at the largest sample within 5 ms after a random point (v4: a cut that happens to fall on a
+            # zero crossing of a pure tone is no click at all, so the self-test cuts where the waveform is high)
+            i = int(len(w) * g.uniform(0.15, 0.7))
+            i += int(np.abs(w[i:i + 240]).max(axis=1).argmax()) + 1
+            cuts.append(click_score(np.concatenate([w[:i], np.zeros((480, 2))]))[0])
     check(min(cuts) > CLICK_LIMIT and np.median(cuts) > 5 * CLICK_LIMIT,
           "detector self-test: 24 deliberate hard cuts score %.3f-%.3f (median %.3f), all above the limit %g"
           % (min(cuts), max(cuts), float(np.median(cuts)), CLICK_LIMIT))

@@ -256,7 +256,11 @@ export function makeLight(E, W, U) {
     return f;
   };
   const manX = scr(L.man.x ?? 540, 0)[0];
-  const inMan = (x, y) => clamp(1 + Math.min(x - (manX - 82), manX + 118 - x, y - 590, 1216 - y) / 50);
+  // (new ending: he stands in prayer, both open hands raised a little outside the shoulders — the bay is widened at
+  //  the height of his arms so that the hands are taken with him, not eaten one pass early)
+  const handsY = [scr(0, 716)[1], scr(0, 884)[1]];
+  const inMan = (x, y) => Math.max(clamp(1 + Math.min(x - (manX - 82), manX + 118 - x, y - 590, 1216 - y) / 50),
+    clamp(1 + Math.min(x - (manX - 204), manX + 204 - x, y - handsY[0], handsY[1] - y) / 40));
   const REACH = [0.26, 0.53, 0.78, 0.945];                                  // share of the frame inside the front of passes 1..4
   // pass k closes (solid plate) everything up to pass-time k - 1 - lag; the LAST coat closes further than its own
   // inner edge (to 3.3), so that the plate has only a thin porous ring and the corner left to close

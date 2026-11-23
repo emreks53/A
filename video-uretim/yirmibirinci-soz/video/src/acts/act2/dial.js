@@ -8,11 +8,12 @@
 //   14.23–15.37     it hovers, then floats down a gentle S-curve to his palm
 //   15.37           it lands and is MINTED: a beaded rim with a milled edge is stamped round it (r 30 -> 44 -> 42)
 //   15.40–15.53     a matte glint: five white-gold dabs, stepped on and off
-//   … 22.00         held; shown in the open hand (22.00–22.17), the long hand ticks one notch (22.17)
-//   22.43–22.87     the cast: a low arc, face to us the whole way; 22.87–22.97 it sinks into the niche's glow
+//   … 22.00         held at his side; 22.00–22.50 it comes up with his opening right hand and stands in the open palm
+//   22.57–22.87     GIVEN (client round: nothing is thrown): it lifts 7 px off the palm and is dabbed out in four
+//                   passes (give.js draws it then, and the light it turns into)
 //   16.83 / 16.90   hand and beads take the world's recede: an over-dab through the sponge (pores keep the original)
 //
-// The hour is ONE object from the ring to the niche: the same gold face with the same two hands.
+// The hour is ONE object from the ring to his praying palm: the same gold face with the same two hands.
 
 export function makeDial(E, W, U, acting) {
   const L = W.layout, P = L.pal, { shape, clamp, lerp, smoothstep: ss } = E;
@@ -222,24 +223,15 @@ export function makeDial(E, W, U, acting) {
 
   // ------------------------------------------------------------------ the hour's journey
   const G = T.gold;
-  const F_POP = L.fr(G.pop), F_SET = L.fr(G.settled), F_LAND = L.fr(G.land), F_REL = L.fr(T.coin.release), F_NICHE = L.fr(T.coin.niche);
+  const F_POP = L.fr(G.pop), F_SET = L.fr(G.settled), F_LAND = L.fr(G.land), F_GIVE = L.fr(T.coin.give[0]), F_GONE = L.fr(T.coin.give[T.coin.give.length - 1]);   // … 677, 686
   // float: hover, then a gentle S-curve to where the palm will be
   const landAt = (() => { const h = acting.held(ft(G.land)); return [h.x, h.y]; })();
   const floatPath = E.curve([POPPED, [656, 598], [670, 660], [705, 722], [landAt[0] + 1, landAt[1] - 26], landAt], { tension: 0.5 });
   const F_GO = F_SET + 7;                                                   // it begins to float down at 14.47
   const BIG = 34 / R30, F_BIG0 = 428, F_BIG1 = 455;                         // the hovering hour's size, and the camera's follow move
-  // the cast: quadratic bezier, sine ease-out by arc length (storyboard's speed table: placed, not pitched)
-  const FL = C.flight, relAt = (() => { const h = acting.held(ft(T.coin.release)); return [h.x, h.y]; })();   // from his finger tips
-  const bez = (u) => { const v = 1 - u; return [v * v * relAt[0] + 2 * v * u * FL.bezier_control[0] + u * u * FL.target_niche_centre[0], v * v * relAt[1] + 2 * v * u * FL.bezier_control[1] + u * u * FL.target_niche_centre[1]]; };
-  const LUT = (() => { const pts = Array.from({ length: 241 }, (_, i) => bez(i / 240)); const d = [0]; for (let i = 1; i < pts.length; i++) d.push(d[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); return { pts, d, len: d[d.length - 1] }; })();
-  const atArc = (s) => { const want = clamp(s) * LUT.len; let lo = 0, hi = LUT.d.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (LUT.d[m] <= want) lo = m; else hi = m; } const u = (want - LUT.d[lo]) / ((LUT.d[hi] - LUT.d[lo]) || 1); return [lerp(LUT.pts[lo][0], LUT.pts[hi][0], u), lerp(LUT.pts[lo][1], LUT.pts[hi][1], u)]; };
-  const SPEEDS = [44, 44, 42, 40, 38, 35, 31, 27, 23, 18, 13, 8, 3];        // px per frame
-  const DIST = SPEEDS.reduce((acc, v) => { acc.push(acc[acc.length - 1] + v); return acc; }, [0]);
-  const flightKeys = DIST.map((d, i) => [i, d / DIST[DIST.length - 1]]);
-
   /**
    * Where and how the hour is at time t: null (not there) or
-   * { slot: 'sky' | 'hands' | 'front', x, y, scale, rot, rim, sx, sy, tick, faceP, hands }.
+   * { slot: 'sky' | 'hands', x, y, scale, rot, rim, sx, sy, faceP, hands, given }.
    */
   function coinAt(t) {
     const f = t * fps;
@@ -269,21 +261,15 @@ export function makeDial(E, W, U, acting) {
       const big = lerp(BIG, 1, E.ease.sine.inOut(clamp((f - F_BIG0) / (F_BIG1 - F_BIG0))));
       return { slot: 'hands', x, y: y - bob, scale: big, rot: 0.05 * Math.sin(n * 0.21) * (1 - u) };
     }
-    if (f < F_REL - 1e-6) {
-      // in his hand: minted on landing (the rim is stamped round it), then held, then shown in his finger tips —
-      // always BEHIND the hand (slot `hands`): thumb and fingers lie in front of its rim, no layer ever flips
+    if (f < F_GONE - 1e-6) {
+      // in his hand: minted on landing (the rim is stamped round it), then held, then standing in the open palm of
+      // the dua — always BEHIND the hand (slot `hands`): thumb and fingers lie in front of its rim, no layer ever flips.
+      // From 22.57 it is being GIVEN: `given` = the number of dab-out passes that have landed (1 … 3; the fourth, on
+      // 22.87, takes the last of it) — give.js draws it then, through its own sponge mask.
       const n = f - F_LAND, h = acting.held(t);
       const rim = kf(n, [[0, 44 / 42], [1, 1.03], [2, 1]]);
       const sy = kf(n, [[0, 0.94], [1, 0.975], [2, 1]]);
-      return { slot: 'hands', x: h.x, y: h.y + (1 - sy) * R42, scale: 1, k: h.k, rim, sy, sx: 2 - sy, tick: on(t, T.coin.tick) ? 6 : 0 };
-    }
-    if (f < F_NICHE + 3 - 1e-6) {
-      // the cast: face to us, a small in-plane roll out and back; then it sinks into the glow (3 frames). On the release
-      // frame it is still between his fingers (behind them); one frame later it has cleared the hand
-      const n = f - F_REL, s = kf(n, flightKeys);
-      const [x, y] = atArc(s);
-      const sink = f - F_NICHE;
-      return { slot: n < 0.5 ? 'hands' : 'front', x, y, k: acting.K2, scale: sink > 0 ? kf(sink, [[0, 1], [1, 0.74], [2, 0.42], [3, 0]]) : 1, rim: 1, tick: 6, rot: 11 * DEG * Math.sin(Math.PI * clamp(n / 13)) };
+      return { slot: 'hands', x: h.x, y: h.y + (1 - sy) * R42, scale: 1, k: h.k, rim, sy, sx: 2 - sy, given: f < F_GIVE - 1e-6 ? 0 : L.count(t, T.coin.give) };
     }
     return null;
   }
@@ -316,7 +302,7 @@ export function makeDial(E, W, U, acting) {
   // ------------------------------------------------------------------ hands / front slots: the hour with him
   function drawHeld(ctx, t, slot) {
     const coin = coinAt(t);
-    if (!coin || coin.slot !== slot) return;
+    if (!coin || coin.slot !== slot || coin.given) return;                // while it is given, give.js draws what is left of it
     drawCoin(ctx, coin.x, coin.y, coin);
   }
   /**

@@ -16,8 +16,10 @@ export const TL = {
   chest: { body: [18.27, 18.40, 18.53], lid: 18.77, lidRest: 18.87, seam: [19.50, 19.57] },   // lid printed f563, at rest f566 (gloss 18.92)
   morph: { squash: 19.87, m1: [19.97, 20.27], m2: [20.00, 20.27], m3: [20.13, 20.30], m3rest: 20.33, fin1: 20.33, fin2: 20.37, rest: 20.43 },
   rug: { spill: 21.27, roll: [21.33, 21.40], unroll: [21.43, 21.93], glow: [21.73, 21.80], flick: [21.90, 21.97] },
-  coin: { show: [22.00, 22.17], tick: 22.17, swing: 22.20, back: 22.30, release: 22.43, follow: 22.57, niche: 22.87, sunk: 22.97 },
-  links: { bloom: 22.90, bloomEnd: 23.10, door: 23.07, far: 23.23 },     // the three answers, 5 frames apart (687 / 692 / 697)
+  // client round («seccadeye at» is figurative): he raises both hands in prayer, the hour on his open right palm, and
+  // GIVES it — it dabs out into light in four passes; the light rises to the far light. Nothing is thrown, nothing lands.
+  coin: { raise: [22.00, 22.50], give: [22.57, 22.67, 22.77, 22.87], reach: 23.23 },   // frames 660–675 · 677 / 680 / 683 / 686 · the stream's head is in the far light on 697
+  links: { bloom: 22.90, door: 23.07, far: 23.23 },                      // the three answers, 5 frames apart (687 / 692 / 697); `bloom` = the niche's glow swells (rug.js)
   cover: [23.90, 24.00, 24.10, 24.20, 24.30],   // the covered share of each pass: light.js (COVER_P)
 };
 

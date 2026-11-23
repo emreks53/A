@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
-"""sfx.py - procedural, sample-free sound-effect palette for the sponge-painting short.
+"""sfx.py - procedural, sample-free sound-effect palette for the sponge-painting short.  PALETTE v4.
 
-Everything is synthesised (numpy/scipy): layered shaped noise, modal resonators, soft envelopes.
-No samples, no music, nothing pitched on a scale.  All sounds are soft, matte, organic.
+v4 (after the client's review: "no coarse or unpleasant effects, and a little quieter") is deliberately small
+and has two families only:
+    AIR    air (camera glides, slow moves) . rise (the breath into the cover) . room_tone (end card)
+    LIGHT  glow (light blooming, one tone colour for the whole film) . glint (gold catching the light)
+    spare  touch (a felt-soft tap; measured with the rest, not used by the cue sheet)
+Gone: dab, dab_flurry, whoosh, specks, puff, paper, shimmer, coin_ting, coin_land, coin_drop_in, wood_knock,
+cloth_unroll, pop, pop_flurry, book_slide (noise bursts with hard attacks, crackle, knocks, hiss, runs of
+ticks).  The v3 palette is kept in v3_backup/sfx.py.
+
+Everything is synthesised (numpy/scipy).  No samples, no music: the light has ONE fixed colour (four soft
+partials between 1.5 and 4.1 kHz, fifths and octaves only), so no two cues can form a tune, and its body is
+un-pitched warm air; nothing is struck (the fastest attack of the palette takes 11 ms from 10 to 90 %).
 
 Every public sound function
   * returns a `Sound`: a float32 numpy array shaped (n, 2) at 48 kHz with attributes
@@ -13,7 +23,7 @@ Every public sound function
   * is delivered at its calibrated DEFAULT MIX LEVEL (see LEVELS, K-weighted max 100 ms loudness), so a
     cue `gain_db` of 0 means "recommended quiet level under a -16 LUFS narrator",
   * starts and ends on exact zero (raised-cosine edges), has no DC (30 Hz high-pass) and a gentle
-    roll-off above ~10 kHz (zero-phase, -6 dB at 11.5 kHz, 24 dB/oct).
+    roll-off above ~8 kHz (zero-phase, -6 dB at 9 kHz, 24 dB/oct).
 
 Use `render(name, **params)` or call the functions directly.  `python3 sfx.py` renders the demo set.
 """
@@ -32,11 +42,10 @@ SQ2 = np.sqrt(2.0)
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Default level of every sound: maximum K-weighted loudness over any 100 ms window ("LK100", LUFS scale).
-# Narration sits at -16 LUFS, so these are 16..22 LU below it before the mixer's extra 5 dB of ducking.
+# Narration sits at -16 LUFS, so these are 18.5..24 LU below it before the mixer's extra ducking.
+# v4: about 3 dB under the v3 defaults.
 LEVELS = {
-    "dab": -32.0, "whoosh": -35.0, "specks": -37.0, "puff": -34.5, "paper": -35.5, "shimmer": -37.0,
-    "coin_ting": -35.0, "coin_land": -33.5, "coin_drop_in": -32.5, "wood_knock": -32.5,
-    "cloth_unroll": -35.0, "rise": -32.0, "pop": -35.5, "book_slide": -35.5,
+    "air": -38.0, "glow": -39.0, "glint": -39.0, "rise": -34.5, "touch": -40.0,
     "room_tone": -58.0,  # steady-state loudness (1 s window): barely perceptible
 }
 
@@ -239,7 +248,7 @@ def _grain(fc, q, length=0.006):
 
 
 _SOS_HP = signal.butter(2, 30.0, "highpass", fs=SR, output="sos")
-_SOS_LP = signal.butter(2, 11500.0, "lowpass", fs=SR, output="sos")
+_SOS_LP = signal.butter(2, 9000.0, "lowpass", fs=SR, output="sos")
 
 
 def _finish(x, name, anchor, level=None, fin=0.002, fout=0.010, win=0.1):
@@ -256,103 +265,20 @@ def _finish(x, name, anchor, level=None, fin=0.002, fout=0.010, win=0.1):
 
 
 # ----------------------------------------------------------------------------------------------------------
-# the palette
+# the palette (v4): two families only - AIR (air, rise, room_tone) and LIGHT (glow, glint).
+# Nothing is struck: the fastest attack in the palette is the glint's (10-90 % in about 11 ms).
 # ----------------------------------------------------------------------------------------------------------
-def dab(seed=0, duration=None, brightness=0.5, wet=0.5, weight=0.5, pan=0.0):
-    """One soft sponge dab on a wall: a muted, damp 'pf-thup' (40-90 ms).
-    Layers: 'pf' = air squeezed from the pores (0.9-2.5 kHz, first, very short), 'thup' = damp body
-    (300-1100 Hz, slightly later, longer), a soft wall thump (95-130 Hz, falling), and 0-3 faint tacky
-    peel ticks on the release.  The seed varies length, band centres, layer balance, thump pitch."""
-    r = _rng(seed, "dab")
-    dur = float(np.clip(duration if duration else r.uniform(0.048, 0.082), 0.040, 0.090))
-    b = _clip01(brightness)
-    pre = 0.002
-    n = _n(pre + dur + 0.012)
-    v = r.uniform
-    body_lo, body_hi = 300.0 * 2 ** v(-0.2, 0.2), 1050.0 * 2 ** v(-0.25, 0.25)
-    body = _burst(r, _ad(n, v(0.007, 0.011), 0.26 * dur, pre + 0.002), body_lo, body_hi, 2, 3, corr=0.8)
-    pf_lo, pf_hi = 900.0 * 2 ** v(-0.2, 0.2), (1900.0 + 1200.0 * b) * 2 ** v(-0.15, 0.15)
-    pf = _burst(r, _ad(n, v(0.0035, 0.006), 0.10 * dur, pre), pf_lo, pf_hi, 2, 3, corr=0.7)
-    f0 = v(95.0, 130.0)
-    thump = _chirp(n, lambda t: f0 * (1.0 + 0.7 * np.exp(-t / 0.010)), pre + 0.001) * _ad(n, 0.006, 0.30 * dur, pre + 0.001)
-    x = body + pf * (0.40 + 0.5 * b) * v(0.8, 1.25)
-    x += _pan(thump * (0.35 + 0.7 * _clip01(weight)) * v(0.8, 1.2), 0.0)
-    for _ in range(int(min(r.poisson(1.6 * _clip01(wet)), 3))):
-        pos, ln, fc = pre + dur * v(0.35, 0.8), v(0.002, 0.004), v(1400.0, 3000.0)
-        tick = _noise(r, n, fc * 0.7, fc * 1.4, 2, 2) * _hann_bump(n, pos, ln) * v(0.22, 0.42)
-        x += _pan(tick, v(-0.4, 0.4))
-    x = _bal(x, pan)
-    return _finish(x, "dab", pre + 0.006, level=LEVELS["dab"] + v(-1.0, 1.0), fout=0.012)
-
-
-def _schedule(r, n, duration, shape="decel", jitter=0.18, min_gap=0.055):
-    """Irregular hit times in [0, duration]: 'decel' (quick then slowing), 'accel', 'arc' (slow-fast-slow),
-    'even', or a number = exponent of the time warp.  Jittered, never closer than min_gap."""
-    if n <= 1:
-        return np.zeros(1)
-    u = np.linspace(0.0, 1.0, n)
-    if shape == "arc":
-        w = u + 0.6 * np.sin(2.0 * np.pi * u) / (2.0 * np.pi)
-    else:
-        g = {"decel": 1.7, "accel": 1.0 / 1.7, "even": 1.0}.get(shape, shape)
-        w = u ** float(g)
-    t = duration * w
-    gaps = np.diff(t)
-    for i in range(1, n - 1):
-        t[i] += r.uniform(-jitter, jitter) * min(gaps[i - 1], gaps[i])
-    for i in range(1, n):
-        t[i] = max(t[i], t[i - 1] + min_gap)
-    return t
-
-
-def _flurry(name, one, n, duration, seed, shape, fall_db, pan, spread, times, jitter, level_jit, kw):
-    r = _rng(seed, name)
-    if times is not None:
-        t = np.asarray(sorted(float(v) for v in times))
-        t = t - t[0]
-        n = len(t)
-    else:
-        n = max(int(n), 1)
-        t = _schedule(r, n, float(duration), shape, jitter)
-    hits = []
-    last_pan = None
-    for i in range(n):
-        p = pan + spread * r.uniform(-1.0, 1.0)
-        if last_pan is not None and abs(p - last_pan) < 0.15 * spread:
-            p = pan + spread * r.uniform(-1.0, 1.0)
-        last_pan = p
-        g = -fall_db * (i / max(n - 1, 1)) ** 0.9 + (r.uniform(-level_jit, level_jit) if i else 0.0)
-        s = one(seed=int(r.integers(1, 2 ** 31 - 1)), pan=float(np.clip(p, -1, 1)), **kw(r, i, n))
-        hits.append((t[i], 10.0 ** (g / 20.0), s))
-    a0 = max(s.anchor for _, _, s in hits)
-    place = [(int(round((tt + a0 - s.anchor) * SR)), g, s) for tt, g, s in hits]
-    out = np.zeros((max(i0 + len(s) for i0, _, s in place), 2))
-    for i0, g, s in place:
-        out[i0:i0 + len(s)] += np.asarray(s, dtype=np.float64) * g
-    return Sound(out, a0, name)
-
-
-def dab_flurry(n=6, duration=0.8, seed=0, shape="decel", fall_db=7.0, pan=0.0, spread=0.5,
-               brightness=0.5, wet=0.5, times=None, jitter=0.18):
-    """A natural, irregular run of n dabs ('dabbed in').  `duration` = time from the first to the last
-    hit; shape 'decel' | 'accel' | 'arc' | 'even'; levels fall by `fall_db` over the run (+-1.2 dB random),
-    random pans within +-spread.  Pass `times=[0, .1, .23, ...]` (seconds after the first hit) to lock the
-    dabs to stepped animation frames.  Anchor = first dab."""
-    def kw(r, i, m):
-        return dict(brightness=_clip01(brightness + r.uniform(-0.2, 0.2) - 0.15 * i / max(m - 1, 1)),
-                    wet=wet, weight=_clip01(0.6 - 0.3 * i / max(m - 1, 1) + r.uniform(-0.15, 0.15)))
-    return _flurry("dab_flurry", dab, n, duration, seed, shape, fall_db, pan, spread, times, jitter, 1.2, kw=kw)
-
-
-def whoosh(duration=0.7, direction="lr", seed=0, brightness=0.5, pan=0.0, sweep=0.55, peak=0.48):
-    """Airy, gentle camera-move swish: noise through a band (about 1.5 octaves wide) whose centre glides
-    (lr/rl/none: up and back, 'up': rising, 'down': falling), a smooth bell envelope with slight air
-    turbulence and a stereo pan sweep.  Anchor = loudest point (peak * duration) = fastest point of the move."""
-    r = _rng(seed, "whoosh")
-    T = float(np.clip(duration, 0.25, 4.0))
+def air(duration=0.8, direction="lr", seed=0, warmth=0.5, pan=0.0, sweep=0.45, peak=0.5):
+    """Soft air for a camera glide or a slow move: low-passed noise in a band about 1.7 octaves wide whose
+    centre glides 300 -> 820 Hz and back (lr / rl / none), up ('up') or down ('down'); a 4th-order low-pass
+    at 2.4 kHz removes every trace of hiss, a high-pass at 170 Hz every rumble.  Slow bell envelope (attack about a quarter of the duration),
+    a breath of slow turbulence, a gentle pan sweep.  `warmth` 0..1 = darker.
+    Anchor = the loudest point (peak * duration) = the fastest point of the move."""
+    r = _rng(seed, "air")
+    T = float(np.clip(duration, 0.4, 4.0))
     n = _n(T)
-    b = _clip01(brightness)
-    f_lo, f_hi = 380.0 * 2 ** (0.6 * (b - 0.5)), 1500.0 * 2 ** (1.0 * (b - 0.5))
+    w = _clip01(warmth)
+    f_lo, f_hi = 300.0 * 2 ** (0.6 * (0.5 - w)), 820.0 * 2 ** (1.0 * (0.5 - w))
 
     def glide(tt):
         u = np.clip(tt / T, 0.0, 1.0)
@@ -361,333 +287,154 @@ def whoosh(duration=0.7, direction="lr", seed=0, brightness=0.5, pan=0.0, sweep=
         elif direction == "down":
             c = 1.0 - _ss(u)
         else:
-            c = _bell_u(u, max(peak - 0.06, 0.1), 1.0, 1.0)
+            c = _bell_u(u, peak, 1.0, 1.0)
         return f_lo * (f_hi / f_lo) ** c
 
     def mask(tt, ff):
         ff = np.maximum(ff, 20.0)
-        air = 0.05 * (0.4 + b) * np.exp(-0.5 * (np.log2(ff / 4200.0) / 0.7) ** 2) * _bell_u(tt / T, peak)
-        return np.exp(-0.5 * (np.log2(ff / glide(tt)) / 0.75) ** 2) + air
+        band = np.exp(-0.5 * (np.log2(ff / glide(tt)) / 0.85) ** 2)
+        return band / np.sqrt(1.0 + (170.0 / ff) ** 4) / np.sqrt(1.0 + (ff / 2400.0) ** 8)
 
-    x = _tv_noise(r, n, mask, nfft=1024, corr=0.55)
-    env = _bell(n, peak, 1.6, 1.3) * (1.0 + 0.10 * _noise(r, n, 4.0, 14.0, 1, 2))
+    x = _tv_noise(r, n, mask, nfft=2048, corr=0.5)
+    env = _bell(n, peak, 1.8, 1.5) * (1.0 + 0.05 * np.clip(_noise(r, n, 1.5, 6.0, 1, 2), -2.5, 2.5))
     u = np.arange(n) / n
     traj = {"lr": 2.0 * _ss(u) - 1.0, "rl": 1.0 - 2.0 * _ss(u)}.get(direction, np.zeros(n))
     x = _bal(x, pan + sweep * traj) * env[:, None]
-    return _finish(x, "whoosh", peak * T, fin=0.01, fout=0.02)
+    return _finish(x, "air", peak * T, fin=0.03, fout=0.05)
 
 
-def specks(duration=1.0, seed=0, density=1.0, brightness=0.5, pan=0.0, spread=0.7, peak=0.22):
-    """Fine crumbling / dispersing sprinkle: sparse sand-like grains (very short damped ticks, 2-6.5 kHz,
-    a few larger 'crumbs' at 0.9-1.8 kHz), log-normal levels, random pans, density rising quickly then
-    thinning out, over a barely audible hiss.  Anchor = start (begin of the dissolve)."""
-    r = _rng(seed, "specks")
-    T = float(np.clip(duration, 0.2, 6.0))
-    nd = _n(T)
-    n = nd + _n(0.02)
-    b = _clip01(brightness)
-    s = _bell(nd, peak, 0.7, 1.8)
-    idx = np.nonzero(r.random(nd) < 130.0 * density * s / SR)[0]
-    kernels = []
-    for k in range(12):
-        if k < 2:
-            kernels.append((_grain(r.uniform(1000.0, 1800.0), r.uniform(3.0, 5.0)), 0.8))
-        else:
-            fc = 2000.0 * (6500.0 / 2000.0) ** r.random() * 2 ** (0.6 * (b - 0.5))
-            kernels.append((_grain(fc, r.uniform(1.5, 4.0)), (fc / 3000.0) ** 0.5))
-    x = np.zeros((n, 2))
-    for i in idx:
-        k, kg = kernels[int(r.integers(2, 12)) if r.random() > 0.07 else int(r.integers(0, 2))]
-        a = kg * min(np.exp(r.normal(0.0, 0.5)), 2.2) * (0.45 + 0.55 * s[i])
-        j = min(len(k), n - i)
-        x[i:i + j] += _pan(k[:j] * a, pan + spread * r.uniform(-1.0, 1.0))
-    x = signal.sosfiltfilt(signal.butter(2, 900.0, "highpass", fs=SR, output="sos"), x, axis=0)
-    bed = _noise(r, n, 2200.0, 6500.0, 2, 2, tilt=-3.0, ch=2, corr=0.3)
-    x += bed * (np.concatenate([s, np.zeros(n - nd)]) ** 1.2)[:, None] * 0.05
-    return _finish(_bal(x, pan * 0.5), "specks", 0.0, fin=0.004, fout=0.03)
+# The light.  ONE colour for the whole film: four high partials in fifths and octaves (1536 / 2048 / 3072 /
+# 4096 Hz = 3, 4, 6, 8 x GLOW_ROOT).  They are too high and too soft to be heard as a note, they never form an
+# interval other than a fifth or an octave (nothing that could be called a tune, nothing sour), and no two of
+# them share a critical band (no roughness).  The glint's fundamental (2048 Hz) is one of them.
+GLOW_ROOT = 512.0
+_SHIMMER = ((3.0, 0.0), (4.0, -1.5), (6.0, -5.0), (8.0, -9.5))  # ratio to GLOW_ROOT, dB at brightness 0.5
 
 
-def puff(seed=0, duration=0.22, brightness=0.5, pan=0.0):
-    """Tiny soft air puff / 'poof' (something vanishing): a breath of mid noise with a soft 12 ms attack,
-    a darker body that lingers a little, a whisper of air on top and a faint low plosive.
-    Anchor = attack peak."""
-    r = _rng(seed, "puff")
-    dur = float(np.clip(duration, 0.12, 0.6))
-    b = _clip01(brightness)
-    k = dur / 0.22
-    pre = 0.002
-    n = _n(pre + dur)
-    v = r.uniform
-    x = _burst(r, _ad(n, v(0.009, 0.012), 0.030 * k, pre), 600.0, 2000.0 * 2 ** (0.8 * (b - 0.5)), 2, 2, corr=0.6)
-    x += 0.9 * _burst(r, _ad(n, 0.016, 0.052 * k, pre + 0.003), 220.0, 800.0, 2, 2, corr=0.75)
-    x += 0.22 * _burst(r, _ad(n, 0.022, 0.065 * k, pre + 0.004), 2200.0, 5200.0, 2, 2, tilt=-3.0, corr=0.4)
-    f0 = v(135.0, 165.0)
-    x += _pan(0.45 * _chirp(n, lambda t: f0 * (0.62 + 0.38 * np.exp(-t / 0.012)), pre) * _ad(n, 0.006, 0.018, pre), 0.0)
-    return _finish(_bal(x, pan), "puff", pre + 0.012, fout=0.03)
-
-
-def paper(seed=0, duration=0.35, crisp=0.5, pan=0.0, flutters=None):
-    """Brief soft paper rustle / flutter: a run of irregular little crackle bursts (1.1-5 kHz, tilted
-    dark so it stays soft), a papery low-mid body, and sparse fine crinkle ticks.
-    Anchor = first (strongest) burst, 35 ms in."""
-    r = _rng(seed, "paper")
-    dur = float(np.clip(duration, 0.15, 1.5))
-    c = _clip01(crisp)
-    n = _n(dur)
-    v = r.uniform
-    hi = _noise(r, n, 1100.0, 5200.0 * 2 ** (0.7 * (c - 0.5)), 1, 2, tilt=-1.5, ch=2, corr=0.5)
-    lo = _noise(r, n, 350.0, 1100.0, 2, 2, ch=2, corr=0.8)
-    K = int(flutters) if flutters else max(3, int(round(dur * 14.0 + v(-1.0, 1.0))))
-    first = 0.035
-    centres = [first]
-    span = max(dur * 0.86 - first, 0.02)
-    for i in range(1, K):
-        centres.append(first + span * (i / max(K - 1, 1)) ** 1.15 * v(0.88, 1.12))
-    env = np.zeros(n)
-    for i, cc in enumerate(centres):
-        amp = 1.0 if i == 0 else v(0.35, 0.9) * (1.0 - 0.55 * cc / dur)
-        env += amp * _hann_bump(n, cc, v(0.016, 0.040) if i else 0.05)
-    env = env + 0.10 * _bell(n, 0.3, 1.0, 1.5)
-    x = hi * env[:, None] + 0.4 * lo * (env ** 1.3)[:, None]
-    ticks = np.zeros((n, 2))
-    for i in np.nonzero(r.random(n) < 70.0 * env / SR)[0]:
-        g = _grain(v(3000.0, 5500.0) * 2 ** (0.5 * (c - 0.5)), v(1.5, 3.0), 0.004)
-        j = min(len(g), n - i)
-        ticks[i:i + j] += _pan(g[:j] * np.exp(r.normal(0.0, 0.4)), v(-0.6, 0.6))
-    x += ticks * (0.5 + 0.9 * c)
-    return _finish(_bal(x, pan), "paper", first, fin=0.004, fout=0.03)
-
-
-def shimmer(duration=1.6, seed=0, brightness=0.5, pan=0.0, peak=0.6, density=1.0, spread=0.7):
-    """Gentle airy sparkle / glow rise for light blooming.  NOT melodic: a cloud of soft glimmers (each
-    swells in over 40-110 ms, nothing is 'struck') at random inharmonic frequencies (2.2-8 kHz, where
-    melodic pitch is weak), denser and slightly higher towards the peak, over a faint breath of air.
-    Anchor = peak of the bloom (peak * duration)."""
-    r = _rng(seed, "shimmer")
-    T = float(np.clip(duration, 0.5, 8.0))
+def glow(duration=1.4, seed=0, brightness=0.5, pan=0.0, peak=0.5, rising=0.0, shimmer=0.5, spread=0.5):
+    """Warm light blooming - the shimmer without hiss.  Two layers under one slow bell envelope:
+      body     a breath of warm air (noise band round 650 Hz, 250 Hz - 1.8 kHz, nothing hissy), not pitched;
+      shimmer  four soft high partials (1.5 / 2 / 3 / 4.1 kHz).  Each is a sine with two quieter companions
+               0.5-1.8 Hz above and below it: they are in phase at the partial's own peak and drift apart
+               afterwards (a slow shimmer of at most 12 dB, never a flutter), each with a slow random
+               twinkle (0.7-4 Hz) and its own place in the stereo field; the upper partials arrive later
+               and leave earlier, so the light brightens towards its peak.  Nothing is struck (attacks of
+               100 ms and more), nothing above 4.2 kHz.
+    `shimmer` 0..1 = balance (0 = only the warm air, 0.5 = equal loudness, 1 = mostly shimmer);
+    `rising` 0..1 = a bloom that climbs: the partials come in from low to high (the low ones up to 45 %
+    earlier) and the body's band glides upward; `brightness` tilts the shimmer (+-6 dB) and the body.
+    Anchor = the peak (peak * duration)."""
+    r = _rng(seed, "glow")
+    T = float(np.clip(duration, 0.4, 8.0))
     n = _n(T)
     b = _clip01(brightness)
-    glob = _bell(n, peak, 1.4, 1.0)
-    N = max(int(round((22.0 * T + 8.0) * density)), 4)
-    lim = max(n - _n(0.28), n // 2)
-    cdf = np.cumsum(glob[:lim])
-    cdf /= cdf[-1]
-    starts = np.sort(np.interp((np.arange(N) + r.random(N)) / N, cdf, np.arange(lim))) / SR
-    F0 = 4300.0 * 2 ** (0.5 * (b - 0.5))
-    x = np.zeros((n, 2))
-    for t0 in starts:
-        fc = F0 * 2 ** (0.5 * (t0 / T - 0.5))
-        f = float(np.clip(fc * 2 ** r.uniform(-0.8, 0.8), 2200.0, 8000.0))
-        att, tau = r.uniform(0.040, 0.110), r.uniform(0.05, 0.14)
-        ln = min(_n(att + 5.5 * tau), n - int(t0 * SR))
-        if ln < 64:
-            continue
-        g = glob[min(int(t0 * SR), n - 1)] ** 0.5 * 10.0 ** (r.uniform(-7.0, 0.0) / 20.0) * (f / 4000.0) ** -0.8
-        tt = np.arange(ln) / SR
-        trem = 1.0 + 0.3 * np.sin(2.0 * np.pi * r.uniform(5.0, 11.0) * tt + r.uniform(0, 6.283))
-        s = np.sin(2.0 * np.pi * f * tt) * _ad(ln, att, tau) * trem * g
-        s *= 0.5 + 0.5 * np.cos(np.pi * np.clip((np.arange(ln) - 0.8 * ln) / (0.2 * ln), 0.0, 1.0))
-        i0 = int(t0 * SR)
-        x[i0:i0 + ln] += _pan(s, pan + spread * r.uniform(-1.0, 1.0))
-    x /= np.sqrt(np.mean(x * x)) + 1e-12
-    air = _noise(r, n, 3000.0, 7500.0, 2, 2, tilt=-3.0, ch=2, corr=0.3)
-    x += 0.45 * air * (glob ** 1.2)[:, None]
-    return _finish(_bal(x, pan * 0.5), "shimmer", peak * T, fin=0.02, fout=0.08)
+    ri = _clip01(rising)
+    sh = _clip01(shimmer)
+    u = np.arange(n) / max(n - 1, 1)
+    t = np.arange(n) / SR
+    glob = _bell(n, peak, 1.5, 1.1)
+
+    # ---- body: warm air ----
+    f_c = 650.0 * 2 ** (0.5 * (b - 0.5))
+
+    def mask(tt, ff):
+        ff = np.maximum(ff, 20.0)
+        c = f_c * 2 ** (0.8 * ri * (_ss(np.clip(tt / (peak * T), 0.0, 1.0)) - 0.6))
+        m = np.exp(-0.5 * (np.log2(ff / c) / 0.7) ** 2)
+        return m / np.sqrt(1.0 + (250.0 / ff) ** 6) / np.sqrt(1.0 + (ff / 1800.0) ** 8)
+
+    body = _tv_noise(r, n, mask, nfft=2048, corr=0.45) * (glob ** 1.1)[:, None]
+
+    # ---- shimmer: four high partials ----
+    K = len(_SHIMMER)
+    lite = np.zeros((n, 2))
+    for k, (ratio, adb) in enumerate(_SHIMMER):
+        q = k / (K - 1.0)
+        f = GLOW_ROOT * ratio
+        pk = peak * (1.0 - 0.45 * ri * (1.0 - q))
+        e = _bell_u(u, pk, 1.6 + 1.2 * q, 1.1 + 0.8 * q * (1.0 - ri))
+        if ri > 0.0 and pk < peak:
+            # a climbing bloom: a partial that has arrived (at 62 %) keeps growing gently until the top one is
+            # there, so the level grows all the way to the anchor; afterwards the low ones leave first
+            hold = 0.62 + 0.38 * _ss((u - pk) / (peak - pk))
+            fall = (0.5 + 0.5 * np.cos(np.pi * np.clip((u - peak) / (1.0 - peak), 0.0, 1.0))) ** (1.7 - 0.6 * q)
+            e = np.where(u < pk, 0.62 * e, np.where(u < peak, hold, fall))
+        a = 10.0 ** ((adb + 12.0 * (b - 0.5) * (q - 0.3)) / 20.0)
+        tc = t - pk * T
+        for j in range(3):
+            df = 0.0 if j == 0 else r.uniform(0.5, 1.8) * (1.0 if j == 1 else -1.0)
+            tw = np.clip(1.0 + 0.30 * _noise(r, n, 0.7, 4.0, 1, 2), 0.3, 1.8)
+            comp = np.sin(2.0 * np.pi * (f + df) * tc + 0.5 * r.uniform(-1.0, 1.0)) * tw * (1.0 if j == 0 else 0.3)
+            lite += _pan(comp * e * a, pan + spread * r.uniform(-1.0, 1.0))
+
+    # ---- balance: equal K-weighted loudness at shimmer = 0.5 ----
+    lb, ll = meter.max_window_lufs(body, 0.1), meter.max_window_lufs(lite, 0.1)
+    x = body * 10.0 ** (-lb / 20.0) * np.cos(sh * np.pi / 2.0) * SQ2
+    x += lite * 10.0 ** (-ll / 20.0) * np.sin(sh * np.pi / 2.0) * SQ2
+    return _finish(_bal(x, pan * 0.5), "glow", peak * T, fin=0.03, fout=0.10)
 
 
-_COIN_RATIOS = (1.0, 1.729, 2.328)  # free-edge circular plate: (2,0), (0,1), (3,0) -> inharmonic, metallic
+_GLINT_MODES = ((1.0, 0.0, 1.0), (1.729, -9.0, 0.6), (2.328, -17.0, 0.4))  # ratio, dB, decay: a small plate (coin)
 
 
-def _coin_modes(r, n, t0, f1, t60, bright, attack, damp_hi=0.8, pan=0.0, width=0.12):
-    """Coin ring: three inharmonic plate modes, each a slightly split doublet (gentle 5-20 Hz beating, the
-    'sweet' shimmer of a real coin); higher modes decay faster; soft raised-cosine attack (no click)."""
-    t = np.arange(n) / SR - t0
+def glint(seed=0, pitch=1.0, duration=0.6, brightness=0.5, pan=0.0, softness=0.6):
+    """One sweet, small glint (gold catching the light).  The three lowest modes of a small free plate - a
+    coin - at 2048 Hz (one of the glow's partials, so it belongs to the light), 3.5 kHz (9 dB down) and
+    4.8 kHz (17 dB down), the upper ones gone sooner; each a doublet 1.2-2.5 Hz apart that starts in phase
+    (a slow, shallow beat inside the ring-out).  Inharmonic: an object, not a note.
+    NOT struck: a raised-cosine attack of 12-24 ms (10-90 % in 7-14 ms; 11 ms at the default softness), no
+    contact noise at all, then an exponential ring-out (`duration` = T60 of the lowest mode).  The pitch is
+    fixed: two glints are the same object, never an interval.  Anchor = the middle of the attack."""
+    r = _rng(seed, "glint")
+    t60 = float(np.clip(duration, 0.2, 1.5))
+    A = 0.012 + 0.012 * _clip01(softness)
+    pre = 0.002
+    n = _n(pre + A + 1.05 * t60 + 0.03)
+    t = np.arange(n) / SR - pre
     on = t >= 0
     tt = t[on]
-    out = np.zeros((n, 2))
     tau1 = t60 / 6.91
-    amps_db = (0.0, -4.5 + 5.0 * (bright - 0.5), -9.0 + 8.0 * (bright - 0.5))
-    for ratio, adb in zip(_COIN_RATIOS, amps_db):
-        f = f1 * ratio * (1.0 + r.uniform(-0.006, 0.006))
-        if f > 9000.0:
+    f1 = 4.0 * GLOW_ROOT * pitch
+    x = np.zeros((n, 2))
+    for k, (ratio, adb, damp) in enumerate(_GLINT_MODES):
+        f = f1 * ratio
+        if f > 6000.0:
             continue
-        tau = tau1 * ratio ** (-damp_hi)
-        a = 10.0 ** (adb / 20.0)
-        split = f * r.uniform(0.0012, 0.004)
-        s = a * np.exp(-tt / tau) * np.sin(2.0 * np.pi * f * tt)
-        s += a * r.uniform(0.45, 0.8) * np.exp(-tt / (0.9 * tau)) * np.sin(2.0 * np.pi * (f + split) * tt + r.uniform(0, 6.283))
-        s *= np.where(tt < attack, 0.5 - 0.5 * np.cos(np.pi * tt / attack), 1.0)
-        out[on] += _pan(s, pan + width * r.uniform(-1.0, 1.0))
-    return out
+        df = r.uniform(1.2, 2.5)
+        s = np.sin(2.0 * np.pi * (f - 0.5 * df) * tt) + 0.35 * np.sin(2.0 * np.pi * (f + 0.5 * df) * tt)
+        s *= np.exp(-tt / (tau1 * damp)) * 10.0 ** ((adb + (8.0 * (_clip01(brightness) - 0.5) if k else 0.0)) / 20.0)
+        s *= np.where(tt < A, 0.5 - 0.5 * np.cos(np.pi * tt / A), 1.0)
+        y = np.zeros(n)
+        y[on] = s
+        x += _pan(y, 0.12 * r.uniform(-1.0, 1.0))
+    return _finish(_bal(x, pan), "glint", pre + 0.5 * A, fout=0.03)
 
 
-def coin_ting(seed=0, pitch=1.0, duration=0.38, brightness=0.5, pan=0.0, tick=0.06):
-    """Small, sweet, short coin ring: modes near 2.7 / 4.7 / 6.3 kHz (x pitch), ring-out (T60) = duration
-    (0.25-0.4 s recommended), soft 2.5 ms attack, only a ghost of a contact tick.  Anchor = strike."""
-    r = _rng(seed, "coin_ting")
-    dur = float(np.clip(duration, 0.15, 0.9))
-    pre = 0.002
-    n = _n(pre + dur + 0.02)
-    f1 = 2700.0 * pitch * (1.0 + r.uniform(-0.03, 0.03))
-    x = _coin_modes(r, n, pre, f1, dur, _clip01(brightness), 0.0025, pan=0.0)
-    x += tick * _burst(r, _ad(n, 0.0015, 0.0025, pre), 3000.0, 6000.0, 3, 3, corr=0.8)
-    return _finish(_bal(x, pan), "coin_ting", pre + 0.002, fout=0.03)
-
-
-def _thud(r, n, t0, lo, hi, tau, f_low, low_amp, skin=0.3):
-    """Muted soft impact: low-mid noise burst + faint skin/contact noise + short falling low sine."""
-    x = _burst(r, _ad(n, 0.006, tau, t0), lo, hi, 2, 2, corr=0.85)
-    x += skin * _burst(r, _ad(n, 0.004, 0.008, t0), 600.0, 1700.0, 2, 2, corr=0.8)
-    low = _chirp(n, lambda t: f_low * (0.74 + 0.26 * np.exp(-t / 0.015)), t0) * _ad(n, 0.007, tau * 1.25, t0)
-    return x + _pan(low * low_amp, 0.0)
-
-
-def coin_land(seed=0, pitch=1.0, brightness=0.4, pan=0.0, softness=0.6):
-    """Coin caught in a palm: the ring is choked by the hand (T60 0.10-0.16 s, upper modes strongly
-    damped) on top of a muted fleshy thud.  Anchor = contact."""
-    r = _rng(seed, "coin_land")
-    so = _clip01(softness)
-    pre = 0.002
-    n = _n(pre + 0.24)
-    f1 = 2700.0 * pitch * (1.0 + r.uniform(-0.03, 0.03))
-    x = _thud(r, n, pre, 130.0, 620.0, 0.024, r.uniform(108.0, 124.0), 0.6)
-    x += (0.50 - 0.20 * so) * _coin_modes(r, n, pre + 0.001, f1, 0.16 - 0.06 * so, _clip01(brightness) - 0.15, 0.004, damp_hi=1.3)
-    return _finish(_bal(x, pan), "coin_land", pre + 0.005, fout=0.03)
-
-
-def coin_drop_in(seed=0, pitch=1.0, bloom=0.5, pan=0.0, warmth=0.5):
-    """Coin sinking into something soft, with a warm low bloom: soft thud + faint choked ting, then a
-    non-pitched warm swell (low noise band around 85-170 Hz plus a 170-700 Hz band whose top closes as it
-    'sinks') that peaks ~0.2 s after the hit and is gone after `bloom` + 0.13 s.  Anchor = the thud."""
-    r = _rng(seed, "coin_drop_in")
-    bl = float(np.clip(bloom, 0.25, 1.5))
-    w = _clip01(warmth)
-    pre = 0.002
-    n = _n(pre + bl + 0.13)
-    f1 = 2700.0 * pitch * (1.0 + r.uniform(-0.03, 0.03))
-    x = _thud(r, n, pre, 110.0, 480.0, 0.040, r.uniform(90.0, 100.0), 0.7, skin=0.15)
-    x += 0.26 * _coin_modes(r, n, pre + 0.001, f1, 0.22, 0.3, 0.005, damp_hi=1.2)
-    nb = n - _n(pre)
-    T = nb / SR
-
-    def mask(tt, ff):
-        top = 700.0 * (300.0 / 700.0) ** _ss(tt / T)
-        return _mag(ff, 170.0, None, 2, 2, tilt=-3.0) / np.sqrt(1.0 + (np.maximum(ff, 1.0) / top) ** 4)
-
-    env = _bell(nb, 0.36, 1.2, 1.5)
-    swell = _tv_noise(r, nb, mask, nfft=2048, corr=0.6, norm=False) * (0.30 + 0.25 * (1.0 - w))
-    swell += _noise(r, nb, 85.0, 170.0, 2, 2, ch=2, corr=0.95) * (0.35 + 0.4 * w)
-    x[n - nb:] += swell * env[:, None] * 0.85
-    return _finish(_bal(x, pan), "coin_drop_in", pre + 0.006, fout=0.06)
-
-
-def wood_knock(seed=0, pitch=1.0, style="set", hardness=0.4, pan=0.0):
-    """Small wooden box set down / lid closing - soft and damped.  Modes ~205/370/545/790 Hz (x pitch),
-    decays 10-30 ms, felt-soft 2-3 ms attack, a hint of contact noise.
-    style 'set' = light corner touch then the firm contact 28-45 ms later; 'lid' = single, slightly higher
-    knock with a breath of displaced air; 'single' = one plain knock.  Anchor = the firm contact."""
-    r = _rng(seed, "wood_knock")
-    h = _clip01(hardness)
-    pre = 0.002
-    gap = r.uniform(0.028, 0.045) if style == "set" else 0.0
-    n = _n(pre + gap + 0.22)
-    f = np.array([205.0, 368.0, 545.0, 790.0]) * pitch * (1.0 + r.uniform(-0.05, 0.05, 4))
-    taus = np.array([0.030, 0.022, 0.015, 0.010])
-    amps = 10.0 ** (np.array([0.0, -2.0, -6.0, -11.0 + 8.0 * (h - 0.4)]) / 20.0)
-
-    def hit(t0, gain, fmul, hard):
-        m = _modes(n, f * fmul, amps, taus, t0, attack=0.0032 - 0.0016 * hard)
-        c = _burst(r, _ad(n, 0.002, 0.005, t0), 500.0, 1500.0 + 2200.0 * hard, 2, 3, corr=0.8)
-        return gain * (_pan(m, 0.0) + (0.10 + 0.30 * hard) * c)
-
-    if style == "set":
-        x = hit(pre, 0.42, 1.07, h * 0.7) + hit(pre + gap, 1.0, 1.0, h)
-    elif style == "lid":
-        x = hit(pre, 1.0, 1.12, min(h + 0.1, 1.0))
-        x += 0.15 * _burst(r, _ad(n, 0.008, 0.020, pre), 300.0, 1200.0, 2, 2, corr=0.6)
-    else:
-        x = hit(pre, 1.0, 1.0, h)
-    return _finish(_bal(x, pan), "wood_knock", pre + gap + 0.003, fout=0.03)
-
-
-def cloth_unroll(duration=0.9, seed=0, brightness=0.5, pan=0.0, sweep=0.3, flap=1.0):
-    """Soft fabric unrolling: a 'shhh' that builds and brightens slightly as the roll speeds up
-    (1.1 -> 2.1 kHz centre, gentle irregular flutter), a short breath, then a soft 'fwup' flap as the end
-    lands (low-mid noise + displaced air + faint low bump).  `duration` = length of the swish;
-    Anchor = the flap (the sound starts `duration` earlier)."""
-    r = _rng(seed, "cloth_unroll")
-    T = float(np.clip(duration, 0.3, 4.0))
-    b = _clip01(brightness)
-    n = _n(T + 0.17)
-    u = np.arange(n) / SR / T
-
-    def mask(tt, ff):
-        fc = 1100.0 * (1.9 * 2 ** (0.8 * (b - 0.5))) ** _ss(tt / T)
-        return np.exp(-0.5 * (np.log2(np.maximum(ff, 20.0) / fc) / 0.9) ** 2)
-
-    sw = _tv_noise(r, n, mask, nfft=1024, corr=0.55)
-    es = np.clip(u, 0.0, 1.0) ** 1.5 * (1.0 - 0.85 * _ss((u - 0.90) / 0.09)) * (1.0 - _ss((u - 1.0) / 0.08))
-    es *= np.clip(1.0 + 0.28 * _noise(r, n, 9.0, 24.0, 1, 2), 0.3, 1.8)
-    x = _bal(sw, sweep * (2.0 * np.clip(u, 0.0, 1.0) - 1.0) * 0.5) * (es * 0.62)[:, None]
-    fl = _burst(r, _ad(n, 0.012, 0.050, T - 0.006), 140.0, 850.0, 2, 2, corr=0.8)
-    fl += 0.35 * _burst(r, _ad(n, 0.008, 0.028, T - 0.004), 700.0, 2600.0, 2, 2, corr=0.6)
-    fl += _pan(0.45 * _chirp(n, lambda t: 64.0 + 24.0 * np.exp(-t / 0.02), T - 0.006) * _ad(n, 0.012, 0.045, T - 0.006), 0.0)
-    x += _bal(fl, sweep * 0.5) * flap
-    return _finish(_bal(x, pan), "cloth_unroll", T + 0.004, fin=0.02, fout=0.04)
-
-
-def rise(duration=2.4, seed=0, brightness=0.5, pan=0.0, peak=0.7, air=0.5, bed=0.5):
-    """Broad, warm, non-pitched swell for the final moment: pink-ish noise through a low-pass that opens
-    (260 Hz -> ~2 kHz) towards the peak and closes again, a breath of air near the top, over a very low
-    sine bed (55->60 Hz and a non-harmonic 91 Hz partner).  Slow build, soft landing (the last 30 %).
-    Anchor = the peak (peak * duration)."""
+def rise(duration=2.4, seed=0, brightness=0.5, pan=0.0, peak=0.7, air=0.0, bed=0.0):
+    """Broad, warm breath for the final moment: pink-ish noise (200 Hz up) through a low-pass that opens
+    (340 Hz -> about 1.4 kHz) towards the peak and closes again.  Slow build, soft landing (the last 30 %).
+    v4: darker top, no rumble (high-pass 200 Hz 18 dB/oct, was 70 Hz), no air layer and no low sine bed by default (`air`, `bed` > 0 bring them back; the 55-60 / 91 Hz bed read
+    as hum on headphones).  Anchor = the peak (peak * duration)."""
     r = _rng(seed, "rise")
     T = float(np.clip(duration, 0.8, 10.0))
     n = _n(T)
     b = _clip01(brightness)
-    top = 2000.0 * 2 ** (b - 0.5)
+    top = 1400.0 * 2 ** (b - 0.5)
 
     def mask(tt, ff):
         ff = np.maximum(ff, 1.0)
         open_ = _bell_u(tt / T, max(peak - 0.03, 0.1), 1.5, 1.0)
-        fc = 260.0 * (top / 260.0) ** open_
-        m = _mag(ff, 70.0, None, 2, 2, tilt=-3.0, ref=300.0) / np.sqrt(1.0 + (ff / fc) ** 4)
+        fc = 340.0 * (top / 340.0) ** open_
+        m = _mag(ff, 200.0, None, 3, 2, tilt=-3.0, ref=300.0) / np.sqrt(1.0 + (ff / fc) ** 4)
         return m + 0.035 * air * np.exp(-0.5 * (np.log2(ff / 4200.0) / 0.8) ** 2) * open_ ** 2
 
     x = _tv_noise(r, n, mask, nfft=4096, corr=0.45, norm=False) * _bell(n, peak, 2.2, 1.3)[:, None]
-    t = np.arange(n) / SR
-    e_bed = _bell(n, min(peak + 0.02, 0.95), 1.8, 1.4)
-    low = np.sin(2.0 * np.pi * (55.0 * t + 2.5 * t * t / T)) + 0.5 * np.sin(2.0 * np.pi * 91.0 * t + 1.3)
-    x += _pan(low * e_bed * 0.55 * bed, 0.0)
+    if bed > 0.0:
+        t = np.arange(n) / SR
+        e_bed = _bell(n, min(peak + 0.02, 0.95), 1.8, 1.4)
+        low = np.sin(2.0 * np.pi * (55.0 * t + 2.5 * t * t / T)) + 0.5 * np.sin(2.0 * np.pi * 91.0 * t + 1.3)
+        x += _pan(low * e_bed * 0.55 * bed, 0.0)
     return _finish(_bal(x, pan), "rise", peak * T, fin=0.05, fout=0.15)
-
-
-def pop(seed=0, pitch=1.0, pan=0.0, softness=0.6):
-    """Tiny soft bubbly pop (small things appearing, e.g. flowers): a 430-760 Hz blip whose pitch
-    blooms upward by ~55 % in 20 ms (bubble 'bloop'), 15-24 ms decay, soft 4-6 ms attack and a ghost of
-    a lip puff.  Pitch is random per seed and off any scale, so runs of pops never sound like a tune.
-    Anchor = onset."""
-    r = _rng(seed, "pop")
-    so = _clip01(softness)
-    pre = 0.002
-    n = _n(pre + 0.11)
-    f0 = r.uniform(430.0, 760.0) * pitch
-    tau = r.uniform(0.015, 0.024)
-    env = _ad(n, 0.003 + 0.004 * so, tau, pre)
-    s = _chirp(n, lambda t: f0 * (1.0 + 0.55 * (1.0 - np.exp(-t / 0.018))), pre) * env
-    s += 0.10 * _chirp(n, lambda t: 2.07 * f0 * (1.0 + 0.55 * (1.0 - np.exp(-t / 0.018))), pre) * env ** 1.5
-    x = _pan(s, 0.0)
-    x += (0.16 - 0.08 * so) * _burst(r, _ad(n, 0.003, 0.006, pre), 900.0, 2800.0, 2, 2, corr=0.7)
-    return _finish(_bal(x, pan), "pop", pre + 0.004, level=LEVELS["pop"] + r.uniform(-0.8, 0.8), fout=0.02)
-
-
-def pop_flurry(n=5, duration=0.6, seed=0, shape="even", fall_db=3.0, pan=0.0, spread=0.6, times=None,
-               jitter=0.3, softness=0.6):
-    """A loose run of n little pops (a cluster of flowers appearing).  Same scheduling rules as
-    dab_flurry (`times` to lock to animation).  Anchor = first pop."""
-    def kw(r, i, m):
-        return dict(softness=softness, pitch=2 ** r.uniform(-0.25, 0.25))
-    return _flurry("pop_flurry", pop, n, duration, seed, shape, fall_db, pan, spread, times, jitter, 1.5, kw=kw)
 
 
 def room_tone(duration=6.0, seed=0, warmth=0.5, pan=0.0, fade_in=0.6, fade_out=1.2):
@@ -704,44 +451,32 @@ def room_tone(duration=6.0, seed=0, warmth=0.5, pan=0.0, fade_in=0.6, fade_out=1
     return _finish(_bal(x, pan), "room_tone", 0.0, fin=fi, fout=fo, win=1.0)
 
 
-def book_slide(seed=0, duration=0.5, pan=0.0, settle=1.0, brightness=0.4, sweep=0.2):
-    """A book pushed into place on a wooden shelf: dull leather-on-wood friction (centre 0.5-1.4 kHz
-    following the speed, fine stick-slip grain) that starts quickly and decelerates, then a tiny soft
-    settle (shelf modes ~150/260/410 Hz, 12-30 ms decays).  `duration` = length of the slide;
-    Anchor = the settle (the slide starts `duration` + 16 ms earlier)."""
-    r = _rng(seed, "book_slide")
-    T = float(np.clip(duration, 0.2, 3.0))
-    b = _clip01(brightness)
-    n = _n(T + 0.16)
-    tS = T + 0.012
-    u = np.arange(n) / SR / T
-
-    def speed(uu):
-        return _bell_u(uu, 0.3, 1.0, 1.4)
-
-    def mask(tt, ff):
-        ff = np.maximum(ff, 20.0)
-        fc = (520.0 + 900.0 * speed(tt / T)) * 2 ** (b - 0.4)
-        return np.exp(-0.5 * (np.log2(ff / fc) / 1.0) ** 2) + 0.35 * np.exp(-0.5 * (np.log2(ff / 190.0) / 0.5) ** 2)
-
-    env = speed(u) ** 0.8 * np.clip(1.0 + 0.38 * _noise(r, n, 25.0, 70.0, 1, 2), 0.2, 2.0)
-    x = _tv_noise(r, n, mask, nfft=1024, corr=0.6) * (env * 0.5)[:, None]
-    x = _bal(x, sweep * (np.clip(u, 0.0, 1.0) - 0.5))
-    fs = np.array([150.0, 262.0, 410.0]) * (1.0 + r.uniform(-0.05, 0.05, 3))
-    st = _pan(_modes(n, fs, 10.0 ** (np.array([0.0, -4.0, -9.0]) / 20.0), [0.030, 0.020, 0.012], tS, attack=0.004), 0.0)
-    st += 0.25 * _burst(r, _ad(n, 0.004, 0.010, tS), 300.0, 1200.0, 2, 2, corr=0.8)
-    x += _bal(st, sweep * 0.5) * 0.8 * settle
-    return _finish(_bal(x, pan), "book_slide", tS + 0.004, fin=0.02, fout=0.03)
+# ---- spare: measured and verified with the rest, NOT used by the v4 cue sheet ----------------------------
+def touch(seed=0, pitch=1.0, pan=0.0, softness=0.6):
+    """SPARE.  A felt-soft touch (a print lands): two damped low modes (225 / 352 Hz x pitch, 28 / 20 ms) and a
+    faint low-passed breath of felt (300-900 Hz, 12 dB under), raised-cosine attack 14-22 ms (10-90 % in
+    8-12 ms; about 10 ms at the default softness).  No contact tick, nothing above 1 kHz.
+    Anchor = the middle of the attack."""
+    r = _rng(seed, "touch")
+    A = 0.014 + 0.008 * _clip01(softness)
+    pre = 0.002
+    n = _n(pre + A + 0.20)
+    t = np.arange(n) / SR - pre
+    ramp = np.where(t < 0, 0.0, np.where(t < A, 0.5 - 0.5 * np.cos(np.pi * np.clip(t, 0, A) / A), 1.0))
+    tp = np.maximum(t, 0.0)
+    s = np.sin(2.0 * np.pi * 225.0 * pitch * tp) * np.exp(-tp / 0.028)
+    s += 0.6 * np.sin(2.0 * np.pi * 352.0 * pitch * tp + r.uniform(0.0, 6.2832)) * np.exp(-tp / 0.020)
+    x = _pan(s * ramp, 0.0)
+    x += 0.25 * _burst(r, ramp * np.exp(-tp / 0.022), 300.0, 900.0, 2, 3, corr=0.8) * np.sqrt(np.mean((s * ramp) ** 2) / (np.mean((ramp * np.exp(-tp / 0.022)) ** 2) + 1e-20))
+    return _finish(_bal(x, pan), "touch", pre + 0.5 * A, fout=0.03)
 
 
 # ----------------------------------------------------------------------------------------------------------
 # registry
 # ----------------------------------------------------------------------------------------------------------
 SOUNDS = {
-    "dab": dab, "dab_flurry": dab_flurry, "whoosh": whoosh, "specks": specks, "puff": puff, "paper": paper,
-    "shimmer": shimmer, "coin_ting": coin_ting, "coin_land": coin_land, "coin_drop_in": coin_drop_in,
-    "wood_knock": wood_knock, "cloth_unroll": cloth_unroll, "rise": rise, "pop": pop, "pop_flurry": pop_flurry,
-    "room_tone": room_tone, "book_slide": book_slide,
+    "air": air, "glow": glow, "glint": glint, "rise": rise, "room_tone": room_tone,
+    "touch": touch,   # spare
 }
 
 
@@ -792,7 +527,7 @@ def list_sounds():
     """Print every sound with its parameters (defaults) and default level."""
     import inspect
     for name, fn in SOUNDS.items():
-        lvl = LEVELS.get(name, LEVELS.get(name.replace("_flurry", ""), 0.0))
+        lvl = LEVELS.get(name, 0.0)
         print("%-13s LK100 %6.1f  %s" % (name, lvl, str(inspect.signature(fn))))
 
 

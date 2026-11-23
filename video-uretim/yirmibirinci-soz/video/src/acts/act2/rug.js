@@ -5,7 +5,9 @@
 //                   border, the top fringe and the whole pointed mihrab niche are out by 21.67
 //   21.73 / 21.80   the niche begins to GLOW with the light of the seam and the doorway (two steps)
 //   21.90–21.97     the roll is spent; the bottom fringe flicks out and settles
-//   22.90–23.10     LINK 1 (front slot): the niche's own light swells once to fill the niche (+10 px), back in two steps
+//   22.90–23.23     LINK 1: the niche's glow SWELLS once — three sizes up on 22.90 / 22.93 / 22.97, held, and back in
+//                   two steps (23.13 / 23.23) to one size above where it was. An answer, not a splash: nothing arrives in
+//                   it, it is the same warm glow grown larger, it never leaves the niche (client round)
 //
 // The rug is one baked print; the unrolling is a moving cut (nothing is stretched). The roll is a live cut of
 // a pinned texture that only gets thinner.
@@ -172,20 +174,19 @@ export function makeRug(E, W, U) {
       ] });
     a.GR = GR;
     a.core = E.makeGlow({ rx: 20, ry: 34, color: P('niche_glow'), core: '#FFF4D2', density: 0.9, falloff: 0.55, seed: 2414 });   // warm white-gold, a clear step under the far light's white
-    // --- LINK 1: the niche's own light swells ONCE to fill the whole niche and a hand's breadth round it, and goes
-    //     back in two steps. It is cut to the niche + 10 px (it never reaches the border or the fringe); its rim is
-    //     loose gold dabs, so the cut is not seen.
-    const BG = 10, BR = [cx - NW / 2 - BG - 4, NA - BG - 4, cx + NW / 2 + BG + 4, NB + BG + 4];
-    const br = (x, y) => Math.hypot((x - cx) / (NW / 2 + BG), (y - (N.centre[1] + 8)) / (NH / 2 + BG));
-    a.bloomTex = E.bakeStencil({ shape: shape.rect(BR[0], BR[1], BR[2] - BR[0], BR[3] - BR[1]), anchor: [0, 0], pad: 0, seed: 2415, bleed: false,
-      reveal: { steps: 3, mode: 'mask', order: 'radial', from: [cx, N.centre[1] + 8], dab: 54, jitter: 0.1 },
-      layers: [
-        { color: P('door_glow'), coverage: 0.74, size: 30, stamps: 'body', pores: 0.4 },
-        { color: '#FBE7A6', coverage: 0.9, size: 34, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1.0, 0.8, br(x, y)) },
-        { color: P('niche_glow'), coverage: 0.95, size: 32, stamps: 'body', pores: 0.2, maskFn: (x, y) => ss(0.82, 0.62, br(x, y)) },
-        { color: '#FFF4D2', coverage: 0.9, size: 28, stamps: 'body', pores: 0.2, maskFn: (x, y) => ss(0.56, 0.36, br(x, y)) },
-      ] });
-    a.BR = BR; a.bloomArch = nicheArch(BG);
+    // --- LINK 1 (client round): the niche ANSWERS — its own glow, the same print in the same warm tones, three sizes
+    //     larger (x 1.14 / 1.28 / 1.42 round its own centre: the gold fringe reaches the niche's edge at the largest).
+    //     Each size is its own sponge print (nothing is scaled); all are cut to the niche like the glow itself.
+    a.swell = [1.14, 1.28, 1.42].map((k, i) => {
+      const g = (x, y) => Math.hypot((x - cx) / (40 * k), (y - GC) / (57 * k));
+      return E.bakeStencil({ shape: shape.rect(GR[0], GR[1], GR[2] - GR[0], GR[3] - GR[1]), anchor: [0, 0], pad: 0, seed: 2416 + i, bleed: false,
+        layers: [
+          { color: '#F2C656', coverage: 0.62, size: 26, stamps: 'body', pores: 0.4, maskFn: (x, y) => ss(1.16, 0.96, g(x, y)) },
+          { color: P('door_glow'), coverage: 0.88, size: 26, stamps: 'body', pores: 0.3, maskFn: (x, y) => ss(1.0, 0.84, g(x, y)) },
+          { color: '#FBE7A0', coverage: 0.93, size: 24, stamps: 'body', pores: 0.2, maskFn: (x, y) => ss(0.8, 0.62, g(x, y)) },
+          { color: P('niche_glow'), coverage: 0.92, size: 22, stamps: 'body', pores: 0.2, maskFn: (x, y) => ss(0.56, 0.38, g(x, y)) },
+        ] });
+    });
     return a;
   });
 
@@ -194,6 +195,8 @@ export function makeRug(E, W, U) {
   /** revealed length (px from the top edge): 273 * (1 - (1 - u)^4) over 21.43–21.93 */
   const lenAt = (t) => LEN * (1 - (1 - prog(t, un[0], un[1])) ** 4);
   const glowP = (t) => (on(t, T.rug.glow[0]) ? E.dabP(t, ft(T.rug.glow[0]), { steps: 2 }) : 0);
+  /** LINK 1: the size of the niche's glow (0 = as it was, 1 … 3): up on 22.90 / 22.93 / 22.97, held, back on 23.13 / 23.23, then one size up for good */
+  const swellAt = (t) => { const n = nf(t, T.links.bloom); return n < -1e-6 ? 0 : n < 1 - 1e-6 ? 1 : n < 2 - 1e-6 ? 2 : n < 7 - 1e-6 ? 3 : n < 10 - 1e-6 ? 2 : 1; };
 
   // ------------------------------------------------------------------ draw (mid slot, world px)
   function draw(ctx, t) {
@@ -222,14 +225,15 @@ export function makeRug(E, W, U) {
       A.fringeBot.draw(ctx, 0, 0);
       ctx.restore();
     }
-    // the niche's glow
+    // the niche's glow — and its swell (LINK 1)
     const gp = glowP(t);
     if (gp > 0) {
-      const arch = nicheArch(-3);
+      const arch = nicheArch(-3), sw = swellAt(t);
       ctx.save();
       ctx.clip(arch.path);
       A.glow.draw(ctx, 0, 0, { p: gp });
-      if (gp >= 1) A.core.draw(ctx, cx, N.centre[1] + 12, { scale: 1 + 0.05 * Math.sin((t - ft(T.rug.glow[1])) * 2.1) });
+      if (sw > 0) A.swell[sw - 1].draw(ctx, 0, 0);
+      if (gp >= 1) A.core.draw(ctx, cx, N.centre[1] + 12, { scale: (1 + 0.05 * Math.sin((t - ft(T.rug.glow[1])) * 2.1)) * (1 + 0.11 * sw) });
       ctx.restore();
     }
     // the roll
@@ -243,13 +247,5 @@ export function makeRug(E, W, U) {
     }
   }
 
-  /** LINK 1 (front slot): the bloom lands 22.90, is whole on the next frame, and dabs out in two steps (gone 6.5 frames on) */
-  function drawBloom(ctx, t) {
-    const n = nf(t, T.links.bloom);
-    if (n < -1e-6 || n >= 6.5 - 1e-6) return;
-    const p = n < 1 - 1e-6 ? 2 / 3 : n < 3.5 - 1e-6 ? 1 : n < 5 - 1e-6 ? 2 / 3 : 1 / 3;
-    E.drawStencil(ctx, A.bloomArch, A.bloomTex, { x: A.BR[0], y: A.BR[1], p });
-  }
-
-  return { draw, drawBloom, lenAt, glowP, nicheArch, sprites: A, box: BOX };
+  return { draw, lenAt, glowP, swellAt, nicheArch, sprites: A, box: BOX };
 }

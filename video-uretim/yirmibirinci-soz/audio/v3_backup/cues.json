@@ -1,0 +1,367 @@
+{
+ "_comment": "Cue sheet v3: after the film review (far light 16.97, lid 18.77, links, last hold +0.5 s: cover 23.90-24.30, end card +0.5 s; film 30.1 s).",
+ "duration": 30.1,
+ "voice": "voice_trim.wav",
+ "cues": [
+  {
+   "t": 0.1,
+   "sound": "dab_flurry",
+   "gain_db": 2.0,
+   "pan": 0.0,
+   "params": {
+    "n": 3,
+    "times": [
+     0.0,
+     0.1,
+     0.2
+    ],
+    "seed": 101
+   },
+   "note": "b01_open: the last passes are dabbed in: four soft dabs locked to the passes at 0.07 / 0.13 / 0.20 / 0.27"
+  },
+  {
+   "t": 1.8,
+   "sound": "whoosh",
+   "gain_db": 2.0,
+   "pan": -0.2,
+   "params": {
+    "duration": 0.7,
+    "direction": "rl",
+    "seed": 102
+   },
+   "note": "b03_dun: camera glide toward 'yesterday', very soft, peaks just before «Bil»"
+  },
+  {
+   "t": 3.72,
+   "sound": "puff",
+   "gain_db": 4.0,
+   "pan": -0.3,
+   "params": {
+    "seed": 103
+   },
+   "note": "b03_dun: yesterday leaves the hand"
+  },
+  {
+   "t": 4.3,
+   "sound": "specks",
+   "gain_db": 4.0,
+   "pan": -0.35,
+   "params": {
+    "duration": 0.8,
+    "seed": 104
+   },
+   "note": "b04_pause_cross: the afterglow crumbles into specks"
+  },
+  {
+   "t": 4.57,
+   "sound": "whoosh",
+   "gain_db": 2.0,
+   "pan": 0.2,
+   "params": {
+    "duration": 0.8,
+    "direction": "lr",
+    "seed": 105
+   },
+   "note": "b04_pause_cross: glide from past to future (peak at the middle of the move)"
+  },
+  {
+   "t": 6.0,
+   "sound": "paper",
+   "gain_db": 5.0,
+   "pan": 0.15,
+   "params": {
+    "duration": 0.3,
+    "seed": 106
+   },
+   "note": "b05_yarin_senet: the deed (senet): the seal is stamped"
+  },
+  {
+   "t": 6.37,
+   "sound": "puff",
+   "gain_db": 2.0,
+   "pan": 0.15,
+   "params": {
+    "duration": 0.18,
+    "seed": 107
+   },
+   "note": "b05_yarin_senet: «yok» - it is not there"
+  },
+  {
+   "t": 8.42,
+   "sound": "whoosh",
+   "gain_db": 2.0,
+   "pan": 0.0,
+   "params": {
+    "duration": 0.7,
+    "direction": "rl",
+    "seed": 108
+   },
+   "note": "b07_oyle_ise: the frame widens back to the centre (peak at the middle of the move)"
+  },
+  {
+   "t": 9.67,
+   "sound": "shimmer",
+   "gain_db": 4.0,
+   "pan": 0.0,
+   "params": {
+    "duration": 1.4,
+    "seed": 109
+   },
+   "note": "b08_hakiki_omrunu: today lights up (peak on the second blaze pass)"
+  },
+  {
+   "t": 10.13,
+   "sound": "pop_flurry",
+   "gain_db": 3.0,
+   "pan": 0.0,
+   "params": {
+    "n": 3,
+    "times": [
+     0,
+     0.07,
+     0.14
+    ],
+    "seed": 110
+   },
+   "note": "b08_hakiki_omrunu: flowers open: three soft pops, one per step"
+  },
+  {
+   "t": 11.63,
+   "sound": "shimmer",
+   "gain_db": 0.0,
+   "pan": 0.0,
+   "params": {
+    "duration": 0.7,
+    "brightness": 0.45,
+    "peak": 0.35,
+    "seed": 151
+   },
+   "note": "«bil»: nod at its lowest 11.63-11.73, the lit rise blooms (peak f350)"
+  },
+  {
+   "t": 11.9,
+   "sound": "dab_flurry",
+   "gain_db": -1.0,
+   "pan": 0.0,
+   "params": {
+    "n": 4,
+    "times": [
+     0.0,
+     0.0667,
+     0.1333,
+     0.2
+    ],
+    "seed": 152,
+    "fall_db": 4.0
+   },
+   "note": "blaze settles + cobalt annulus 11.90-12.10"
+  },
+  {
+   "t": 12.93,
+   "sound": "pop_flurry",
+   "gain_db": -1.0,
+   "pan": 0.0,
+   "params": {
+    "n": 8,
+    "duration": 0.47,
+    "shape": "even",
+    "seed": 111
+   },
+   "note": "b10_laekall_bir_saat: the hours are laid round the sun: eight very soft tick-pops, one per step of the sweep"
+  },
+  {
+   "t": 13.97,
+   "sound": "pop",
+   "gain_db": 5.0,
+   "pan": 0.1,
+   "params": {
+    "pitch": 1.2,
+    "seed": 112
+   },
+   "note": "b10_laekall_bir_saat: one hour comes out of the ring"
+  },
+  {
+   "t": 15.37,
+   "sound": "coin_land",
+   "gain_db": 5.0,
+   "pan": 0.1,
+   "params": {
+    "seed": 113
+   },
+   "note": "b11_ihtiyat_akcesi: caught in the palm"
+  },
+  {
+   "t": 15.42,
+   "sound": "coin_ting",
+   "gain_db": 2.0,
+   "pan": 0.1,
+   "params": {
+    "seed": 114
+   },
+   "note": "b11_ihtiyat_akcesi: the rim is stamped: now it rings like a coin"
+  },
+  {
+   "t": 16.33,
+   "sound": "whoosh",
+   "gain_db": 2.0,
+   "pan": 0.2,
+   "params": {
+    "duration": 0.6,
+    "direction": "lr",
+    "seed": 115
+   },
+   "note": "b12_hakiki_istikbal: pull back and turn to the right (peak at the middle of the move)"
+  },
+  {
+   "t": 16.97,
+   "sound": "shimmer",
+   "gain_db": 5.0,
+   "pan": 0.3,
+   "params": {
+    "duration": 1.5,
+    "seed": 116
+   },
+   "note": "b12_hakiki_istikbal: the true future (peak on the brightest pass)"
+  },
+  {
+   "t": 18.77,
+   "sound": "wood_knock",
+   "gain_db": 5.0,
+   "pan": 0.3,
+   "params": {
+    "style": "lid",
+    "seed": 117
+   },
+   "note": "b13_sandukca: the lid settles on the little chest"
+  },
+  {
+   "t": 19.97,
+   "sound": "dab_flurry",
+   "gain_db": 2.0,
+   "pan": 0.3,
+   "params": {
+    "n": 4,
+    "duration": 0.35,
+    "seed": 118
+   },
+   "note": "b14_mescid: the chest is re-stencilled into a mescid"
+  },
+  {
+   "t": 21.93,
+   "sound": "cloth_unroll",
+   "gain_db": 4.0,
+   "pan": 0.3,
+   "params": {
+    "duration": 0.5,
+    "seed": 119
+   },
+   "note": "b15_seccade: the rug unrolls; the soft flap lands as the fringe flicks out"
+  },
+  {
+   "t": 22.87,
+   "sound": "coin_drop_in",
+   "gain_db": 6.0,
+   "pan": 0.3,
+   "params": {
+    "bloom": 0.5,
+    "seed": 120
+   },
+   "note": "b16_at: the hour sinks into the niche: soft thud and a warm low bloom"
+  },
+  {
+   "t": 23.0,
+   "sound": "room_tone",
+   "gain_db": 3.0,
+   "pan": 0.0,
+   "align": "start",
+   "params": {
+    "duration": 7.1,
+    "seed": 122
+   },
+   "note": "end-card air"
+  },
+  {
+   "t": 23.23,
+   "sound": "shimmer",
+   "gain_db": 2.0,
+   "pan": 0.25,
+   "params": {
+    "duration": 1.1,
+    "brightness": 0.5,
+    "peak": 0.45,
+    "seed": 153
+   },
+   "note": "LINK 3: the far light swells (the hour has reached the true future)"
+  },
+  {
+   "t": 24.35,
+   "sound": "rise",
+   "gain_db": 4.0,
+   "pan": 0.2,
+   "params": {
+    "duration": 1.7,
+    "seed": 121
+   },
+   "note": "cream cover grows out of the far light (peak inside the cover)"
+  },
+  {
+   "t": 25.55,
+   "sound": "shimmer",
+   "gain_db": 1.0,
+   "pan": 0.0,
+   "params": {
+    "duration": 1.5,
+    "brightness": 0.4,
+    "seed": 131
+   },
+   "note": "end card: warm light on the Qur'an eases on (24.5-25.5)"
+  },
+  {
+   "t": 25.8,
+   "sound": "dab",
+   "gain_db": -1.0,
+   "pan": 0.0,
+   "params": {
+    "seed": 141,
+    "brightness": 0.4
+   },
+   "note": "end card: 'Risale-i Nur'"
+  },
+  {
+   "t": 26.267,
+   "sound": "dab",
+   "gain_db": 1.0,
+   "pan": -0.1,
+   "params": {
+    "seed": 142,
+    "weight": 0.7
+   },
+   "note": "end card: 'Sözler' + accent light"
+  },
+  {
+   "t": 26.733,
+   "sound": "dab",
+   "gain_db": -1.0,
+   "pan": 0.05,
+   "params": {
+    "seed": 143,
+    "brightness": 0.45
+   },
+   "note": "end card: 'Yirmi Birinci Söz'"
+  },
+  {
+   "t": 27.167,
+   "sound": "dab",
+   "gain_db": -1.0,
+   "pan": 0.0,
+   "params": {
+    "seed": 144,
+    "brightness": 0.4
+   },
+   "note": "end card: '291. Sayfa'"
+  }
+ ],
+ "mix": {
+  "duck_db": 4.0
+ }
+}

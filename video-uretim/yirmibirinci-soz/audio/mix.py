@@ -25,10 +25,10 @@ voice_bus.wav (processed narration) and mix_report.json.
 Chain
   voice : 70 Hz high-pass (12 dB/oct, zero-phase) -> gain to -16 LUFS integrated (BS.1770-4) -> true peak <= -1.5 dBTP
           (a look-ahead limiter engages only if the gain alone would exceed it; no compression).
-  sfx   : every cue is capped at -14 dBFS true peak -> summed -> ducked 5 dB under speech (side-chain from the
-          voice, 30 ms attack with 30 ms look-ahead, 100 ms hold, 250 ms release) -> short-term loudness ceiling
+  sfx   : every cue is capped at -18 dBFS true peak -> summed -> ducked 4 dB under speech (side-chain from the
+          voice, 50 ms attack with 50 ms look-ahead, 100 ms hold, 350 ms release) -> short-term loudness ceiling
           (voice - 14 LU in every 3 s window that contains speech; voice - 12 LU elsewhere) -> bus peak ceiling
-          -14 dBFS -> natural tail fade.
+          -18 dBFS -> natural tail fade.
   final : voice + sfx -> safety true-peak ceiling -1.5 dBTP (normally idle) -> 10 ms fades at the file edges.
 """
 import argparse
@@ -55,9 +55,11 @@ DEFAULTS = dict(
     voice_offset=0.0,          # seconds; video time of the first voice sample
     sfx_margin_lu=14.0,        # SFX short-term loudness must stay this far below the voice while it speaks
     sfx_margin_free_lu=12.0,   # same guard for windows without speech (None = off)
-    sfx_peak_max=-14.0,        # dBFS: no SFX peak above this, anywhere
-    duck_db=5.0,               # extra attenuation of the SFX bus under speech (4..6)
-    duck_attack=0.030, duck_release=0.250, duck_lookahead=0.030, duck_hold=0.100,
+    sfx_peak_max=-18.0,        # dBFS: no SFX peak above this, anywhere (v4: was -14)
+    duck_db=4.0,               # extra attenuation of the SFX bus under speech (3..6; v4 default 4, was 5)
+    # v4: slower side-chain (was 30 ms attack / 30 ms look-ahead / 250 ms release): the palette is now made of
+    # sustained tones and air, on which a quick gain step would be heard as a wobble
+    duck_attack=0.050, duck_release=0.350, duck_lookahead=0.050, duck_hold=0.100,
     speech_on_db=-22.0, speech_off_db=-30.0,   # speech detector thresholds relative to the voice LUFS
     final_tp_max=-1.5,         # dBTP ceiling of the final mix
     edge_fade=0.010,           # fade in/out at the file edges

@@ -90,8 +90,10 @@ def sstep(x, a, b):
 # whatever the plates' leather is: `*_to` is where the row's mean goes, `*_keep` how much of the volume-to-volume
 # jitter survives.
 LEATHER = dict(h_to=47.5, h_keep=0.4,
-               l_to=69.5, l_keep=0.5,
-               c_to=26.9, c_keep=0.2, c_shadow=1.06,   # chroma: lit leather to c_to; shadows x c_shadow only
+               l_to=68.6, l_keep=0.5,
+               c_to=32.0, c_keep=0.2, c_shadow=1.14,   # chroma: lit leather to c_to; shadows x c_shadow only
+               # (client, after the first delivery: "a little more saturated than now" -> C* 26.9 -> 32.0 at the
+               #  same hue, a touch denser: L* 69.5 -> 68.6; shadows 1.06 -> 1.14)
                lit=(54.0, 72.0),                       # L* range over which "shadow" turns into "lit"
                sigma=10.0)                             # low-pass of the local mean (plate px)
 

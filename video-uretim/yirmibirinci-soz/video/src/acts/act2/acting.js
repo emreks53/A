@@ -1,22 +1,23 @@
 // acting.js — the man's ACTING in act 2 (12.20–24.30) and where the coin sits in his hand.
 //
 // One pose per frame, a pure function of absolute time, assembled from:
-//   * the RIGHT ARM. Its three big moves are authored as CHANNELS of absolute angles (upper arm, forearm, hand, the two
+//   * the ARMS. Their big moves are authored as CHANNELS of absolute angles (upper arm, forearm, hand, the two
 //     foreshortenings), each a monotone cubic through frame keys, so that a move has weight: the upper arm leads, the
 //     forearm follows, the hand drags and arrives last, nothing snaps —
-//       14.57–15.23  the forearm RAISE to receive the hour (give, rise with a dragging hand, 5° overshoot, settle)
-//       22.00–23.73  the hand opens — one underhand swing from the shoulder — release — the GIVING LINE (one clean line
-//                    from shoulder to finger tips, palm down-forward), HELD while the three links answer — and only
-//                    then (23.27–23.73) the arm sinks; at rest from 23.77, four frames before the cover
+//       14.57–15.23  the right forearm RAISES to receive the hour (give, rise with a dragging hand, 5° overshoot, settle)
+//       22.00–22.50  THE DUA (client round: «seccadeye at» is figurative — he gives the hour in PRAYER, nothing is
+//                    thrown): BOTH forearms rise before him and the hands open, palms up — elbows near the body, the
+//                    two open hands a little outside the shoulders at chest-to-shoulder height, the gold hour standing
+//                    on his open right palm. Held, alive, to the cover: he prays where he stands (no step, no sinking arm)
 //     while the hour rests on his palm (15.23–15.77) the arm is solved live on the giving palm, and
 //       15.77–16.07  the hand closes over the coin and draws it in: the WRIST runs a short arc (cubic in-out, 3 % settle)
-//   * the body under the swing (dip, half-step, hips, shoulders) — its own channels: the weight follows the hand and
-//     arrives after it (hips 22.60, head 22.70)
-//   * the head: its own track — small moves that lead the eye to where the next thing happens
+//   * the shoulders under the raise (a small give, a small lift, settled) — their own channel
+//   * the head: its own track — small moves that lead the eye to where the next thing happens; in the dua it is bowed
 //
-// The coin is HELD, never stuck on: while he has it (15.37–22.43) it lies behind his hand, placed in the hand's own
-// frame from the wrist (`held`): standing on the cupped palm — sunk into the closing hand — in the half-closed mitten
-// (the mitten in front of its lower-left third) — and, shown, beyond the open finger tips with the thumb on its rim.
+// The coin is HELD, never stuck on: while he has it (15.37–22.87) it lies behind his hand, placed from the wrist
+// (`held`): standing on the cupped palm — sunk into the closing hand — in the half-closed mitten (the mitten in front
+// of its lower-left third) — and, in the dua, standing in the open palm again (thumb and finger tips in front of its
+// lower rim). From 22.57 it lifts off the palm and is given (give.js dabs it out into light).
 //
 // Frames in comments are film frames (30 fps); storyboard times are in util.js (TL).
 
@@ -57,7 +58,7 @@ export function makeActing(E, W, U) {
   const RECV_AT = C.right_palm_receive;                  // (720, 830)
   const recvOpts = { hand: 'cupped', handAngle: 94 };
   const RECV = M.reach(P.back_neutral, 'R', RECV_AT, recvOpts);
-  const SIDE = P.back_coin_held_at_side, SIDE_T = P.back_turned_right, FINAL = P.back_final_stand;
+  const SIDE = P.back_coin_held_at_side, SIDE_T = P.back_turned_right;
   const R0 = absOf(M.REST_ARM), R1 = absOf(RECV.armR), S = absOf(SIDE_T.armR);
   // 16.07–22.00: held at his side; 16.07–16.40 he turns toward the right column (upper arm, forearm + 2 f, hand + 2 f)
   const side = M.track([k(482, SIDE), k(492, SIDE_T, io), k(660, SIDE_T)], { overlap: 2 });
@@ -102,85 +103,60 @@ export function makeActing(E, W, U) {
     return M.reach(P.back_neutral, 'R', palm, { hand: held ? 'hold' : 'cupped', flip: held ? -1 : 1, handAngle: H, elbow: R0.U, fa: lerp(1, absOf(SIDE.armR).fa, clamp(s)) });
   };
 
-  // ------------------------------------------------------------------ 22.00–23.73 show, swing, release, the giving line, the sink
-  //   660–665  the hand opens where it is and holds the coin out in its finger tips
-  //   666–669  dips back (the upper arm turns forward again at 668: it leads the forearm, whose deepest point is 669 = 22.30)
-  //   669–673  ONE underhand swing from the shoulder: upper arm 10 → 40° (≤ 12° a frame), forearm 18 → 60° (≤ 19° a frame),
-  //            fastest ON the release frame; RELEASE at 673 = 22.43, then the forearm swings on to 78° and settles back
-  //   673–680  it follows the coin and settles into the GIVING LINE: upper arm 60°, forearm 71°, hand 75° — one line from
-  //            shoulder to finger tips, pointing at the rug; the hand turns palm down-forward, fingers together (676).
-  //            Both segments stay foreshortened (0.57 / 0.55): the finger tips keep sky between them and the knoll
-  //   680–698  THE GIVING LINE IS HELD while the coin arrives (686) and the three links answer (687 / 692 / 697): a moving
-  //            hold — the arm sags a degree and a half, the hand eases three (5 px in 18 frames), never frozen, never
-  //            pulling the eye from the right column (review 2, N3)
-  //   698–712  only then he lets go: the wrist drops first (the hand hangs from the still-raised arm), the upper arm
-  //            leads the forearm down, the hand arrives last and swings 3 px past its rest and back. Eased in and out by
-  //            the PALM'S OWN PATH (peak 19 px a frame, see `sinkAt`); at rest from frame 713, four frames before the cover
-  const cast = {
-    U: chan([[660, S.U], [666, S.U], [668, 9], [670, 13.5], [671, 19], [672, 28], [673, 40], [675.5, 53], [679.5, 60], [698, 58.6]]),
-    fa: chan([[660, S.fa], [668, 0.86], [673, 0.56], [676, 0.57], [698, 0.57]]),
-    F: chan([[660, S.F], [665, S.F + 2], [666, S.F + 2], [669, 18], [670, 21], [671, 28], [672, 41], [673, 60], [675.5, 78], [681, 71], [698, 69.4]]),
-    fb: chan([[660, S.fb], [665, S.fb + 0.02], [669, 0.44], [673, 0.46], [676, 0.52], [681, 0.55], [698, 0.55]]),
-    H: chan([[660, S.H], [665, S.H + 4], [666, S.H + 4], [669, 86], [673, 100], [675, 100], [681, 75], [698, 72]]),
-    pin: chan([[673, 1], [678, 0]]),
-    // the body: dips with the wind-up, half-step forward with the swing; hips and shoulders arrive AFTER the hand
-    rootX: chan([[669, 0], [673, 5.5], [678, FINAL.root.x]]),
-    rootY: chan([[666, 0], [669, 4], [673, 0.6], [675.5, 0]]),
-    step: chan([[669, 0], [674.5, 1]]),
-    lean: chan([[666, 0], [669, -0.8], [675, 0.5], [681, 0]]),
-    sh: chan([[666, SIDE_T.sh], [669, SIDE_T.sh - 1], [675, 1.4], [678, 1], [698, 1]]),
-    headX: chan([[673, 0], [677.5, 1.6], [682, 0]]),
-    armL: chan([[666, 0], [669, -2.5], [673, 3.5], [677, 2], [690, 1], [698, 1]]),     // the left arm answers the swing a little
+  // ------------------------------------------------------------------ 22.00–22.50 THE DUA (frames 660–677), held to the cover
+  // Seen from behind: the upper arms stay where they hang (elbows near the body, drawn a little shorter: the elbows go
+  // forward), the forearms rise steeply before him and the two open hands stand a little outside the shoulders, palms
+  // up (hand shape `dua`, man.js). Not a shrug (the hands are HIGH, the forearms steep, the shoulders down) and not a
+  // surrender (the palms are bowls turned to the sky, below the head; the head is bowed).
+  //   RIGHT arm (the coin hand; it starts half closed at his side, forearm pointing down-out 55°):
+  //     660–662.5  a small give: the wrist sinks 3 px, the shoulders 1 px
+  //     662.5–670  the forearm rises 55° → 155° (≤ 17° a frame) and lengthens as it comes up before him; the hand opens
+  //                in two swaps hidden in the move (half closed → cupped 664 → open 667) and turns palm-up LAST
+  //     671.5      3.5° past its place, settled 675
+  //   LEFT arm (from hanging; it has the longer way and arrives a frame after the right — symmetric but alive):
+  //     660–662.5  give (the forearm swings back 5°)
+  //     662.5–672  it comes forward and up: on the flat wall that is a forearm that SHORTENS as it swings through the
+  //                horizontal (0.42 of its length at 665.5–668) and lengthens again upward, so the wrist climbs close
+  //                to the body instead of flapping out like a wing; the hand turns palm-up EARLY (58° at 667) so that it
+  //                is lifted like the right one; rest → cupped 665 → open 667.5
+  //     672        3.5° past its place, settled 675.5–676.5
+  //   the HOLD (677 → cover): a moving hold. While the hour is given the palm is still; as the light leaves it, both
+  //   hands LIFT a little after it (the forearms 3°, a touch longer; the palms tilt 3° more to the sky: about 6 px, the
+  //   right from 679, the left two frames behind) and stay — the gesture of offering completes; then they ease a
+  //   degree to the cover. The shoulders breathe (man.js), and from 22.87 the hands breathe with them (the right palm
+  //   is pinned only while the coin stands on it).
+  const DUA = P.back_dua, DR = absOf(DUA.armR), DL = absOf(DUA.armL);     // man.js: right U 12 / F 150 / H 114 (palm (674, 785), the coin's
+                                                                          // centre (670, 749)); left U 13 / F 147 / H 111, a little lower and more open
+  const dua = {
+    R: {
+      U: chan([[660, S.U], [663, S.U - 0.6], [668, DR.U + 2.2], [672, DR.U - 0.3], [675, DR.U]]),
+      fa: chan([[660, S.fa], [670, DR.fa]]),
+      F: chan([[660, S.F], [662.5, S.F - 3], [664.5, 70], [667, 109], [669.5, 143], [671.5, DR.F + 3.5], [675, DR.F], [679, DR.F], [690, DR.F + 3], [700, DR.F + 3], [717, DR.F + 1.8]]),
+      fb: chan([[660, S.fb], [664.5, 0.47], [670.5, DR.fb], [679, DR.fb], [691, DR.fb + 0.04], [717, DR.fb + 0.04]]),
+      H: chan([[660, S.H], [663, S.H - 5], [666, 96], [669.5, 107], [672.5, DR.H + 2.5], [676, DR.H], [680, DR.H], [692, DR.H + 3], [701, DR.H + 3], [717, DR.H + 1.5]]),
+      pin: chan([[686, 1], [700, 0]]),
+    },
+    L: {
+      U: chan([[660, R0.U], [662.5, R0.U - 1], [667.5, DL.U + 3], [672, DL.U - 0.4], [675.5, DL.U]]),
+      fa: chan([[660, R0.fa], [670.5, DL.fa]]),
+      F: chan([[660, R0.F], [662.5, R0.F - 5], [664.5, 14], [666, 50], [667.5, 96], [669.5, 133], [672, DL.F + 3.5], [675.5, DL.F], [681, DL.F], [692, DL.F + 3], [701, DL.F + 3], [717, DL.F + 1.8]]),
+      fb: chan([[660, R0.fb], [663.5, 0.62], [665.5, 0.42], [668, 0.42], [672, DL.fb], [681, DL.fb], [693, DL.fb + 0.04], [717, DL.fb + 0.04]]),
+      H: chan([[660, R0.H], [663, R0.H - 8], [665.5, 22], [667, 58], [668.5, 84], [670.5, 101], [673, DL.H + 3], [676.5, DL.H], [682, DL.H], [694, DL.H + 3], [702, DL.H + 3], [717, DL.H + 1.5]]),
+    },
+    shy: chan([[660, 0], [662.5, 1.3], [668.5, -0.8], [673, 0.35], [677, 0]]),
+    sh: chan([[661, SIDE_T.sh], [673, DUA.sh]]),
   };
-  // the SINK in its own time τ = 0 … 13 (the shape of the move: who leads, who follows); `sinkAt` maps film frames to τ
-  const HOLD_END = 698, SINK_END = 711.6, REST_FROM = 713;
-  const sink = {
-    U: chan([[0, 58.6], [4, 55.5], [6, 48], [8, 36.5], [11.5, R0.U]]),
-    fa: chan([[0, 0.57], [3, 0.57], [7, 0.66], [11.5, 1]]),
-    F: chan([[0, 69.4], [1, 69.2], [5, 59], [6.5, 51], [8.5, 37.5], [12.5, R0.F]]),
-    fb: chan([[0, 0.55], [4, 0.55], [8, 0.68], [12.5, R0.fb]]),
-    H: chan([[0, 72], [4, 32], [9, 14], [13, R0.H]]),
-    sh: chan([[2, 1], [12, FINAL.sh]]),
-    armL: chan([[3, 1], [12, 0]]),
-  };
-  const sinkPose = (tau, dF = 0, dH = 0) => {
-    const hand = tau < 7.5 ? 'flat' : 'rest';
+  const handR = (f) => (f < 664 ? ['hold', -1] : f < 667 ? ['cupped', 1] : ['dua', 1]);
+  const handL = (f) => (f < 665 ? ['rest', 1] : f < 667.5 ? ['cupped', 1] : ['dua', 1]);
+  const duaPose = (f) => {
+    const r = dua.R, l = dua.L, hr = handR(f), hl = handL(f);
     return {
-      ...SIDE_T,
-      root: { x: FINAL.root.x, y: 0 }, step: 1, lean: 0, sh: sink.sh(tau),
-      armL: { ...SIDE_T.armL, a: SIDE_T.armL.a + sink.armL(tau) },
-      armR: armOf(sink.U(tau), sink.fa(tau), sink.F(tau) + dF, sink.fb(tau), sink.H(tau) + dH, hand, hand === 'rest' ? 1 : -1, 0),
+      ...SIDE_T, sh: dua.sh(f), shy: dua.shy(f),
+      armR: armOf(r.U(f), r.fa(f), r.F(f), r.fb(f), r.H(f), hr[0], hr[1], r.pin(f)),
+      armL: armOf(l.U(f), l.fa(f), l.F(f), l.fb(f), l.H(f), hl[0], hl[1], 0),
     };
   };
-  // Timing by ARC LENGTH of the palm: its speed runs up over the first quarter of the move, cruises, and runs out over
-  // the last quarter (ease in-out with a flat top: 192 px in 13.6 frames, never faster than 19 px a frame in the world)
-  const sinkAt = (() => {
-    const N = 260, len = [0];
-    let prev = M.point('palmR', sinkPose(0));
-    for (let i = 1; i <= N; i++) { const q = M.point('palmR', sinkPose((13 * i) / N)); len.push(len[i - 1] + Math.hypot(q[0] - prev[0], q[1] - prev[1])); prev = q; }
-    const speed = (u) => E.smoothstep(0, 0.25, u) * E.smoothstep(1, 0.77, u);
-    const K = 400, P = [0];
-    for (let i = 1; i <= K; i++) P.push(P[i - 1] + speed((i - 0.5) / K));
-    return (f) => {
-      const u = clamp((f - HOLD_END) / (SINK_END - HOLD_END)), x = u * K, i = Math.min(K - 1, Math.floor(x));
-      const want = (lerp(P[i], P[i + 1], x - i) / P[K]) * len[N];
-      let lo = 0, hi = N;
-      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (len[m] <= want) lo = m; else hi = m; }
-      return (13 * (lo + (want - len[lo]) / ((len[hi] - len[lo]) || 1))) / N;
-    };
-  })();
-  // the settle: forearm and hand swing a little past their rest (3 px at the finger tips) and come back by frame 713
-  const bump = (f, a, b) => { const x = clamp((f - a) / (b - a)); return Math.sin(Math.PI * x) ** 2; };
-  const castPose = (f) => {
-    if (f > HOLD_END) return sinkPose(sinkAt(f), -1.5 * bump(f, 708.4, REST_FROM), -2.2 * bump(f, 709, REST_FROM));
-    const hand = f < 662.5 ? 'hold' : f < 675.5 ? 'open' : 'flat';
-    return {
-      ...SIDE_T,
-      root: { x: cast.rootX(f), y: cast.rootY(f) }, step: cast.step(f), lean: cast.lean(f), sh: cast.sh(f),
-      armL: { ...SIDE_T.armL, a: SIDE_T.armL.a + cast.armL(f) },
-      armR: armOf(cast.U(f), cast.fa(f), cast.F(f), cast.fb(f), cast.H(f), hand, -1, cast.pin(f)),
-    };
-  };
+  const F_DUA = 660, F_GIVE = L.fr(T.coin.give[0]), F_GONE = L.fr(T.coin.give[T.coin.give.length - 1]);   // 660, 677, 686
 
   // ------------------------------------------------------------------ head: {pitch, tilt, turn}
   const hv = (pitch, tilt, turn) => ({ pitch, tilt, turn, x: 0, y: 0 });
@@ -196,9 +172,9 @@ export function makeActing(E, W, U) {
     k(534, hv(-4, 0, 1)), k(549, hv(-1, 0.5, 1), io),                    // 17.80–18.30 follows the light-beads down to the plateau
     k(614, hv(-1, 0.5, 1)), k(627, hv(-3.6, 0, 1), io),                  // 20.47–20.90 lifts a little toward the mescid
     k(644, hv(-3.6, 0, 1)), k(658, hv(1.2, 0.5, 1), io),                 // 21.47–21.93 down with the unrolling rug
-    k(666, hv(1.2, 0.5, 1)), k(669, hv(2.6, -1, 1), io),                 // the swing: dips with the wind-up …
-    k(679, hv(-1.2, 1.5, 1), io),                                        // … and goes with the cast, arriving after the hand
-    k(700, hv(-1.2, 1.5, 1)), k(711, hv(0, 0, 1), io),                   // stays turned toward the mosque; settles with the sinking arm
+    k(663, hv(1.2, 0.5, 1)), k(676, hv(12, 1.5, 1), io),                  // the dua: he bows his head (it arrives after the hands)
+    k(681, hv(12, 1.5, 1)), k(693, hv(10, 1.2, 1), io),                  // … follows the rising light a breath's width
+    k(698, hv(10, 1.2, 1)), k(711, hv(13, 1.5, 1), io),                 // … and bows a little deeper when the far light has answered
   ]);
 
   // ------------------------------------------------------------------ the pose
@@ -215,13 +191,11 @@ export function makeActing(E, W, U) {
       return n > 0 ? { ...p, shy: kf(n, [[0, 0], [2, 1.8], [8, 0]]) } : p;
     }
     if (f < 482) return closePose(f);
-    if (f < 660) return side(f / fps);
-    if (f < REST_FROM) return castPose(f);
-    return FINAL;
+    if (f < F_DUA) return side(f / fps);
+    return duaPose(f);
   }
   function pose(t) {
-    const f = t * fps, p = body(f), h = head(t);
-    return { ...p, head: f >= 673 && f < 682 ? { ...h, x: cast.headX(f) } : h };
+    return { ...body(t * fps), head: head(t) };
   }
 
   // ------------------------------------------------------------------ where the coin is while he has it
@@ -239,21 +213,30 @@ export function makeActing(E, W, U) {
   // his hand out to the right)]
   const ON_PALM = inHand(RECV, C.rest_on_palm);                          // standing on the cupped palm (720, 784)
   const FIST_1 = [46, -21], FIST_2 = [40, -24];                          // in the half-closed mitten: coin r 42 / r 33
-  const TIPS = [65, -14];                                                // shown: beyond the open finger tips, the thumb on its rim
-  const gripU = { close: chan([[473, 0], [476.5, 0.46], [480.5, 1]]), show: chan([[660, 0], [665, 1]]) };
+  const gripU = { close: chan([[473, 0], [476.5, 0.46], [480.5, 1]]), open: chan([[661.5, 0], [665, 0.5], [669, 1]]) };
+  // in the DUA the small coin (r 33) stands in the open palm: its centre 36 px above the palm point (the thumb's bump and
+  // the finger tips in front of its lower rim), leaning 30 % with the tilted hand. The palm point is taken from the
+  // wrist with the open hand's own numbers, so nothing jumps when the hand shapes swap.
+  const PALM_D = [31, -2], UP_D = 36;
+  const onDuaPalm = (h) => {
+    const c = Math.cos(h.rot), s = Math.sin(h.rot), tilt = 0.3 * h.rot;                      // rot < 0: the hand points up-outward
+    return [h.wrist[0] + PALM_D[0] * c - PALM_D[1] * s + UP_D * Math.sin(tilt), h.wrist[1] + PALM_D[0] * s + PALM_D[1] * c - UP_D * Math.cos(tilt)];
+  };
+  // given (22.57 → 22.87): it lifts 7 px off the palm while give.js dabs it out
+  const lift = (f) => 7 * e.sine.inOut(clamp((f - F_GIVE) / (F_GONE - F_GIVE + 1)));
   /**
-   * Coin centre while it is in his hand (15.37–22.43): {x, y, k} — k = the coin's size (see coinK). Drawn BEHIND the
+   * Coin centre while it is in his hand (15.37–22.87): {x, y, k} — k = the coin's size (see coinK). Drawn BEHIND the
    * hand (slot `hands`): thumb and fingers always lie in front of its rim.
    */
   function held(t) {
     const f = t * fps, h = M.hand('R', pose(t)), kk = coinK(f);
     const fist = [lerp(FIST_2[0], FIST_1[0], (kk - K2) / (1 - K2)), lerp(FIST_2[1], FIST_1[1], (kk - K2) / (1 - K2))];
-    let g;
-    if (f < 473) g = ON_PALM;
-    else if (f < 660) { const u = gripU.close(f); g = [lerp(ON_PALM[0], fist[0], u), lerp(ON_PALM[1], fist[1], u)]; }
-    else { const u = gripU.show(f); g = [lerp(fist[0], TIPS[0], u), lerp(fist[1], TIPS[1], u)]; }
     const c = Math.cos(h.rot), s = Math.sin(h.rot);
-    return { x: h.wrist[0] + g[0] * c - g[1] * s, y: h.wrist[1] + g[0] * s + g[1] * c, k: kk };
+    const inFrame = (g) => [h.wrist[0] + g[0] * c - g[1] * s, h.wrist[1] + g[0] * s + g[1] * c];
+    if (f < 473) { const q = inFrame(ON_PALM); return { x: q[0], y: q[1], k: kk }; }
+    if (f < F_DUA) { const u = gripU.close(f), q = inFrame([lerp(ON_PALM[0], fist[0], u), lerp(ON_PALM[1], fist[1], u)]); return { x: q[0], y: q[1], k: kk }; }
+    const u = gripU.open(f), a = inFrame(fist), b = onDuaPalm(h);
+    return { x: lerp(a[0], b[0], u), y: lerp(a[1], b[1], u) - (f > F_GIVE ? lift(f) : 0), k: kk };
   }
-  return { pose, palm, held, coinK, K2, RECV, frames: { LAND } };
+  return { pose, palm, held, coinK, K2, RECV, frames: { LAND, DUA: F_DUA, GIVE: F_GIVE, GONE: F_GONE } };
 }

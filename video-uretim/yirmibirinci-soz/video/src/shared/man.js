@@ -64,6 +64,16 @@ const HANDS = {
     pts: [[-7, -9], [4, -10.6], [14, -12.6], [24, -13.6], [33, -13], [40.6, -9.8], [45.2, -4], [46, 2.8], [43, 8.4], [37, 11.4], [31.6, 12.6],
       [29, 16.2], [23.6, 18.4], [16.6, 17.4], [9.6, 14], [2.6, 10.8], [-7, 9]],
   },
+  dua: {
+    // ADDED for the new ending (22.00 on; nothing else uses it): the open hand of prayer, palm up, seen from the side like
+    // `cupped` but OPEN and at ease - a shallower bowl (the finger tips rise 9 px above the palm instead of 12), a thinner
+    // heel, the thumb a low bump lying forward beside the index finger. Raised to 105-120 deg it stays an open palm and
+    // never turns into a hook. Same palm point as `cupped`, so a pose can swap the two without moving a held thing.
+    palm: [31, -2],
+    pts: [[-7, 9], [5, 10.4], [17, 11], [29, 10.2], [40, 8], [50, 4.6], [58, 0.6], [64.4, -4.2], [67.6, -9],
+      [67.2, -12.4], [64, -13.6], [60, -12], [54, -8.8], [47, -6], [40, -4.2], [35.6, -3.8],
+      [35.6, -6.4], [34.2, -9.8], [30.6, -12], [25, -12.2], [18, -11], [10, -10], [2, -9.2], [-7, -9]],
+  },
 };
 export const HAND_SHAPES = Object.keys(HANDS);
 
@@ -902,6 +912,17 @@ export async function makeMan(E, opts = {}) {
   POSES.back_release = man.reach(P0({ sh: 2, lean: 0.6, step: 1, root: { x: G.stepHips, y: 0 }, head: head({ turn: 1 }) }), 'R', [720, 820], { hand: 'open', handAngle: 110, flip: -1 });
   POSES.back_follow_through = man.reach(P0({ sh: 3, step: 1, root: { x: G.stepHips, y: 0 }, head: head({ turn: 1 }) }), 'R', [755, 800], { hand: 'open', handAngle: 102, flip: -1 });
   POSES.back_final_stand = P0({ sh: -4, step: 1, root: { x: G.stepHips, y: 0 }, head: head({ turn: 1 }) });
+  // ADDED for the new ending (the act-2 team; nothing above is changed): THE DUA, seen from behind. He stands turned to
+  // screen-right, head bowed; the upper arms hang where they hang (drawn a little shorter: the elbows are before him),
+  // both forearms rise steeply (150 / 147 deg) and the two OPEN hands (`dua`, palms up) stand a little outside the
+  // shoulders at chest-to-shoulder height: palms at (674, 785) and (395, 790). The left one a touch lower and more
+  // open - symmetric, not mirrored. Not a shrug (hands high, forearms steep, shoulders down), not a surrender (palms are
+  // bowls turned to the sky, below the head).
+  POSES.back_dua = P0({
+    sh: -3, head: head({ turn: 1, pitch: 12, tilt: 1.5 }),
+    armR: { a: 12, fa: 0.85, b: 138, fb: 0.80, w: -36, hand: 'dua', flip: 1, pin: 0 },
+    armL: { a: 13, fa: 0.86, b: 134, fb: 0.78, w: -36, hand: 'dua', flip: 1, pin: 0 },
+  });
   man.POSES = POSES;
   man.REST_ARM = REST;
 
