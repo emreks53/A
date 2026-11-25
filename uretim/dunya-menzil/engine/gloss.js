@@ -1,6 +1,7 @@
 /* Glosses: the modern-Turkish meaning of an archaic word appears, as an elegant subtitle, at the very first
-   phoneme of that word. Only the meaning is written (no source word, no box). Words spoken < 1 s apart are
-   joined on one line so neither flashes by. Drawn crisp on the overlay canvas (not watercolour-processed).
+   phoneme of that word. Only the meaning is written (no source word, no box). When the next meaning arrives,
+   the previous one leaves at that moment (never two meanings side by side). Drawn crisp on the overlay canvas
+   (not watercolour-processed).
    Vertical band: 64-82% of the frame (the app's own buttons stay above it). */
 (function () {
   const E = window.E;
@@ -17,8 +18,7 @@
     groups = [];
     for (const g of E.GLOSSES) {
       const item = { ...g, t0: E.T(g.from) - E.GLOSS_LEAD, wordEnd: E.Te(g.to) };
-      if (g.join && groups.length) groups[groups.length - 1].items.push(item);
-      else groups.push({ items: [item], tone: g.tone || 'dark', verse: !!g.verse, hold: g.hold });
+      groups.push({ items: [item], tone: g.tone || 'dark', verse: !!g.verse, hold: g.hold });
     }
     groups.forEach((gr) => { gr.t0 = gr.items[0].t0; });
     groups.forEach((gr, i) => {
@@ -26,7 +26,12 @@
       let end = Math.max(last.wordEnd + 1.25, last.t0 + 2.0);
       if (gr.hold) end = gr.hold;
       const next = groups[i + 1];
-      if (next && !gr.verse) end = Math.min(end, next.t0 - 0.06);
+      gr.fade = FADE_OUT;
+      if (next && next.t0 <= end + FADE_OUT) {
+        // replaced: the old meaning leaves exactly as the new one starts to appear
+        end = Math.min(end, next.t0);
+        gr.fade = 0.2;
+      }
       gr.t1 = end;
     });
     E.GLOSS_GROUPS = groups;
@@ -103,9 +108,9 @@
   E.drawGlosses = (ctx, t) => {
     if (!groups) build();
     for (const gr of groups) {
-      if (t < gr.t0 || t > gr.t1 + FADE_OUT) continue;
-      const out = 1 - E.ease.inOutSine(E.seg(t, gr.t1, gr.t1 + FADE_OUT));
-      const lift = E.ease.inQuad(E.seg(t, gr.t1, gr.t1 + FADE_OUT)) * 8;
+      if (t < gr.t0 || t > gr.t1 + gr.fade) continue;
+      const out = 1 - E.ease.inOutSine(E.seg(t, gr.t1, gr.t1 + gr.fade));
+      const lift = E.ease.inQuad(E.seg(t, gr.t1, gr.t1 + gr.fade)) * 8;
       if (gr.verse) {
         const size = VERSE_SIZE;
         ctx.font = `600 italic ${size}px ${FONT_FAMILY}`;
@@ -115,14 +120,14 @@
         lines.forEach((ln, i) => drawLine(ctx, ln, E.W / 2, y0 + i * lh - lift, t, gr.t0 + i * 0.18, gr.tone, size, out));
         continue;
       }
-      // joined items: build the line progressively; earlier items keep position as later ones arrive
+      // one meaning per group (groups are never joined)
       ctx.font = `600 italic ${SIZE}px ${FONT_FAMILY}`;
       const sep = gr.items.length > 1 && gr.items.some((it) => /^(sonlu)$/.test(it.text)) ? ', ' : ' ';
       const full = gr.items.map((it) => it.text).join(sep);
       let size = SIZE;
       while (ctx.measureText(full).width > MAX_W && size > 48) { size -= 2; ctx.font = `600 italic ${size}px ${FONT_FAMILY}`; }
       const lines = wrap(ctx, full, MAX_W);
-      const y = (gr.items[0].text && gr.tone === 'light' && E.GLOSS_GROUPS.some((g2) => g2.verse && t < g2.t1 + FADE_OUT && t > g2.t0)) ? 1530 : Y_CENTER;
+      const y = Y_CENTER;
       if (lines.length === 1) {
         // each item reveals at its own onset
         const totalW = ctx.measureText(full).width;

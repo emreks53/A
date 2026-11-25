@@ -42,7 +42,6 @@
   E.GLOSS_LEAD = 0.05;
 
   /* from/to: word index range in E.WORDS that the meaning belongs to.
-     join: true -> shown together with the previous gloss on the same line (they are spoken < 1 s apart).
      tone: 'light' text for dark backgrounds. y: optional centre line override. */
   E.GLOSSES = [
     { from: 4, to: 4, text: 'konaklama yeridir' },
@@ -50,18 +49,18 @@
     { from: 33, to: 33, text: 'sayfadır' },
     { from: 38, to: 40, text: 'amel defterimize' },
     { from: 59, to: 59, text: 'geçici' },
-    { from: 60, to: 60, text: 'sonlu', join: true },
+    { from: 60, to: 60, text: 'sonlu' },
     { from: 70, to: 70, text: 'ayna' },
     { from: 76, to: 80, text: 'Allah’ın isimlerinin nakışlarına' },
     { from: 83, to: 85, text: 'isimlerin yansımasına' },
-    { from: 86, to: 87, text: 'geçer', join: true },
+    { from: 86, to: 87, text: 'geçer' },
     { from: 95, to: 95, text: 'geçici' },
     { from: 99, to: 100, text: 'anlayıp' },
     { from: 103, to: 103, text: 'şiddetli' },
     { from: 110, to: 110, text: 'hislerimizi' },
     { from: 114, to: 114, text: 'meyvesi' },
     { from: 118, to: 118, text: 'âhirete ait' },
-    { from: 119, to: 119, text: 'faydalarına', join: true },
+    { from: 119, to: 119, text: 'faydalarına' },
     { from: 128, to: 129, text: 'dönüşür', hold: 67.85 },   // gone before the night ink floods in (s15)
     { from: 131, to: 136, text: 'Allah’ı unuttular, Allah da onlara kendilerini unutturdu; işte onlar fasıklardır',
       tone: 'light', verse: true, hold: 74.35 },
@@ -70,6 +69,6 @@
     { from: 149, to: 149, text: 'genel', tone: 'light' },
     { from: 155, to: 155, text: 'ölümsüz', tone: 'light' },
     { from: 160, to: 160, text: 'şiddetli', tone: 'light' },
-    { from: 161, to: 162, text: 'hisler', tone: 'light', join: true },
+    { from: 161, to: 162, text: 'hisler', tone: 'light' },
   ];
 })();
