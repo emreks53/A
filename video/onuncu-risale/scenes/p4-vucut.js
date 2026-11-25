@@ -63,6 +63,142 @@
   }
   const P = (fr, key) => [fr.ox + fr.A[key][0], fr.oy + fr.A[key][1]];
 
+  // hangi nimet hangi duyuya "hissettirilir" (ihsas yayları bu noktalara gider)
+  const FEEL = { nar: 'eye', uzum: 'mouth', ekmek: 'fingertip', bal: 'mouth', sut: 'mouth', 'su-testi': 'ear', elma: 'nose', incir: 'mouth', zeytin: 'mouth', gul: 'nose', hurma: 'mouth' };
+  // kamera: durmadan, yavaş; duyular söylenirken başa yaklaşır, aletler/nimetler bağlanırken tüm kadraj; yükselişten önce nötr
+  function cam4(t) {
+    return camSmooth([
+      [17.12, { x: 540, y: 960, z: 1.0 }, { stop: true }],
+      [18.6, { x: 540, y: 935, z: 1.035 }],
+      [20.3, { x: 545, y: 905, z: 1.06 }],
+      [22.4, { x: 562, y: 836, z: 1.08 }],
+      [24.0, { x: 550, y: 880, z: 1.06 }],
+      [25.4, { x: 540, y: 948, z: 1.012 }],
+      [27.3, { x: 540, y: 960, z: 1.0 }, { stop: true }],
+    ], t);
+  }
+  const SWEEP = () => [tInsan() - 0.05, tInsan() + 0.95]; // normal → şema tarama çizgisi (zemin ve adam birlikte)
+
+  function drawMan(ctx, t, fr, ys) {
+    const drawNormal = () => { drawPart(ctx, spr('adam-ayakta-govde'), fr.ox, fr.oy); drawPart(ctx, spr('adam-ayakta-bas'), fr.ox, fr.oy, 1, Math.sin(t * 0.9) * 0.01); drawPart(ctx, spr('adam-ayakta-kol'), fr.ox, fr.oy, 1, Math.sin(t * 1.2) * 0.012); };
+    const drawSema = () => { if (hasSpr('adam-ayakta-sema')) drawPart(ctx, spr('adam-ayakta-sema'), fr.ox, fr.oy); };
+    if (ys == null) { drawNormal(); return; }
+    if (ys <= -50) { drawNormal(); return; }
+    if (ys >= H + 50) { drawSema(); return; }
+    ctx.save(); ctx.beginPath(); ctx.rect(-200, ys, W + 400, H * 2); ctx.clip(); drawNormal(); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(-200, -H, W + 400, ys + H); ctx.clip(); drawSema(); ctx.restore();
+  }
+
+  function drawScene(ctx, t, wp) {
+    const [s0, s1] = SWEEP(); const sw = inv(s0, s1, t);
+    const ys = sw > 0 && sw < 1 ? lerp(-60, H + 60, E.io2(sw)) : (sw >= 1 ? H + 100 : -100);
+    // zemin: sıcak → çivit, karışık renkli ara ton yok; tarama çizgisiyle değişir
+    drawSpr(ctx, spr('p4-sicak'), -48, -170, 1.09, 0, 1); // zemin üstten taşar: yükselişte bulut kenarı arasından astar görünmesin
+    if (sw >= 1) drawSpr(ctx, spr('p4-civit'), -48, -170, 1.09, 0, 1);
+    else if (sw > 0) { ctx.save(); ctx.beginPath(); ctx.rect(-200, -400, W + 400, ys + 400); ctx.clip(); drawSpr(ctx, spr('p4-civit'), -48, -170, 1.09, 0, 1); ctx.restore(); }
+    const diag = E.io2(inv(tInsan() - 0.15, tInsan() + 0.55, t));
+    const fr = manFrame();
+    // nimetler
+    const ih = tIhsas();
+    N.forEach((n, i) => {
+      const st = tNimet() + i * 0.085; const p = inv(st, st + 0.55, t); if (p <= 0) return;
+      const pop = E.outBack(p, 1.6);
+      const si = SENSES.findIndex((q) => q[0] === n[7]);
+      const lk = n[7] ? E.io2(inv(tAlat() + si * 0.16 + 0.12, tAlat() + si * 0.16 + 0.5, t)) : 0; // aletle bağlanma (yumuşak)
+      let x = lerp(n[1], n[4], E.io3(diag)), y = lerp(n[2], n[5], E.io3(diag)), s = lerp(n[3], n[6], E.io3(diag));
+      s *= 1 + 0.25 * lk;
+      const alpha = lerp(1, lerp(0.42, 1, lk), diag);
+      const bob = Math.sin(t * 1.6 + i * 1.3) * 7 * (1 - diag * 0.6);
+      // ihsas: nimetten ilgili duyuya akan belirgin noktalı yay (duyuya değmeden durur)
+      const ap = E.out3(inv(ih + i * 0.04, ih + 0.65 + i * 0.04, t)) * (1 - E.in2(inv(tInsan() - 0.25, tInsan() + 0.15, t)));
+      if (ap > 0 && window.UI && fr) {
+        const key = FEEL[n[0]] || 'nose'; const [hx, hy] = P(fr, key);
+        const dx = hx - x, dy = hy - y; const len = Math.hypot(dx, dy) || 1;
+        const tx = x + dx * (1 - 46 / len), ty = y + dy * (1 - 46 / len);
+        ctx.save(); ctx.globalAlpha = 0.95 * ap;
+        UI.dots(ctx, x + dx / len * 64, y + dy / len * 64, tx, ty, ap, '#FFF6E2', { gap: 22, size: 6.4, size1: 4.2, bend: (i % 2 ? 1 : -1) * 60, offset: -Math.max(0, t - ih) * 60 });
+        ctx.restore();
+        if (ap > 0.6 && window.UI) { const k = (t - ih - 0.5 - i * 0.04); if (k > 0 && k < 0.6) UI.sparkle(ctx, tx, ty, 20, k, '#FFF6E2'); }
+      }
+      // ifaza: bolluk — her nimetten iki-üç küçük eşi taşar ve yanına yerleşir
+      const fz = E.out3(inv(tIfaza() + i * 0.05, tIfaza() + 0.55 + i * 0.05, t)) * (1 - diag);
+      if (fz > 0 && hasSpr(n[0])) {
+        for (let k = 0; k < 2; k++) {
+          const a = i * 1.9 + k * 2.7 + 0.4; const rr = (104 + k * 18) * E.outBack(fz, 1.4);
+          drawSpr(ctx, spr(n[0]), x + Math.cos(a) * rr, y + bob + Math.sin(a) * rr * 0.75, s * 0.46 * fz, Math.sin(t + k) * 0.05, fz);
+        }
+      }
+      if (hasSpr(n[0])) drawSpr(ctx, spr(n[0]), x, y + bob, s * pop, Math.sin(t * 1.1 + i) * 0.04, alpha);
+    });
+    if (!fr) return;
+    // adam: p3'ten gelen fırça silmesi bitince belirir (şeritler arasında kopuk görünmesin)
+    // ayaklardan başa doğru tek fırça darbesiyle boyanır gibi açılır (yarı saydam hayalet ya da kopuk baş yok)
+    const manP = E.io2(inv(17.4, 17.82, t));
+    if (manP > 0) {
+      if (wp < 1) { ctx.restore(); ctx.save(); ctx.translate(0, riseY(t)); camApply(ctx, cam4(t)); } // silme maskesinin dışına çık (dönüşümler yeniden)
+      ctx.save();
+      if (manP < 1) { const yTop = lerp(fr.oy + fr.A.h + 20, fr.oy - 40, manP); ctx.beginPath(); ctx.rect(-200, yTop, W + 400, H * 2); ctx.clip(); }
+      drawMan(ctx, t, fr, sw > 0 ? ys : null); ctx.restore();
+    }
+    // tarama çizgisi
+    if (sw > 0 && sw < 1) { ctx.save(); ctx.globalAlpha = Math.sin(sw * Math.PI) * 0.9; ctx.fillStyle = '#9BF0E8'; ctx.shadowColor = '#7FE3E0'; ctx.shadowBlur = 24; ctx.fillRect(-100, ys - 2, W + 200, 4); ctx.restore(); }
+    // organlar: kalp (hissiyat), akciğer + mide (cihazat)
+    const organ = (name, key, t0, pulse) => {
+      if (!hasSpr(name)) return; const a = E.out3(inv(t0, t0 + 0.45, t)); if (a <= 0) return;
+      const [cx, cy] = P(fr, key); const sc = 0.85 + 0.15 * E.outBack(inv(t0, t0 + 0.5, t)) + (pulse || 0);
+      if (window.UI) UI.glow(ctx, cx, cy, 120, '#FF9A7A', 0.17 * a + (pulse || 0) * 0.9);
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.translate(-cx, -cy); drawPart(ctx, spr(name), fr.ox, fr.oy, 1, 0, a); ctx.restore();
+    };
+    const beat = (tt, b) => Math.exp(-Math.pow((tt - b) * 9, 2)) * 0.09;
+    const hb = beat(t, tHis() + 0.25) + beat(t, tHis() + 0.62) + beat(t, tHis() + 1.3) * 0.6;
+    organ('organ-akciger', 'lungs', tCihaz(), Math.sin((t - tCihaz()) * 2.4) * 0.015);
+    organ('organ-mide', 'stomach', tCihaz() + 0.22, 0);
+    organ('organ-kalp', 'heart', tHis(), hb);
+    // aza (uzuvlar): yumuşak kenarlı ışık bandı şemada aşağı süzülür (sert dikdörtgen yok)
+    const az = inv(tAza(), tAza() + 1.0, t);
+    if (az > 0 && az < 1 && hasSpr('adam-ayakta-sema')) {
+      const yb = lerp(fr.oy + fr.A.h * 0.22, fr.oy + fr.A.h * 1.02, E.io2(az));
+      const [tc, tx] = tmpCanvas('aza'); tx.setTransform(ctx.getTransform());
+      drawPart(tx, spr('adam-ayakta-sema'), fr.ox, fr.oy);
+      tx.globalCompositeOperation = 'destination-in';
+      const g = tx.createLinearGradient(0, yb - 190, 0, yb + 40); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.7, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      tx.fillStyle = g; tx.fillRect(-400, yb - 200, W + 800, 260);
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.6 * Math.sin(az * Math.PI); ctx.drawImage(tc, 0, 0); ctx.restore();
+    }
+    // duyular: halka + madalyon + bağ çizgisi; aletler: madalyondan nimete; "anlaşılır ki": bütün bağlar birlikte parlar
+    const tA = tAnla();
+    SENSES.forEach((sn, i) => {
+      const st = tHavass() + i * 0.12; const p = inv(st, st + 0.5, t); if (p <= 0 || !fr.A[sn[2]]) return;
+      const [px, py] = P(fr, sn[2]); const mx = sn[3], my = sn[4];
+      const pulse = Math.exp(-Math.pow((t - tA - 0.15 - i * 0.06) * 4.5, 2));
+      if (window.UI) {
+        const face = ['eye', 'nose', 'mouth'].includes(sn[2]);
+        UI.ring(ctx, px, py, face ? 15 : 24, E.out3(p), '#9BF0E8', face ? 3.4 : 4, 10 + i);
+        ctx.save(); ctx.globalAlpha = E.out3(inv(st + 0.15, st + 0.55, t));
+        UI.line(ctx, [[px, py], [lerp(px, mx, 0.55), lerp(py, my, 0.2)], [mx, my]], E.out3(inv(st + 0.1, st + 0.55, t)), '#7FE3E0', 2.6 + pulse * 2.4, 20 + i);
+        ctx.restore();
+      }
+      const n = N.find((q) => q[7] === sn[0]);
+      const lt = tAlat() + i * 0.16; const lp = E.io3(inv(lt, lt + 0.55, t));
+      if (n && lp > 0 && window.UI) {
+        const pts = [[mx, my], [lerp(mx, n[4], 0.5), lerp(my, n[5], 0.5) - 10], [n[4], n[5]]];
+        ctx.save(); ctx.globalAlpha = 0.95;
+        UI.line(ctx, pts, lp, '#FFD27A', 3 + pulse * 3, 40 + i);
+        if (pulse > 0.05) UI.glow(ctx, n[4], n[5], 96, '#FFD27A', 0.26 * pulse);
+        ctx.restore();
+        // anlaşılır: duyudan nimete akan ışık boncuğu
+        const bu = inv(tA - 0.05 + i * 0.06, tA + 0.55 + i * 0.06, t);
+        if (bu > 0 && bu < 1) {
+          const q = E.io2(bu), w0 = 1 - q; const bx = w0 * w0 * pts[0][0] + 2 * w0 * q * pts[1][0] + q * q * pts[2][0], by = w0 * w0 * pts[0][1] + 2 * w0 * q * pts[1][1] + q * q * pts[2][1];
+          ctx.save(); ctx.globalAlpha = Math.sin(bu * Math.PI); UI.glow(ctx, bx, by, 30, '#FFE7A8', 0.4); ctx.fillStyle = '#FFF4D8'; ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+      }
+      const pz = Math.exp(-Math.pow((t - tA - 0.15) * 5, 2));
+      const ms = E.outBack(inv(st + 0.2, st + 0.65, t), 1.5) * (1 + pz * 0.08);
+      if (hasSpr(sn[1])) drawSpr(ctx, spr(sn[1]), mx, my, 0.6 * ms);
+    });
+  }
+
   Engine.add({
     name: 'p4', t0: T0, t1: T1, z: 4,
     draw(ctx, t) {
@@ -71,106 +207,9 @@
       if (wp < 1) { ctx.save(); ctx.clip(BrushWipe.mask(wp, 33)); }
       // yukarı dönüş: her şey aşağı kayar
       ctx.translate(0, riseY(t));
-      const diag = E.io2(inv(tInsan() - 0.15, tInsan() + 0.55, t));
-      drawSpr(ctx, spr('p4-sicak'), -48, -170, 1.09, 0, 1); // zemin üstten taşar: yükselişte bulut kenarı arasından astar görünmesin
-      if (diag > 0) drawSpr(ctx, spr('p4-civit'), -48, -170, 1.09, 0, diag);
-      const fr = manFrame();
-      const head = fr ? P(fr, 'nose') : [600, 640];
-      // nimet ↔ adam: noktalı yaylar (hissettirmek)
-      const ih = tIhsas();
-      N.forEach((n, i) => {
-        const st = tNimet() + i * 0.085; const p = inv(st, st + 0.55, t); if (p <= 0) return;
-        const pop = E.outBack(p, 1.6);
-        const linked = n[7] && t > tAlat() + SENSES.findIndex((s) => s[0] === n[7]) * 0.16 + 0.25;
-        let x = lerp(n[1], n[4], E.io3(diag)), y = lerp(n[2], n[3 + 2], E.io3(diag)), s = lerp(n[3], n[6], E.io3(diag));
-        if (linked) s *= 1 + 0.25 * E.outBack(inv(tAlat(), tAlat() + 0.5, t));
-        const alpha = lerp(1, linked ? 1 : 0.42, diag);
-        const bob = Math.sin(t * 1.6 + i * 1.3) * 7 * (1 - diag * 0.6);
-        // ihsas yayları
-        const ap = E.out3(inv(ih + i * 0.03, ih + 0.7 + i * 0.03, t)) * (1 - E.in2(inv(tInsan() - 0.2, tInsan() + 0.3, t)));
-        if (ap > 0 && window.UI) {
-          ctx.save(); ctx.globalAlpha = 0.85 * ap;
-          const dx = head[0] - x, dy = head[1] - y; const len = Math.hypot(dx, dy);
-          const tx = x + dx * 0.78, ty = y + dy * 0.78; // başa kadar değil, yakınında durur
-          UI.dots(ctx, x + dx / len * 70, y + dy / len * 70, tx, ty, ap, '#FFF3D6', { gap: 20, size: 4.6, bend: (i % 2 ? 1 : -1) * 70, offset: -Math.max(0, t - ih) * 40 });
-          ctx.restore();
-        }
-        // feyizlendirme: her nimetten küçük kopyalar taşar
-        const fz = E.out3(inv(tIfaza() + i * 0.04, tIfaza() + 0.6 + i * 0.04, t)) * (1 - diag);
-        if (fz > 0 && hasSpr(n[0])) {
-          for (let k = 0; k < 2; k++) {
-            const a = i * 1.7 + k * Math.PI + (t - tIfaza()) * 0.6; const rr = 70 + k * 18;
-            drawSpr(ctx, spr(n[0]), x + Math.cos(a) * rr * fz, y + Math.sin(a) * rr * 0.7 * fz, s * 0.5 * fz, 0, fz * 0.95);
-          }
-        }
-        if (hasSpr(n[0])) drawSpr(ctx, spr(n[0]), x, y + bob, s * pop, Math.sin(t * 1.1 + i) * 0.04, alpha);
-      });
-      // adam: normal → şema (yukarıdan aşağı tarama çizgisi)
-      if (fr) {
-        const sweep = inv(tInsan() + 0.1, tInsan() + 1.05, t);
-        const yTop = fr.oy, yBot = fr.oy + fr.A.h; const ys = lerp(yTop - 20, yBot + 20, E.io2(sweep));
-        const drawNormal = () => { drawPart(ctx, spr('adam-ayakta-govde'), fr.ox, fr.oy); drawPart(ctx, spr('adam-ayakta-bas'), fr.ox, fr.oy, 1, Math.sin(t * 0.9) * 0.01); drawPart(ctx, spr('adam-ayakta-kol'), fr.ox, fr.oy, 1, Math.sin(t * 1.2) * 0.012); };
-        const drawSema = () => { if (hasSpr('adam-ayakta-sema')) drawPart(ctx, spr('adam-ayakta-sema'), fr.ox, fr.oy); };
-        if (sweep <= 0) drawNormal();
-        else if (sweep >= 1) drawSema();
-        else {
-          ctx.save(); ctx.beginPath(); ctx.rect(0, ys, W, H); ctx.clip(); drawNormal(); ctx.restore();
-          ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, ys); ctx.clip(); drawSema(); ctx.restore();
-          ctx.save(); ctx.globalAlpha = Math.sin(sweep * Math.PI); ctx.fillStyle = '#9BF0E8'; ctx.shadowColor = '#7FE3E0'; ctx.shadowBlur = 24; ctx.fillRect(fr.ox - 60, ys - 2, fr.A.w + 120, 4); ctx.restore();
-        }
-        // organlar: kalp (hissiyat), akciğer + mide (cihazat)
-        const organ = (name, key, t0, pulse) => {
-          if (!hasSpr(name)) return; const a = E.out3(inv(t0, t0 + 0.45, t)); if (a <= 0) return;
-          const [cx, cy] = P(fr, key); const s = 0.85 + 0.15 * E.outBack(inv(t0, t0 + 0.5, t)) + (pulse || 0);
-          if (window.UI) UI.glow(ctx, cx, cy, 120, '#FF9A7A', 0.17 * a + (pulse || 0) * 0.9);
-          ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy); drawPart(ctx, spr(name), fr.ox, fr.oy, 1, 0, a); ctx.restore();
-        };
-        const beat = (tt, b) => Math.exp(-Math.pow((tt - b) * 9, 2)) * 0.09;
-        const hb = beat(t, tHis() + 0.25) + beat(t, tHis() + 0.62) + beat(t, tHis() + 1.3) * 0.6;
-        organ('organ-akciger', 'lungs', tCihaz(), Math.sin((t - tCihaz()) * 2.4) * 0.015);
-        organ('organ-mide', 'stomach', tCihaz() + 0.22, 0);
-        organ('organ-kalp', 'heart', tHis(), hb);
-        // aza: uzuvlarda hat ışığı süpürmesi
-        const az = inv(tAza(), tAza() + 0.9, t);
-        if (az > 0 && az < 1 && hasSpr('adam-ayakta-sema')) {
-          const yb = lerp(fr.oy + fr.A.h * 0.25, fr.oy + fr.A.h, E.io2(az));
-          ctx.save(); ctx.beginPath(); ctx.rect(0, yb - 160, W, 160); ctx.clip(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.55 * Math.sin(az * Math.PI); drawPart(ctx, spr('adam-ayakta-sema'), fr.ox, fr.oy); ctx.restore();
-        }
-        // duyular: halka + madalyon + bağ çizgisi; aletler: madalyondan nimete
-        SENSES.forEach((s, i) => {
-          const st = tHavass() + i * 0.12; const p = inv(st, st + 0.5, t); if (p <= 0 || !fr.A[s[2]]) return;
-          const [px, py] = P(fr, s[2]); const mx = s[3], my = s[4];
-          const pulse = Math.exp(-Math.pow((t - tAnla() - 0.15) * 5, 2));
-          if (window.UI) {
-            const face = ['eye', 'nose', 'mouth'].includes(s[2]);
-            UI.ring(ctx, px, py, face ? 15 : 24, E.out3(p), '#9BF0E8', face ? 3.4 : 4, 10 + i);
-            ctx.save(); ctx.globalAlpha = E.out3(inv(st + 0.15, st + 0.55, t));
-            UI.line(ctx, [[px, py], [lerp(px, mx, 0.55), lerp(py, my, 0.2)], [mx, my]], E.out3(inv(st + 0.1, st + 0.55, t)), '#7FE3E0', 2.6 + pulse * 2, 20 + i);
-            ctx.restore();
-          }
-          const n = N.find((q) => q[7] === s[0]);
-          const lt = tAlat() + i * 0.16; const lp = E.io3(inv(lt, lt + 0.55, t));
-          if (n && lp > 0 && window.UI) {
-            ctx.save(); ctx.globalAlpha = 0.95;
-            UI.line(ctx, [[mx, my], [lerp(mx, n[4], 0.5), lerp(my, n[5], 0.5) - 10], [n[4], n[5]]], lp, '#FFD27A', 3 + pulse * 2.5, 40 + i);
-            if (pulse > 0.05) UI.glow(ctx, n[4], n[5], 90, '#FFD27A', 0.2 * pulse);
-            ctx.restore();
-          }
-          const ms = E.outBack(inv(st + 0.2, st + 0.65, t), 1.5) * (1 + pulse * 0.08);
-          if (hasSpr(s[1])) drawSpr(ctx, spr(s[1]), mx, my, 0.6 * ms);
-        });
-      }
+      camApply(ctx, cam4(t));
+      drawScene(ctx, t, wp);
       if (wp < 1) ctx.restore();
     },
   });
-  sfx(tWipe, 'brush-big', -8);
-  N.forEach((_, i) => sfx(17.62 + i * 0.085 + 0.12, 'pop', -16 - (i % 3), { pitch: 0.85 + (i % 5) * 0.07 }));
-  sfx(18.27, 'airy', -20, { dur: 0.9 }); sfx(18.94, 'shimmer', -24, { dur: 1.1 });
-  sfx(20.43, 'whoosh-deep', -12, { dur: 1.2 }); sfx(20.6, 'scan', -24, { dur: 1.0 });
-  for (let i = 0; i < 5; i++) sfx(22.15 + i * 0.12 + 0.05, 'tick', -20, { pitch: 1 + i * 0.08 });
-  sfx(23.18, 'heartbeat', -14); sfx(23.55, 'heartbeat', -16);
-  sfx(23.7, 'bubble', -22); sfx(24.73, 'sweep', -22, { dur: 0.9 });
-  for (let i = 0; i < 5; i++) sfx(25.46 + i * 0.16 + 0.2, 'tick-warm', -20, { pitch: 1 + i * 0.06 });
-  sfx(27.0, 'bloom', -18, { dur: 1.4 });
-  sfx(27.45, 'rise', -12, { dur: 2.0 });
 })();

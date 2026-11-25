@@ -60,6 +60,12 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     silver: ['#323A52', '#4C5672', '#6C7894', '#909CB6', '#B6C0D6', '#D8E0EE', '#F0F4FA', '#FFFFFF'],
     under: Paint.UNDER,
   };
+  // solmuş eşler (fânilik): kırmızı/mor/yeşil kalır, tozlanır ve söner — kahve, siyah, çürük tonu YOK
+  const FADE = YIY.fade;
+  PAL.arilK = PAL.aril.map((c) => FADE(c, { dh: -3, kC: 0.64 }));            // soluk lal (garnet), sönük parıltı
+  PAL.pithK = PAL.pith.map((c) => FADE(c, { kL: 0.95, add: 0, kC: 0.7 }));   // hafif matlaşmış krem zar/kabuk içi
+  PAL.grapeK = PAL.grapeP.map((c) => FADE(c, { dh: 8, kC: 0.66 }));          // tozlu menekşe
+  PAL.leafW = PAL.leaf.map((c, i) => mix(c, ['#3E4416', '#545A1C', '#6E7224', '#8C8C2E', '#AAA43C', '#C6BC52', '#DED27A'][i], 0.7)); // sarıya dönmeye başlamış // biraz sararmış
   YIYECEK.PAL = PAL;
 
   // ---- dışbükey çokgen yardımcıları (tane hücreleri)
@@ -109,29 +115,30 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     if (o.glow ?? 0.6) fill(S, ellipsePath(cx + sz * 0.3, cy + sz * 0.26, sz * 0.36, sz * 0.22, -0.5), AP[5], { clip: [bp, crescent(bp, bb, sz * 0.5)], height: false, alpha: o.glow ?? 0.6 });
     // fırça izi: ışık katında tek kısa darbe
     dab(S, cx + LX * sz * 0.3, cy + LY * sz * 0.3, -0.5 + (r2() - 0.5) * 0.6, (sz * 0.9) / K, (sz * 0.42) / K, AP[4], { alpha: 0.5, height: false, dry: 0.5 });
-    if (wi < 0.5) {
-      const a = 1 - wi * 2; const hs = 0.6 + r2() * 0.8; const hx = cx + LX * sz * (0.42 + r2() * 0.18) + (r2() - 0.5) * sz * 0.2, hy = cy + LY * sz * (0.5 + r2() * 0.15);
-      if (r2() < 0.88) fill(S, ellipsePath(hx, hy, sz * 0.16 * hs, sz * 0.1 * hs, -0.55), '#FFFFFF', { alpha: 0.95 * a, height: false });
-      if (r2() < 0.4) fill(S, ellipsePath(hx + sz * 0.26, hy - sz * 0.05, sz * 0.06 * hs, sz * 0.045 * hs, -0.5), '#FFFFFF', { alpha: 0.8 * a, height: false });
+    if (wi < 0.5 || o.hiA) { // o.hiA / o.hiC: solmuşta sönük (ama yerinde) parıltı
+      const a = o.hiA ?? 1 - wi * 2; const hc = o.hiC ?? '#FFFFFF'; const hs = (0.6 + r2() * 0.8) * (o.hiS ?? 1); const hx = cx + LX * sz * (0.42 + r2() * 0.18) + (r2() - 0.5) * sz * 0.2, hy = cy + LY * sz * (0.5 + r2() * 0.15);
+      if (r2() < 0.88) fill(S, ellipsePath(hx, hy, sz * 0.16 * hs, sz * 0.1 * hs, -0.55), hc, { alpha: 0.95 * a, height: false });
+      if (r2() < 0.4) fill(S, ellipsePath(hx + sz * 0.26, hy - sz * 0.05, sz * 0.06 * hs, sz * 0.045 * hs, -0.5), hc, { alpha: 0.8 * a, height: false });
     } else fill(S, ellipsePath(cx + LX * sz * 0.4, cy + LY * sz * 0.45, sz * 0.12, sz * 0.08, -0.6), AP[6], { alpha: 0.45, height: false });
     return sh;
   }
 
   // ================================================================ NAR AÇIK (yarım nar, kesik yüzü yukarıda; sofra açısında)
-  // geometri ortak: taze ve kuru aynı yerleşimi paylaşır (çapraz geçiş için)
-  const PITH_K = ['#4E3622', '#62452C', '#7A5A3A', '#8C6A44', '#A07850', '#B48C62'];
-  const MEMB_K = ['#5A3E22', '#7A5A30', '#8A6A3A', '#A07E46', '#B08A50', '#C8A468'];
+  // geometri ortak: taze ve solmuş aynı yerleşimi (zarlar, taneler, cepler) ve aynı pivotu paylaşır (çapraz geçiş için).
+  // solmuş (wi=1): kırmızı kalır (tozlu gül-kırmızısı), %5 büzüşür (alt nokta sofrada sabit), kabukta 2-3 yumuşak göçük,
+  // krem zarlar hafif matlaşır, taneler soluk lal, ayrı ve okunur, sönük parıltılı. Kahve / siyah / çürük tonu YOK.
   function paintNarAcik(wi = 0) {
     const k = 2.2, K = k; const w = 520 * K, h = 420 * K;
     const S = Paint.sprite(w, h, { seed: 1201, k }); const rr = rng(1207);
-    const cx = 256 * K, cy = 150 * K; // kesik yüz merkezi
+    const RX0 = 214 * K, RY0 = 86 * K, DOWN0 = 176 * K, cy0 = 150 * K;
     const shr = 1 - wi * 0.05;
-    const RX = 214 * K * shr, RY = 86 * K * shr; // yüz elipsi (RY/RX = 0.40, sofraya uygun)
-    const DOWN = 176 * K * shr; // kubbe altı (yüz merkezinden en alt nokta)
-    const NP = NAR_PAL.map((c, i) => (wi > 0 ? mix(c, NAR_KURU[i], wi * 0.9) : c));
+    const RX = RX0 * shr, RY = RY0 * shr; // yüz elipsi (RY/RX = 0.40, sofraya uygun)
+    const DOWN = DOWN0 * shr; // kubbe altı (yüz merkezinden en alt nokta)
+    const cx = 256 * K, cy = cy0 + (DOWN0 - DOWN); // kesik yüz merkezi (büzüşünce kubbe dibi yerinde kalır)
+    const NP = NAR_PAL.map((c, i) => (wi > 0 ? mix(c, NAR_KURU[i], wi) : c));
     const AP = PAL.aril.map((c, i) => (wi > 0 ? mix(c, PAL.arilK[i], wi) : c));
-    const PP = PAL.pith.map((c, i) => (wi > 0 ? mix(c, PITH_K[i], wi) : c));
-    const MP = PAL.pith.map((c, i) => (wi > 0 ? mix(c, MEMB_K[i], wi) : c));
+    const PP = PAL.pith.map((c, i) => (wi > 0 ? mix(c, PAL.pithK[i], wi) : c));
+    const MP = PP;
     const Rs = RX / K;
     // --- temas gölgesi (kubbenin dibinde, sağa)
     contactShadow(S, cx + RX * 0.16, cy + DOWN * 0.93, RX * 0.86, RY * 0.36, { seed: 1209, coreX: 0.62, coreY: 0.55 });
@@ -147,16 +154,20 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     // kubbe ışığı: küre normali (yüz düzleminin altı)
     const domeV = (x, y) => { const u = (x - cx) / RX, v = clamp((y - cy) / DOWN, 0, 1); const nz = Math.sqrt(Math.max(0, 1 - u * u - v * v * 0.6)); const l = Math.hypot(u, v * 0.9, nz) || 1; const d = (u * L3[0] + v * 0.9 * L3[1] + nz * L3[2]) / l; return clamp(d * 0.7 + 0.42); };
     stepBody(S, skin.path, skin.bb, [NP[1], NP[2], NP[3], NP[4], NP[5]], domeV, sdir, { thr: [0.24, 0.42, 0.6, 0.78], len: sL, wid: sW, rim: { w: 2.4, alpha: 0.9 } });
-    layer(S, { clip: [skin.path, crescent(skin.path, skin.bb, RX * 0.05)], bb: skin.bb, cols: [mix(NP[2], '#62207A', 0.34 - wi * 0.22)], base: mix(NP[2], '#62207A', 0.34 - wi * 0.22), dir: sdir, len: [sL[0] * 0.5, sL[1] * 0.5], wid: [sW[0] * 0.6, sW[1] * 0.6], cover: 1.6 });
+    layer(S, { clip: [skin.path, crescent(skin.path, skin.bb, RX * 0.05)], bb: skin.bb, cols: [mix(NP[2], '#62207A', 0.34 - wi * 0.14)], base: mix(NP[2], '#62207A', 0.34 - wi * 0.14), dir: sdir, len: [sL[0] * 0.5, sL[1] * 0.5], wid: [sW[0] * 0.6, sW[1] * 0.6], cover: 1.6 });
     if (wi < 0.5) { // parlak vurgu darbeleri (sol alt kıvrım boyunca)
       for (let i = 0; i < 4; i++) { const a = 2.5 + i * 0.12; dab(S, cx + Math.cos(a) * RX * 0.86, cy + Math.sin(a) * DOWN * 0.66, a + Math.PI / 2 + 0.1, Rs * 0.09, Rs * 0.03, NP[7], { alpha: 0.9 * (1 - wi * 2), dry: 0.4 }); }
       dab(S, cx + Math.cos(2.58) * RX * 0.85, cy + Math.sin(2.58) * DOWN * 0.65, 2.58 + Math.PI / 2, Rs * 0.05, Rs * 0.022, NP[8], { alpha: 1 - wi * 2 });
     }
-    if (wi > 0.05) withClip(S, skin.path, () => {
-      for (let i = 0; i < Math.round(9 * wi); i++) {
-        const a = 0.25 + rr() * 2.6; const r0 = 0.25 + rr() * 0.3, r1 = r0 + 0.25 + rr() * 0.3; const q = [];
-        for (let j = 0; j <= 8; j++) { const t = lerp(r0, r1, j / 8); const aa = a + Math.sin(t * 9 + i) * 0.06; q.push([cx + Math.cos(aa) * RX * (0.35 + t * 0.62), cy + RY * 0.6 + Math.sin(aa) * (DOWN - RY * 0.6) * (0.3 + t * 0.7)]); }
-        crease(S, q, clamp(Rs * 0.02, 2, 4.4), NP[1], NP[6], { alpha: 0.85 });
+    else if (wi > 0.05) { // solmuş: sönük, mat parıltı
+      for (let i = 0; i < 3; i++) { const a = 2.52 + i * 0.12; dab(S, cx + Math.cos(a) * RX * 0.86, cy + Math.sin(a) * DOWN * 0.66, a + Math.PI / 2 + 0.1, Rs * 0.08, Rs * 0.028, NP[7], { alpha: 0.4, dry: 0.6 }); }
+    }
+    if (wi > 0.05) withClip(S, skin.path, () => { // 2-3 yumuşak göçük (ayrı rastgele dizi: zar/tane yerleşimi tazeyle aynı kalır)
+      const rc = rng(1213);
+      for (const [a0, r0, ln] of [[0.62, 0.3, 0.42], [1.75, 0.36, 0.36], [2.55, 0.42, 0.24]]) {
+        const a = a0 + (rc() - 0.5) * 0.15; const r1 = r0 + ln; const q = [];
+        for (let j = 0; j <= 8; j++) { const t = lerp(r0, r1, j / 8); const aa = a + Math.sin(t * 7 + a0 * 3) * 0.05; q.push([cx + Math.cos(aa) * RX * (0.35 + t * 0.62), cy + RY * 0.6 + Math.sin(aa) * (DOWN - RY * 0.6) * (0.3 + t * 0.7)]); }
+        crease(S, q, clamp(Rs * 0.03, 2.6, 6.2) * wi, NP[2], NP[6], { alpha: 0.66, hA: 0.8 });
       }
     });
     // --- kesik yüz (u,v birim daire → ekran)
@@ -170,13 +181,10 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     layer(S, { clip: rind.path, bb: rind.bb, cols: [PP[2], PP[3], PP[4]], base: PP[3], shade: (x, y) => clamp(0.55 + ((cx - x) / RX) * 0.3 + ((cy - y) / RY) * 0.12), dir: (x, y) => Math.atan2((y - cy) / RY, (x - cx) / RX) + Math.PI / 2, dirJit: 0.15, len: [14, 26], wid: [5, 8], cover: 1.6 });
     const inner = []; for (let i = 0; i < 96; i++) { const a = (i / 96) * TAU; const l = lobR(a); inner.push(F(Math.cos(a) * l, Math.sin(a) * l)); }
     const inn = shape(inner, 0.5);
-    // boşluk (taneler arası): derin kızıl; kuruyunca koyu kahve-bordo
-    fill(S, inn.path, wi ? mix(AP[1], '#42201A', wi) : AP[1], { h: 106 });
-    if (wi > 0.05) { // kurumuş öz: kahve-bordo zemin üstünde kuru fırça izleri, ince çatlaklar
-      field(S, { bb: inn.bb, inside: inn.path, clip: inn.path, cols: ['#4C2620', '#5A3028', '#3A1C18'], dir: (x, y) => Math.atan2((y - cy) / RY, (x - cx) / RX) + (S.r() - 0.5) * 0.5, len: [16, 30], wid: [6, 10], cover: 1.3 * wi, alpha: 0.7, dry: 0.6 });
-    }
+    // boşluk (taneler arası): derin kızıl; solunca soluk koyu lal (kahve değil)
+    fill(S, inn.path, AP[1], { h: 106 });
     // kabuk içi kenarında ince gölge (çukur): üst-sol iç kenar
-    fill(S, inn.path, wi ? '#2E1612' : AP[0], { clip: [inn.path, crescent(inn.path, inn.bb, -RY * 0.1)], height: false, alpha: 0.55 });
+    fill(S, inn.path, AP[0], { clip: [inn.path, crescent(inn.path, inn.bb, -RY * 0.1)], height: false, alpha: 0.55 });
     // --- zarlar: özden kabuğa uzanan, kalınlığı değişen, dallanan duvarlar (u,v)
     const coreR = 0.11; const memb = [];
     // eşit olmayan aralıklı 5 ana duvar; bazıları özden değil ortadan başlar, kavisleri güçlü (tekerlek değil)
@@ -225,31 +233,26 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
       if (P.length >= 3) { const rad = Math.hypot(s0.u, s0.v) || 1; P = clipHalf(P, -s0.u / rad, -s0.v / rad, -(coreR + gap)); }
       s0.cell = P.length >= 3 && polyArea(P) > Math.PI * s0.r * s0.r * 0.12 ? P : null;
     }
-    // kuruma: büzüş, kümelenerek en yakın duvara (zar ya da kabuk) çekil, bir kısmı yok
+    // solma: taneler yerinde hafifçe söner ve büzüşür (ayrı, okunur kalır), çok azı eksik
     const wr = rng(1291);
     const cells = [];
     for (const s0 of seeds) {
       if (!s0.cell) continue;
       let P = s0.cell; const [ccx, ccy] = polyCen(P);
       if (wi) {
-        if (wr() < 0.08 * wi) continue;
-        const f = 1 - wi * (0.2 + wr() * 0.24);
-        // en yakın duvar
-        let best = [1e9, 0, 0]; for (const m of memb) { const q = nearestOn(ccx, ccy, m.pts); if (q[0] < best[0]) best = q; }
-        const a = Math.atan2(ccy, ccx); const rad = Math.hypot(ccx, ccy); const dr = lobR(a) - rad;
-        let tx = 0, ty = 0; if (dr < best[0]) { tx = Math.cos(a) * dr; ty = Math.sin(a) * dr; } else { tx = best[1] - ccx; ty = best[2] - ccy; }
-        const tl = Math.hypot(tx, ty) || 1; const pull = Math.max(0, tl - s0.r * f * 0.8) * 0.85 * wi;
-        P = P.map(([x, y]) => [ccx + (x - ccx) * f + tx / tl * pull, ccy + (y - ccy) * f + ty / tl * pull]);
-        P = P.map(([x, y], i) => [x + (wr() - 0.5) * s0.r * 0.25 * wi, y + (wr() - 0.5) * s0.r * 0.25 * wi]);
+        if (wr() < 0.035 * wi) continue;
+        const f = 1 - wi * (0.07 + wr() * 0.08);
+        P = P.map(([x, y]) => [ccx + (x - ccx) * f + (wr() - 0.5) * s0.r * 0.07 * wi, ccy + (y - ccy) * f + (wr() - 0.5) * s0.r * 0.07 * wi]);
         P = hull(P);
       }
       cells.push({ P, v: polyCen(P)[1], s0 });
     }
     cells.sort((a, b) => a.v - b.v);
-    const hgtK = RX * ar * 0.55 * (1 - wi * 0.4); // tane kabarıklığı (ekran yukarı)
+    const hgtK = RX * ar * 0.55 * (1 - wi * 0.18); // tane kabarıklığı (ekran yukarı)
+    const hiW = wi ? { hiA: 0.42, hiC: '#F4DCE0', hiS: 0.85 } : {};
     for (const c of cells) {
       const Fp = c.P.map(([u, v]) => F(u, v));
-      arilCell(S, Fp, hgtK * (0.7 + 0.6 * (c.s0.r / ar - 0.75)), AP, wi, c.s0.sd, { glow: wi ? 0.15 : 0.55 });
+      arilCell(S, Fp, hgtK * (0.7 + 0.6 * (c.s0.r / ar - 0.75)), AP, wi, c.s0.sd, { glow: wi ? 0.32 : 0.55, ...hiW });
     }
     // cepler: krem çukur, üst-sol iç kenarı gölgeli
     for (const [pu, pv, prx, pry, rot] of pockets) {
@@ -263,19 +266,16 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
       const mr = rng(1301);
       for (const m of memb) {
         let segs = [m.pts];
-        if (wi) { // kuru: buruşuk, kırık, yer yer çökmüş
-          const col = mr() < 0.35 ? 0.05 : 0.016; const P2 = m.pts.map(([u, v], j) => [u + (mr() - 0.5) * 0.024 * wi + Math.sin(j * 1.7 + m.ph) * col * wi, v + (mr() - 0.5) * 0.024 * wi + Math.cos(j * 1.3 + m.ph) * col * 0.6 * wi]);
-          segs = []; let cur = []; for (let j = 0; j < P2.length; j++) { if (mr() < 0.16 * wi && cur.length > 2) { segs.push(cur); cur = []; j += 1 + Math.floor(mr() * 2); continue; } cur.push(P2[j]); } if (cur.length > 1) segs.push(cur);
-        }
+        if (wi) segs = [m.pts.map(([u, v], j) => [u + Math.sin(j * 1.7 + m.ph) * 0.006 * wi, v + Math.cos(j * 1.3 + m.ph) * 0.004 * wi])]; // solmuş: bütün, yalnız hafif dalgalı
         for (const sg of segs) {
           const n = sg.length; if (n < 2) continue;
           const N = sg.map((p, j) => { const a = sg[Math.max(0, j - 1)], b = sg[Math.min(n - 1, j + 1)]; const dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l]; });
           const t0 = m.pts.indexOf(sg[0]) >= 0 ? m.pts.indexOf(sg[0]) / (m.pts.length - 1) : 0;
-          const hwj = (j) => m.hw(t0 + (j / (n - 1)) * (1 - t0)) * (wi ? 0.7 + 0.6 * mr() : 1);
+          const hwj = (j) => m.hw(t0 + (j / (n - 1)) * (1 - t0)) * (wi ? 0.9 : 1);
           const L1 = [], R1 = []; for (let j = 0; j < n; j++) { const hw = hwj(j); L1.push(F(sg[j][0] + N[j][0] * hw, sg[j][1] + N[j][1] * hw)); R1.push(F(sg[j][0] - N[j][0] * hw, sg[j][1] - N[j][1] * hw)); }
           const wall = shape([...L1, ...R1.reverse()], 0.4);
-          fill(S, wall.path, MP[wi ? 2 : 3], { h: 158 });
-          fill(S, wall.path, MP[wi ? 0 : 1], { clip: [wall.path, crescent(wall.path, wall.bb, -RY * 0.035)], height: false, alpha: 0.9 });
+          fill(S, wall.path, MP[3], { h: 158 });
+          fill(S, wall.path, MP[1], { clip: [wall.path, crescent(wall.path, wall.bb, -RY * 0.035)], height: false, alpha: 0.9 });
           fill(S, wall.path, MP[wi ? 4 : 5], { clip: [wall.path, crescent(wall.path, wall.bb, RY * 0.028)], height: false, alpha: 0.95 });
         }
       }
@@ -287,31 +287,32 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     // yüzün üst kenarında kabuk dudağı: ışığa bakan ince parlak çizgi
     const lip = []; for (let i = 0; i <= 24; i++) { const a = Math.PI * 1.05 + (i / 24) * Math.PI * 0.75; lip.push(F(Math.cos(a), Math.sin(a))); }
     line(S, lip, 2.6, wi ? NP[5] : NP[6], { w1: 1.2, taper: true, height: false });
-    // önde dökülmüş birkaç tane, temas gölgeli (kuruyunca soluk, büzüşük)
+    // önde dökülmüş birkaç tane, temas gölgeli (solunca soluk lal, biraz küçük; kahve değil)
     const loose = [[322, 352, 0.4], [356, 368, -0.5], [390, 350, 0.9], [298, 374, 0.1]];
-    const LP = wi ? AP.map((c) => shade(c, 0.06, 0.85)) : AP;
+    const LP = wi ? AP.map((c) => shade(c, 0.02)) : AP;
     for (const [lx, ly, rot] of loose) {
-      const x = lx * K, y = ly * K; const f = 1 - wi * 0.3; const rx = 15 * K * f, ry = 10 * K * f;
+      const x = lx * K, y = ly * K; const f = 1 - wi * 0.1; const rx = 15 * K * f, ry = 10 * K * f;
       contactShadow(S, x + 5 * K, y + ry * 0.75, rx * 1.15, ry * 0.5, { seed: lx + ly, coreX: 0.6, coreY: 0.55 });
-      const pts = blobPts(x, y + ry * 0.3, rx, ry * 0.75, 9, wi ? 0.22 : 0.12, Math.floor(lx * 7 + ly), rot * 0.3);
-      arilCell(S, pts, ry * 0.9, LP, wi, Math.floor(lx * 7 + ly), { rim: true, glow: wi ? 0.15 : 0.6 });
+      const pts = blobPts(x, y + ry * 0.3, rx, ry * 0.75, 9, wi ? 0.16 : 0.12, Math.floor(lx * 7 + ly), rot * 0.3);
+      arilCell(S, pts, ry * 0.9, LP, wi, Math.floor(lx * 7 + ly), { rim: true, glow: wi ? 0.32 : 0.6, ...hiW });
     }
-    // pivot: yarım narın görsel merkezi
-    return done(S, cx, cy + (DOWN - RY) * 0.5 + 6 * K, 0.4);
+    // pivot: yarım narın görsel merkezi (tazenin ölçüleriyle: solmuşta da aynı pivot)
+    return done(S, cx, cy0 + (DOWN0 - RY0) * 0.5 + 6 * K, 0.4);
   }
   reg('nar-acik', () => paintNarAcik(0), { size: [465, 327], base: [0, 125] });
-  reg('nar-acik-kuru', () => paintNarAcik(1), { size: [443, 319], base: [0, 122] });
+  reg('nar-acik-kuru', () => paintNarAcik(1), { size: [443, 319], base: [0, 125] });
 
   // ================================================================ ÜZÜM
   // tek tane: az sayıda, büyük, keskin ton basamağı (taban, gölge hilali, ışık düzlemi, vurgu) — her basamak görünür
-  // geniş bir fırça izi (en ≥ 0.5 r). o.raisin: kuru üzüm, o.glow: yeşil üzümde içten ışık, o.bloom: mat buğu lekesi
-  const grapeShape = (x, y, r, sd, raisin) => { const r2 = rng(sd); return shape(blobPts(x, y, r * (1 + raisin * 0.03), r * (1.05 - raisin * 0.12), raisin ? 12 : 16, raisin ? 0.12 : 0.025, sd, (r2() - 0.5) * 0.8), 0.5); };
+  // geniş bir fırça izi (en ≥ 0.5 r). o.raisin: kuru üzüm, o.wilt: solmuş (biraz küçük, yumuşak kırışıklı, ayrı tane),
+  // o.glow: yeşil üzümde içten ışık, o.bloom: mat buğu lekesi, o.hiA: parıltı saydamlığı (solmuşta sönük)
+  const grapeShape = (x, y, r, sd, raisin, wilt = 0) => { const r2 = rng(sd); return shape(blobPts(x, y, r * (1 + raisin * 0.03), r * (1.05 - raisin * 0.12 - wilt * 0.035), raisin ? 12 : 16, raisin ? 0.12 : 0.025 + wilt * 0.022, sd, (r2() - 0.5) * 0.8), 0.5); };
   function grape(S, x, y, r, P0, o = {}) {
     const K = S.k; const sd = o.seed ?? 1; const r2 = rng(sd + 7); const rs = r / K;
-    const raisin = o.raisin ?? 0;
+    const raisin = o.raisin ?? 0; const wilt = o.wilt ?? 0;
     const dh = (r2() - 0.5) * (o.hueJit ?? 10), dl = (r2() - 0.5) * 0.035 + (o.dl ?? 0);
     const P = P0.map((c, i) => (i < P0.length - 1 ? shade(c, dl, 1, dh) : c));
-    const sh = grapeShape(x, y, r, sd, raisin); const bp = sh.path; const bb = sh.bb;
+    const sh = grapeShape(x, y, r, sd, raisin, wilt); const bp = sh.path; const bb = sh.bb;
     if (o.rim) S.rim(bp, { w: clamp(rs * 0.06, 1, 2.2), alpha: 0.9 });
     const dk = o.dark ?? 0; const C = (i) => P[clamp(i - dk, 0, P.length - 2)];
     const sw = Math.max(rs * 0.55, 3); const dirA = -0.8 + (r2() - 0.5) * 0.5;
@@ -343,11 +344,24 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
         }
       });
       fill(S, ellipsePath(x + LX * r * 0.42, y + LY * r * 0.46, r * 0.13, r * 0.09, -0.6), P[6], { alpha: 0.75, height: false });
-    } else if (!o.dark || r2() < 0.4) {
-      // 6) parıltı: boyu ve yeri değişken (bazen ikinci küçük nokta)
-      const hs = 0.6 + r2() * 0.9; const hx = x + LX * r * (0.46 + r2() * 0.18) + (r2() - 0.5) * r * 0.16, hy = y + LY * r * (0.52 + r2() * 0.14);
-      fill(S, ellipsePath(hx, hy, r * 0.12 * hs, r * 0.08 * hs, -0.65), P[7], { alpha: o.dark ? 0.6 : 0.95, height: false });
-      if (r2() < 0.35) fill(S, ellipsePath(hx + r * 0.24, hy - r * 0.06, r * 0.045 * hs, r * 0.035 * hs, -0.6), P[7], { alpha: 0.7, height: false });
+    } else {
+      if (wilt) { // solmuş: 1-2 yumuşak kırışık (gövdeyi saran kısa yay; bir basamak koyu oluk + açık sırt, hafif kabartma)
+        const rw = rng(sd + 31); const nF = 1 + (rw() < 0.55 ? 1 : 0);
+        withClip(S, bp, () => {
+          for (let i = 0; i < nF; i++) {
+            const a0 = (i ? -2.1 : 0.5) + rw() * 1.6; const rad = r * (0.46 + rw() * 0.16); const span = 0.8 + rw() * 0.4; const q = [];
+            for (let j = 0; j <= 6; j++) { const a = a0 + span * (j / 6 - 0.5); q.push([x + Math.cos(a) * rad, y + Math.sin(a) * rad * 0.96]); }
+            crease(S, q, clamp(rs * 0.15, 1.6, 4.4) * wilt, C(1), P[5], { alpha: 0.7, hA: 0.75 });
+          }
+        });
+      }
+      if (!o.dark || r2() < 0.4) {
+        // 6) parıltı: boyu ve yeri değişken (bazen ikinci küçük nokta); solmuşta sönük
+        const ha = o.hiA ?? 1;
+        const hs = 0.6 + r2() * 0.9; const hx = x + LX * r * (0.46 + r2() * 0.18) + (r2() - 0.5) * r * 0.16, hy = y + LY * r * (0.52 + r2() * 0.14);
+        fill(S, ellipsePath(hx, hy, r * 0.12 * hs, r * 0.08 * hs, -0.65), P[7], { alpha: (o.dark ? 0.6 : 0.95) * ha, height: false });
+        if (r2() < 0.35) fill(S, ellipsePath(hx + r * 0.24, hy - r * 0.06, r * 0.045 * hs, r * 0.035 * hs, -0.6), P[7], { alpha: 0.7 * ha, height: false });
+      }
     }
     return sh;
   }
@@ -370,21 +384,23 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     return { front, back, hw };
   }
   // asma yaprağı: beş loblu, dişli; (x,y) merkez, R yarıçap, ang sap yönünün tersi (uç yönü); sy: dikey basıklık (yatık yaprak)
-  function vineLeafPts(x, y, R, ang, seed, sy = 1) {
+  // curl 0..1: uç tarafı içe kıvrılır (lob uçları kısalır, bir yanı daralır) — solmuş yaprak
+  function vineLeafPts(x, y, R, ang, seed, sy = 1, curl = 0) {
     const r = rng(seed); const pts = []; const n = 90;
     for (let i = 0; i < n; i++) {
       const a = (i / n) * TAU; // a=0: uç
       const lobe = 0.62 + 0.38 * Math.pow(Math.abs(Math.cos(a * 2.5)), 1.6);
       const sinus = 1 - 0.55 * Math.exp(-Math.pow((Math.abs(((a + Math.PI) % TAU) - Math.PI) - Math.PI) / 0.32, 2));
       const serr = 1 + (i % 3 === 0 ? 0.05 : -0.015);
-      const rr2 = R * lobe * sinus * serr * (1 + (r() - 0.5) * 0.04);
+      let rr2 = R * lobe * sinus * serr * (1 + (r() - 0.5) * 0.04);
+      if (curl) rr2 *= 1 - curl * (0.2 * Math.pow(Math.max(0, Math.cos(a)), 1.5) + 0.1 * Math.max(0, Math.sin(a)));
       pts.push([x + Math.cos(a + ang) * rr2, y + Math.sin(a + ang) * rr2 * sy]);
     }
     return pts;
   }
   function vineLeaf(S, x, y, R, ang, P, seed, o = {}) {
-    const K = S.k; const Rs = R / K; const sy = o.sy ?? 1;
-    const pts = vineLeafPts(x, y, R, ang, seed, sy); const sh = shape(pts, 0.3);
+    const K = S.k; const Rs = R / K; const sy = o.sy ?? 1; const curl = o.curl ?? 0;
+    const pts = vineLeafPts(x, y, R, ang, seed, sy, curl); const sh = shape(pts, 0.3);
     const ldir = (px, py) => Math.atan2((py - y) / sy, px - x) + (S.r() - 0.5) * 0.4;
     layer(S, { clip: sh.path, bb: sh.bb, cols: [P[1], P[2]], base: P[2], dir: ldir, len: [Rs * 0.25, Rs * 0.5], wid: [clamp(Rs * 0.1, 4, 12), clamp(Rs * 0.16, 5, 16)], cover: 1.4, rim: { w: 1.6, alpha: 0.85 } });
     // ışık katı (sol üst yarı) ve açık lekeler
@@ -398,26 +414,40 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
       line(S, q, clamp(Rs * 0.035, 1.4, 3.4), vc, { w1: 0.6, height: false });
       for (let m = 1; m <= 2; m++) { const t = 0.35 + m * 0.2; const p0 = q[Math.round(t * 6)]; for (const sd2 of [-1, 1]) { const a2 = a + sd2 * 0.7; line(S, [p0, [p0[0] + Math.cos(a2) * L * 0.25, p0[1] + Math.sin(a2) * L * 0.25 * sy]], clamp(Rs * 0.02, 1, 2), vc, { w1: 0.5, height: false }); } }
     }
+    if (curl) { // kıvrık kenar: uç tarafında içe dönmüş, ışık alan açık alt yüz şeridi + içinde ince koyu kıvrım çizgisi
+      const n = pts.length; const span = Math.round(n * 0.2); const edge = [], fold = [];
+      for (let j = -span; j <= span; j++) { const p = pts[(j + n) % n]; const t = Math.abs(j) / span; const ins = R * (0.07 + 0.02 * (1 - t)) * curl; const dx = x - p[0], dy = (y - p[1]) / sy; const l = Math.hypot(dx, dy) || 1; edge.push([p[0] + (dx / l) * ins * 0.45, p[1] + (dy / l) * ins * 0.45 * sy]); fold.push([p[0] + (dx / l) * ins, p[1] + (dy / l) * ins * sy]); }
+      withClip(S, sh.path, () => {
+        line(S, edge, clamp(Rs * 0.09, 2.5, 8) * curl, P[5], { w1: clamp(Rs * 0.03, 1, 3), taper: true, height: false });
+        line(S, fold, clamp(Rs * 0.03, 1.2, 3), P[1], { w1: 0.6, taper: true, height: false });
+      });
+    }
     return sh;
   }
   const GRAPE_G = ['#2E4A10', '#4A6A16', '#6C9220', '#93B42A', '#BCD43C', '#DDEA6A', '#F2F6B0', '#FDFFE8'];
-  const grapeOpt = (kind, P) => kind === 'mor' ? { bloom: 0, refl: '#4E3E9A' } : kind === 'yesil' ? { glow: 0.75, glowC: '#E4EE7A', refl: '#7A9A2E', bloom: 0 } : { raisin: 1 };
+  const WILT_BLOOM = '#A89CB4'; // solmuş üzümde mat, tozlu buğu
+  const grapeOpt = (kind, P) => kind === 'mor' ? { bloom: 0, refl: '#4E3E9A' } : kind === 'yesil' ? { glow: 0.75, glowC: '#E4EE7A', refl: '#7A9A2E', bloom: 0 } : { wilt: 1, refl: YIY.fade('#4E3E9A', { dh: 8, kC: 0.66 }), hiA: 0.5 };
   function paintUzum(kind) {
     // kind: 'mor' | 'kuru' | 'yesil'
     const k = 1.6, K = k; const w = 360 * K, h = 470 * K;
     const S = Paint.sprite(w, h, { seed: kind === 'yesil' ? 1402 : 1401, k });
-    const dry = kind === 'kuru'; const P = kind === 'yesil' ? GRAPE_G : dry ? PAL.raisin : PAL.grapeP;
+    // 'kuru' = solmuş (fânilik): tozlu menekşe, taneler biraz küçük ama ayrı, yumuşak kırışıklı; yaprak biraz sararmış,
+    // sarkık ve kıvrık. Yerleşim ve pivot tazeyle aynı (çapraz geçişte sıçrama yok). Kahve / siyah / kuru üzüm YOK.
+    const dry = kind === 'kuru'; const P = kind === 'yesil' ? GRAPE_G : dry ? PAL.grapeK : PAL.grapeP;
     const seed = kind === 'yesil' ? 77 : 41;
     const cx = 178 * K, top = 100 * K; const r = 33 * K;
     const L = bunchLayout(cx, top, 268 * K, 330 * K, r, seed, { skew: kind === 'yesil' ? -0.5 : 0.6, wing: kind === 'yesil' ? 0.1 : 0.22 });
-    if (dry) { const tc = (q) => { q[0] = cx + (q[0] - cx) * 0.88; q[1] = top + (q[1] - top) * 0.9; }; L.front.forEach(tc); L.back.forEach(tc); } // kuru: salkım toplanır
-    const shrink = (sd) => (dry ? 0.62 + rng(sd + 3)() * 0.24 : 1); // bazıları dolgun kalır
-    // yaprak (salkımın arkasında, sol üst) — kuruyunca sararmış
-    const LP = dry ? PAL.leafK : PAL.leaf;
-    if (kind !== 'yesil') vineLeaf(S, 110 * K, 94 * K, 84 * K * (dry ? 0.92 : 1), -2.5, LP, 7, { vein: dry ? '#E6CE8A' : undefined });
-    else vineLeaf(S, 252 * K, 94 * K, 78 * K, -0.7, LP, 9);
+    if (dry) { const tc = (q) => { q[1] += (q[1] - top) * 0.015; }; L.front.forEach(tc); L.back.forEach(tc); } // solmuş: salkım hafifçe sarkar
+    const shrink = (sd) => (dry ? 0.9 + rng(sd + 3)() * 0.06 : 1); // solmuş: %4-10 küçük
+    // yaprak (salkımın arkasında, sol üst) — solunca biraz sararmış, sarkık (uç aşağı döner) ve kıvrık
+    const LP = dry ? PAL.leafW : PAL.leaf;
+    if (kind === 'mor') vineLeaf(S, 110 * K, 94 * K, 84 * K, -2.5, LP, 7);
+    else if (dry) { // sap ucu (yaprak dibi) tazeyle aynı yerde; uç aşağı döner
+      const la = -2.78, lr = 84 * K * 0.95; const bx = 110 * K + Math.cos(-2.5 + Math.PI) * 84 * K * 0.45, by = 94 * K + Math.sin(-2.5 + Math.PI) * 84 * K * 0.45;
+      vineLeaf(S, bx + Math.cos(la) * lr * 0.45, by + Math.sin(la) * lr * 0.45, lr, la, LP, 7, { curl: 0.8, sy: 0.9 });
+    } else vineLeaf(S, 252 * K, 94 * K, 78 * K, -0.7, LP, 9);
     // sap: üstte odunsu dal, salkıma iner
-    const SP = dry ? PAL.stem.map((c) => shade(c, -0.04, 0.8)) : PAL.stem;
+    const SP = dry ? PAL.stem.map((c) => shade(c, 0.03, 0.72)) : PAL.stem;
     const stalk = kind === 'yesil' ? [[150 * K, 26 * K], [166 * K, 52 * K], [176 * K, 84 * K], [178 * K, 130 * K]] : [[212 * K, 24 * K], [198 * K, 52 * K], [184 * K, 84 * K], [180 * K, 130 * K]];
     line(S, crPts(stalk, 4), 11, SP[2], { w1: 6, rim: { w: 1.4, alpha: 0.85 } });
     line(S, crPts(stalk, 4).map(([x, y]) => [x - 2.5 * K, y - 1 * K]), 4, SP[4], { w1: 2, height: false });
@@ -425,7 +455,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     // sülük (kıvrık filiz)
     const tq = []; const t0x = (kind === 'yesil' ? 166 : 196) * K, t0y = 50 * K; const sgn = kind === 'yesil' ? -1 : 1;
     for (let i = 0; i <= 30; i++) { const t = i / 30; const a = t * 9 + 0.5; const rad = (16 - t * 11) * K; tq.push([t0x + sgn * (t * 40 * K + Math.cos(a) * rad), t0y - t * 18 * K + Math.sin(a) * rad * 0.8]); }
-    line(S, tq, 3.4, dry ? SP[3] : '#6E8A2A', { w1: 1.4, height: false });
+    line(S, tq, 3.4, dry ? '#94903E' : '#6E8A2A', { w1: 1.4, height: false });
     // salkım içi saplar
     for (let i = 0; i < 5; i++) { const g = L.front[(i * 2) % L.front.length]; line(S, [[180 * K, 122 * K], [g[0], g[1] - r * 0.4]], 3.4, SP[2], { w1: 2, height: false }); }
     // astar kenarı yalnız salkımın dış hattında: önce kenar tanelerin astarı, sonra taneler üstüne
@@ -433,15 +463,16 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     const fr = L.front.map((g, j) => [...g, seed * 100 + nb + j]).sort((a, b) => a[1] - b[1]);
     // salkım ölçeğinde ışık: sol üst taneler bir tık açık, sağ alttakiler koyu
     const gl = (x, y) => clamp(((cx - x) / (134 * K)) * 0.03 + ((top + 120 * K - y) / (340 * K)) * 0.05, -0.05, 0.04);
-    const bloomPick = (sd) => kind === 'mor' && rng(sd + 11)() < 0.32 ? 0.42 : kind === 'yesil' && rng(sd + 11)() < 0.18 ? 0.3 : 0;
-    for (const [x, y, rr0, u, t, sd] of fr) if (u > 0.6 || t > 0.8 || t < 0.08) S.rim(grapeShape(x, y, rr0 * shrink(sd), sd, dry ? 1 : 0).path, { w: 2, alpha: 0.9 });
+    const bloomPick = (sd) => kind === 'mor' && rng(sd + 11)() < 0.32 ? 0.42 : dry && rng(sd + 11)() < 0.45 ? 0.36 : kind === 'yesil' && rng(sd + 11)() < 0.18 ? 0.3 : 0;
+    const bloomC = kind === 'yesil' ? '#E8F0C8' : dry ? WILT_BLOOM : '#B4A6DC';
+    for (const [x, y, rr0, u, t, sd] of fr) if (u > 0.6 || t > 0.8 || t < 0.08) S.rim(grapeShape(x, y, rr0 * shrink(sd), sd, 0, dry ? 1 : 0).path, { w: 2, alpha: 0.9 });
     let i = 0;
-    for (const [x, y, rr0] of L.back) { const sd = seed * 100 + i++; grape(S, x, y, rr0 * shrink(sd), P, { ...opt, seed: sd, dark: 1, dl: gl(x, y) - 0.03, bloom: bloomPick(sd) * 0.6 }); }
-    for (const [x, y, rr0, u, t, sd] of fr) grape(S, x, y, rr0 * shrink(sd), P, { ...opt, seed: sd, dl: gl(x, y), bloom: bloomPick(sd), bloomC: kind === 'yesil' ? '#E8F0C8' : '#B4A6DC' });
+    for (const [x, y, rr0] of L.back) { const sd = seed * 100 + i++; grape(S, x, y, rr0 * shrink(sd), P, { ...opt, seed: sd, dark: 1, dl: gl(x, y) - 0.03, bloom: bloomPick(sd) * 0.6, bloomC }); }
+    for (const [x, y, rr0, u, t, sd] of fr) grape(S, x, y, rr0 * shrink(sd), P, { ...opt, seed: sd, dl: gl(x, y), bloom: bloomPick(sd), bloomC });
     return done(S, cx, 250 * K, 0.4);
   }
   reg('uzum', () => paintUzum('mor'), { size: [306, 423], base: [0, 183] });
-  reg('uzum-kuru', () => paintUzum('kuru'), { size: [277, 372], base: [0, 138] });
+  reg('uzum-kuru', () => paintUzum('kuru'), { size: [277, 372], base: [0, 183] });
   reg('uzum-yesil', () => paintUzum('yesil'), { size: [297, 408], base: [0, 174] });
 
   // ================================================================ ÜZÜM YATIK (sofrada yatan salkım; tabla düzleminde kısalmış, ışık sol üstten)
@@ -467,43 +498,45 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
   }
   function paintUzumYatik(dry) {
     const k = 1.6, K = k; const w = 470 * K, h = 290 * K;
-    const S = Paint.sprite(w, h, { seed: 1451, k }); const P = dry ? PAL.raisin : PAL.grapeP;
+    const S = Paint.sprite(w, h, { seed: 1451, k }); const P = dry ? PAL.grapeK : PAL.grapeP;
     const cx = 250 * K, cy = 170 * K; // pivot: salkımın tabla izinin merkezi
     const B = yatikLayout(43); const { E, C } = YATIK;
-    if (dry) for (const q of B) { q.x *= 0.9; q.y *= 0.88; q.z = 30 + (q.z - 30) * 0.8; }
+    for (const q of B) q.sd = 4500 + Math.round(q.x * 3 + q.y * 7); // tane tohumu tazenin yerleşiminden (solmuşta aynı tane)
+    const shrink = (sd) => (dry ? 0.9 + rng(sd + 3)() * 0.06 : 1); // solmuş: %4-10 küçük, ayrı taneler
+    if (dry) for (const q of B) { q.z -= (1 - shrink(q.sd)) * q.r * (q.z < 40 ? 1 : 0.6); } // küçülen taneler tablaya oturur
     const scr = (x, y, z) => [cx + x * K, cy + (y * E - z * C) * K];
     // tabla gölgesi (tek yol, düzgün saydamlık): tanelerin değme izleri sağa-aşağı kaymış
     const sh1 = new Path2D(), sh2 = new Path2D();
     for (const q of B) { const [x, y] = scr(q.x, q.y, 0); sh1.ellipse(x + 16 * K, y + 7 * K, q.r * 1.25 * K, q.r * E * 1.35 * K, 0, 0, TAU); sh2.ellipse(x + 8 * K, y + 3 * K, q.r * 0.9 * K, q.r * E * 0.95 * K, 0, 0, TAU); }
     // yaprak: tablada yatan asma yaprağı (sap ucunda, salkımın altında)
-    const LP = dry ? PAL.leafK : PAL.leaf;
-    vineLeaf(S, cx - 120 * K, cy - 6 * K, 92 * K * (dry ? 0.92 : 1), -2.75, LP, 17, { sy: E * 1.25, vein: dry ? '#E6CE8A' : undefined });
+    const LP = dry ? PAL.leafW : PAL.leaf;
+    vineLeaf(S, cx - 120 * K + (dry ? 3 * K : 0), cy - 6 * K, 92 * K * (dry ? 0.95 : 1), -2.75, LP, 17, { sy: E * 1.25, curl: dry ? 0.75 : 0 });
     fill(S, sh1, SHC[1], { alpha: 0.3, height: false }); fill(S, sh2, SHC[0], { alpha: 0.34, height: false });
     // sap: salkımın geniş ucundan sola, tablaya yaslanmış odunsu dal + kısa yan dal
-    const SP = dry ? PAL.stem.map((c) => shade(c, -0.04, 0.8)) : PAL.stem;
+    const SP = dry ? PAL.stem.map((c) => shade(c, 0.03, 0.72)) : PAL.stem;
     const st = [scr(-150, -10, 40), scr(-190, -4, 34), scr(-226, 8, 22), scr(-246, 16, 14)];
     line(S, crPts(st, 4), 10, SP[2], { w1: 6, rim: { w: 1.4, alpha: 0.85 } });
     line(S, crPts(st, 4).map(([x, y]) => [x - 1.5 * K, y - 2.5 * K]), 3.6, SP[4], { w1: 2, height: false });
     fill(S, ellipsePath(st[3][0], st[3][1], 4.5 * K, 6 * K, 0.3), SP[4], { h: 150 });
     const tq = []; for (let i = 0; i <= 26; i++) { const t = i / 26; const a = t * 8.5 + 1; const rad = (14 - t * 9) * K; tq.push([st[1][0] + t * 26 * K + Math.cos(a) * rad, st[1][1] - t * 30 * K + Math.sin(a) * rad * 0.8]); }
-    line(S, tq, 3.2, dry ? SP[3] : '#6E8A2A', { w1: 1.3, height: false });
+    line(S, tq, 3.2, dry ? '#94903E' : '#6E8A2A', { w1: 1.3, height: false });
     // salkım içi saplar (üst taneler arasında görünür)
     const topB = B.filter((q) => q.z > 50).slice(-6);
     for (const q of topB) { const [x, y] = scr(q.x, q.y, q.z + q.r * 0.6); line(S, [scr(-140, -8, 48), [x, y]], 3, SP[2], { w1: 1.8, height: false }); }
     // taneler (uzaktan yakına); astar yalnız dış hatta: önce hepsinin astarı, sonra taneler
     const opt = grapeOpt(dry ? 'kuru' : 'mor', P);
-    const shrink = (sd) => (dry ? 0.62 + rng(sd + 3)() * 0.24 : 1);
-    for (const q of B) { const [x, y] = scr(q.x, q.y, q.z); const sd = 4500 + Math.round(q.x * 3 + q.y * 7); S.rim(grapeShape(x, y, q.r * K * shrink(sd), sd, dry ? 1 : 0).path, { w: 2, alpha: 0.9 }); }
+    for (const q of B) { const [x, y] = scr(q.x, q.y, q.z); const sd = q.sd; S.rim(grapeShape(x, y, q.r * K * shrink(sd), sd, 0, dry ? 1 : 0).path, { w: 2, alpha: 0.9 }); }
     for (const q of B) {
-      const [x, y] = scr(q.x, q.y, q.z); const sd = 4500 + Math.round(q.x * 3 + q.y * 7);
+      const [x, y] = scr(q.x, q.y, q.z); const sd = q.sd;
       const low = q.z < 40 && q.y < 0; // arkada, alt katta: gölgede
       const gl = clamp(((q.z - 40) / 60) * 0.04 - (q.x / 300) * 0.02, -0.05, 0.04);
-      grape(S, x, y, q.r * K * shrink(sd), P, { ...opt, seed: sd, dark: low ? 1 : 0, dl: gl, bloom: !dry && rng(sd + 11)() < 0.32 ? 0.42 : 0, bloomC: '#B4A6DC' });
+      const bl = rng(sd + 11)();
+      grape(S, x, y, q.r * K * shrink(sd), P, { ...opt, seed: sd, dark: low ? 1 : 0, dl: gl, bloom: !dry ? (bl < 0.32 ? 0.42 : 0) : bl < 0.45 ? 0.36 : 0, bloomC: dry ? WILT_BLOOM : '#B4A6DC' });
     }
     return done(S, cx, cy, 0.4);
   }
   reg('uzum-yatik', () => paintUzumYatik(false), { size: [423, 184], base: [0, 34] });
-  reg('uzum-yatik-kuru', () => paintUzumYatik(true), { size: [410, 161], base: [0, 32] });
+  reg('uzum-yatik-kuru', () => paintUzumYatik(true), { size: [410, 161], base: [0, 34] });
 
   // ---- serbest biçimli gövde için basamaklı tonlar (gövdenin kaydırılmış/küçültülmüş kopyalarıyla katlar)
   // o: c=[cx,cy] ölçek merkezi, size (sprite px, tipik yarıçap), P (8-9 renk), dir, sL, sW

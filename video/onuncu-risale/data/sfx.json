@@ -1,332 +1,337 @@
 [
  {
-  "t": 0,
-  "kind": "brush",
-  "gain": -6
+  "t": 0.1,
+  "kind": "air",
+  "gain": -25,
+  "dur": 10.85,
+  "a": 0.5,
+  "r": 0.55
  },
  {
-  "t": 0.18,
+  "t": 0.11,
   "kind": "brush",
-  "gain": -9
+  "gain": -18,
+  "dur": 0.17
  },
  {
-  "t": 0.36,
+  "t": 0.19,
+  "kind": "brush-big",
+  "gain": -19,
+  "dur": 0.2
+ },
+ {
+  "t": 0.275,
   "kind": "brush",
-  "gain": -11
+  "gain": -22,
+  "dur": 0.15
  },
  {
   "t": 2.45,
   "kind": "whoosh-soft",
-  "gain": -8,
+  "gain": -21,
   "dur": 1.6
  },
  {
-  "t": 4.46,
-  "kind": "pop",
-  "gain": -14,
-  "pitch": 1
+  "t": 4.29,
+  "kind": "dab",
+  "gain": -27,
+  "fc": 1150
  },
  {
-  "t": 4.545,
-  "kind": "pop",
-  "gain": -16,
-  "pitch": 1.06
+  "t": 4.385,
+  "kind": "dab",
+  "gain": -29.5,
+  "fc": 820
  },
  {
-  "t": 4.63,
-  "kind": "pop",
-  "gain": -14,
-  "pitch": 1.12
+  "t": 4.47,
+  "kind": "dab",
+  "gain": -28,
+  "fc": 1380
  },
  {
-  "t": 4.715,
-  "kind": "pop",
-  "gain": -16,
-  "pitch": 1.18
+  "t": 4.565,
+  "kind": "dab",
+  "gain": -30.5,
+  "fc": 950
  },
  {
-  "t": 4.8,
-  "kind": "pop",
-  "gain": -14,
-  "pitch": 1.24
+  "t": 4.655,
+  "kind": "dab",
+  "gain": -27.5,
+  "fc": 1240
  },
  {
-  "t": 4.885,
-  "kind": "pop",
-  "gain": -16,
-  "pitch": 1.3
- },
- {
-  "t": 9.37,
-  "kind": "brush",
-  "gain": -12
+  "t": 4.745,
+  "kind": "dab",
+  "gain": -30,
+  "fc": 760
  },
  {
   "t": 9.45,
-  "kind": "chime",
-  "gain": -20
+  "kind": "brush-ring",
+  "gain": -25,
+  "dur": 0.5
  },
  {
   "t": 10.4,
   "kind": "whoosh-in",
-  "gain": -8,
+  "gain": -19,
   "dur": 0.8
+ },
+ {
+  "t": 10.9,
+  "kind": "room-warm",
+  "gain": -25,
+  "dur": 4.85,
+  "a": 0.3,
+  "r": 0.35
  },
  {
   "t": 10.95,
   "kind": "whoosh-out",
-  "gain": -12,
+  "gain": -23,
   "dur": 0.9
  },
  {
-  "t": 12.62,
-  "kind": "crunch",
-  "gain": -22
- },
- {
-  "t": 12.75,
-  "kind": "shimmer",
-  "gain": -22,
-  "dur": 1.3
- },
- {
-  "t": 14.62,
-  "kind": "wind",
-  "gain": -24,
-  "dur": 3.4
- },
- {
-  "t": 14.8,
+  "t": 14.55,
   "kind": "leaves",
-  "gain": -26,
-  "dur": 2.5
+  "gain": -31,
+  "dur": 2.8
  },
  {
-  "t": 17.12,
+  "t": 15.45,
+  "kind": "air-dusk",
+  "gain": -24,
+  "dur": 2,
+  "a": 0.3,
+  "r": 0.25
+ },
+ {
+  "t": 17.24,
   "kind": "brush-big",
-  "gain": -8
+  "gain": -20,
+  "dur": 0.22
  },
  {
-  "t": 17.74,
-  "kind": "pop",
-  "gain": -16,
-  "pitch": 0.85
+  "t": 17.25,
+  "kind": "air-soft",
+  "gain": -27,
+  "dur": 10.35,
+  "a": 0.3,
+  "r": 0.5
  },
  {
-  "t": 17.825,
-  "kind": "pop",
-  "gain": -17,
-  "pitch": 0.9199999999999999
+  "t": 17.31,
+  "kind": "brush",
+  "gain": -21,
+  "dur": 0.17
  },
  {
-  "t": 17.91,
-  "kind": "pop",
-  "gain": -18,
-  "pitch": 0.99
+  "t": 17.385,
+  "kind": "brush",
+  "gain": -23,
+  "dur": 0.15
  },
  {
-  "t": 17.995,
-  "kind": "pop",
-  "gain": -16,
-  "pitch": 1.06
+  "t": 17.7,
+  "kind": "dab",
+  "gain": -30,
+  "fc": 900
  },
  {
-  "t": 18.08,
-  "kind": "pop",
-  "gain": -17,
-  "pitch": 1.13
+  "t": 17.87,
+  "kind": "dab",
+  "gain": -32,
+  "fc": 1300
  },
  {
-  "t": 18.165,
-  "kind": "pop",
-  "gain": -18,
-  "pitch": 0.85
+  "t": 17.955,
+  "kind": "dab",
+  "gain": -31,
+  "fc": 780
  },
  {
-  "t": 18.25,
-  "kind": "pop",
-  "gain": -16,
-  "pitch": 0.9199999999999999
+  "t": 18.125,
+  "kind": "dab",
+  "gain": -33,
+  "fc": 1100
  },
  {
   "t": 18.27,
   "kind": "airy",
-  "gain": -20,
+  "gain": -30,
   "dur": 0.9
  },
  {
-  "t": 18.335,
-  "kind": "pop",
-  "gain": -17,
-  "pitch": 0.99
+  "t": 18.38,
+  "kind": "dab",
+  "gain": -31.5,
+  "fc": 1450
  },
  {
-  "t": 18.42,
-  "kind": "pop",
-  "gain": -18,
-  "pitch": 1.06
- },
- {
-  "t": 18.505,
-  "kind": "pop",
-  "gain": -16,
-  "pitch": 1.13
- },
- {
-  "t": 18.59,
-  "kind": "pop",
-  "gain": -17,
-  "pitch": 0.85
- },
- {
-  "t": 18.94,
-  "kind": "shimmer",
-  "gain": -24,
-  "dur": 1.1
+  "t": 18.55,
+  "kind": "dab",
+  "gain": -33.5,
+  "fc": 850
  },
  {
   "t": 20.43,
   "kind": "whoosh-deep",
-  "gain": -12,
+  "gain": -24,
   "dur": 1.2
  },
  {
-  "t": 20.6,
-  "kind": "scan",
+  "t": 22.425,
+  "kind": "tap",
+  "gain": -31
+ },
+ {
+  "t": 22.548,
+  "kind": "tap",
+  "gain": -33
+ },
+ {
+  "t": 22.792,
+  "kind": "tap",
+  "gain": -32
+ },
+ {
+  "t": 22.897,
+  "kind": "tap",
+  "gain": -34
+ },
+ {
+  "t": 23.175,
+  "kind": "heart",
+  "gain": -21,
+  "v": "lub",
+  "pan": 0
+ },
+ {
+  "t": 23.545,
+  "kind": "heart",
   "gain": -24,
-  "dur": 1
+  "v": "dub",
+  "pan": 0
  },
  {
-  "t": 22.2,
-  "kind": "tick",
-  "gain": -20,
-  "pitch": 1
- },
- {
-  "t": 22.32,
-  "kind": "tick",
-  "gain": -20,
-  "pitch": 1.08
- },
- {
-  "t": 22.44,
-  "kind": "tick",
-  "gain": -20,
-  "pitch": 1.16
- },
- {
-  "t": 22.56,
-  "kind": "tick",
-  "gain": -20,
-  "pitch": 1.24
- },
- {
-  "t": 22.68,
-  "kind": "tick",
-  "gain": -20,
-  "pitch": 1.32
- },
- {
-  "t": 23.18,
-  "kind": "heartbeat",
-  "gain": -14
- },
- {
-  "t": 23.55,
-  "kind": "heartbeat",
-  "gain": -16
- },
- {
-  "t": 23.7,
-  "kind": "bubble",
-  "gain": -22
+  "t": 24.225,
+  "kind": "heart",
+  "gain": -25,
+  "v": "lub",
+  "pan": 0
  },
  {
   "t": 24.73,
   "kind": "sweep",
-  "gain": -22,
+  "gain": -31,
   "dur": 0.9
  },
  {
-  "t": 25.66,
-  "kind": "tick-warm",
-  "gain": -20,
-  "pitch": 1
+  "t": 25.668,
+  "kind": "flick",
+  "gain": -30
  },
  {
-  "t": 25.82,
-  "kind": "tick-warm",
-  "gain": -20,
-  "pitch": 1.06
+  "t": 25.84,
+  "kind": "flick",
+  "gain": -32.5
  },
  {
-  "t": 25.98,
-  "kind": "tick-warm",
-  "gain": -20,
-  "pitch": 1.12
+  "t": 25.99,
+  "kind": "flick",
+  "gain": -31
  },
  {
-  "t": 26.14,
-  "kind": "tick-warm",
-  "gain": -20,
-  "pitch": 1.18
+  "t": 26.162,
+  "kind": "flick",
+  "gain": -33
  },
  {
-  "t": 26.3,
-  "kind": "tick-warm",
-  "gain": -20,
-  "pitch": 1.24
- },
- {
-  "t": 27,
-  "kind": "bloom",
-  "gain": -18,
-  "dur": 1.4
+  "t": 26.31,
+  "kind": "flick",
+  "gain": -32
  },
  {
   "t": 27.45,
   "kind": "rise",
-  "gain": -12,
+  "gain": -22,
   "dur": 2
+ },
+ {
+  "t": 27.55,
+  "kind": "paradise",
+  "gain": -26,
+  "dur": 9.2,
+  "a": 1,
+  "r": 0.2
  },
  {
   "t": 28.15,
   "kind": "airy",
-  "gain": -20,
+  "gain": -30,
   "dur": 1.3
  },
  {
-  "t": 29.25,
+  "t": 28.45,
   "kind": "water",
-  "gain": -27,
-  "dur": 7.4
+  "gain": -18,
+  "dur": 8.3,
+  "a": 0.9,
+  "r": 0.25
  },
  {
   "t": 32.6,
   "kind": "whoosh-in",
-  "gain": -18,
+  "gain": -27,
   "dur": 0.7
  },
  {
-  "t": 33.55,
-  "kind": "leaves",
-  "gain": -30,
-  "dur": 1.6
+  "t": 32.95,
+  "kind": "water",
+  "gain": -21,
+  "dur": 3.8,
+  "a": 0.25,
+  "r": 0.2,
+  "close": 1
  },
  {
-  "t": 36.22,
+  "t": 33.45,
+  "kind": "foliage",
+  "gain": -31,
+  "dur": 1.7
+ },
+ {
+  "t": 36.5,
+  "kind": "room-window",
+  "gain": -18,
+  "dur": 5,
+  "a": 0.35,
+  "r": 0.45
+ },
+ {
+  "t": 36.52,
   "kind": "brush",
-  "gain": -12
+  "gain": -24,
+  "dur": 0.16
  },
  {
-  "t": 36.45,
+  "t": 36.585,
+  "kind": "brush-big",
+  "gain": -23,
+  "dur": 0.2
+ },
+ {
+  "t": 36.66,
   "kind": "brush",
-  "gain": -14
+  "gain": -26,
+  "dur": 0.15
  },
  {
-  "t": 36.6,
-  "kind": "room",
-  "gain": -30,
-  "dur": 4.9
+  "t": 37,
+  "kind": "paper",
+  "gain": -36,
+  "dur": 0.45
  }
 ]

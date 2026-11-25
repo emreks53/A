@@ -10,7 +10,7 @@
     { text: 'Onuncu Risale', font: '500 54px "EB Garamond"', dy: 184, at: 37.62 },
     { text: '215. Sayfa', font: '500 48px "EB Garamond"', dy: 256, at: 37.88 },
   ];
-  const TEXT_Y = 452; // ilk satırın taban çizgisi (pencerenin tepeler bölgesi)
+  const TEXT_Y = 410; // ilk satırın taban çizgisi (pencerenin gökyüzü/tepeler bölgesi)
   const reveal = (t) => inv(T0, T0 + 1.05, t);
 
   // derinlik haritasıyla önceden üretilmiş 2.5B kızak çekimi kareleri (tools/foto_paralaks.py); yoksa düz fotoğraf
@@ -42,8 +42,14 @@
     overlay(ctx, t) {
       // kaynak yazısı (tuval dokusunun üstünde, keskin)
       ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      const out = 1 - E.io2(inv(40.55, 41.1, t)); // yazı fotoğraftan biraz önce söner
+      // alt satırların arkasında çok yumuşak, sıcak bir koyulaşma (kutu değil): açık çiçekler/ırmak üstünde okunurluk
+      const da = E.out2(inv(37.5, 38.3, t)) * out;
+      if (da > 0) { ctx.save(); ctx.globalAlpha = da; ctx.translate(W / 2, TEXT_Y + 175); ctx.scale(2.6, 1);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 150); g.addColorStop(0, 'rgba(40,22,10,0.24)'); g.addColorStop(0.6, 'rgba(40,22,10,0.13)'); g.addColorStop(1, 'rgba(40,22,10,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 150, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
       for (const L of LINES) {
-        const a = E.out3(inv(L.at, L.at + 0.7, t)) * (1 - E.in2(inv(41.05, 41.45, t)));
+        const a = E.out3(inv(L.at, L.at + 0.7, t)) * out;
         if (a <= 0) continue;
         const rise = (1 - E.out3(inv(L.at, L.at + 0.9, t))) * 16;
         ctx.save(); ctx.globalAlpha = a; ctx.font = L.font;
@@ -53,12 +59,10 @@
         ctx.restore();
       }
       // ince altın çizgi (ilk satırın altında)
-      const la = E.out3(inv(37.25, 38.0, t)) * (1 - E.in2(inv(41.05, 41.45, t)));
+      const la = E.out3(inv(37.25, 38.0, t)) * out;
       if (la > 0) { ctx.save(); ctx.globalAlpha = la * 0.9; ctx.strokeStyle = '#F0D9A8'; ctx.lineWidth = 2; ctx.shadowColor = 'rgba(18,10,4,0.5)'; ctx.shadowBlur = 10; const hw = 120 * E.out3(inv(37.25, 38.0, t)); ctx.beginPath(); ctx.moveTo(W / 2 - hw, TEXT_Y + 36); ctx.lineTo(W / 2 + hw, TEXT_Y + 36); ctx.stroke(); ctx.restore(); }
       // sonda yumuşak kararma
-      const fo = E.in2(inv(41.05, 41.5, t)); if (fo > 0) { ctx.save(); ctx.globalAlpha = fo; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+      const fo = E.io2(inv(40.75, 41.42, t)); if (fo > 0) { ctx.save(); ctx.globalAlpha = fo; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
     },
   });
-  sfx(36.22, 'brush', -12); sfx(36.45, 'brush', -14);
-  sfx(36.6, 'room', -30, { dur: 4.9 });
 })();

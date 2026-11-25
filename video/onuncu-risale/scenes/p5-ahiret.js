@@ -9,26 +9,28 @@ BAND.topB = BAND.topA + 480 * BAND.sc;
 const RISE = { t0: 27.38, t1: 29.6, dist: BAND.topB + 900 * BAND.sc }; // B'nin alt kenarı = önceki sahnenin üst kenarı
 const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
 (() => {
-  const T0 = RISE.t0, T1 = 36.62;
-  const tVista = 29.5, tToFeast = 32.55, tFeast = 33.05;
+  const T0 = RISE.t0, T1 = 37.32; // kaynak fotoğrafının fırça silmesi bitene dek altta çizilir (turuncu astar parlamasın)
+  const tVista = 29.5, tFeast = 33.05; // ziyafete geçiş (çözülme) 33.12–33.25
 
   function vistaCam(t) {
-    // ırmak cümlesinde kadraj suyu izleyerek hafifçe aşağı süzülür; "kasırların altında"da köşklere yönelir,
-    // sonra sol köşkün açık revağına dalınır (ziyafet o revağın altında açılır).
-    const c = camAt([
-      [tVista, { x: 540, y: 960, z: 1.0 }],
-      [31.35, { x: 566, y: 1075, z: 1.07 }, E.ioSine],
-      [32.45, { x: 452, y: 990, z: 1.22 }, E.ioSine],
-      [tFeast + 0.17, { x: 385, y: 1042, z: 4.4 }, E.in2],
+    // yükselişin sonundaki yukarı süzülüş durmadan sürer; ırmak cümlesinde kadraj suyu izler, "kasırların altında"da
+    // köşklere yönelir, sonra sol köşkün açık revağına giderek hızlanan bir dalışla girilir (ziyafet o revağın altında).
+    const c = camSmooth([
+      [tVista, { x: 540, y: 960, z: 1.0 }, { v: { x: 4, y: 42, z: 0.02 } }],
+      [31.35, { x: 566, y: 1075, z: 1.07 }],
+      [32.45, { x: 452, y: 990, z: 1.22 }],
+      [33.25, { x: 385, y: 1042, z: 7.0 }, { v: { x: 0, y: 0, z: 4.5 } }],
     ], t);
     const b = breathe(t, 0.5); c.x += b.x; c.y += b.y; c.r = b.r;
     return c;
   }
   function feastCam(t) {
-    const c = camAt([
-      [tFeast - 0.03, { x: 540, y: 1000, z: 0.95 }],
-      [tFeast + 0.9, { x: 540, y: 988, z: 1.07 }, E.out3],
-      [T1, { x: 548, y: 994, z: 1.12 }, E.ioSine],
+    // "ebediyete lâyık": öndeki dal salkımlarını indirirken ona yaklaşılır; "cismanî ziyafetler": bütün sofraya açılır
+    const c = camSmooth([
+      [tFeast + 0.07, { x: 540, y: 1000, z: 0.95 }, { v: { x: 40, y: -40, z: 0.18 } }],
+      [33.95, { x: 636, y: 905, z: 1.15 }],
+      [34.95, { x: 540, y: 986, z: 1.0 }],
+      [T1, { x: 548, y: 992, z: 1.07 }, { stop: true }],
     ], t);
     const b = breathe(t, 0.45); c.x += b.x; c.y += b.y; c.r = b.r; return c;
   }
@@ -83,20 +85,24 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
         }
       });
     }
-    // kadehlerde yavaş, yumuşak inci parlaklığı (patlama/ışın yok)
-    if (Z.cups) Z.cups.forEach(([x, y], i) => {
-      const a = 0.16 * (0.5 + 0.5 * Math.sin((t - tFeast) * 1.6 + i * 2.1)) * E.io2(inv(tFeast, tFeast + 0.8, t));
-      if (a < 0.01) return; const [sx, sy] = w2s(c, x, y - 44);
+    // "ziyafetler": tepsi, kadehler ve ibrikte sırayla yumuşak bir inci parlaklığı (patlama/ışın yok)
+    const sheen = (x, y, r, t0) => {
+      const k = inv(t0, t0 + 0.7, t); if (k <= 0 || k >= 1) return; const a = 0.24 * Math.sin(k * Math.PI);
+      const [sx, sy] = w2s(c, x, y); const R = r * c.z;
       ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = a;
-      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 34 * c.z); g.addColorStop(0, '#FFF8EE'); g.addColorStop(1, 'rgba(255,248,238,0)');
-      ctx.fillStyle = g; ctx.fillRect(sx - 40 * c.z, sy - 40 * c.z, 80 * c.z, 80 * c.z); ctx.restore();
-    });
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R); g.addColorStop(0, '#FFF8EE'); g.addColorStop(1, 'rgba(255,248,238,0)');
+      ctx.fillStyle = g; ctx.fillRect(sx - R, sy - R, 2 * R, 2 * R); ctx.restore();
+    };
+    const tz = 34.98;
+    if (Z.tray) sheen(Z.tray.x, Z.tray.y - 20, (Z.tray.RX || 210) * 0.9, tz);
+    if (Z.cups) Z.cups.forEach(([x, y], i) => sheen(x, y - 40, 46, tz + 0.12 + i * 0.09));
+    if (Z.ewer) sheen(Z.ewer[0], Z.ewer[1] - 90, 70, tz + 0.42);
   }
 
   Engine.add({
     name: 'p5', t0: T0, t1: T1, z: 5,
     draw(ctx, t) {
-      const feastA = E.io2(inv(tFeast - 0.03, tFeast + 0.15, t));
+      const feastA = E.io2(inv(tFeast + 0.07, tFeast + 0.2, t));
       if (feastA < 1) {
         // yükseliş: bütün manzara (katmanları bozulmadan) yukarıdan iner; altında bulut kuşağı
         const off = -(RISE.dist - riseY(t));
@@ -104,12 +110,14 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
         drawVista(ctx, t);
         if (t < tVista + 0.1) drawCloudBand(ctx, t);
         ctx.restore();
+        // önde, kuşaktan daha hızlı geçen bulut kümeleri: yükselişte derinlik (paralaks)
+        const M = window.CENNET_M;
+        if (M && M.drawWisps && t < tVista) {
+          const y = 960 + 1.55 * (riseY(t) - 2380);
+          if (y > -900 && y < H + 900) M.drawWisps(ctx, W / 2 + 40, y, 1.7, 1);
+        }
       }
-      if (feastA > 0) { ctx.save(); ctx.globalAlpha = feastA; drawFeast(ctx, t); ctx.restore(); }
+      if (feastA > 0) withAlpha(ctx, feastA, (c) => drawFeast(c, t), 'p5ziyafet');
     },
   });
-  sfx(28.15, 'airy', -20, { dur: 1.3 });
-  sfx(29.25, 'water', -27, { dur: 7.4 });
-  sfx(32.6, 'whoosh-in', -18, { dur: 0.7 });
-  sfx(33.55, 'leaves', -30, { dur: 1.6 });
 })();

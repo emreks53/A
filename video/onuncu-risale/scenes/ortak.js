@@ -22,6 +22,15 @@ const sprOr = (n, fb) => (hasSpr(n) ? spr(n) : fb ? spr(fb) : null);
 const _tmp = {};
 function tmpCanvas(name) { if (!_tmp[name]) _tmp[name] = makeCanvas(W, H); const c = _tmp[name]; const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none'; x.clearRect(0, 0, W, H); return [c, x]; }
 
+// grup saydamlığı: sahne önce ara tuvale çizilir, sonra tek parça olarak alfa ile basılır
+// (katmanlar ayrı ayrı yarı saydam görünmez, çarpma/doygunluk katmanları da birlikte söner)
+function withAlpha(ctx, a, fn, name = 'grup') {
+  if (a <= 0.001) return;
+  if (a >= 0.999) { fn(ctx); return; }
+  const [c, x] = tmpCanvas(name); fn(x);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha *= a; ctx.drawImage(c, 0, 0); ctx.restore();
+}
+
 // akan su darbeleri: yolun içinde, akış yönünde kayan kısa açık darbeler
 function waterShimmer(ctx, path, t, o = {}) {
   const r = rng(o.seed ?? 3); const n = o.n ?? 70; const bb = o.bbox ?? [0, 0, W, H];

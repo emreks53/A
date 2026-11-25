@@ -123,7 +123,7 @@ const YIY = (() => {
     const strokeP = (ctx, P, wid, col, alpha) => { ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineCap = 'round'; for (let i = 0; i < P.length - 1; i++) { ctx.lineWidth = Math.max(0.6, wid * tap(i)); ctx.beginPath(); ctx.moveTo(P[i][0], P[i][1]); ctx.lineTo(P[i + 1][0], P[i + 1][1]); ctx.stroke(); } ctx.restore(); };
     strokeP(S.x, pts, w * k, dark, o.alpha ?? 0.9);
     if (light) strokeP(S.x, off(w * k * 0.9), w * k * 0.55, light, (o.alpha ?? 0.9) * 0.8);
-    if (o.height !== false) { strokeP(S.hx, pts, w * k * 1.2, 'rgb(84,84,84)', 0.8); strokeP(S.hx, off(w * k * 1.0), w * k * 0.9, 'rgb(186,186,186)', 0.7); }
+    if (o.height !== false) { const ha = o.hA ?? 1; strokeP(S.hx, pts, w * k * 1.2, 'rgb(84,84,84)', 0.8 * ha); strokeP(S.hx, off(w * k * 1.0), w * k * 0.9, 'rgb(186,186,186)', 0.7 * ha); }
   }
   // yarı saydam fırçalı çizgi (cam, parıltı)
   function softLine(S, pts, w, col, alpha = 1, o = {}) {
@@ -247,32 +247,42 @@ const YIY = (() => {
     return g;
   }
   const L3 = (() => { const v = [-0.62, -0.6, 0.5]; const l = Math.hypot(...v); return v.map((q) => q / l); })(); // 3B ışık: sol üst-ön
-  return { gridEval, gridMask, masked, stepBody, L3, toneBall, TAU, LT, poly, bboxOf, circ, ellPts, shape, polyShape, ellShape, outside, crPts, withClip, fill, dab, field, layer, line, crease, softLine, leafPts, leaf, normClips, makeTest, moved, crescent };
+  // solma rengi (fânilik: "vakti geçmiş, sessizce sönen" — çürük/yanık DEĞİL): değer aralığı sıkışır (koyular kahve/siyaha
+  // düşmez, en az L 0.29; orta tonlar ~%10 koyulaşır, parlaklar söner), doygunluk ~%35 düşer, ton hafifçe kayar (dh derece)
+  const fade = (c, o = {}) => { const [L, C, Hh] = hex2lch(c); const L2 = Math.max(o.floor ?? 0.29, L * (o.kL ?? 0.74) + (o.add ?? 0.085)); return lch2hex(clamp(L2), C * (o.kC ?? 0.64), Hh + ((o.dh ?? 0) * Math.PI) / 180); };
+  return { fade, gridEval, gridMask, masked, stepBody, L3, toneBall, TAU, LT, poly, bboxOf, circ, ellPts, shape, polyShape, ellShape, outside, crPts, withClip, fill, dab, field, layer, line, crease, softLine, leafPts, leaf, normClips, makeTest, moved, crescent };
 })();
 
 // ------------------------------------------------------------------------------------------------
 // NAR: koyu doygun nar kırmızısı, doğal ve hafif düzensiz taç (kaliks).
 // pomegranateOn(S, cx, cy, R, o): var olan sprite'a boyar. o.wither 0..1 kuruma, o.crownAng taç yönü
 const NAR_PAL = ['#2E0418', '#4C0820', '#720C28', '#990F2C', '#BC1530', '#D92436', '#EE4A44', '#FA8A7A', '#FFE4DA'];
-const NAR_KURU = ['#1C0A0E', '#2C1014', '#3E1A1C', '#562426', '#723430', '#8C4838', '#A45E48', '#B87A62', '#C89C86'];
-function pomegranateOn(S, cx, cy, R, o = {}) {
-  const { layer, dab, line, crease, withClip, crescent, shape, circ } = YIY;
-  const wi = o.wither ?? 0; const r = S.r; const k = S.k; const Rs = R / k;
-  const seed = o.seed ?? 11; const rr = rng(seed);
-  const P = (o.pal ?? NAR_PAL).map((c, i) => (wi > 0 ? mix(c, NAR_KURU[i], wi * 0.88) : c));
-  const ca = o.crownAng ?? -Math.PI / 2 + 0.1; // taç yönü
-  const ax = Math.cos(ca), ay = Math.sin(ca);
-  // gövde: hafif köşeli küre (5 belirsiz yüz), taç tarafı omuzlu; kuruyunca göçük, sarkık
-  const pts = []; const N = 48; const ph = rr() * 6;
+// solmuş nar: kırmızı kalır — tozlu gül-kırmızısı (doygunluk ~%36 düşük, orta tonlar ~%10 koyu, en koyu L 0.29; kahve yok)
+const NAR_KURU = NAR_PAL.map((c) => YIY.fade(c, { dh: -2, kC: 0.68 }));
+// kabuk gövdesi (taze ve solmuş AYNI ph/ca ile; solmuş hafif büzüşür, 2-3 yumuşak göçük)
+function narBodyPts(cx, cy, R, ca, ph, wi) {
+  const pts = []; const N = 48;
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2;
     const rel = Math.cos(a - ca);
     let m = 1 + 0.02 * Math.cos(5 * (a - ca) + ph) - 0.05 * Math.pow(Math.max(0, rel), 3) + 0.015 * Math.sin(a * 2 + ph);
-    if (wi > 0) m *= 1 + wi * (0.022 * Math.sin(a * 3 + ph * 2) + 0.02 * Math.sin(a * 7 + ph) + 0.012 * Math.sin(a * 11 + ph * 3) - 0.07 * Math.pow(Math.max(0, rel), 2) - 0.035 * Math.pow(Math.max(0, -rel), 3));
-    pts.push([cx + Math.cos(a) * R * m * 1.02, cy + Math.sin(a) * R * m * (0.97 - wi * 0.05)]);
+    if (wi > 0) m *= 1 + wi * (0.012 * Math.sin(a * 3 + ph * 2) + 0.009 * Math.sin(a * 7 + ph) - 0.03 * Math.pow(Math.max(0, rel), 2) - 0.012 * Math.pow(Math.max(0, -rel), 3));
+    pts.push([cx + Math.cos(a) * R * m * 1.02, cy + Math.sin(a) * R * m * (0.97 - wi * 0.02)]);
   }
+  return pts;
+}
+function pomegranateOn(S, cx, cy, R, o = {}) {
+  const { layer, dab, line, crease, withClip, crescent, shape, circ } = YIY;
+  const wi = o.wither ?? 0; const r = S.r; const k = S.k; const Rs = R / k;
+  const seed = o.seed ?? 11; const rr = rng(seed);
+  const P = (o.pal ?? NAR_PAL).map((c, i) => (wi > 0 ? mix(c, NAR_KURU[i], wi) : c));
+  const ca = o.crownAng ?? -Math.PI / 2 + 0.1; // taç yönü
+  const ax = Math.cos(ca), ay = Math.sin(ca);
+  // gövde: hafif köşeli küre (5 belirsiz yüz), taç tarafı omuzlu; solunca hafif büzüşük, yumuşak göçüklü
+  const ph = rr() * 6;
+  const pts = narBodyPts(cx, cy, R, ca, ph, wi);
   const body = shape(pts, 0.5); const bb = body.bb; const bp = body.path;
-  const tipX = cx + ax * R * (0.93 - wi * 0.08), tipY = cy + ay * R * (0.93 - wi * 0.08); // tacın kökü
+  const tipX = cx + ax * R * (0.93 - wi * 0.04), tipY = cy + ay * R * (0.93 - wi * 0.04); // tacın kökü
   const merid = (x, y) => {
     const m = Math.atan2(y - (tipY + ay * R * 0.25), x - (tipX + ax * R * 0.25));
     const d = ((x - tipX) * -ax + (y - tipY) * -ay) / (2 * R); // tacdan uzaklık 0..1
@@ -289,9 +299,9 @@ function pomegranateOn(S, cx, cy, R, o = {}) {
   const thr = wi ? [0.2, 0.38, 0.56, 0.76] : [0.24, 0.42, 0.6, 0.8];
   YIY.stepBody(S, bp, bb, [P[1], P[2], P[3], P[4], P[5]], sphV, merid, { thr, len: sL, wid: sW, edgeFreq: 0.016, edgeAmp: 0.022, lJit: 0.04, cover: 1.5, rim: { w: clamp(Rs * 0.016, 1.6, 3.4), alpha: 0.9 } });
   // ışık noktası çevresinde küçük açık kat (P6)
-  { const [hx, hy] = at(0.56); const hp = smoothPath(blobPts(hx, hy, R * 0.2, R * 0.15, 12, 0.12, seed + 9, -0.7)); YIY.layer(S, { clip: [bp, hp], bb, cols: [P[6], shade(P[6], 0.02)], base: P[6], dir: merid, len: [sL[0] * 0.6, sL[1] * 0.6], wid: [sW[0] * 0.7, sW[1] * 0.7], cover: 1.6, alpha: 1 - wi }); }
+  { const [hx, hy] = at(0.56); const hp = smoothPath(blobPts(hx, hy, R * 0.2, R * 0.15, 12, 0.12, seed + 9, -0.7)); YIY.layer(S, { clip: [bp, hp], bb, cols: [P[6], shade(P[6], 0.02)], base: P[6], dir: merid, len: [sL[0] * 0.6, sL[1] * 0.6], wid: [sW[0] * 0.7, sW[1] * 0.7], cover: 1.6, alpha: 1 - wi * 0.45 }); }
   // yansıyan serin ışık: sağ-alt kenarda ince mor hilal
-  YIY.layer(S, { clip: [bp, crescent(bp, bb, R * 0.075)], bb, cols: [mix(P[2], '#62207A', 0.36 - wi * 0.24), shade(mix(P[2], '#62207A', 0.36 - wi * 0.24), 0.03)], base: mix(P[2], '#62207A', 0.36 - wi * 0.24), dir: merid, len: [sL[0] * 0.5, sL[1] * 0.5], wid: [sW[0] * 0.6, sW[1] * 0.6], cover: 1.6 });
+  YIY.layer(S, { clip: [bp, crescent(bp, bb, R * 0.075)], bb, cols: [mix(P[2], '#62207A', 0.36 - wi * 0.14), shade(mix(P[2], '#62207A', 0.36 - wi * 0.14), 0.03)], base: mix(P[2], '#62207A', 0.36 - wi * 0.14), dir: merid, len: [sL[0] * 0.5, sL[1] * 0.5], wid: [sW[0] * 0.6, sW[1] * 0.6], cover: 1.6 });
   // 4) belirsiz yüz sırtları (meridyen): taçtan inen çok ince çizgiler (kabartmasız)
   withClip(S, bp, () => {
     const vx = -ay, vy = ax;
@@ -302,25 +312,18 @@ function pomegranateOn(S, cx, cy, R, o = {}) {
       line(S, q, clamp(Rs * 0.01, 1, 2.2), lit ? shade(P[5], 0.04, 0.9) : P[2], { w1: 0.6, taper: true, height: false });
     }
   });
-  // 5) kuruma: düzensiz kırışık ağı (oluk + sırt, kabartmalı) ve birkaç göçük
+  // 5) solma: 2-3 yumuşak kırışık / göçük (bir basamak koyu oluk + ışık yanında açık sırt, hafif kabartma);
+  //    ayrı rastgele dizisi: taze ile aynı taç geometrisi (çapraz geçişte sıçrama yok)
   if (wi > 0.05) {
+    const rc = rng(seed + 503);
     withClip(S, bp, () => {
       const vx = -ay, vy = ax;
       const sphPt = (t, phi) => { const u = Math.cos(Math.PI * t) * R * 0.95, v = Math.sin(Math.PI * t) * Math.sin(phi) * R * 0.98; return [cx + ax * u + vx * v, cy + ay * u + vy * v]; };
-      // ana oluklar: taçtan yanlara kavisli, kısa-orta boy, dallanan
-      const nW = Math.round(10 * wi);
-      for (let i = 0; i < nW; i++) {
-        const phi = (rr() - 0.5) * 2.8; const t0 = 0.12 + rr() * 0.45, t1 = t0 + 0.12 + rr() * 0.28; const sw = (rr() - 0.5) * 0.9;
-        const q = []; for (let j = 0; j <= 10; j++) { const tt = lerp(t0, t1, j / 10); q.push(sphPt(tt, phi + sw * (j / 10) + Math.sin(tt * 14 + i) * 0.05)); }
-        crease(S, q, clamp(Rs * 0.028, 2.4, 6), P[1], P[7], { alpha: 0.9 });
-        if (rr() < 0.5) { const j0 = 4 + Math.floor(rr() * 4); const br = []; const d = rr() < 0.5 ? 1 : -1; for (let j = 0; j <= 5; j++) { const p0 = q[j0]; br.push([p0[0] + j * R * 0.025 * d, p0[1] + j * R * 0.02 + Math.sin(j) * 2]); } crease(S, br, clamp(Rs * 0.018, 1.6, 4), P[1], P[6], { alpha: 0.8 }); }
-      }
-      // ince buruşukluklar
-      for (let i = 0; i < Math.round(14 * wi); i++) {
-        const t = 0.15 + rr() * 0.75, phi = (rr() - 0.5) * 2.9; const [x0, y0] = sphPt(t, phi);
-        const dir = rr() * Math.PI; const len = R * (0.06 + rr() * 0.1);
-        const q = []; for (let j = 0; j <= 5; j++) { const tt = j / 5 - 0.5; q.push([x0 + Math.cos(dir) * len * tt, y0 + Math.sin(dir) * len * tt + Math.sin(tt * 5 + i) * 2 * k]); }
-        crease(S, q, clamp(Rs * 0.016, 1.4, 3.2), P[1], P[6], { alpha: 0.7 });
+      const cr = [[-0.95, 0.2, 0.36], [0.5, 0.26, 0.3], [1.2, 0.12, 0.17]]; // [phi, t0, boy]: iki uzun meridyen göçüğü + taç dibinde kısa büzüşme
+      for (let i = 0; i < cr.length; i++) {
+        const [phi0, t0, tl] = cr[i]; const phi = phi0 + (rc() - 0.5) * 0.2; const sw = (rc() - 0.5) * 0.4;
+        const q = []; for (let j = 0; j <= 10; j++) { const tt = t0 + tl * (j / 10); q.push(sphPt(tt, phi + sw * (j / 10) + Math.sin(tt * 8 + i) * 0.04)); }
+        crease(S, q, clamp(Rs * (i === 2 ? 0.028 : 0.036), 2.4, 7.2) * wi, P[2], P[6], { alpha: 0.68, hA: 0.8 });
       }
     });
   }
@@ -333,6 +336,9 @@ function pomegranateOn(S, cx, cy, R, o = {}) {
       dab(S, hx0 + Math.cos(ta) * R * 0.09 * u, hy0 + Math.sin(ta) * R * 0.09 * u + Math.abs(u) * R * 0.02, ta + 0.2 + u * 0.25, Rs * (0.07 + 0.04 * (1 - Math.abs(u))), Rs * 0.036, P[7], { alpha: 0.95 * ha, dry: 0.4 });
     }
     dab(S, hx0 - R * 0.015, hy0 - R * 0.01, ta + 0.25, Rs * 0.06, Rs * 0.026, P[8], { alpha: ha });
+  } else { // solmuş: mat, sönük parıltı (kaybolmaz, yalnız söner)
+    const [hx0, hy0] = at(0.64); const ta = Math.atan2(oy, ox) + Math.PI / 2;
+    for (let i = 0; i < 3; i++) { const u = i - 1; dab(S, hx0 + Math.cos(ta) * R * 0.08 * u, hy0 + Math.sin(ta) * R * 0.08 * u + Math.abs(u) * R * 0.02, ta + 0.2 + u * 0.25, Rs * (0.06 + 0.03 * (1 - Math.abs(u))), Rs * 0.034, P[7], { alpha: 0.42, dry: 0.6 }); }
   }
   crownOn(S, tipX, tipY, R, ca, P, wi, rr);
   return body;
@@ -344,12 +350,12 @@ function crownOn(S, tx, ty, R, ca, P, wi, rr) {
   const rot = ca + Math.PI / 2; const c = Math.cos(rot), s = Math.sin(rot);
   const T = ([u, v]) => [tx + u * c - v * s, ty + u * s + v * c];
   const TP = (pts) => pts.map(T);
-  const sc = (R / 192) * 1.25 * (1 - wi * 0.1); // geometri ölçeği (sprite px)
+  const sc = (R / 192) * 1.25 * (1 - wi * 0.04); // geometri ölçeği (sprite px)
   const ss = clamp(Rs / 192, 0.3, 2); // darbe ölçeği (ekran px)
   const rimY = -27 * sc, rw = 25 * sc, rry = 8.5 * sc;
-  const cb = mix(P[3], '#641A1E', 0.14 + wi * 0.36);
+  const cb = mix(P[3], '#641A1E', 0.14 - wi * 0.04);
   const CP = [shade(cb, -0.17, 1.05, -4), shade(cb, -0.08), cb, shade(cb, 0.08, 0.95, 5), shade(cb, 0.16, 0.85, 9)];
-  const tipC = mix(cb, '#3A1A10', 0.6);
+  const tipC = mix(cb, '#3A1A10', 0.6 - wi * 0.3);
   const lx = Math.cos(Math.atan2(YIY.LT[1], YIY.LT[0]) - rot); const sg = lx <= 0 ? -1 : 1; // ışık hangi yandan
   const lean = (rr() - 0.5) * 0.12; // bütün tacın hafif eğikliği
   const LN = ([u, v]) => [u + v * -lean, v]; // eğiklik: üst kısım yana kayar
@@ -367,13 +373,12 @@ function crownOn(S, tx, ty, R, ca, P, wi, rr) {
     const th = th0 + (i / n) * Math.PI * 2 + (rr() - 0.5) * 0.35;
     const cs = Math.cos(th), sn = Math.sin(th);
     const base = LN([cs * rw * 0.96, rimY + sn * rry]);
-    const L0 = (31 + rr() * 12) * sc * (1 - wi * 0.25) * (sn > 0 ? 1 : 0.88);
-    const out = (0.7 + rr() * 0.45); const curl = (0.55 + rr() * 0.5) * (1 + wi * 0.6);
-    const broken = wi > 0.3 && rr() < 0.35;
-    sep.push({ th, cs, sn, base, L0, out, curl, broken, hw: (10.5 + rr() * 3) * sc });
+    const L0 = (31 + rr() * 12) * sc * (1 - wi * 0.1) * (sn > 0 ? 1 : 0.88);
+    const out = (0.7 + rr() * 0.45) * (1 + wi * 0.12); const curl = (0.55 + rr() * 0.5) * (1 + wi * 0.35); // solunca hafif sarkık
+    sep.push({ th, cs, sn, base, L0, out, curl, hw: (10.5 + rr() * 3) * sc });
   }
   const sepal = (q) => {
-    const L2 = q.L0 * (q.broken ? 0.55 : 1);
+    const L2 = q.L0;
     // 3B yön: dışa (cs, sn·ezik) + yukarı; üst yarıda dışa kıvrılır
     const dx = q.cs * q.out, dy = -1 + q.sn * 0.25 * q.out; const dl = Math.hypot(dx, dy);
     const ux = dx / dl, uy = dy / dl; const px = -uy, py = ux; // yan yön
@@ -401,7 +406,7 @@ function crownOn(S, tx, ty, R, ca, P, wi, rr) {
   const order = sep.slice().sort((a, b) => a.sn - b.sn);
   for (const q of order.filter((q) => q.sn < 0)) sepal(q);
   const mouth = YIY.shape(TP(YIY.ellPts(LN([0, rimY])[0], rimY, rw * 0.92, rry * 0.9, 0, 20)), 0.5);
-  fill(S, mouth.path, mix('#1E040C', P[0], 0.35), { h: 108 });
+  fill(S, mouth.path, mix('#1E040C', P[0], 0.35 + wi * 0.45), { h: 108 });
   for (let i = 0; i < 12; i++) {
     const u = (rr() - 0.5) * rw * 1.3, v = rimY + (rr() - 0.3) * rry * 0.7;
     const q0 = T(LN([u, v])), q1 = T(LN([u + (rr() - 0.5) * 6 * sc, v - (4 + rr() * 8) * sc]));
@@ -413,8 +418,11 @@ function crownOn(S, tx, ty, R, ca, P, wi, rr) {
 function paintPomegranate(o = {}) {
   const k = o.k ?? 1; const w = 500 * k, h = 520 * k;
   const S = Paint.sprite(w, h, { seed: o.seed ?? 11, k });
-  const cx = 250 * k, cy = 284 * k, R = 192 * k * (1 - (o.wither ?? 0) * 0.15);
-  pomegranateOn(S, cx, cy + (o.wither ?? 0) * 20 * k, R, o);
+  const wi = o.wither ?? 0; const cx = 250 * k, cy = 284 * k, R0 = 192 * k, R = R0 * (1 - wi * 0.06);
+  // solmuş: aynı pivot, %6 küçük; alt nokta (sofraya değdiği yer) tazeyle aynı kalsın diye aşağı kaydır
+  let dy = 0;
+  if (wi) { const ph = rng(o.seed ?? 11)() * 6; const ca = o.crownAng ?? -Math.PI / 2 + 0.1; const bot = (P) => Math.max(...P.map((q) => q[1])); dy = bot(narBodyPts(cx, cy, R0, ca, ph, 0)) - bot(narBodyPts(cx, cy, R, ca, ph, wi)); }
+  pomegranateOn(S, cx, cy + dy, R, o);
   return { canvas: S.finish({ emboss: 0.42 }), px: cx, py: cy, k };
 }
 defSprite('nar', () => paintPomegranate({ seed: 11 }));

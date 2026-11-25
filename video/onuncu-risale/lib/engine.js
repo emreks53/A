@@ -50,6 +50,28 @@ function camAt(keys, t) {
   }
   return { ...keys[keys.length - 1][1] };
 }
+// yumuşak kamera yolu (Catmull-Rom/Hermite): ara anahtarlarda durmadan akar. keys = [[t, {x,y,z}, {stop?, v?}], ...]
+// ilk/son anahtar ve stop:true olanlar hızsız; v: {x,y,z} (sn başına; z için log-ölçek) açık hız verir.
+function camSmooth(keys, t) {
+  const n = keys.length;
+  const P = keys.map(([, k]) => [k.x, k.y, Math.log(k.z)]);
+  const T = keys.map(([kt]) => kt);
+  const tan = (i) => {
+    const o = keys[i][2] || {};
+    if (o.v) return [o.v.x || 0, o.v.y || 0, o.v.z || 0];
+    if (o.stop || i === 0 || i === n - 1) return [0, 0, 0];
+    const dt = T[i + 1] - T[i - 1];
+    return P[i].map((_, d) => (P[i + 1][d] - P[i - 1][d]) / dt);
+  };
+  if (t <= T[0]) { const k = keys[0][1]; return { x: k.x, y: k.y, z: k.z, r: 0 }; }
+  if (t >= T[n - 1]) { const k = keys[n - 1][1]; return { x: k.x, y: k.y, z: k.z, r: 0 }; }
+  let i = 0; while (t > T[i + 1]) i++;
+  const h = T[i + 1] - T[i], u = (t - T[i]) / h, u2 = u * u, u3 = u2 * u;
+  const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
+  const m0 = tan(i), m1 = tan(i + 1);
+  const v = P[i].map((_, d) => h00 * P[i][d] + h10 * h * m0[d] + h01 * P[i + 1][d] + h11 * h * m1[d]);
+  return { x: v[0], y: v[1], z: Math.exp(v[2]), r: 0 };
+}
 // hafif el kamerası salınımı (çok küçük; nefes alan kadraj)
 const breathe = (t, amp = 1) => ({ x: Math.sin(t * 0.7) * 3 * amp + Math.sin(t * 1.9) * 1.2 * amp, y: Math.cos(t * 0.53) * 3 * amp, r: Math.sin(t * 0.41) * 0.0018 * amp });
 
