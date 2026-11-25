@@ -11,7 +11,7 @@ from kit import build_sky, build_ground, build_cypress, build_flower, paint, bui
 from assets_items import build_token
 from man import build_side, walk_pose, REST, draw_side, lerp_pose
 
-TOKENS = ['book', 'lamp', 'heart', 'jug', 'sapling', 'tesbih', 'bread']
+TOKENS = ['book', 'seccade', 'heart', 'jug', 'sapling', 'tesbih', 'bread']
 FLOWERS = [(70, 1560, 'bud', 300, 6), (900, 1540, 'bud', 290, 8), (250, 1570, 'bud', 240, 7),
            (700, 1580, 'bud', 230, 9), (450, 1600, 'bud', 220, 10), (1010, 1610, 'open', 320, 11),
            (150, 1690, 'open', 330, 1), (370, 1730, 'open', 280, 2), (600, 1710, 'open', 300, 3),
@@ -170,4 +170,4 @@ def draw(f, t, A):
 
 
 def load():
-    return cached('han_v4', build)
+    return cached('han_v5', build)

@@ -8,10 +8,10 @@ from cache import cached
 from kit import build_sky, paint, glow_density
 from assets_items import build_token
 
-ORDER0 = ['coin', 'bread', 'lamp', 'house', 'book']
+ORDER0 = ['coin', 'bread', 'seccade', 'house', 'book']
 SLOTS = [318, 540, 762, 960, 1140]
 TS = 2.5
-PROMO = [('lamp', 13.50), ('book', 14.40)]
+PROMO = [('seccade', 13.50), ('book', 14.40)]
 
 
 def build():
@@ -19,7 +19,7 @@ def build():
     A = {}
     A['sky'] = build_sky(1400, 2300, s=0.5, seed=241, top='#9CC6E6', deep='#6A8FD0', horizon=2300, clouds=3,
                          cloud_y=(0.1, 0.8), ww=ww, place=(-160, -200), dens=0.5)
-    A['tokens'] = {k: build_token(k, R=35, s=2.6, seed=700 + i * 17, full_wet=(k in ('lamp', 'book')))
+    A['tokens'] = {k: build_token(k, R=35, s=2.6, seed=700 + i * 17, full_wet=(k in ('seccade', 'book')))
                    for i, k in enumerate(ORDER0)}
     el = Element(300, 300, 0.8, seed=751, pivot=(150, 150))
     D = glow_density(el.th, el.tw, 120, 120, 140, '#F2C14E', k=0.85, s=0.8, seed=752, core=0.42, rays=12)
@@ -102,4 +102,4 @@ def draw(f, t, A):
 
 
 def load():
-    return cached('prior_v4', build)
+    return cached('prior_v5', build)

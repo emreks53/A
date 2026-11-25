@@ -30,3 +30,12 @@ Klasörler: `sahneler/` (render motoru ve sahneler), `ses/` (efekt üreteci), `k
 Garamond — Google Fonts, OFL), `data/ne_110m_land.geojson` (Natural Earth, kamu malı), `audio/src.mp3`
 (okuma kaydı), `sfx/` (`ses/make_sfx.py` çıktısı), `books2/` (`kitaplar/scene.py` çıktısı, Poly Haven CC0
 dokularıyla).
+
+## Kurallar (sonraki videolar için)
+
+- Lügat: yeni karşılık gelirken eskisi ekrandan gider (0,14 sn içinde yukarı kayıp söner); ekranda hep tek satır.
+- İslam'ı temsil etmeyen mistik ögeler kullanılmaz (sihirli lamba benzeri kandil, "her şeyi gören göz" gibi
+  semboller). Bu videoda kandil seccadeyle, büyük göz dünyaya bakan adamla değiştirildi.
+- Kapanış sahnesi her videoda farklı bir mekân olmalı; ultra gerçekçi, kamera çekiminden ayırt edilemez.
+  Risale-i Nur ciltleri #D68661, Kur'an-ı Kerim #144173 (beyaz yazı ve işleme), Kur'an rahle/aparat üzerinde
+  değil, en güzel yerde doğal ve düzgün; bir Risale açık, okunuyormuş gibi.

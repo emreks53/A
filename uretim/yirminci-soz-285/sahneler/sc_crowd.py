@@ -9,7 +9,7 @@ from comp import Cam
 from cache import cached
 from kit import build_sky, build_ground, paint, glow_density, closed, leaf_poly, build_shadow
 from assets_globe import build_globe
-from man import build_figure
+from man import build_figure, build_side, draw_side, REST
 from scipy_free import smooth_closed, smooth_open
 from wc import blur as blur_np
 
@@ -36,9 +36,9 @@ def build():
     ww = WorldWet(bounds=(-800, -900, 3200, 2900), angle=math.radians(196), origin=(900, 950), scale=1100, amp=0.12,
                   seed=941)
     A = {}
-    A['sky'] = build_sky(2900, 1700, s=0.45, seed=251, top='#8BBCE2', deep='#5A80C8', horizon=GROUND + 240 + 60,
-                         clouds=6, cloud_y=(0.1, 0.45), ww=ww, place=(-300, -240), dens=0.85)
-    A['ground'] = build_ground(2900, 700, s=0.6, seed=351, top_y=20, base='#E6CB96', green='#8DB85A',
+    A['sky'] = build_sky(2900, 2400, s=0.45, seed=251, top='#8BBCE2', deep='#5A80C8', horizon=GROUND + 900 + 60,
+                         clouds=7, cloud_y=(0.3, 0.62), ww=ww, place=(-300, -900), dens=0.85)
+    A['ground'] = build_ground(2900, 1300, s=0.6, seed=351, top_y=20, base='#E6CB96', green='#8DB85A',
                                shade='#B88A55', ww=ww, place=(-300, GROUND - 20), fade=40)
     figs = []
     for i, (x, y, sc, maj, ck) in enumerate(CROWD):
@@ -97,20 +97,37 @@ def build():
     el.add_shape(P(pts))
     paint(el, pts, '#D9A85A', None, None, ang=0.3, seed=992, dens=3, spacing=1.4, length=(2, 4), no_wet=True)
     A['grain'] = el
-    # göz
-    A['eye'] = build_eye()
+    # bakan adam (nokta-i nazar): dünyayı ebedî mesken gibi seyreden yolcu
     A['curtain'] = build_curtain()
     A['shadow'] = build_shadow(110, 18, s=1.6)
-    # perde gölgesi: yalnız gözün içinde, perde kenarından aşağı sönen
-    eye = A['eye']
-    el = Element(eye.ww, eye.wh, 0.5, seed=1011, pivot=eye.pivot)
-    am = el.mask(P(eye.almond))
-    yy = np.mgrid[0:el.th, 0:el.tw][0].astype(np.float32) / el.s
-    cyl = eye.pivot[1]
-    dens = sstep(cyl + 360, cyl + 20, yy) * 0.55 * am
-    el.add_density(blur_np(dens, 3)[..., None] * pig('#4A3A5E', 0.8)[None, None, :])
-    A['shade'] = el
+    A['viewer'] = build_side(s=2.4, seed=100)
+    A['sight'] = build_sight()
     return slim(A)
+
+
+VX, VY, VS = 1000.0, 1560.0, 2.3   # bakan adamın tabanı ve ölçeği
+VIEW_POSE = dict(REST, head=-14.0, torso=-2.0)
+
+
+def build_sight():
+    """Adamın gözünden köşke uzanan kesik kalem çizgisi (bakış), göze yakın uçtan çizilir."""
+    ex, ey = VX + VS * 21.0, VY - VS * 283.0
+    kx, ky = GX - 40, GY - GR * 0.9 + 10
+    x0, y0 = min(ex, kx) - 30, min(ey, ky) - 30
+    w, h = abs(kx - ex) + 60, abs(ky - ey) + 60
+    el = Element(w, h, 1.6, seed=1031, pivot=(0, 0))
+    el.X0, el.Y0 = x0, y0
+    sc = el.canvas()
+    n = 15
+    for k in range(n):
+        u0 = 0.06 + 0.82 * k / n
+        u1 = u0 + 0.82 / n * 0.55
+        p0 = np.array([ex + (kx - ex) * u0 - x0, ey + (ky - ey) * u0 - y0])
+        p1 = np.array([ex + (kx - ex) * u1 - x0, ey + (ky - ey) * u1 - y0])
+        sc.line(np.array([p0, p1]) * el.s, 2.6 * el.s, 0.9, k / n, (k + 0.6) / n, seed=1032 + k, taper=(0.2, 0.2))
+    el.layer('#4A3A5E', sc, k=0.85, wet_override=np.zeros((el.th, el.tw), np.float32))
+    el.shape = el.shape * 0
+    return el
 
 
 def build_palace(ww):
@@ -300,7 +317,7 @@ def camera(t):
     # A: kalabalık; B: küre; C: göz (uzak)
     a = (540.0, 960.0, 1.0 + 0.03 * ramp(t, 16.9, 19.1, 'io'))
     b = (GX, 900.0, 1.06)
-    c = (GX, 800.0, 0.58)
+    c = (GX - 120, 860.0, 0.62)
     u = ease(ramp(t, 19.12, 19.62, 'lin'), 'io3')
     x = a[0] + (b[0] - a[0]) * u
     y = a[1] + (b[1] - a[1]) * u
@@ -321,10 +338,8 @@ def motion_samples(t):
 
 def draw(f, t, A):
     f.cam = camera(t)
-    bg = 1.0 - ramp(t, 21.42, 21.72, 'io')
-    if bg > 0:
-        f.place(A['sky'], -300 + 6 * (t - 16.9), -240, op=bg)
-        f.place(A['ground'], -300, GROUND - 20, op=bg)
+    f.place(A['sky'], -300 + 6 * (t - 16.9), -900)
+    f.place(A['ground'], -300, GROUND - 20)
     # kalabalık
     for i, ((x, y, sc, maj, ck), fig) in enumerate(zip(CROWD, A['figs'])):
         t0 = 17.0 + 0.045 * i
@@ -384,18 +399,23 @@ def draw(f, t, A):
         f.place(A['roots'], GX, by - 4, pd=ramp(t, 20.72, 21.3, 'lin'), sx=0.82, sy=0.82)
         f.place(p, GX, by, sx=(0.92 + 0.08 * pr) * 0.78, sy=max(0.01, pr) * 0.78, pd=ramp(t, 20.62, 21.1, 'lin'),
                 pw=ramp(t, 20.75, 21.3, 'lin'))
-    # göz
-    if t > 21.5:
-        f.place(A['eye'], GX, GY, pd=ramp(t, 21.55, 22.4, 'lin'), pw=ramp(t, 21.8, 22.6, 'lin'))
+    # bakan adam ve bakış çizgisi
+    if t > 21.42:
+        pd = ramp(t, 21.45, 21.95, 'lin')
+        pose = dict(VIEW_POSE)
+        pose['head'] += 1.2 * math.sin(t * 1.9)
+        f.place(A['shadow'], VX + 8, VY + 3, sx=VS * 0.9, op=pd, mode='add')
+        draw_side(f, A['viewer'], VX, VY, VS, pose, pd=pd, pw=ramp(t, 21.55, 22.1, 'lin'))
+        sg = A['sight']
+        f.place(sg, sg.X0, sg.Y0, pd=ramp(t, 21.9, 22.55, 'lin'))
     # perde
     cu = ramp(t, 23.06, 23.62, 'lin')
     if cu > 0:
         drop = ease(cu, 'o') + 0.035 * math.sin(math.pi * ramp(t, 23.4, 23.9, 'lin'))
         yb = (GY - EYE_UP - 1100) + (GY + EYE_DN + 40 - (GY - EYE_UP - 1100)) * drop
         sway = 0.006 * math.sin((t - 23.6) * 2.4) * (1 if t > 23.6 else 0)
-        f.place(A['shade'], GX, GY, op=0.5 * ramp(t, 23.4, 24.2, 'io'), mode='add')
         f.place(A['curtain'], GX, yb, rot=sway, pd=1.0)
 
 
 def load():
-    return cached('crowd_v6', build)
+    return cached('crowd_v7', build)

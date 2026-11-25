@@ -13,7 +13,7 @@ GROUND = 1250.0
 MAN_X = 330.0
 MAN_S = 1.0
 BAG_X = 520.0
-ITEMS = [('lamp', 9.32), ('jug', 9.78), ('bread', 10.22), ('book', 10.68)]
+ITEMS = [('seccade', 9.32), ('jug', 9.78), ('bread', 10.22), ('book', 10.68)]
 
 
 def build():
@@ -160,4 +160,4 @@ def draw_items(f, t, A):
 
 
 def load():
-    return cached('bag_v4', build)
+    return cached('bag_v5', build)

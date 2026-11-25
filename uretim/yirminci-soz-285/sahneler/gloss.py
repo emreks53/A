@@ -18,6 +18,7 @@ BASE_Y = 1428          # ilk satırın orta çizgisi (%74)
 LINE_H = 92
 LEAD = 0.04            # ilk sesten bu kadar önce başlar
 FADE_IN = 0.2
+OUT = 0.14             # yeni lügat gelince eskisinin sönme süresi
 HOLD = 2.5
 
 
@@ -60,23 +61,18 @@ class Glosses:
             if t < on or t > it['end'] + 0.5:
                 continue
             a_in = ease(min(1.0, (t - on) / FADE_IN), 'o')
-            shift = 0.0
-            for j in range(i + 1, len(self.items)):
-                oj = self.items[j]['on']
-                if t >= oj:
-                    shift += ease(min(1.0, (t - oj) / 0.15), 'o')
-            if shift > 1.6:
-                continue
-            a_out = 1.0 - ramp(t, it['end'], it['end'] + 0.45, 'io')
-            a_shift = 1.0 - 0.42 * min(1.0, shift) - 1.0 * max(0.0, shift - 1.0) / 0.6
+            # yeni lügat gelirken eskisi ekrandan gider: aynı anda hafifçe yukarı kayıp söner (yığılma yok)
+            leave = 0.0
             if i + 1 < len(self.items) and t >= self.items[i + 1]['on']:
-                # yeni lügat gelince eskisi kısa süre üstte kalıp söner (ekran sade kalsın)
-                a_shift *= 1.0 - ramp(t, self.items[i + 1]['on'] + 0.55, self.items[i + 1]['on'] + 1.0, 'io')
-            alpha = max(0.0, a_in * a_out * a_shift)
+                leave = ease(min(1.0, (t - self.items[i + 1]['on']) / OUT), 'o')
+                if leave >= 1.0:
+                    continue
+            a_out = 1.0 - ramp(t, it['end'], it['end'] + 0.45, 'io')
+            alpha = max(0.0, a_in * a_out * (1.0 - leave))
             if alpha <= 0.003:
                 continue
-            sc = 1.0 - 0.16 * min(1.0, shift)
-            y = BASE_Y - shift * LINE_H * 0.98 + (1 - a_in) * 34
+            sc = 1.0
+            y = BASE_Y + (1 - a_in) * 34 - leave * 26
             sp = it['sprite']
             sharp = ease(min(1.0, (t - on) / 0.26), 'o')
             mask = sp.soft * (1 - sharp) + sp.mask * sharp

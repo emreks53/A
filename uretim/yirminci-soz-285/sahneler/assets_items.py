@@ -8,7 +8,7 @@ from scipy_free import smooth_closed, smooth_open
 
 INK = '#2B2540'
 
-TOKEN_COL = dict(book=('#8DB8D8', '#3D58B6'), lamp=('#F3D23C', '#D08A2A'), heart=('#EE8FAE', '#B8456A'),
+TOKEN_COL = dict(book=('#8DB8D8', '#3D58B6'), lamp=('#F3D23C', '#D08A2A'), seccade=('#F2C9A8', '#C0705A'), heart=('#EE8FAE', '#B8456A'),
                  jug=('#86C4B0', '#2E7E6A'), sapling=('#A8CF7A', '#4F9C38'), tesbih=('#C7B0E2', '#7A5BB0'),
                  bread=('#E8B877', '#B07A35'), coin=('#E8C860', '#B08A2A'), house=('#E2A58C', '#A8553E'))
 
@@ -81,6 +81,18 @@ def picto(kind, R):
             side = np.vstack([e[:20], (e[:20] + np.array([0, 6 * f]))[::-1]])
             fills += [(side, '#B8902E'), (e, '#E2BE4E')]
             lines += [closed(e)]
+    elif kind == 'seccade':
+        # seccade: kenar bordürlü dikdörtgen, mihrap kemeri, iki uçta saçak
+        body = np.array([[-17, -25], [17, -25], [17, 25], [-17, 25]], float) * f
+        border = np.array([[-12.5, -20.5], [12.5, -20.5], [12.5, 20.5], [-12.5, 20.5]], float) * f
+        arch = np.vstack([[[-8, 16]], bez((-8, -6), (-8, -13), (0, -18), (0, -18), 8),
+                          bez((0, -18), (0, -18), (8, -13), (8, -6), 8)[1:], [[8, 16]]]) * f
+        arch = np.vstack([arch[:1], np.array([[-8, -6]]) * f, arch[1:]])
+        fills += [(body, '#D0705C'), (arch, '#F2D592')]
+        lines += [closed(body), closed(border), arch]
+        for x in np.linspace(-14, 14, 8):
+            lines += [np.array([[x, 25], [x, 30]]) * f, np.array([[x, -25], [x, -30]]) * f]
+        lines += [np.array([[-4, 6], [0, 2], [4, 6], [0, 10], [-4, 6]]) * f]
     elif kind == 'house':
         wall = np.array([[-18, -4], [18, -4], [18, 20], [-18, 20]]) * f
         roof = np.array([[-24, -2], [0, -24], [24, -2]]) * f
