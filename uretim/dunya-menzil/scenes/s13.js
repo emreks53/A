@@ -1,10 +1,11 @@
 /* s13 · 58.45–63.75 · "onun neticesi ve semeresi ve sümbülü olan uhrevî fevaidine çevirsek"
    Wide again (cut): the braided current from the man's heart turns and pours down into the nursery's aisle; the
    water of light runs along the furrows to every root. "neticesi": the saplings grow into young trees. "semeresi":
-   pomegranates and apples ripen, glowing. "sümbülü": golden wheat springs up between the trees. "uhrevî
-   fevaidine": fruits and grain lift off as small lights and float through the arch into the garden beyond.
-   "çevirsek": the current itself flows on along the path, through the gate, into the garden. The camera pushes
-   gently toward the gate (s14 bleeds in from 540,1100). */
+   pomegranates and apples ripen. "sümbülü": golden wheat springs up between the trees. "uhrevî fevaidine": fruits
+   and grain lift off as soft warm orbs and drift at eye level, low over the orchard, through the arch into the
+   garden beyond (no light shafts, no trails, no sky glow). "çevirsek": the current itself flows on, through the
+   gate, into the garden; nothing radiates from the gate. Over the shot the day slowly warms toward the evening of
+   s14 (an even colour shift, not a glow). The camera pushes gently toward the gate (s14 bleeds in from 540,1100). */
 (function () {
   const E = window.E;
   const P = E.P;
@@ -14,7 +15,7 @@
   const HZ = 790;
   const GATE = { x: 640, y: 880, w: 240 };
   GATE.h = GATE.w * 1.75;
-  GATE.light = [GATE.x, GATE.y - 56.75 * GATE.w / 100];     // radiant horizon point inside the arch
+  GATE.vista = [GATE.x, GATE.y - 56.75 * GATE.w / 100];     // the garden's horizon point seen inside the arch
   const persp = (y) => (y - HZ) / (1180 - HZ);
   const aisleX = (y) => 640 + (604 - 640) * (y - GATE.y) / (1200 - GATE.y);
   const YB = 996, YF = 1200;                                 // nursery back / front edge
@@ -115,22 +116,18 @@
     E.restore(L);
   }
 
-  function gate(L, gt, haze, appear, open, accent) {
+  function gate(L, gt, haze, appear, open) {
     const { x, y, w, h } = GATE;
-    if (haze > 0) {
-      // golden haze from which the gate emerges, staying as a halo
-      const hz = haze * (1 - 0.45 * appear);
-      E.lift(L.paint, E.blob(x, y - h * 0.5, 200, { rx: 210, ry: 280, seed: 23, irr: 0.18 }), 0.8 * hz, 50);
-      E.wash(L.paint, E.blob(x, y - h * 0.5, 240, { rx: 260, ry: 300, seed: 21, irr: 0.18 }), E.shade(P.gamboge, 0.3), { alpha: 0.3 * haze, soft: 80 });
-      E.glow(L.light, x, y - h * 0.45, 380, '#FFE2A0', 0.26 * haze + 0.12 * open + 0.1 * accent);
-    }
+    // the distant gate emerges from a pale morning mist ("âhiret"); the mist clears as it stands (no halo, no glow)
+    const mist = haze * (1 - appear);
+    if (mist > 0.01) E.lift(L.paint, E.blob(x, y - h * 0.5, 200, { rx: 230, ry: 290, seed: 23, irr: 0.18 }), 0.62 * mist, 60);
     if (appear <= 0) return;
     E.save(L);
     const sc = 0.97 + 0.03 * E.ease.outCubic(appear);
     E.translate(L, x, y); E.scale(L, sc); E.translate(L, -x, -y);
-    PR.archGate(L, x, y, w, h, { open, glow: Math.min(1, open * (0.88 + 0.12 * Math.sin(gt * 1.7)) + accent * 0.3), t: gt, alpha: appear });
+    // the open doors show a luminous garden in warm daylight INSIDE the arch; nothing radiates out of it
+    PR.archGate(L, x, y, w, h, { open, glow: open, rays: 0, t: gt, alpha: appear });
     E.restore(L);
-    if (open > 0.05) E.rays(L.light, GATE.light[0], GATE.light[1], { n: 9, len: 560, spread: 2.5, angle: Math.PI / 2, width: 0.05, color: '#FFE9B8', a: 0.1 * open + 0.06 * accent, seed: 13, t: gt });
   }
 
   function mound(L, x, y, s, a) {
@@ -320,7 +317,9 @@
   });
 
   function water(L, lt, gt, tPour) {
-    // luminous irrigation running along the aisle and the furrows
+    // the redirected current, now water, runs down the aisle in a small rill and spreads along the furrows of the
+    // two beds to every root. Painted as water (a wet, slightly darker sheen with a few small glints), not as light,
+    // and the furrows start at the beds' inner edge, so nothing crosses the footpath (no glowing grid in the aisle)
     const lc = L.light;
     for (const ry of ROWS) {
       const s = persp(ry);
@@ -328,32 +327,40 @@
       for (const sd of [-1, 1]) {
         const k = E.ep(lt, tRow, tRow + 0.7, 'outCubic');
         if (k <= 0) continue;
-        const x0 = aisleX(ry) + sd * 9 * s, x1 = aisleX(ry) + sd * (52 + (310 - 52) * k) * s;
-        const y = ry + 6 * s, hh = 4.2 * s;
+        const x0 = aisleX(ry) + sd * 50 * s, x1 = aisleX(ry) + sd * (54 + (310 - 54) * k) * s;
+        const y = ry + 5 * s, hh = 2.6 * s;
         const band = E.smoothPath([[x0, y - hh], [x1, y - hh * 0.6], [x1 + sd * 3, y], [x1, y + hh * 0.6], [x0, y + hh]], true, 0.3);
-        E.wash(L.paint, band, '#F6DCC4', { mode: 'over', alpha: 0.8 });
-        E.wash(L.paint, band, '#E2A08C', { alpha: 0.22 });
+        E.wash(L.paint, band, '#E6E3E0', { mode: 'over', alpha: 0.85 });
+        E.wash(L.paint, band, '#B9CCDA', { alpha: 0.35 });
+        E.wash(L.paint, band, '#E3B6A8', { alpha: 0.18 });
         L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.fill(band); L.ink.restore();
-        lc.save(); lc.globalCompositeOperation = 'lighter'; lc.fillStyle = E.rgba('#FFE4C8', 0.16); lc.fill(band); lc.restore();
-        // glints flowing outward
-        for (let g = 0; g < 4; g++) {
-          const u = ((gt * 0.5 + g / 4 + (sd > 0 ? 0.13 : 0)) % 1) * k;
-          E.glow(lc, aisleX(ry) + sd * (52 + 258 * u) * s, y, 9 * s + 4, '#FFF3E0', 0.38 * k);
+        // a couple of small glints travelling outward on the water
+        for (let g = 0; g < 2; g++) {
+          const u = ((gt * 0.45 + g / 2 + (sd > 0 ? 0.13 : 0)) % 1) * k;
+          E.glow(lc, aisleX(ry) + sd * (56 + 250 * u) * s, y, 5 * s + 2, '#FFF6EA', 0.3 * k);
         }
       }
     }
-    // the aisle channel (from the landing point back and forth)
+    // the rill in the aisle (from the landing point back and forth), gently meandering
     const ka = E.ep(lt, tPour, tPour + 0.5, 'outCubic');
     if (ka > 0) {
       const yb = E.lerp(LAND[1], ROWS[0] - 6, ka), yf = E.lerp(LAND[1], ROWS[2] + 22, ka);
       const ys = [];
-      for (let i = 0; i <= 8; i++) ys.push(E.lerp(yb, yf, i / 8));
-      const half = (y) => 7 * persp(y);
-      const ch = E.smoothPath(ys.map((y) => [aisleX(y) - half(y), y]).concat(ys.slice().reverse().map((y) => [aisleX(y) + half(y), y])), true, 0.3);
-      E.wash(L.paint, ch, '#F6DCC4', { mode: 'over', alpha: 0.85 });
-      E.wash(L.paint, ch, '#E2A08C', { alpha: 0.24 });
+      for (let i = 0; i <= 10; i++) ys.push(E.lerp(yb, yf, i / 10));
+      const mx = (y) => aisleX(y) + 5 * persp(y) * Math.sin(y * 0.045 + 1.2);
+      const strip = (hw) => E.smoothPath(ys.map((y) => [mx(y) - hw * persp(y), y]).concat(ys.slice().reverse().map((y) => [mx(y) + hw * persp(y), y])), true, 0.3);
+      // damp, darker sand along the banks, then the water itself: a pale strip reflecting the sky, tinted by the current
+      E.wash(L.paint, strip(11), '#A98D6C', { alpha: 0.3, soft: 5 });
+      const ch = strip(5.2);
+      E.wash(L.paint, ch, '#E6E3E0', { mode: 'over', alpha: 0.9 });
+      E.wash(L.paint, ch, '#B9CCDA', { alpha: 0.35 });
+      E.wash(L.paint, ch, '#E3B6A8', { alpha: 0.18 });
       L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.fill(ch); L.ink.restore();
-      lc.save(); lc.globalCompositeOperation = 'lighter'; lc.fillStyle = E.rgba('#FFD9B8', 0.28); lc.fill(ch); lc.restore();
+      for (let g = 0; g < 3; g++) {
+        const u = (gt * 0.35 + g / 3) % 1;
+        const y = E.lerp(yb, yf, u);
+        E.glow(lc, mx(y), y, 4 * persp(y) + 2, '#FFF6EA', 0.28 * ka);
+      }
     }
   }
 
@@ -395,9 +402,10 @@
     }
   }
 
-  /** the lights of the harvest: from each fruit / wheat clump up and into the garden's light */
+  /** the fruits of the harvest for the hereafter: from each fruit / wheat clump a soft warm orb drifts at eye level,
+      low over the orchard, through the arch and on into the garden, growing smaller as it goes (no trails, no rays) */
   function lights(L, lt, gt, tR, tH, gateK) {
-    const G = GATE.light;
+    const G = GATE.vista;
     const lc = L.light;
     let arrived = 0;
     const samples = 10;
@@ -406,28 +414,21 @@
       if (u0 <= 0) return;
       if (u0 >= 1) { arrived++; return; }
       const rr = E.rng(seed);
-      const end = [G[0] + (rr() - 0.5) * 44 * gateK, G[1] + (rr() - 0.45) * 70 * gateK];
-      const c = [S[0] + (end[0] - S[0]) * (0.25 + rr() * 0.3), Math.min(S[1], end[1]) - 120 - rr() * 160];
-      const at = (u) => { const e = E.ease.inOutSine(E.clamp(u)); const v = 1 - e; return [v * v * S[0] + 2 * v * e * c[0] + e * e * end[0], v * v * S[1] + 2 * v * e * c[1] + e * e * end[1]]; };
-      const fade = 1 - E.smooth(E.seg(u0, 0.72, 1));
-      const pop = E.ease.outBackSoft(E.clamp(u0 * 6));
-      const r = r0 * (1 - 0.45 * E.clamp(u0)) * pop;
-      // trail: a fading comet tail of light
-      const trail = [];
-      for (let k = 0; k <= 6; k++) trail.push(at(u0 - k * 0.016));
-      lc.save();
-      lc.globalCompositeOperation = 'lighter';
-      lc.lineCap = 'round';
-      for (let k = 0; k < 6; k++) {
-        lc.strokeStyle = E.rgba(E.mix(col, '#FFD9A0', 0.45), 0.42 * fade * (1 - k / 6));
-        lc.lineWidth = r * (1.7 - k * 0.22);
-        lc.beginPath(); lc.moveTo(trail[k][0], trail[k][1]); lc.lineTo(trail[k + 1][0], trail[k + 1][1]); lc.stroke();
-      }
-      lc.restore();
-      const q = trail[0];
-      E.wash(L.paint, E.blob(q[0], q[1], r, { seed, irr: 0.05, n: 16 }), E.mix(col, '#F6D58E', 0.3), { mode: 'over', alpha: 0.95 * fade });
-      E.lift(L.paint, E.blob(q[0] - r * 0.3, q[1] - r * 0.3, r * 0.38, { seed: seed + 1, irr: 0.05, n: 12 }), 0.8 * fade);
-      E.glow(lc, q[0], q[1], r * 3.4, E.mix(col, '#FFE7B8', 0.55), 0.55 * fade);
+      // destination: somewhere in the garden's meadow seen through the opening (between its horizon and the threshold)
+      const end = [G[0] + (rr() - 0.5) * 64 * gateK, G[1] + (16 + rr() * 64) * gateK];
+      // a low, gentle arc (it never climbs above the garden's horizon inside the arch)
+      const c = [S[0] + (end[0] - S[0]) * (0.4 + rr() * 0.2), Math.min(S[1], end[1]) - 20 - rr() * 40];
+      const ph = rr() * E.TAU;
+      const e = E.ease.inOutSine(E.clamp(u0)), v = 1 - e;
+      const sway = 4 * Math.sin(u0 * 5 + ph) * Math.sin(Math.PI * u0);
+      const q = [v * v * S[0] + 2 * v * e * c[0] + e * e * end[0] + sway, v * v * S[1] + 2 * v * e * c[1] + e * e * end[1]];
+      const fade = Math.min(E.smooth(E.clamp(u0 * 5)), 1 - E.smooth(E.seg(u0, 0.7, 1)));
+      const r = r0 * (0.75 + 0.25 * E.ease.outBackSoft(E.clamp(u0 * 5))) * (1 - 0.55 * e);
+      if (r < 0.6 || fade <= 0.01) return;
+      // a soft, translucent warm orb (a pale, wet-edged dab of the fruit's colour with a little glow), not a solid ball
+      E.wash(L.paint, E.blob(q[0], q[1], r, { seed, irr: 0.05, n: 16 }), E.mix(col, '#FBE3B0', 0.5), { mode: 'over', alpha: 0.72 * fade, soft: r * 0.3 });
+      E.lift(L.paint, E.blob(q[0] - r * 0.25, q[1] - r * 0.25, r * 0.45, { seed: seed + 1, irr: 0.05, n: 12 }), 0.55 * fade, r * 0.2);
+      E.glow(lc, q[0], q[1], r * 2.6, E.mix(col, '#FFE7B8', 0.65), 0.3 * fade);
     };
     // fruit lights: each spawns when its fruit is harvested (ripeness crossing 0.5 on the way down)
     for (const pl of PLANTS) {
@@ -444,16 +445,18 @@
           prev[j] = f.ripe;
         });
       }
+      // one fruit of each tree sends an orb (two from the front row): a gentle, sparse drift, not a swarm
+      const pick = pl.ri === 2 ? [0, Math.floor(full.length / 2)] : [Math.floor(full.length / 3)];
       full.forEach((f, j) => {
-        if (j % 3 !== 0) return; // a third of the fruits send a light (keeps the sky readable)
+        if (!pick.includes(j)) return;
         const t0 = spawn[j] === null ? tH + 0.75 : spawn[j];
-        fly([f.x, f.y], t0, 1.25 + (j % 4) * 0.1, FRUIT[pl.sd < 0 ? 0 : 1], pl.seed * 97 + j, 7 * pl.s + 2.5);
+        fly([f.x, f.y], t0, 1.5 + (j % 4) * 0.1, FRUIT[pl.sd < 0 ? 0 : 1], pl.seed * 97 + j, 8 * pl.s + 3);
       });
     }
     // grain lights
     WHEAT.forEach((w, i) => {
       const t0 = tH + 0.15 + (i % 6) * 0.11;
-      if (i % 2 === 0) fly([w.x, w.y - 112 * w.s], t0, 1.35, '#F2C14E', 500 + i, 6 * w.s + 2);
+      if (i % 3 === 0) fly([w.x, w.y - 112 * w.s], t0, 1.6, '#F2C14E', 500 + i, 7 * w.s + 2.5);
     });
     return arrived;
   }
@@ -475,7 +478,6 @@
         z: E.tween(lt, [[0, 1.255], [tC - 0.4, 1.285, 'inOutSine'], [end, 1.43, 'inOutCubic']]),
       };
       const turn = E.ep(lt, tC - 0.1, tC + 0.75, 'inOutCubic');       // the current turns from the roots to the gate
-      const gateBoost = E.ep(lt, tH + 0.9, tC + 0.9, 'inOutSine');
 
       sky(L);
       cam(L, C, 0.3);
@@ -488,7 +490,7 @@
       PR.ground(L, HZ + 32, { palette: 'garden', seed: 3, t, trees: 0.32, flowers: 0.8, x0: -300, x1: 1380 });
       cam(L, C, 1);
       knoll(L);
-      gate(L, t, 1, 1, 1, 0.6 * gateBoost + 0.4 * turn);
+      gate(L, t, 1, 1, 1);
       footpath(L, 1);
       soil(L, 1);
       water(L, lt, t, tPour);
@@ -530,43 +532,42 @@
           const w = A * Math.sin(u * 6 * Math.PI - lt * 4.6 + (i * E.TAU) / 3);
           return [p[0] + nx * w, p[1] + ny * w];
         });
-        PR.ribbon(L, pts, { p: 0.994, width: 30, color: COL[i], t: t * 1.6, glow: 0.6 + 0.3 * turn, twist: 0.7, seed: i + 2 });
+        PR.ribbon(L, pts, { p: 0.994, width: 30, color: COL[i], t: t * 1.6, glow: 0.5 - 0.15 * turn, twist: 0.7, seed: i + 2 });
       }
-      // splash where it lands in the aisle
+      // splash where it lands in the aisle: water ripples spreading on the path and a few droplets (paint, not light)
       const land = E.ep(lt, tPour - 0.1, tPour + 0.6);
       if (land > 0 && land < 1) {
-        const rr = 20 + 90 * E.ease.outCubic(land);
-        L.light.save(); L.light.globalCompositeOperation = 'lighter';
-        L.light.strokeStyle = E.rgba('#FFE6D0', 0.6 * (1 - land));
-        L.light.lineWidth = 5; L.light.beginPath(); L.light.ellipse(LAND[0], LAND[1], rr, rr * 0.3, 0, 0, E.TAU); L.light.stroke(); L.light.restore();
-        E.glow(L.light, LAND[0], LAND[1], 120, '#FFE6D0', 0.6 * (1 - land));
+        for (const d of [0, 0.22]) {
+          const u = E.clamp((land - d) / (1 - d));
+          if (u <= 0 || u >= 1) continue;
+          const rr = 14 + 64 * E.ease.outCubic(u);
+          const ring = new Path2D();
+          ring.ellipse(LAND[0], LAND[1] + 2, rr, rr * 0.28, 0, 0, E.TAU);
+          L.ink.save(); L.ink.strokeStyle = E.rgba('#6F7F8E', 0.4 * (1 - u)); L.ink.lineWidth = 2.2; L.ink.setLineDash([16, 7]); L.ink.stroke(ring); L.ink.restore();
+        }
+        E.splatter(L.paint, LAND[0], LAND[1] - 14, 46, '#C98F86', { seed: 77, n: 8, size: 3.2, alpha: 0.5 * Math.sin(Math.PI * land) });
+        E.glow(L.light, LAND[0], LAND[1], 60, '#FFE6D0', 0.2 * (1 - land));
       }
-      if (q > 0.9) E.glow(L.light, LAND[0], LAND[1], 70, '#FFDCC4', 0.45 * (1 - turn));
-      // the garden answers as the current pours in: a bloom of light in the arch, rays
-      const arrive = E.ep(lt, tC + 0.45, tC + 1.1, 'outCubic');
-      if (turn > 0.5) E.glow(L.light, into[0], into[1], 110, '#FFE8CC', 0.5 * E.seg(turn, 0.5, 1));
-      if (arrive > 0) {
-        E.glow(L.light, GATE.light[0], GATE.light[1], 280, '#FFE6B4', 0.5 * arrive);
-        E.rays(L.light, GATE.light[0], GATE.light[1], { n: 11, len: 720, spread: E.TAU * 0.9, angle: -Math.PI / 2, width: 0.035, color: '#FFE9B8', a: 0.13 * arrive, seed: 31, t: lt });
-      }
+      if (q > 0.9) E.glow(L.light, LAND[0], LAND[1], 40, '#FFDCC4', 0.16 * (1 - turn));
+      // (the current simply flows on into the garden: no burst, no bloom of light, no rays at the gate)
 
-      // the harvest of lights
+      // the harvest: soft orbs drifting into the garden
       lights(L, lt, t, tR, tH, 1);
 
       fgCam(L, C);
       foreground(L, t);
 
       E.resetCamera(L);
-      // the garden's light floods the scene as the current flows in: the morning turns to the golden hour of s14
-      const gold = E.ep(lt, tC - 0.3, end, 'inOutSine');
-      if (gold > 0) {
+      // the day moves on while the orchard grows and bears fruit: a slow, even warming of the whole picture toward the
+      // evening light of s14 (starts early, spans the shot, tied to no word and to no place — no glow)
+      const eve = E.ep(lt, 0.6, end, 'inOutSine');
+      if (eve > 0) {
         // (a warm glaze over a blue sky only greys it, as on paper: the light is partly repainted, then glazed)
         const full = E.rrect(0, 0, E.W, E.H, 0);
-        E.wash(L.paint, full, '#F6D8B0', { mode: 'over', alpha: 0.3 * gold, grad: { from: [0, 0], to: [0, E.H], stops: [[0, E.rgba('#F0C2B4', 1)], [0.45, E.rgba('#F8DDB0', 0.75)], [1, E.rgba('#EFC896', 0.6)]] } });
-        E.wash(L.paint, full, '#F2C48A', { alpha: 0.5 * gold, grad: { from: [0, 0], to: [0, E.H], stops: [[0, E.rgba('#E2A0A0', 1)], [0.42, E.rgba('#F0C080', 0.85)], [1, E.rgba('#E2A26E', 1)]] } });
-        E.glow(L.light, 540 + (GATE.light[0] - C.x) * C.z, 960 + (GATE.light[1] - C.y) * C.z, 950, '#FFE2A8', 0.3 * gold);
+        E.wash(L.paint, full, '#F6D8B0', { mode: 'over', alpha: 0.24 * eve, grad: { from: [0, 0], to: [0, E.H], stops: [[0, E.rgba('#F0C2B4', 1)], [0.45, E.rgba('#F8DDB0', 0.75)], [1, E.rgba('#EFC896', 0.6)]] } });
+        E.wash(L.paint, full, '#F2C48A', { alpha: 0.4 * eve, grad: { from: [0, 0], to: [0, E.H], stops: [[0, E.rgba('#E2A0A0', 1)], [0.42, E.rgba('#F0C080', 0.85)], [1, E.rgba('#E2A26E', 1)]] } });
       }
-      E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 9, seed: 77, size: 2.6, a: 0.45 + 0.3 * gold, rise: 18, color: '#FFF1CF' });
+      E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 9, seed: 77, size: 2.6, a: 0.45, rise: 18, color: '#FFF1CF' });
     },
     sfx() {
       const T = (i) => E.T(i);

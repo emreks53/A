@@ -120,11 +120,12 @@
       (x, y) = BASE CENTRE (threshold on the ground), w = width of the stone frame, h = height to the cornice (default
       1.75·w; aspect clamped 0.8..4). Palmette cresting rises ≈ 0.07·w above, the steps reach ±0.68·w.
       A tall pointed Ottoman arch in pale stone: tezhip band, spandrel rosettes, keystone medallion, muqarnas frieze,
-      columns, wooden double doors. Behind them a luminous paradise garden seen in depth: golden sky, radiant light at a
-      low horizon (no source shown), far hills and tree lines, a stream of light winding toward us, cypresses at middle
-      distance, great trees framing the vista from the sides, flowers, rising motes.
-      opts: open 0..1 (default 0: the doors swing away and reveal the garden);  glow 0..1 (default = open: light pouring
-            out, spill on the ground, L.light glow + rays);  t (water shimmer, motes);  alpha.
+      columns, wooden double doors. Behind them a luminous paradise garden seen in depth: a daylight sky, warm haze at a
+      low horizon, far hills and tree lines, a stream winding toward us, cypresses at middle distance, great trees framing
+      the vista from the sides, flowers, motes.
+      opts: open 0..1 (default 0: the doors swing away and reveal the garden);  glow 0..1 (default = open: warm spill on
+            the ground);  rays 0..1 (default 0 — keep 0: radiating rays read as divine light, see docs/KURALLAR.md);
+            daySky 0..1 (default 1 − rays: blue daylight sky inside the arch);  t (water shimmer, motes);  alpha.
 
    10. pond(L, x, y, w, h, opts)
       (x, y) = CENTRE of the water ellipse, w × h its size (default h = 0.28·w). Still water (far side reflects the sky,
@@ -3210,9 +3211,16 @@
     w = num(w, 420);
     h = num(h, w * 1.75);
     if (!(w > 0.5) || !(h > 0.5)) return;
+    // opts.glow: how luminous the garden seen through the opening is (warm daylight inside the arch, a little sunlight
+    // falling through the doorway onto the step). opts.rays 0..1 (default 0): the old radiance OUTSIDE the arch (rays
+    // and a halo pouring out of it) — off unless asked for, so by default nothing radiates from the gate.
+    // opts.daySky 0..1 (default 1 − rays): the garden's sky becomes a natural daylight sky — soft blue overhead, warm
+    // haze only near its horizon — instead of the golden sky (0 = the old golden sky; rays: 1 gives the old look).
     const o = opts || {};
     const open = clamp(num(o.open, 0));
     const glw = clamp(num(o.glow, open));
+    const rays = clamp(num(o.rays, 0));
+    const daySky = clamp(num(o.daySky, 1 - rays));
     const t = num(o.t, 0);
     const asp = Math.round(clamp(h / w, 0.8, 4) * 100) / 100;
     drawProp(L, num(x, 0), num(y, 0), w / 100, num(o.alpha, 1), (K) => {
@@ -3221,10 +3229,10 @@
     const H = G.H;
     const stone = '#EEE6D8', stoneL = '#F6F1E8', stoneD = '#B3A694', orn = '#C4A46E';
     const part = (path, fill, a = 0.32) => { over(K, path, fill, 1); occlude(K, path, 1); if (a > 0) pen(K, path, 1.0 * lk, a); };
-    // light spilling out on the ground in front
+    // daylight from the garden falling through the doorway onto the ground in front (a warm patch, no glare)
     if (glw > 0.01) {
-      glaze(K, smooth([[-G.hw, 0], [G.hw, 0], [G.hw * 2.6, 26], [-G.hw * 2.6, 26]], true), '#F6CF78', 0.4 * glw, 3);
-      glow(K, 0, 6, 90, '#FFD98A', 0.3 * glw);
+      glaze(K, smooth([[-G.hw, 0], [G.hw, 0], [G.hw * 2.6, 26], [-G.hw * 2.6, 26]], true), '#F6CF78', (0.26 + 0.14 * rays) * glw, 3);
+      glow(K, 0, 6, lerp(36, 90, rays), '#FFD98A', (0.12 + 0.18 * rays) * glw);
     }
     // ---- architecture
     part(G.step2, '#DDD3C3', 0.24);
@@ -3277,8 +3285,16 @@
     K.p.save(); K.k.save(); K.l.save();
     for (const c of [K.p, K.k, K.l]) c.clip(G.open);
     occlude(K, G.open, 1);
-    if (open > 0.001) gateGarden(K, G, open, glw, t, lk);
-    else over(K, G.open, '#6E5A4E', 1);
+    // (without the outer radiance the garden's own horizon glow is softened too: a sunny garden, not a light source)
+    if (open > 0.001) {
+      gateGarden(K, G, open, glw * lerp(0.1, 1, rays), t, lk);
+      if (daySky > 0.001) {
+        // daylight sky over the garden: blue overhead fading into the warm haze before it reaches the crowns of the
+        // framing trees (their tops sit just under ys − 14), so nothing golden glows at the top of the arch
+        const top = G.apex - 2, yf = G.ys - 13;
+        over(K, poly([[-G.hw - 2, yf], [-G.hw - 2, top], [G.hw + 2, top], [G.hw + 2, yf]]), LG(K.p, 0, top, 0, yf, [[0, rgba('#BCD3E8', 0.95 * daySky)], [0.45, rgba('#CFDFEA', 0.8 * daySky)], [0.8, rgba('#E9E9DF', 0.35 * daySky)], [1, rgba('#F8EAD0', 0)]]), 1);
+      }
+    } else over(K, G.open, '#6E5A4E', 1);
     // inner reveal (thickness of the wall): lit left jamb, shaded right jamb
     const rev = new Path2D(); rev.addPath(G.open); rev.addPath(G.reveal);
     fillP(K, rev, LG(K.p, -G.hw, 0, G.hw, 0, [[0, '#F3ECE0'], [0.5, '#E2D6C4'], [1, '#B9AA96']]), 1, { over: true, rule: 'evenodd' });
@@ -3316,7 +3332,7 @@
         pen(K, leaf, 0.9 * lk, 0.32, { double: false });
       }
       // a line of light between the leaves as they part
-      if (sw > 0.01) glow(K, 0, G.ys * 0.6, 20, '#FFE7A8', 0.6 * sw * (1 - sw));
+      if (sw > 0.01) glow(K, 0, G.ys * 0.6, 20, '#FFE7A8', 0.6 * sw * (1 - sw) * lerp(0.35, 1, rays));
     }
     K.p.restore(); K.k.restore(); K.l.restore();
     pen(K, G.open, 1.1 * lk, 0.36);
@@ -3324,11 +3340,11 @@
     for (const c of G.cols) { part(c.base, stoneL, 0.26); part(c.shaft, stoneL, 0.26); glaze(K, c.shaft, LG(K.p, -60, 0, 60, 0, [[0, 'rgba(255,255,255,0)'], [1, rgba(stoneD, 0.3)]]), 1); part(c.cap, '#E2CFA6', 0.26); }
     part(G.step, '#E7DECF', 0.28);
     glaze(K, poly([[-58, -1.5], [62, -1.5], [62, 0], [-58, 0]]), stoneD, 0.4);
-    // ---- light pouring out
-    if (glw > 0.01) {
+    // ---- optional radiance outside the arch (opts.rays; off by default)
+    if (glw > 0.01 && rays > 0.001) {
       const ys = G.ys;
-      E.rays(K.l, 0, -6, { n: 7, len: 70, spread: 2.0, angle: Math.PI / 2, width: 0.07, color: '#FFE9B8', a: 0.18 * glw * K.a, seed: 9, t });
-      glow(K, 0, ys * 0.5, 80, '#FFE2A0', 0.3 * glw);
+      E.rays(K.l, 0, -6, { n: 7, len: 70, spread: 2.0, angle: Math.PI / 2, width: 0.07, color: '#FFE9B8', a: 0.18 * glw * rays * K.a, seed: 9, t });
+      glow(K, 0, ys * 0.5, 80, '#FFE2A0', 0.3 * glw * rays);
     }
     });
   };

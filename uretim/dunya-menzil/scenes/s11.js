@@ -1,9 +1,10 @@
 /* s11 · 47.65–53.60 · "Hem o hususi dünyamız, âhiret ve cennetin muvakkat bir fidanlığı olduğunu derk edip"
-   Morning garden. The man tends his personal world, resting on the meadow; at "dünyamız" the bubble opens into
-   light and spreads out into a small fenced nursery (fidanlık) of staked saplings. At "âhiret" a tall arch gate
-   emerges from a golden haze on the knoll beyond, at "cennetin" its doors open onto the luminous garden.
+   Morning garden (the natural morning sky of s10's end, nothing glowing in it). The man tends his personal world,
+   resting on the meadow; at "dünyamız" the bubble opens and spreads out into a small fenced nursery (fidanlık) of
+   staked saplings. At "âhiret" a tall arch gate emerges from a pale morning mist on the knoll beyond, at "cennetin"
+   its doors open onto a garden in warm daylight seen INSIDE the arch (no rays, no halo, nothing pours out).
    "fidanlığı": pencil label "fidanlık"; "olduğunu": a dashed transplant arrow from the saplings into the gate.
-   "derk edip": the gardener straightens and lifts his gaze to the gate, nods; a soft beam of light touches him.
+   "derk edip": the gardener looks up from the saplings to the gate and gives a small nod (gesture only, no light).
    World layout (shared by s11 / s13 — keep in sync): horizon ≈ y 790, gate base (640, 880) w 240,
    nursery = two blocks either side of an aisle/footpath that leads to the gate. */
 (function () {
@@ -15,7 +16,7 @@
   const HZ = 790;
   const GATE = { x: 640, y: 880, w: 240 };
   GATE.h = GATE.w * 1.75;
-  GATE.light = [GATE.x, GATE.y - 56.75 * GATE.w / 100];     // radiant horizon point inside the arch
+  GATE.vista = [GATE.x, GATE.y - 56.75 * GATE.w / 100];     // the garden's horizon point seen inside the arch
   const persp = (y) => (y - HZ) / (1180 - HZ);
   const aisleX = (y) => 640 + (604 - 640) * (y - GATE.y) / (1200 - GATE.y);
   const YB = 996, YF = 1200;                                 // nursery back / front edge
@@ -116,22 +117,18 @@
     E.restore(L);
   }
 
-  function gate(L, gt, haze, appear, open, accent) {
+  function gate(L, gt, haze, appear, open) {
     const { x, y, w, h } = GATE;
-    if (haze > 0) {
-      // golden haze from which the gate emerges, staying as a halo
-      const hz = haze * (1 - 0.45 * appear);
-      E.lift(L.paint, E.blob(x, y - h * 0.5, 200, { rx: 210, ry: 280, seed: 23, irr: 0.18 }), 0.8 * hz, 50);
-      E.wash(L.paint, E.blob(x, y - h * 0.5, 240, { rx: 260, ry: 300, seed: 21, irr: 0.18 }), E.shade(P.gamboge, 0.3), { alpha: 0.3 * haze, soft: 80 });
-      E.glow(L.light, x, y - h * 0.45, 380, '#FFE2A0', 0.26 * haze + 0.12 * open + 0.1 * accent);
-    }
+    // the distant gate emerges from a pale morning mist ("âhiret"); the mist clears as it stands (no halo, no glow)
+    const mist = haze * (1 - appear);
+    if (mist > 0.01) E.lift(L.paint, E.blob(x, y - h * 0.5, 200, { rx: 230, ry: 290, seed: 23, irr: 0.18 }), 0.62 * mist, 60);
     if (appear <= 0) return;
     E.save(L);
     const sc = 0.97 + 0.03 * E.ease.outCubic(appear);
     E.translate(L, x, y); E.scale(L, sc); E.translate(L, -x, -y);
-    PR.archGate(L, x, y, w, h, { open, glow: Math.min(1, open * (0.88 + 0.12 * Math.sin(gt * 1.7)) + accent * 0.3), t: gt, alpha: appear });
+    // the open doors show a luminous garden in warm daylight INSIDE the arch; nothing radiates out of it
+    PR.archGate(L, x, y, w, h, { open, glow: open, rays: 0, t: gt, alpha: appear });
     E.restore(L);
-    if (open > 0.05) E.rays(L.light, GATE.light[0], GATE.light[1], { n: 9, len: 560, spread: 2.5, angle: Math.PI / 2, width: 0.05, color: '#FFE9B8', a: 0.1 * open + 0.06 * accent, seed: 13, t: gt });
   }
 
   function mound(L, x, y, s, a) {
@@ -343,7 +340,6 @@
       const gOpen = E.ep(lt, tOpen, tOpen + 1.0, 'inOutCubic');
       const look = E.ep(lt, tDerk - 0.05, tDerk + 0.45, 'inOutCubic');
       const nod = Math.sin(Math.PI * E.seg(lt, tDerk + 0.42, tDerk + 0.8));
-      const accent = E.ep(lt, tDerk + 0.1, tDerk + 0.6, 'outCubic') * (1 - 0.4 * E.ep(lt, tDerk + 1.0, tDerk + 2.0));
 
       // camera: on the man and his world, then a pull-back that reveals the nursery and the gate; slow push after
       // (ends on the reference wide framing x 560 · y 950 · z 1.245 that s13 cuts back to; the whole nursery and its
@@ -365,7 +361,7 @@
       PR.ground(L, HZ + 32, { palette: 'garden', seed: 3, t, trees: 0.32, flowers: 0.8, x0: -300, x1: 1380 });
       cam(L, C, 1);
       knoll(L);
-      gate(L, t, haze, appear, gOpen, accent);
+      gate(L, t, haze, appear, gOpen);
       footpath(L, reveal);
       soil(L, reveal);
       fence(L, reveal, 'side');
@@ -381,33 +377,6 @@
       pose.lean += 0.006 * Math.sin(lt * 1.1);
       E.man.shadow(L, MAN.x + 8, MAN.y, MAN.h);
       E.man.draw(L, { x: MAN.x, y: MAN.y, h: MAN.h, view: 'side', facing: 1, pose });
-      if (accent > 0) {
-        // a soft beam from the garden's light to the man, warmth on his face and chest
-        const hx = MAN.x + 22, hy = MAN.y - MAN.h * 0.9;
-        const [gx, gy] = GATE.light;
-        const ang = Math.atan2(hy - gy, hx - gx), len = Math.hypot(hx - gx, hy - gy) * 1.08;
-        const lc = L.light;
-        lc.save();
-        lc.globalCompositeOperation = 'lighter';
-        const g = lc.createLinearGradient(gx, gy, gx + Math.cos(ang) * len, gy + Math.sin(ang) * len);
-        g.addColorStop(0, E.rgba('#FFE9B8', 0.0));
-        g.addColorStop(0.3, E.rgba('#FFE9B8', 0.09 * accent));
-        g.addColorStop(1, E.rgba('#FFE9B8', 0.035 * accent));
-        lc.fillStyle = g;
-        for (const wdt of [0.035, 0.07, 0.11]) {      // stacked wedges = a soft-edged beam
-          lc.beginPath();
-          lc.moveTo(gx, gy);
-          lc.lineTo(gx + Math.cos(ang - wdt) * len, gy + Math.sin(ang - wdt) * len);
-          lc.lineTo(gx + Math.cos(ang + wdt) * len, gy + Math.sin(ang + wdt) * len);
-          lc.closePath();
-          lc.fill();
-        }
-        lc.restore();
-        E.glow(L.light, hx + 8, hy, 160, '#FFE3A6', 0.8 * accent);
-        E.wash(L.paint, E.blob(hx + 10, hy - 4, 70, { seed: 5, irr: 0.2 }), E.shade(P.gamboge, 0.35), { alpha: 0.35 * accent, soft: 30 });
-        E.motes(L.light, { x: hx - 70, y: hy - 110, w: 160, h: 150, n: 8, t: lt, seed: 19, size: 3, a: 0.9 * accent, rise: 22, color: '#FFF1CC' });
-        E.glow(L.light, hx, MAN.y - MAN.h * 0.62, 110, '#FFD9A0', 0.28 * accent);
-      }
 
       // pencil annotations
       const lp = E.ep(lt, tLabel, tLabel + 0.55, 'linear');
@@ -415,8 +384,8 @@
         E.note(L.ink, 'fidanlık', 420, 908, { size: 60, p: lp, alpha: 0.82, rot: -0.05 });
         E.arrow(L.ink, [452, 936], [474, 992], { bend: -0.35, p: E.ep(lt, tLabel + 0.35, tLabel + 0.7), w: 2.2, alpha: 0.6, head: 12 });
       }
-      // "olduğunu": the saplings are for transplanting — a dashed arc from the nursery into the garden, and one little
-      // sapling of light travels along it through the arch
+      // "olduğunu": the saplings are for transplanting — a dashed pencil arc from the nursery into the garden, and one
+      // little sapling travels along it through the arch (a diagram, painted; no light)
       const A0 = [804, 948], AC = [930, 600], A1 = [652, 792];
       dashedArrow(L, A0, AC, A1, E.ep(lt, tArrow - 0.05, tArrow + 0.7, 'inOutSine'), { w: 3, alpha: 0.66 });
       const tv = E.seg(lt, tArrow + 0.1, tArrow + 1.05);
@@ -425,7 +394,6 @@
         const q = [v * v * A0[0] + 2 * v * u * AC[0] + u * u * A1[0], v * v * A0[1] + 2 * v * u * AC[1] + u * u * A1[1]];
         const a = Math.sin(Math.PI * Math.min(1, tv * 1.25)) * (1 - E.smooth(E.seg(tv, 0.75, 1)));
         const sz = 46 * (1 - 0.35 * u);
-        E.glow(L.light, q[0], q[1] - sz * 0.45, sz * 1.6, '#FFF0C8', 0.75 * a);
         PR.sapling(L, q[0], q[1], sz, { t: lt, growth: 1, seed: 7, soil: true, alpha: a });
       }
 
@@ -433,13 +401,7 @@
       foreground(L, t);
 
       E.resetCamera(L);
-      // the golden light of s10 lingers at the top and dissolves into the morning sky
-      const dawn = 1 - E.ep(lt, 0.25, 1.75, 'inOutSine');
-      if (dawn > 0) {
-        E.lift(L.paint, E.blob(540, 170, 420, { rx: 760, ry: 430, seed: 31, irr: 0.18 }), 0.78 * dawn, 120);
-        E.wash(L.paint, E.blob(540, 230, 520, { rx: 820, ry: 520, seed: 33, irr: 0.2 }), '#F4D49C', { alpha: 0.55 * dawn, soft: 150 });
-        E.glow(L.light, 540, 260, 760, '#FFE6B8', 0.45 * dawn);
-      }
+      // a few drifting pollen motes in the morning air (ambient, the same in s12 / s13)
       E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 3, seed: 77, size: 2.6, a: 0.45, rise: 18, color: '#FFF1CF' });
     },
     sfx() {
@@ -450,7 +412,6 @@
         { t: T(92) - 0.15, type: 'swell', gain: 0.32, dur: 1.2 },
         { t: T(94) - 0.05, type: 'chime', gain: 0.24, pitch: 1.25 },
         { t: T(97) - 0.1, type: 'pen', gain: 0.22, dur: 0.6 },
-        { t: T(99), type: 'sparkle', gain: 0.16 },
       ];
     },
   });

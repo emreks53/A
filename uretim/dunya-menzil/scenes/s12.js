@@ -13,7 +13,7 @@
   const HZ = 790;
   const GATE = { x: 640, y: 880, w: 240 };
   GATE.h = GATE.w * 1.75;
-  GATE.light = [GATE.x, GATE.y - 56.75 * GATE.w / 100];     // radiant horizon point inside the arch
+  GATE.vista = [GATE.x, GATE.y - 56.75 * GATE.w / 100];     // the garden's horizon point seen inside the arch
   const persp = (y) => (y - HZ) / (1180 - HZ);
   const aisleX = (y) => 640 + (604 - 640) * (y - GATE.y) / (1200 - GATE.y);
   const YB = 996, YF = 1200;                                 // nursery back / front edge
@@ -114,22 +114,18 @@
     E.restore(L);
   }
 
-  function gate(L, gt, haze, appear, open, accent) {
+  function gate(L, gt, haze, appear, open) {
     const { x, y, w, h } = GATE;
-    if (haze > 0) {
-      // golden haze from which the gate emerges, staying as a halo
-      const hz = haze * (1 - 0.45 * appear);
-      E.lift(L.paint, E.blob(x, y - h * 0.5, 200, { rx: 210, ry: 280, seed: 23, irr: 0.18 }), 0.8 * hz, 50);
-      E.wash(L.paint, E.blob(x, y - h * 0.5, 240, { rx: 260, ry: 300, seed: 21, irr: 0.18 }), E.shade(P.gamboge, 0.3), { alpha: 0.3 * haze, soft: 80 });
-      E.glow(L.light, x, y - h * 0.45, 380, '#FFE2A0', 0.26 * haze + 0.12 * open + 0.1 * accent);
-    }
+    // the distant gate emerges from a pale morning mist ("âhiret"); the mist clears as it stands (no halo, no glow)
+    const mist = haze * (1 - appear);
+    if (mist > 0.01) E.lift(L.paint, E.blob(x, y - h * 0.5, 200, { rx: 230, ry: 290, seed: 23, irr: 0.18 }), 0.62 * mist, 60);
     if (appear <= 0) return;
     E.save(L);
     const sc = 0.97 + 0.03 * E.ease.outCubic(appear);
     E.translate(L, x, y); E.scale(L, sc); E.translate(L, -x, -y);
-    PR.archGate(L, x, y, w, h, { open, glow: Math.min(1, open * (0.88 + 0.12 * Math.sin(gt * 1.7)) + accent * 0.3), t: gt, alpha: appear });
+    // the open doors show a luminous garden in warm daylight INSIDE the arch; nothing radiates out of it
+    PR.archGate(L, x, y, w, h, { open, glow: open, rays: 0, t: gt, alpha: appear });
     E.restore(L);
-    if (open > 0.05) E.rays(L.light, GATE.light[0], GATE.light[1], { n: 9, len: 560, spread: 2.5, angle: Math.PI / 2, width: 0.05, color: '#FFE9B8', a: 0.1 * open + 0.06 * accent, seed: 13, t: gt });
   }
 
   function mound(L, x, y, s, a) {
@@ -349,7 +345,7 @@
       const tB = [T(104) - 0.12, T(106) - 0.12, T(108) - 0.12];   // hırs 55.09 · talep 55.91 · muhabbet 56.53
       const tBraid = T(110) - 0.1;      // "hissiyatımızı" 57.21
 
-      // ---------------- background: the nursery seen from close beside the man; the garden's light behind it
+      // ---------------- background: the nursery seen from close beside the man; the open gate far behind it
       const C = { x: 636 + lt * 4, y: 1004 - lt * 2, z: 1.5 + lt * 0.012 };
       sky(L);
       cam(L, C, 0.3);
@@ -362,7 +358,7 @@
       PR.ground(L, HZ + 32, { palette: 'garden', seed: 3, t, trees: 0.32, flowers: 0.8, x0: -300, x1: 1380 });
       cam(L, C, 1);
       knoll(L);
-      gate(L, t, 1, 1, 1, 0);
+      gate(L, t, 1, 1, 1);
       E.save(L);
       { const cl = new Path2D(); cl.rect(-600, 0, 2400, 1208); L.paint.clip(cl); L.ink.clip(cl); }
       footpath(L, 1);
@@ -371,14 +367,13 @@
       fence(L, 1, 'side');
       plants(L, t, 1);
       fence(L, 1, 'front');
-      // depth: the distance dissolves into warm light (strong at the top, little over the near nursery)
+      // depth: aerial perspective — the distance fades toward pale paper (more at the top, little over the near
+      // nursery); a plain even veil, not a glow, so the far gate simply recedes
       E.resetCamera(L);
       const veil = E.rrect(0, 0, E.W, E.H, 0);
-      E.wash(L.paint, veil, '#ffffff', { mode: 'over', grad: { from: [0, 0], to: [0, 1500], stops: [[0, 'rgba(255,253,246,0.44)'], [0.42, 'rgba(255,250,236,0.52)'], [0.62, 'rgba(255,250,240,0.16)'], [1, 'rgba(255,255,255,0.06)']] } });
-      E.wash(L.paint, E.blob(560, 560, 420, { rx: 560, ry: 420, seed: 3, irr: 0.2 }), E.shade(P.gamboge, 0.45), { alpha: 0.26, soft: 120 });
-      E.glow(L.light, 600, 600, 640, '#FFE6B0', 0.2);
+      E.wash(L.paint, veil, '#ffffff', { mode: 'over', grad: { from: [0, 0], to: [0, 1500], stops: [[0, 'rgba(250,250,246,0.44)'], [0.42, 'rgba(250,249,242,0.5)'], [0.62, 'rgba(250,249,244,0.16)'], [1, 'rgba(255,255,255,0.06)']] } });
       L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.globalAlpha = 0.45; L.ink.fillRect(0, 0, E.W, E.H); L.ink.restore();
-      // the background's light stays soft so it never washes out the feelings that cross in front of it
+      // the background's light (pollen, water glints) stays soft so it never washes out the feelings in front of it
       L.light.save(); L.light.globalCompositeOperation = 'destination-out'; L.light.globalAlpha = 0.45; L.light.fillRect(0, 0, E.W, E.H); L.light.restore();
 
       // ---------------- the man (foreground, screen space)
@@ -410,14 +405,14 @@
         PR.heartLight(L, O[0], O[1], hr, { t, glow: 0.6 + 0.4 * sedit, alpha: kindle, pulse: 1.4 });
       }
       if (sedit > 0.02) {
-        // "şedit": two hard pulse rings
+        // "şedit": two hard pulse rings (kept around the chest, never wide enough to circle his head like a halo)
         L.light.save(); L.light.globalCompositeOperation = 'lighter';
         for (const d of [0, 0.14]) {
           const u = E.seg(lt, tSedit + d, tSedit + d + 0.55);
           if (u <= 0 || u >= 1) continue;
           L.light.strokeStyle = E.rgba('#FFD2BC', 0.5 * (1 - u));
           L.light.lineWidth = 9 * (1 - u) + 2;
-          L.light.beginPath(); L.light.arc(O[0], O[1], 34 + 190 * E.ease.outCubic(u), 0, E.TAU); L.light.stroke();
+          L.light.beginPath(); L.light.arc(O[0], O[1], 34 + 118 * E.ease.outCubic(u), 0, E.TAU); L.light.stroke();
         }
         L.light.restore();
       }

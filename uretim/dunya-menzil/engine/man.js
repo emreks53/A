@@ -149,7 +149,7 @@
   const SIDE_LIM = {
     lean: [-0.9, 2.4, 0.2], head: [-0.85, 0.85, 0.15],
     nS: [-1.15, 3.3, 0.25], fS: [-1.15, 3.3, 0.25], nE: [-0.1, 2.75, 0.16], fE: [-0.1, 2.75, 0.16],
-    nW: [-1.1, 1.1, 0.2], fW: [-1.1, 1.1, 0.2], nH: [-0.85, 2.5, 0.2], fH: [-0.85, 2.5, 0.2],
+    nW: [-1.3, 1.3, 0.15], fW: [-1.3, 1.3, 0.15], nH: [-0.85, 2.5, 0.2], fH: [-0.85, 2.5, 0.2],
     nK: [-0.06, 2.75, 0.12], fK: [-0.06, 2.75, 0.12], nF: [-1.75, 1.0, 0.2], fF: [-1.75, 1.0, 0.2],
     hipDrop: [-0.35, 0.35, 0.05], coatSwing: [-0.03, 0.03, 0.01],
   };
@@ -576,7 +576,7 @@
   // inverted-pendulum bob); knees and hips by two-bone IK. Stride per cycle = walkSpeed(h, cycle)·cycle·amp, so
   // x = x0 + walkSpeed(h, cycle)·t with walk((t / cycle) % 1) has no foot sliding.
   const STRIDE = 4 * Math.sin(0.40) * (R.thigh + R.shin) * 0.92; // per cycle, in h
-  const WK = { st: 0.58, flat: 0.12, heelOff: 0.3, faS: 0.24, faO: -0.52, mid: 0.27, x0: -0.05 };
+  const WK = { st: 0.58, flat: 0.12, heelOff: 0.3, faS: 0.24, faO: -0.52, mid: 0.29, x0: -0.055 };
   const HEEL = [-R.heel, 0.035], TOE = [R.foot, 0.035], LEGL = R.thigh + R.shin;
   /** ankle (x rel. hip, y rel. ground, y down) + foot angle of a planted foot at stance progress u */
   function stanceFoot(u, s) {
@@ -647,7 +647,7 @@
     lookUp: (k = 1) => ({ lean: -0.05 * k, head: -0.42 * k, nS: 0.06, nE: 0.12, fS: -0.04, fE: 0.14, nH: 0.03, nK: 0.03, fH: -0.03, fK: 0.03 }),
     handOnHeart: (k = 1) => ({ lean: 0.03 * k, head: 0.18 * k, nS: 0.06 + 0.25 * k, nE: 0.12 + 1.75 * k, nW: 0.4 * k, fS: -0.04, fE: 0.14, nH: 0.03, nK: 0.03, fH: -0.03, fK: 0.03 }),
     // one knee down: near thigh forward, far knee on the ground, far toes tucked under (shin rising to the ankle)
-    kneel: (k = 1) => ({ lean: 0.06 * k, head: 0.15 * k, nS: 0.25 * k, nE: 0.6 * k, fS: -0.04 - 0.1 * k, fE: 0.14 + 0.75 * k, nH: 0.03 + 1.52 * k, nK: 0.03 + 1.52 * k, fH: -0.03 - 0.03 * k, fK: 0.03 + 1.91 * k, nF: 0, fF: -1.3 * k }),
+    kneel: (k = 1) => ({ lean: 0.06 * k, head: 0.15 * k, nS: 0.25 * k, nE: 0.6 * k, fS: -0.04 + 0.24 * k, fE: 0.14 + 0.48 * k, nH: 0.03 + 1.52 * k, nK: 0.03 + 1.52 * k, fH: -0.03 - 0.03 * k, fK: 0.03 + 1.91 * k, nF: 0, fF: -1.3 * k }),
     clutch: (k = 1) => ({ lean: 0.22 * k, head: 0.28 * k, nS: 0.06 + 0.9 * k, nE: 0.12 + 1.7 * k, fS: -0.04 + 0.8 * k, fE: 0.14 + 1.75 * k, nH: 0.1 * k, nK: 0.2 * k, fH: -0.12 * k, fK: 0.12 * k }),
     proud: (k = 1) => ({ lean: -0.07 * k, head: -0.18 * k, nS: -0.12 * k, nE: 0.25 * k, fS: -0.2 * k, fE: 0.3 * k, nH: 0.05, nK: 0.02, fH: -0.06, fK: 0.02 }),
     // front / back view
