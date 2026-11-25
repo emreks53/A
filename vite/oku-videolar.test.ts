@@ -93,7 +93,7 @@ describe('akisOku', () => {
       ['nimet-ve-sukur', "Otuzuncu Lem'a'dan", "Lem'alar", "Otuzuncu Lem'a", '1:19', "Lem'alar, Otuzuncu Lem'a, 381. sayfa", '#hayat #nimet #şükür'],
       ['hastaya-teselli', "Yirmi Beşinci Lem'a'dan", "Lem'alar", "Yirmi Beşinci Lem'a", '0:56', "Lem'alar, Yirmi Beşinci Lem'a, Birinci Deva, 239. sayfa", '#hastalık #sabır #ömür'],
       ['gul-ve-beka', "Onuncu Söz'den", 'Sözler', 'Onuncu Söz', '1:12', 'Sözler, Onuncu Söz, 81. sayfa', '#haşir #rahmet #beka'],
-      ['kimsesiz-hasta', "Yirmi Beşinci Lem'a'dan", "Lem'alar", "Yirmi Beşinci Lem'a", '1:18', "Lem'alar, Yirmi Beşinci Lem'a, 255. sayfa", '#gurbet #hastalık #rahmet'],
+      ['kimsesiz-hasta', "Yirmi Beşinci Lem'a'dan", "Lem'alar", "Yirmi Beşinci Lem'a", '1:18', "Lem'alar, Yirmi Beşinci Lem'a, Yirmi Üçüncü Deva, 255. sayfa", '#gurbet #hastalık #rahmet'],
     ]);
   });
 
