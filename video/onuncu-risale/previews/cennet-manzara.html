@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>body{margin:0;background:#222}canvas{display:block}</style></head>
+<body><canvas id="out" width="1080" height="1920"></canvas>
+<script src="../lib/core.js"></script>
+<script src="../lib/paint.js"></script>
+<script src="../lib/post.js"></script>
+<script src="../assets/cennet-manzara.js"></script>
+<script>
+const out = document.getElementById('out'); const ctx = out.getContext('2d');
+const T = {};
+function bake(name) { const t0 = performance.now(); const s = spr(name); if (!T[name]) { T[name] = Math.round(performance.now() - t0); console.log('bake', name, s.canvas.width + 'x' + s.canvas.height, 'k=' + s.k, T[name] + ' ms'); } return s; }
+function reset() { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = '#D8562F'; ctx.fillRect(0, 0, 1080, 1920); }
+// paralakslı kamera (sahnelerdeki camPar ile aynı; REF = 540,960)
+function camPar(cam, p) { return { x: 540 + (cam.x - 540) * p, y: 960 + (cam.y - 960) * p, z: Math.exp(Math.log(cam.z) * p) }; }
+function camApply(ctx, c) { ctx.translate(540, 960); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y); }
+function world(cam, o = {}) {
+  const M = CENNET_M;
+  for (const L of M.layers) {
+    const c = camPar(cam, L.parallax);
+    ctx.save(); camApply(ctx, c);
+    drawSpr(ctx, bake(L.name), L.x, L.y);
+    if (L.name === 'cennet-irmak') {
+      // örnek akış darbeleri (sahnede canlandırılacak): riverPath + flowDir
+      if (o.flow !== false) {
+        const r = rng(4); ctx.save(); ctx.clip(M.riverPath());
+        for (let i = 0; i < 160; i++) {
+          const x = 300 + r() * 560, y = 1060 + r() * 900; if (!ctx.isPointInPath(M.riverPath(), (x - c.x) * c.z + 540, (y - c.y) * c.z + 960)) continue;
+          const [dx, dy] = M.flowDir(x, y); const s = 0.6 + (y - 1050) / 800;
+          ctx.globalAlpha = 0.5; ctx.fillStyle = r() < 0.6 ? '#F2FFFC' : '#B5ECE5';
+          ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); ctx.beginPath(); ctx.ellipse(0, 0, 18 * s, 1.6 * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        ctx.restore();
+      }
+      for (const [x, y, n, s] of M.flowerSpots) drawSpr(ctx, bake(n), x, y, s);
+    }
+    ctx.restore();
+  }
+}
+window.show = async () => { reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx); };
+window.show2 = async () => { reset(); ctx.fillStyle = '#1C1A45'; ctx.fillRect(0, 0, 1080, 1920); world({ x: 540, y: -150, z: 1 }, { flow: false }); Post.apply(ctx); };
+window.show3 = async () => { // köşkler ve çiçekler tek tek
+  reset(); ctx.fillStyle = '#6B7091'; ctx.fillRect(0, 0, 1080, 1920);
+  drawSpr(ctx, bake('kasr-sol'), 285, 930, 0.9);
+  drawSpr(ctx, bake('kasr-sag'), 805, 880, 0.9);
+  drawSpr(ctx, bake('cennet-cicek-1'), 190, 1230, 1);
+  drawSpr(ctx, bake('cennet-cicek-2'), 540, 1230, 1);
+  drawSpr(ctx, bake('cennet-cicek-3'), 890, 1230, 1);
+  // yakın plan: sol köşkün alt katı ve terası (1.6x)
+  ctx.save(); ctx.beginPath(); ctx.rect(20, 1290, 1040, 610); ctx.clip();
+  drawSpr(ctx, bake('kasr-sol'), 540, 2010, 1.6);
+  ctx.restore();
+  Post.apply(ctx);
+};
+window.show4 = async () => { // ağaçlar tek başına + ırmak (ölçek 0.5)
+  reset(); ctx.fillStyle = '#6B7091'; ctx.fillRect(0, 0, 1080, 1920);
+  ctx.save(); ctx.scale(0.5, 0.5); ctx.translate(540, 1800);
+  drawSpr(ctx, bake('cennet-irmak'), -200, 1000 - 1800 + 1700);
+  ctx.restore();
+  drawSpr(ctx, bake('cennet-agac-sol'), 140, 1900, 0.45);
+  drawSpr(ctx, bake('cennet-agac-sag'), 940, 1900, 0.45);
+  Post.apply(ctx);
+};
+window.READY = true;
+</script></body></html>

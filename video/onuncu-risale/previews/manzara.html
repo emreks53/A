@@ -32,17 +32,24 @@ function world(cam, dusk = 0) {
   }
 }
 window.show = async () => { reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx); };
-window.show2 = async () => { // tek tek sprite'lar
+window.show2 = async () => { // tek tek sprite'lar + akşam göğü küçük
   reset(); ctx.fillStyle = '#3B3F57'; ctx.fillRect(0, 0, 1080, 1920);
-  const names = SHOW2 || [];
-  for (const [n, x, y, s] of names) { if (SPRITE_DEFS[n]) drawSpr(ctx, bake(n), x, y, s || 1); }
+  const g = bake('gok-aksam'); ctx.drawImage(g.canvas, 0, 0, 1480, 1500, 20, 20, 1040 * 0.5, 1054 * 0.5);
+  ctx.fillStyle = '#E8E4D8'; ctx.font = '22px sans-serif';
+  const label = (t, x, y) => { ctx.fillText(t, x, y); };
+  label('gok-aksam (0.35x)', 30, 570);
+  for (const [n, x, y, s] of SHOW2) { if (SPRITE_DEFS[n]) { drawSpr(ctx, bake(n), x, y, s || 1); label(n, x - 60, y + 40 + (n.startsWith('agac') ? 0 : 40)); } }
   Post.apply(ctx);
 };
 window.show3 = async () => { reset(); world({ x: 444, y: 1492, z: 1.62 }); Post.apply(ctx); };
 window.show4 = async () => { reset(); world({ x: 540, y: 960, z: 1 }, 1); Post.apply(ctx); };
 window.show5 = async () => { reset(); world({ x: 448, y: 1478, z: 1.79 }); Post.apply(ctx); };
 let SHOW2 = [
-  ['gunes', 170, 170, 1], ['bulut-1', 600, 170, 1], ['bulut-2', 200, 420, 1], ['bulut-3', 680, 420, 1],
+  ['gunes', 760, 180, 1], ['bulut-2', 860, 470, 1],
+  ['bulut-1', 260, 760, 1], ['bulut-3', 760, 760, 1],
+  ['agac-kucuk-1', 190, 1180, 1], ['agac-kucuk-2', 540, 1180, 1], ['agac-kucuk-3', 890, 1180, 1],
+  ['yaprak-1', 140, 1400, 1.4], ['yaprak-2', 340, 1400, 1.4], ['yaprak-3', 540, 1400, 1.4], ['yaprak-4', 740, 1400, 1.4],
+  ['cicek-tane-1', 200, 1640, 2], ['cicek-tane-2', 440, 1640, 2], ['cicek-tane-3', 680, 1640, 2],
 ];
 window.READY = true;
 </script></body></html>

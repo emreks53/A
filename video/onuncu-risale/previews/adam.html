@@ -30,5 +30,66 @@ window.show = async () => {
   label('head +0.2 / arm -0.35', 600, 120); label('head -0.2 / arm +0.25', 600, 1120);
   Post.apply(ctx);
 };
+window.show2 = async () => {
+  ['adam-ayakta-sema', 'organ-akciger', 'organ-kalp', 'organ-mide'].forEach(timed);
+  bg('#1B2550');
+  const S = Paint.sprite(W, H, { seed: 9 });
+  S.region(rectPath(0, 0, W, H), { ramp: ['#18214A', '#1B2550', '#1E2A58'], shade: Paint.cst(0.5), dir: 0, dirJit: 0.08, len: [90, 200], wid: [12, 20], cover: 1.6, rim: false, jitter: 30, noise: 0.25 });
+  ctx.drawImage(S.finish({ emboss: 0.4 }), 0, 0);
+  const x = 300, y = 1880;
+  drawSpr(ctx, spr('adam-ayakta-sema'), x, y, 1);
+  for (const o of ['organ-akciger', 'organ-kalp', 'organ-mide']) drawSpr(ctx, spr(o), x, y, 1);
+  // metadata noktaları
+  const M = ADAM.ayakta; ctx.fillStyle = '#FFE15A';
+  for (const k of ['eye', 'ear', 'nose', 'mouth', 'fingertip', 'palm', 'heart', 'lungs', 'stomach', 'foot', 'hip', 'knee', 'neck', 'shoulder']) {
+    const p = ADAM.pt('ayakta', k, x, y, 1); ctx.beginPath(); ctx.arc(p[0], p[1], 5, 0, 7); ctx.fill(); label(k, p[0] + 8, p[1] - 6, '#FFE15A');
+  }
+  // yakın: organlar
+  ctx.save(); ctx.beginPath(); ctx.rect(560, 560, 520, 800); ctx.clip();
+  drawSpr(ctx, spr('adam-ayakta-sema'), 820 + (290 - 260) * 2.2, 960 + (1200 - 450) * 2.2, 2.2);
+  for (const o of ['organ-akciger', 'organ-kalp', 'organ-mide']) drawSpr(ctx, spr(o), 820 + (290 - 260) * 2.2, 960 + (1200 - 450) * 2.2, 2.2);
+  ctx.restore();
+  Post.apply(ctx);
+};
+window.show3 = async () => {
+  ['adam-oturan-bas', 'adam-oturan-govde'].forEach(timed);
+  if (!BG1) BG1 = paintedBg('#EADFC6', '#D9C9A5');
+  ctx.drawImage(BG1, 0, 0);
+  // çimen şeridi
+  ctx.fillStyle = '#6FA84A'; ctx.fillRect(0, 700, W, 30); ctx.fillRect(0, 1350, W, 30); ctx.fillRect(0, 1890, W, 30);
+  ADAM.draw(ctx, 'oturan', 330, 712, 1.1);
+  ADAM.draw(ctx, 'oturan', 230, 1362, 0.9, { head: 0.2 });
+  ADAM.draw(ctx, 'oturan', 760, 1362, 0.9, { head: -0.2 });
+  label('head +0.2 (down, canvas cw)', 40, 830); label('head -0.2 (up)', 600, 830);
+  // yakın yüz
+  ctx.save(); ctx.beginPath(); ctx.rect(40, 1400, 1000, 480); ctx.clip();
+  ADAM.draw(ctx, 'oturan', 300, 2700, 2.6);
+  ctx.restore();
+  Post.apply(ctx);
+};
+window.show4 = async () => {
+  ['adam-yakin-bas', 'adam-yakin-govde', 'adam-yakin-kol'].forEach(timed);
+  if (!BG1) BG1 = paintedBg('#EADFC6', '#D9C9A5');
+  ctx.drawImage(BG1, 0, 0);
+  // kol ağızda (0)
+  ADAM.draw(ctx, 'yakin', 540, 1150, 1, { arm: 0 });
+  // küçük: kol aşağıda (+0.55), baş -0.2 / +0.2
+  ADAM.draw(ctx, 'yakin', 270, 1900, 0.6, { arm: 0.55, head: 0.2 });
+  ADAM.draw(ctx, 'yakin', 810, 1900, 0.6, { arm: 0.3, head: -0.2 });
+  label('arm +0.55 / head +0.2', 40, 1260); label('arm +0.3 / head -0.2', 600, 1260);
+  Post.apply(ctx);
+};
+window.show5 = async () => {
+  if (!BG1) BG1 = paintedBg('#EADFC6', '#D9C9A5');
+  ctx.drawImage(BG1, 0, 0);
+  // yakın yüz ayrıntısı (2x)
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, 960); ctx.clip();
+  ADAM.draw(ctx, 'yakin', 540 - 260, 1150 + 1100, 2, { arm: 0 });
+  ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 960, W, 960); ctx.clip();
+  ADAM.draw(ctx, 'ayakta', 300 - 300, 1880 + 1180 + 960 - 120, 4);
+  ctx.restore();
+  Post.apply(ctx);
+};
 window.READY = true;
 </script></body></html>
