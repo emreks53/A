@@ -1,4 +1,4 @@
-/* end · 94.10–100.0 · photoreal ending: Risale-i Nur Külliyatı + Kur'an (Blender/Cycles frames) and the source.
+/* end · 94.35–100.0 · photoreal ending: Risale-i Nur Külliyatı + Kur'an (Blender/Cycles frames) and the source.
    Frames: ending/frames/0001.png … 0180.png (1080x1920, 30 fps) rendered by ending/render_final.sh. */
 (function () {
   const E = window.E;
@@ -87,11 +87,12 @@
       halo((h) => { if (!h) ctx.fillStyle = '#5A3F35'; ctx.fillText('sf. 155', cx, 500 - (1 - a3) * 10); });
       ctx.restore();
     },
-    sfx() {
+    sfx(shot) {
+      const t0 = shot.start;   // relative to the shot start (the voice has ended; keep it soft)
       return [
-        { t: 94.15, type: 'swell', gain: 0.35, dur: 1.6, pitch: 0.8 },
-        { t: 95.1, type: 'chime', gain: 0.35, pitch: 0.75 },
-        { t: 95.35, type: 'page', gain: 0.25 },
+        { t: t0 + 0.05, type: 'swell', gain: 0.26, dur: 1.6, pitch: 0.8 },
+        { t: t0 + 1.0, type: 'chime', gain: 0.22, pitch: 0.75 },
+        { t: t0 + 1.25, type: 'page', gain: 0.2 },
       ];
     },
   };

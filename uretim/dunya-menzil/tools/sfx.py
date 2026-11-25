@@ -248,27 +248,29 @@ def fx_stone(dur=0.8, pitch=1.0):
 
 
 def fx_rumble(dur=2.0, pitch=1.0):
-    # soft low pad swell instead of noise rumble
+    # distant, untuned low rumble: brown noise below ~160 Hz with a slow swell (no pitched partials, never musical)
     n = int(SR * dur)
-    t = np.arange(n) / SR
-    x = sum(a * np.sin(2 * np.pi * f * pitch * t + p) for f, a, p in [(55, 0.7, 0), (82.4, 0.35, 1.1), (110, 0.12, 2)])
-    return norm(mono_to_st(lp(x, 400) * smooth_env(n, 0.35, 0.5), 0, 0.8))
+    b = np.cumsum(rng.standard_normal(n))
+    b = hp(b - b.mean(), 25)
+    x = lp(b, 160 * pitch, order=3)
+    return norm(mono_to_st(x * smooth_env(n, 0.35, 0.5), 0, 0.8))
 
 
 def fx_drone(dur=4.0, pitch=1.0):
+    # soft air / room tone: band-limited pink noise with a very slow breath (untuned: no chord, no pad)
     n = int(SR * dur)
     t = np.arange(n) / SR
-    x = sum(a * np.sin(2 * np.pi * f * pitch * t + p) for f, a, p in [(65.4, 0.55, 0), (98, 0.3, 1), (130.8, 0.12, 2), (155.6, 0.06, 0.5)])
+    x = bp(pink(n), 120 * pitch, 700 * pitch)
     x *= 0.85 + 0.15 * np.sin(2 * np.pi * 0.18 * t)
-    return norm(mono_to_st(lp(x, 600) * smooth_env(n, 0.3, 0.3), 0, 1.0))
+    return norm(mono_to_st(x * smooth_env(n, 0.3, 0.3), 0, 1.0)) * 0.6
 
 
 def fx_thorn(dur=1.0, pitch=1.0):
-    # soft dark dissonance (minor second) swelling and fading — no scraping
+    # a soft dry rustle of twigs (band-limited noise, gentle swell) — no dissonant interval, no scraping
     n = int(SR * dur)
-    t = np.arange(n) / SR
-    x = np.sin(2 * np.pi * 146.8 * pitch * t) + 0.7 * np.sin(2 * np.pi * 155.6 * pitch * t)
-    return norm(mono_to_st(lp(x, 800) * smooth_env(n, 0.4, 0.5), 0.1, 0.4))
+    x = bp(pink(n), 500 * pitch, 1800 * pitch)
+    x *= 0.6 + 0.4 * np.abs(lp(rng.standard_normal(n), 18))
+    return norm(mono_to_st(x * smooth_env(n, 0.35, 0.5), 0.1, 0.4)) * 0.7
 
 
 GEN = {k[3:]: v for k, v in globals().items() if k.startswith('fx_')}
@@ -324,11 +326,23 @@ def main():
     bus = reverb(bus, 0.3)
     bus[:, 0] = lp(bus[:, 0], 7000); bus[:, 1] = lp(bus[:, 1], 7000)
     # duck under the voice: envelope of the narration
-    venv = np.abs(v).max(1)
-    win = int(SR * 0.12)
-    venv = np.convolve(venv, np.ones(win) / win, mode='same')
-    venv = venv / (venv.max() or 1)
-    duck = 1.0 - 0.5 * np.clip(venv * 4, 0, 1)
+    # (envelope follower on a 1 kHz control rate: 150 ms hold, 30 ms attack, 400 ms release, so the effects do not
+    #  pump up in every short gap between words)
+    from scipy.ndimage import maximum_filter1d
+    blk = SR // 1000
+    nb = len(v) // blk
+    ve = np.abs(v[:nb * blk]).max(1).reshape(nb, blk).max(1)
+    ve = maximum_filter1d(ve, size=150)
+    aa, ar = math.exp(-1 / 30.0), math.exp(-1 / 400.0)
+    env = np.empty(nb)
+    e = 0.0
+    for k in range(nb):
+        x = ve[k]
+        e = aa * e + (1 - aa) * x if x > e else ar * e + (1 - ar) * x
+        env[k] = e
+    env = env / (env.max() or 1)
+    duck_c = 1.0 - 0.5 * np.clip(env * 4, 0, 1)
+    duck = np.interp(np.arange(len(v)), np.arange(nb) * blk + blk / 2, duck_c)
     bus *= duck[:, None]
     # SFX bus level: clearly below the voice. RMS of the active SFX parts sits ~20 dB under the voice RMS,
     # and peaks are softly limited to -20 dBFS so no effect ever competes with the narrator.

@@ -334,10 +334,9 @@
     sfx(shot) {
       const tm = times(shot);
       const g = (x) => shot.start + x;
+      // only the soft ink-drop bloom: the verse is recited over near-silence (no pitched drone or rumble under it)
       return [
-        { t: g(tm.drop0 + 0.05), type: 'drone', gain: 0.28, dur: 5.4 },
-        { t: g(tm.land - 0.02), type: 'bloom', gain: 0.34, pitch: 0.6 },
-        { t: g(tm.land), type: 'rumble', gain: 0.18, dur: 1.8 },
+        { t: g(tm.land - 0.02), type: 'bloom', gain: 0.3, pitch: 0.6 },
       ];
     },
   });

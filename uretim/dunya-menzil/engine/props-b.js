@@ -66,7 +66,7 @@
         opts: color ('#2C2838' ink) · width (max nib width px, 6) · nib (rad, nib edge angle, 0.85: thick
               strokes across it, hairlines along it) · seed · alpha 0.92 · layer 'paint'|'ink' ('paint')
               mode 'glaze'|'over' · bead true (wet bead at the head while writing) · glow 0..1
-      scriptLine(x0, y0, x1, opts?) → strokes   flowing pseudo-Ottoman handwriting (illegible on purpose)
+      scriptLine(x0, y0, x1, opts?) → strokes   abstract flowing handwriting (no letterforms, no dots)
         along baseline y0 from x0 to x1 (x0 > x1 writes right-to-left); opts: size (≈ letter height px, 24),
         seed. Feed the result to inkWrite. Cached; stays within [x1, x0] (± ≈0.15·size).
 
@@ -1341,37 +1341,31 @@
   };
 
   /**
-   * Pseudo-calligraphic handwriting (looks like flowing Ottoman script, says nothing).
+   * Abstract flowing handwriting: reads as lines of writing but contains NO letterforms (no alif-like tall strokes,
+   * no dots, no Arabic letter shapes) — meaningless "letters" that look like a sacred word must never appear.
    * Returns an array of strokes (each an array of [x,y]) from x0 to x1 along baseline y0 (x0 > x1 writes right-to-left).
    */
   PR.scriptLine = (x0, y0, x1, o = {}) => {
     const size = q(Math.max(1, fin(o.size, 24)), 0.25), seed = o.seed || 1;
     x0 = q(fin(x0), 0.5); y0 = q(fin(y0), 0.5); x1 = q(fin(x1), 0.5);
-    return memo(`script:${x0}:${y0}:${x1}:${size}:${seed}`, () => {
+    return memo(`script2:${x0}:${y0}:${x1}:${size}:${seed}`, () => {
       const r = E.rng(seed * 7919 + 13);
       const dir = Math.sign(x1 - x0) || -1, len = Math.abs(x1 - x0);
       const out = [];
+      // low, rounded cursive waves only (all within ±0.3 of the x-height)
       const LET = {
         flat: [[0, 0], [0.42, 0.02]],
-        tooth: [[0, 0], [0.07, -0.34], [0.12, -0.02], [0.22, 0]],
-        loop: [[0, 0], [0.12, -0.28], [0.3, -0.3], [0.32, -0.06], [0.16, 0.02], [0.38, 0]],
-        tall: [[0, 0], [0.03, -0.55], [0.06, -1.02], [0.1, -0.5], [0.14, 0]],
-        hump: [[0, 0], [0.12, -0.2], [0.3, -0.22], [0.42, 0]],
+        wave: [[0, 0], [0.15, -0.2], [0.3, -0.05], [0.45, 0]],
+        loop: [[0, 0], [0.1, -0.24], [0.24, -0.28], [0.27, -0.08], [0.14, 0.01], [0.36, 0]],
+        hump: [[0, 0], [0.12, -0.17], [0.3, -0.19], [0.42, 0]],
       };
       const END = [
-        [[0, 0], [0.15, 0.28], [0.45, 0.42], [0.75, 0.32], [0.86, 0.06]],
-        [[0, 0], [0.25, 0.08], [0.55, 0.06], [0.8, -0.12]],
-        [[0, 0], [0.1, 0.34], [0.32, 0.5], [0.6, 0.42]],
+        [[0, 0], [0.25, 0.05], [0.5, 0.02], [0.68, -0.1]],
+        [[0, 0], [0.2, -0.06], [0.42, -0.04], [0.55, 0.02]],
       ];
       let pos = r() * size * 0.3;
       while (pos < len - size * 1.3) {
-        const ww = Math.min(len - pos - size * 0.95, size * (1.2 + r() * 2.6));
-        // optional detached alif at the start of a word
-        if (r() < 0.35) {
-          const xx = x0 + dir * pos;
-          out.push([[xx, y0 - size * 1.05], [xx + dir * size * 0.03, y0 - size * 0.5], [xx + dir * size * 0.05, y0 + size * 0.04]]);
-          pos += size * 0.3;
-        }
+        const ww = Math.min(len - pos - size * 0.95, size * (1.4 + r() * 2.8));
         const pts = [];
         let u = 0;
         const add = (shape) => {
@@ -1381,17 +1375,11 @@
         };
         while ((u + 0.45) * size < ww) {
           const z = r();
-          add(z < 0.3 ? LET.tooth : z < 0.48 ? LET.flat : z < 0.64 ? LET.loop : z < 0.8 ? LET.hump : LET.tall);
+          add(z < 0.34 ? LET.wave : z < 0.52 ? LET.flat : z < 0.74 ? LET.loop : LET.hump);
         }
         add(END[Math.floor(r() * END.length)]);
         out.push(pts);
-        // dots above/below
-        const nd = r() < 0.6 ? 1 + Math.floor(r() * 2) : 0;
-        for (let k = 0; k < nd; k++) {
-          const xx = x0 + dir * (pos + r() * u * size), yy = y0 + (r() < 0.7 ? -0.62 : 0.55) * size;
-          out.push([[xx, yy], [xx + dir * size * 0.08, yy + size * 0.05]]);
-        }
-        pos += u * size + size * (0.35 + r() * 0.35);
+        pos += u * size + size * (0.4 + r() * 0.35);
       }
       return out;
     });

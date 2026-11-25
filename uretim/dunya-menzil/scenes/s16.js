@@ -391,13 +391,15 @@
         E.glow(L.light, HG.x, HG.y - HG.h * 0.5, 260, '#8FA6E0', 0.2 * hgK * mlv);
         const sand = 0.15 - 0.1 * E.seg(lt, B.hg, 5.6);
         PR.hourglass(L, HG.x, HG.y, HG.h, { t: lt, sand, flow: 1, speed: 1.2, night: 0.85, glow: 0.25, alpha: E.clamp(hgK * 1.8) });
-        // ... out of the shadow: a dark wash over it recedes as the moonlight returns
-        if (hgK < 1) wash(L.paint, E.blob(HG.x, HG.y - HG.h * 0.48, HG.h * 0.4, { rx: HG.h * 0.36, ry: HG.h * 0.6, seed: 23, irr: 0.15 }), '#151B34', { alpha: 0.7 * (1 - hgK), soft: 40 });
         // the last grains glint at the neck on "zevalini"
         const zg = E.ep(lt, B.zeval - 0.1, B.zeval + 0.2, 'outCubic') * (1 - E.ep(lt, B.zeval + 0.4, B.zeval + 1.2));
         E.glow(L.light, HG.x, HG.y - HG.h * 0.5, 46, '#FFE7B0', 0.55 * zg);
         E.glow(L.light, HG.x, HG.y - HG.h * 0.5, 120, '#C9D6FF', 0.22 * zg);
       }
+      // ... out of the shadow: the dark it emerges from gathers first (ramps in, never pops on), then recedes as the
+      // hourglass shows through
+      const shK = E.ep(lt, B.hg - 0.3, B.hg + 0.08, 'inOutSine');
+      if (shK > 0 && hgK < 1) wash(L.paint, E.blob(HG.x, HG.y - HG.h * 0.48, HG.h * 0.4, { rx: HG.h * 0.36, ry: HG.h * 0.6, seed: 23, irr: 0.15 }), '#151B34', { alpha: 0.7 * shK * (1 - hgK), soft: 40 });
 
       // mirror with the reflection: on "nefsini unutup" a dark mist sweeps across the glass and wipes him away
       const ms = manState(lt);

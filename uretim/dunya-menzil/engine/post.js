@@ -151,6 +151,12 @@
     float pigA = 0., pigB = 0.;
     vec3 a = vec3(1.), b = vec3(1.);
     vec4 inkA = vec4(0.), inkB = vec4(0.), lightA = vec4(0.), lightB = vec4(0.);
+    // where the incoming shot's picture does not reach (a zoom starts it smaller than the frame) the outgoing shot
+    // shows instead of blank paper, with a soft 70 px edge (no milky frame-within-a-frame)
+    vec2 eB = vec2(70.0) / uRes;
+    float vB = smoothstep(0.0, eB.x, stB.x) * smoothstep(0.0, eB.x, 1.0 - stB.x)
+             * smoothstep(0.0, eB.y, stB.y) * smoothstep(0.0, eB.y, 1.0 - stB.y);
+    if (uType == 3) m *= vB;
     if (m < 0.999) {
       a = watercolor(uPaintA, uBlurSA, uBlurLA, stA, uWC, uRaw.x, pigA);
       inkA = texture(uInkA, stA); lightA = texture(uLightA, stA);

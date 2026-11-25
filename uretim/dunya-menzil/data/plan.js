@@ -11,11 +11,11 @@
   E.SHOTS = [
     { id: 's01', start: 0.0,   trans: null },
     { id: 's02', start: 2.55,  trans: { type: 'zoom', dur: 0.75, cx: 540, cy: 1010 } },
-    { id: 's03', start: 5.85,  trans: { type: 'bleed', dur: 0.8, cx: 540, cy: 900 } },
+    { id: 's03', start: 5.85,  trans: { type: 'bleed', dur: 0.8, cx: 300, cy: 400 } },
     { id: 's04', start: 10.35, trans: { type: 'zoom', dur: 0.7, cx: 540, cy: 760 } },
     { id: 's05', start: 14.85, trans: { type: 'cut' } },
     { id: 's06', start: 18.75, trans: { type: 'cut' } },
-    { id: 's07', start: 24.7,  trans: { type: 'bleed', dur: 0.9, cx: 540, cy: 960 } },
+    { id: 's07', start: 24.7,  trans: { type: 'bleed', dur: 0.9, cx: 700, cy: 800 } },
     { id: 's08', start: 31.55, trans: { type: 'cut' } },
     { id: 's09', start: 36.7,  trans: { type: 'bleed', dur: 0.8, cx: 540, cy: 800 } },
     { id: 's10', start: 44.65, trans: { type: 'cut' } },
@@ -28,8 +28,8 @@
     { id: 's17', start: 77.45, trans: { type: 'bleed', dur: 0.7, cx: 790, cy: 700 } },
     { id: 's18', start: 82.45, trans: { type: 'cut' } },
     { id: 's19', start: 86.4,  trans: { type: 'cut' } },
-    { id: 's20', start: 90.55, trans: { type: 'bleed', dur: 0.8, cx: 540, cy: 760 } },
-    { id: 'end', start: 94.1,  trans: { type: 'fade', dur: 1.0 } },
+    { id: 's20', start: 90.55, trans: { type: 'fade', dur: 0.5 } },
+    { id: 'end', start: 94.35, trans: { type: 'fade', dur: 1.0 } },
   ];
   E.SHOTS.forEach((s, i) => {
     const next = E.SHOTS[i + 1];

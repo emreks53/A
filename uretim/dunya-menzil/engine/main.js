@@ -130,7 +130,7 @@
         const cx = (tr.cx ?? W / 2) / W, cy = (tr.cy ?? H / 2) / H;
         const e = E.ease.inOutCubic(mix);
         o.xfA = zoomXf(cx, cy, 1 + 2.4 * e);
-        o.xfB = zoomXf(cx, cy, 0.55 + 0.45 * E.ease.outCubic(mix));
+        o.xfB = zoomXf(cx, cy, 0.8 + 0.2 * E.ease.outCubic(mix));
       }
       o.wcA = dA.wc || [1, 1, 3, 0.55];
       o.wcB = dB.wc || [1, 1, 3, 0.55];

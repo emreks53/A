@@ -27,13 +27,27 @@
       if (gr.hold) end = gr.hold;
       const next = groups[i + 1];
       gr.fade = FADE_OUT;
-      if (next && next.t0 <= end + FADE_OUT) {
+      // a meaning never runs on over the next shot / sentence: it is gone by the next cut (or transition start),
+      // but always stays long enough to read, 1–1.6 s (explicit holds, e.g. the verse meaning, are kept as set)
+      if (!gr.hold) {
+        const ns = E.SHOTS.find((sh) => sh.start > gr.t0 + 0.05);
+        if (ns && end + FADE_OUT > ns.start + 0.05) {
+          gr.fade = 0.25;
+          const chars = gr.items.map((it) => it.text).join(' ').length;
+          const minShow = E.clamp(0.6 + 0.045 * chars, 1.0, 1.6);     // reading time grows with the text
+          end = Math.max(Math.min(end, ns.start - 0.2), gr.t0 + minShow);
+        }
+      }
+      if (next && next.t0 <= end + gr.fade) {
         // replaced: the old meaning is completely gone by the moment the new one starts to write on (a short
         // 0.12 s fade that ENDS at next.t0), so the two texts never stack on top of each other
         gr.fade = 0.12;
         end = Math.min(end, next.t0 - gr.fade);
       }
       gr.t1 = end;
+      // a meaning with a very short window (its word is followed at once by the next gloss) appears whole and
+      // quickly instead of writing on letter by letter, so it is readable for its whole window
+      gr.fast = gr.t1 - gr.t0 < 0.8;
     });
     E.GLOSS_GROUPS = groups;
   }
@@ -51,7 +65,7 @@
   }
 
   /** draw a line of text with a per-character ink-flow reveal (p 0..1 per char via timing) */
-  function drawLine(ctx, text, x, y, t, tStart, tone, size, alphaOut) {
+  function drawLine(ctx, text, x, y, t, tStart, tone, size, alphaOut, fast) {
     ctx.font = `600 italic ${size}px ${FONT_FAMILY}`;
     ctx.textBaseline = 'alphabetic';
     const chars = Array.from(text);
@@ -59,7 +73,8 @@
     let cx = x - total / 2;
     const fill = tone === 'light' ? '#F7EEDB' : '#232B44';
     const halo = tone === 'light' ? 'rgba(14,16,30,0.78)' : 'rgba(250,247,238,0.95)';
-    const stagger = Math.min(0.022, 0.32 / Math.max(1, chars.length));
+    const stagger = fast ? 0 : Math.min(0.022, 0.32 / Math.max(1, chars.length));
+    const FI = fast ? 0.1 : FADE_IN;
     // halo pass (soft, no box): a blurred copy behind the text for legibility on busy paint.
     // Fast: glyphs are drawn far off-canvas and only their blurred shadow lands in place
     // (ctx.filter blur would cost ~30 ms per call).
@@ -78,7 +93,7 @@
     for (let i = 0; i < chars.length; i++) {
       const ch = chars[i];
       const w = ctx.measureText(ch).width;
-      const k = E.clamp((t - tStart - i * stagger) / FADE_IN);
+      const k = E.clamp((t - tStart - i * stagger) / FI);
       if (k > 0) {
         ctx.globalAlpha = E.ease.outCubic(k) * alphaOut * 0.9;
         ctx.fillText(ch, hx, y);
@@ -93,7 +108,7 @@
       // measure with kerning context: advance = width(prefix+ch) - width(prefix)
       const pre = chars.slice(0, i).join('');
       const adv = ctx.measureText(pre + ch).width - ctx.measureText(pre).width;
-      const k = E.clamp((t - tStart - i * stagger) / FADE_IN);
+      const k = E.clamp((t - tStart - i * stagger) / FI);
       if (k > 0) {
         const e = E.ease.outCubic(k);
         ctx.save();
@@ -118,7 +133,7 @@
         const lines = wrap(ctx, gr.items[0].text, 880);
         const lh = size * 1.22;
         const y0 = 1318 - ((lines.length - 1) * lh) / 2;
-        lines.forEach((ln, i) => drawLine(ctx, ln, E.W / 2, y0 + i * lh - lift, t, gr.t0 + i * 0.18, gr.tone, size, out));
+        lines.forEach((ln, i) => drawLine(ctx, ln, E.W / 2, y0 + i * lh - lift, t, gr.t0 + i * 0.18, gr.tone, size, out, gr.fast));
         continue;
       }
       // one meaning per group (groups are never joined)
@@ -136,12 +151,12 @@
         gr.items.forEach((it, j) => {
           const txt = it.text + (j < gr.items.length - 1 ? sep : '');
           const w = ctx.measureText(txt).width;
-          drawLine(ctx, txt, x + w / 2, y - lift, t, it.t0, gr.tone, size, out);
+          drawLine(ctx, txt, x + w / 2, y - lift, t, it.t0, gr.tone, size, out, gr.fast);
           x += w;
         });
       } else {
         const lh = size * 1.2;
-        lines.forEach((ln, i) => drawLine(ctx, ln, E.W / 2, y - ((lines.length - 1) * lh) / 2 + i * lh - lift, t, gr.t0 + i * 0.15, gr.tone, size, out));
+        lines.forEach((ln, i) => drawLine(ctx, ln, E.W / 2, y - ((lines.length - 1) * lh) / 2 + i * lh - lift, t, gr.t0 + i * 0.15, gr.tone, size, out, gr.fast));
       }
     }
   };
