@@ -34,6 +34,23 @@ Bu kurallar her video için bağlayıcıdır. Kullanıcının kendi ifadeleri es
      halesinde" çizilmez.
 6. **Sakınılacak diğer tasvirler.** Peygamberler, melekler ve ilahi huzura ait sahneler hiçbir şekilde
    tasvir edilmez.
+7. **Rehberden çıkan kalıcı notlar** (ayrıntı ve kaynaklar `GORSEL_REHBER.md`'de):
+   - Güneşten ya da buluttan yere inen "hikmet çizgileri" çizilmez. Hikmet, yeryüzündeki eserleriyle (arı,
+     yağmur, kök) yer hizasında gösterilir. Güneş hâleli, halkalı çizilmez.
+   - Amel ışığı küçük ve sakindir. Kişinin elinden ya da amelin yerinden çıkar, yukarı yükselmez, gökte
+     süzülmez, mezarlıkta dolaşan küre gibi uçmaz. Berzahta bir mezarın üstünde, cennette yere yakın durur.
+     Ağaçlara, meyvelere yerleşmez.
+   - Berzah: dışarıdan görülen sakin bir Müslüman mezarlığı, doğal gündüz ışığı. Gece göğü, yıldız, hilal,
+     kabrin içi, ruh ya da hayalet yoktur.
+   - Cennet: ağaçların altından ırmaklar akan bahçe, dalları sarkmış meyveler (nar, hurma), kat kat köşkler.
+     Güneş, bulut, gök cismi, cennet ehli (el dahil) ve "yeniden büyüyen meyve" animasyonu yoktur.
+   - Metindeki açık temsil (ör. lamba) ayrı bir temsil sahnesidir. Temsildeki nesne asıl anlatılan şeye
+     ya da kişiye bağlanmaz: velînin elinde "bâkî lamba" olmaz. Mumda kadran, saat ya da kum saati yoktur.
+   - Toza dönme, çürüme, ısırma, terazi gibi "yeme" ve "tartma" mecazları gösterilmez.
+   - Farazi bir hâl gerekiyorsa (ör. "memnunâne değil"), açıkça kâğıt üstünde bir taslak olarak, ayrı bir
+     kartta çizilip silinir. Kişinin yanında hayalet gibi bir eş görünmez.
+   - Ekranda yeni yazı (gloss dışı açıklama) eklenmez. Arapça ifade yazılacaksa sade, altınsız ve parıltısız
+     dizilir, gökte değil kadrajın alt bölümünde durur.
 
 ## 2. Görsel dil
 
@@ -54,6 +71,9 @@ Bu kurallar her video için bağlayıcıdır. Kullanıcının kendi ifadeleri es
 
 - Okuyucunun sesi baskındır. Müzik yoktur.
 - Ses efektleri güzel seçilir ve kısıktır. Kaba, sert ya da kulağı rahatsız eden efekt kullanılmaz.
+  Gök gürültüsü, çakıl çıtırtısı, ısırma, gıcırtı, metal tıkırtı, saat tik-takı, çan, "sihirli" çınlama ve
+  "whoosh" kullanılmaz. Yerine doğal ve yumuşak sesler kullanılır: rüzgâr, yaprak, akan su, yumuşak adım,
+  kâğıt, kumaş.
 - Kayıttaki bölüm adı okunuşu (ör. "Üçüncü Nokta") kesilir.
 
 ## 5. Kapanış sahnesi
@@ -74,3 +94,7 @@ Bu kurallar her video için bağlayıcıdır. Kullanıcının kendi ifadeleri es
     İşlemeler beyazdır.
 - Görsel Shutterstock'un yapay zekâ çizimiyle üretilir (kullanıcı, verilen prompt'u Shutterstock'a girer).
   Prompt 1800 karakter sınırına göre, olabildiğince uzun yazılır.
+- Kur'an kapalı durur, diğer kitaplardan biraz ayrı ve biraz daha yüksekte olur. Mushafa yönelen görünür ışık
+  huzmesi olmaz.
+- Yapay zekânın ürettiği yazılar kontrol edilir. Kapaktaki القرآن الكريم ve Kur'ân-ı Kerîm bozuksa doğru
+  yazıyla sonradan yerleştirilir. Açık sayfadaki yazı okunur netlikteyse ve sahteyse yumuşak odakta bırakılır.
