@@ -703,7 +703,7 @@ def ciz_gok_bahce(t, V, s, cam):
         yelkovan = 360.0 * s['dilim']
         yelkovan_onceki = 360.0 * ilerle(V - 1.0 / FPS, T_SAATI - 0.02, T_SAATI + 0.55, e_io)
         _k(esyalar.ciz_saat, t, Ms, 175, dilim=s['dilim'], gun=s['gun'], gorunurluk=s['saat'], tohum=1,
-           akrep=akrep, yelkovan=yelkovan, yelkovan_onceki=yelkovan_onceki, kadran=1.0, tamam=s['tamam'], hale=0.0)
+           akrep=akrep, yelkovan=yelkovan, yelkovan_onceki=yelkovan_onceki, kadran=1.0, tamam=0.0, hale=0.0)  # tamamlanma halkası yok (gökte süslü daire olmasın)
         baglam.__exit__(None, None, None)
     ust = el.karistir('#6E98C8', '#6F6C8C', k)
     orta = el.karistir('#9BBCDB', '#8A87A2', k)

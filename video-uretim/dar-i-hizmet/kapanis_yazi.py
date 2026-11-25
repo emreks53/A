@@ -13,17 +13,18 @@ from motor import W, H, e_out, e_io, sstep, renk
 from yazi import yazi_katmani, bindir
 
 PLAKA = os.environ.get('KAPANIS_KARELER',
-                       '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/kapanis/kareler')
+                       '/tmp/claude-0/-home-user-A/85bb5f62-9c14-511e-812b-04cd495560e5/scratchpad/okuma/kareler')
 PLAKA_SAYISI = 192
 
 SATIRLAR = [
     # metin, yazı tipi, boyut, renk, y merkezi, giriş gecikmesi (sn), izleme
-    ('Risale-i Nur', 'eb-garamond-600', 84, '#3A2A22', 1372, 0.55, 0.015),
-    ('Lem’alar', 'eb-garamond-500', 62, '#3A2A22', 1478, 0.95, 0.01),
-    ('İkinci Lem’a', 'eb-garamond-500-italic', 52, '#4A3A30', 1540, 1.25, 0.01),
-    ('11. Sayfa', 'eb-garamond-500', 44, '#5A4636', 1594, 1.55, 0.07),
+    # (okuma köşesi plakası: yazı pencereden görünen sakin gökyüzünde, ufkun üstünde)
+    ('Risale-i Nur', 'eb-garamond-600', 80, '#3A2A22', 112, 0.55, 0.015),
+    ('Lem’alar', 'eb-garamond-500', 60, '#3A2A22', 210, 0.95, 0.01),
+    ('İkinci Lem’a', 'eb-garamond-500-italic', 50, '#4A3A30', 266, 1.25, 0.01),
+    ('11. Sayfa', 'eb-garamond-500', 42, '#5A4636', 316, 1.55, 0.07),
 ]
-CIZGI_Y = 1424  # "Risale-i Nur" altındaki ince süs çizgisi
+CIZGI_Y = 160  # "Risale-i Nur" altındaki ince süs çizgisi
 
 
 def plaka(i):
@@ -43,10 +44,10 @@ def plaka(i):
 
 
 def renk_duzelt(P):
-    """Hafif beyaz dengesi (sıcak yansımayı azaltır: ciltler şeftaliden çok soluk gül / açık deri okunur) ve
-    yumuşak bir S eğrisi (kamerayla çekilmiş kontrast)."""
-    x = np.clip(P * np.array([0.975, 0.995, 1.035], np.float32), 0, 1)
-    return np.clip(x + 0.16 * (x - 0.5) * (1 - np.abs(2 * x - 1)), 0, 1)
+    """Çok yumuşak bir S eğrisi (kamerayla çekilmiş kontrast). Renkler render'da kalibre edildi (Risale ~#D68661,
+    Kur'an ~#144173); burada beyaz dengesi değiştirilmez."""
+    x = np.clip(P, 0, 1)
+    return np.clip(x + 0.08 * (x - 0.5) * (1 - np.abs(2 * x - 1)), 0, 1)
 
 
 def _gren(kare_no):
