@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>body{margin:0;background:#222}canvas{display:block}</style></head>
+<body><canvas id="out" width="1080" height="1920"></canvas>
+<script src="../lib/core.js"></script>
+<script src="../lib/paint.js"></script>
+<script src="../lib/post.js"></script>
+<script src="../assets/fruits.js"></script>
+<script src="../assets/adam.js"></script>
+<script>
+const out = document.getElementById('out'); const ctx = out.getContext('2d');
+function timed(name) { const t0 = performance.now(); const s = spr(name); console.log('bake', name, s.canvas.width + 'x' + s.canvas.height, Math.round(performance.now() - t0) + 'ms'); return s; }
+function bg(col) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col; ctx.fillRect(0, 0, W, H); }
+function label(t, x, y, col = '#333') { ctx.save(); ctx.font = '22px sans-serif'; ctx.fillStyle = col; ctx.fillText(t, x, y); ctx.restore(); }
+// sahne arka planı gibi düz boyalı zemin
+function paintedBg(top, bottom, seed = 5) {
+  const S = Paint.sprite(W, H, { seed });
+  S.region(rectPath(0, 0, W, H), { ramp: [shade(top, -0.04), top, shade(top, 0.03), bottom, shade(bottom, 0.03)], shade: Paint.grad(0, 0, 0, H, 0, 1), dir: 0, dirJit: 0.08, len: [90, 200], wid: [12, 20], cover: 2.2, rim: false, jitter: 30, jitterFreq: 0.005, noise: 0.03 });
+  return S.finish({ emboss: 0.4 });
+}
+let BG1 = null;
+window.show = async () => {
+  ['adam-ayakta-bas', 'adam-ayakta-govde', 'adam-ayakta-kol'].forEach(timed);
+  if (!BG1) BG1 = paintedBg('#EADFC6', '#D9C9A5');
+  ctx.drawImage(BG1, 0, 0);
+  // tam boy, ölçek 1
+  ADAM.draw(ctx, 'ayakta', 300, 1880, 1);
+  // küçük: baş aşağı / yukarı, kol öne
+  ADAM.draw(ctx, 'ayakta', 760, 880, 0.62, { head: 0.2, arm: -0.35 });
+  ADAM.draw(ctx, 'ayakta', 760, 1880, 0.62, { head: -0.2, arm: 0.25 });
+  label('head +0.2 / arm -0.35', 600, 120); label('head -0.2 / arm +0.25', 600, 1120);
+  Post.apply(ctx);
+};
+window.READY = true;
+</script></body></html>

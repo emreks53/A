@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Onuncu Risale — Shorts</title>
+<style>
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:500;src:url(fonts/eb-garamond-500-latin-ext.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:500;src:url(fonts/eb-garamond-500-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"EB Garamond";font-style:italic;font-weight:500;src:url(fonts/eb-garamond-500-italic-latin-ext.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"EB Garamond";font-style:italic;font-weight:500;src:url(fonts/eb-garamond-500-italic-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:600;src:url(fonts/eb-garamond-600-latin-ext.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:600;src:url(fonts/eb-garamond-600-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+body{margin:0;background:#111}canvas{display:block}
+</style></head>
+<body><canvas id="out" width="1080" height="1920"></canvas>
+<script src="data/veri.js"></script>
+<script src="lib/core.js"></script>
+<script src="lib/paint.js"></script>
+<script src="lib/post.js"></script>
+<script src="lib/subs.js"></script>
+<script src="lib/engine.js"></script>
+<script src="assets/fruits.js"></script>
+<!-- ASSETS -->
+<script src="scenes/ortak.js"></script>
+<script src="scenes/p1-dunya.js"></script>
+<script src="scenes/p2-lezzet.js"></script>
+<script src="scenes/p3-fani.js"></script>
+<script src="scenes/p4-vucut.js"></script>
+<script src="scenes/p5-ahiret.js"></script>
+<script src="scenes/p6-kaynak.js"></script>
+<!-- SCENES -->
+<script>
+const out = document.getElementById('out'); const ctx = out.getContext('2d', { willReadFrequently: false });
+ctx.imageSmoothingQuality = 'high';
+window.renderFrame = async (t) => { await Engine.render(ctx, t); };
+(async () => { await Engine.init(); if (window.FOTO_READY) await window.FOTO_READY(); window.READY = true; })();
+</script></body></html>

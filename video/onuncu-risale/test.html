@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>body{margin:0;background:#222}canvas{display:block}</style></head>
+<body><canvas id="out" width="1080" height="1920"></canvas>
+<script src="lib/core.js"></script>
+<script src="lib/paint.js"></script>
+<script src="lib/post.js"></script>
+<script src="assets/fruits.js"></script>
+<script>
+const out = document.getElementById('out'); const ctx = out.getContext('2d');
+window.testStyle = async () => {
+  // gök: uzun yatay darbeler, kobalt → turkuaz
+  const S = Paint.sprite(W, H, { seed: 3 });
+  const sky = rectPath(0, 0, W, H);
+  S.region(sky, { ramp: ['#1D44A0', '#2453AE', '#2A6DC0', '#3486CF', '#4C9FD8', '#76BCE0', '#A6D8E6'], shade: Paint.grad(0, 0, 0, H * 0.8, 0, 1), dir: 0, dirJit: 0.1, len: [90, 210], wid: [11, 19], cover: 2.8, rim: false, jitter: 26, jitterFreq: 0.006, noise: 0.02, broken: 0.03 });
+  ctx.drawImage(S.finish({ emboss: 0.5 }), 0, 0);
+  const t0 = performance.now();
+  const nar = spr('nar');
+  console.log('nar ms', Math.round(performance.now() - t0));
+  drawSpr(ctx, nar, 540, 1000, 1.2);
+  drawSpr(ctx, spr('nar-kuru'), 300, 1550, 0.7, 0.3);
+  Post.apply(ctx);
+};
+window.READY = true;
+</script></body></html>

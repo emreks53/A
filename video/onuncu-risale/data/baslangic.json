@@ -1,0 +1,6 @@
+{
+ "_not": "Alt yazı kelimelerinin ilk sesinin başladığı an (sn). Sessizlikten sonra gelenler enerji eşiğiyle, bitişik kelimeler zorunlu hizalamadan (CTC) 20-30 ms öne alınarak bulundu.",
+ "0": 0.072, "3": 3.061, "6": 4.180, "9": 6.230, "10": 7.208, "17": 11.079,
+ "22": 14.600, "24": 15.792, "29": 18.270, "31": 18.940, "37": 22.150, "39": 23.700,
+ "42": 25.462, "44": 25.940, "47": 28.336, "50": 29.908, "56": 33.189, "58": 34.334
+}

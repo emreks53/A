@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>body{margin:0;background:#222}canvas{display:block}</style></head>
+<body><canvas id="out" width="1080" height="1920"></canvas>
+<script src="../lib/core.js"></script>
+<script src="../lib/paint.js"></script>
+<script src="../lib/post.js"></script>
+<script src="../assets/manzara.js"></script>
+<script>
+const out = document.getElementById('out'); const ctx = out.getContext('2d');
+const T = {};
+function bake(name) { const t0 = performance.now(); const s = spr(name); if (!T[name]) { T[name] = Math.round(performance.now() - t0); console.log('bake', name, s.canvas.width + 'x' + s.canvas.height, 'k=' + s.k, T[name] + ' ms'); } return s; }
+function reset() { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = '#D8562F'; ctx.fillRect(0, 0, 1080, 1920); }
+// paralakslı kamera (sahnelerdeki camPar ile aynı)
+function camPar(cam, p) { return { x: 540 + (cam.x - 540) * p, y: 960 + (cam.y - 960) * p, z: Math.exp(Math.log(cam.z) * p) }; }
+function camApply(ctx, c) { ctx.translate(540, 960); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y); }
+function man(ctx) { // yer tutucu: oturan adam (oturma noktası M.man, ~560 px)
+  const [x, y] = MANZARA.man; ctx.fillStyle = 'rgba(30,24,40,0.9)';
+  ctx.beginPath(); ctx.ellipse(x - 10, y - 250, 95, 250, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x + 30, y - 470, 50, 58, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x + 130, y - 40, 150, 50, -0.2, 0, Math.PI * 2); ctx.fill();
+}
+function world(cam, dusk = 0) {
+  const M = MANZARA;
+  for (const L of M.layers) {
+    const c = camPar(cam, L.parallax);
+    ctx.save(); camApply(ctx, c);
+    if (L.name === 'gok-sabah' && dusk) { drawSpr(ctx, bake('gok-aksam'), L.x, L.y); ctx.restore(); continue; }
+    if (L.name === 'gunes' && dusk) { ctx.restore(); continue; }
+    drawSpr(ctx, bake(L.name), L.x, L.y);
+    if (L.name === M.manLayer) man(ctx);
+    ctx.restore();
+  }
+}
+window.show = async () => { reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx); };
+window.show2 = async () => { // tek tek sprite'lar
+  reset(); ctx.fillStyle = '#3B3F57'; ctx.fillRect(0, 0, 1080, 1920);
+  const names = SHOW2 || [];
+  for (const [n, x, y, s] of names) { if (SPRITE_DEFS[n]) drawSpr(ctx, bake(n), x, y, s || 1); }
+  Post.apply(ctx);
+};
+window.show3 = async () => { reset(); world({ x: 444, y: 1492, z: 1.62 }); Post.apply(ctx); };
+window.show4 = async () => { reset(); world({ x: 540, y: 960, z: 1 }, 1); Post.apply(ctx); };
+window.show5 = async () => { reset(); world({ x: 448, y: 1478, z: 1.79 }); Post.apply(ctx); };
+let SHOW2 = [
+  ['gunes', 170, 170, 1], ['bulut-1', 600, 170, 1], ['bulut-2', 200, 420, 1], ['bulut-3', 680, 420, 1],
+];
+window.READY = true;
+</script></body></html>
