@@ -10,8 +10,8 @@
   sfx(0.02, 'air', -25, { dur: 10.96, a: 0.45, r: 0.55 });         // Perde 1: sabah çayırı (dalış 10.38-10.98'de söner)
   sfx(10.92, 'room-warm', -25, { dur: 4.95, a: 0.3, r: 0.3 });     // Perde 2: sıcak iç mekân (3. perdeye geçiş 15.59-15.87)
   sfx(15.55, 'air-dusk', -24, { dur: 1.9, a: 0.35, r: 0.25 });     // Perde 3: akşam esintisi (silmeyle biter)
-  sfx(17.25, 'air-soft', -27, { dur: 10.35, a: 0.3, r: 0.5 });     // Perde 4: soyut zemin, yumuşak hava
-  sfx(27.55, 'paradise', -26, { dur: 9.25, a: 1.0, r: 0.3 });      // Perde 5: cennet havası (fotoğraf 36.77'de tam örter)
+  sfx(17.25, 'air-soft', -27, { dur: 10.7, a: 0.3, r: 0.6 });      // Perde 4: soyut zemin, yumuşak hava (yükselişte söner)
+  sfx(27.4, 'paradise', -26, { dur: 9.4, a: 0.9, r: 0.3 });        // Perde 5: cennet havası (fotoğraf 36.77'de tam örter)
   sfx(28.45, 'water', -18, { dur: 8.35, a: 0.9, r: 0.3 });         // ırmak (28.53'te görünür) → ziyafet sonuna dek
   sfx(33.05, 'water', -21, { dur: 3.75, a: 0.25, r: 0.3, close: 1 }); // ziyafet (33.12-33.25 belirir): öndeki dere, daha yakın
   sfx(36.50, 'room-window', -18, { dur: 4.92, a: 0.35, r: 0.67 }); // Perde 6: oda + pencere havası, 40.75-41.42 kararmayla söner

@@ -267,7 +267,7 @@ def water_layer(rng, n, close):
         m = np.exp((0.55 + 0.2 * close) * smooth(rng, n, rate * rng.uniform(0.8, 1.25)))
         bab += b / rms(b) * m / rms(m)
     hiss = lowpass(highpass(white(rng, n), 3800), 9000); hiss *= np.exp(0.5 * smooth(rng, n, 9.0))
-    x = 0.65 * flow / rms(flow) + 0.75 * bab / rms(bab) + (0.18 + 0.22 * close) * hiss / rms(hiss)
+    x = 0.65 * flow / rms(flow) + 0.75 * bab / rms(bab) + (0.15 + 0.1 * close) * hiss / rms(hiss)
     if not close: x = lowpass(x, 5200)  # uzak ırmak: yumuşak üst uç
     return x
 
