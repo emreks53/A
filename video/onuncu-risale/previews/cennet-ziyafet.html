@@ -13,54 +13,71 @@ function reset(bg = '#D8562F') { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalA
 // paralakslı kamera (sahnelerdeki camPar ile aynı)
 function camPar(cam, p) { return { x: 540 + (cam.x - 540) * p, y: 960 + (cam.y - 960) * p, z: Math.exp(Math.log(cam.z) * p) }; }
 function camApply(ctx, c) { ctx.translate(540, 960); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y); }
-// tam ziyafet kompozisyonu: lower 0..1 dalın alçalması
-function world(cam, lower = 0) {
+// tam ziyafet kompozisyonu (scenes/p5-ahiret.js drawFeast ile aynı katman mantığı): lower 0..1 dalın alçalması
+function world(cam, lower = 0, fruit = null) {
   const Z = ZIYAFET;
   for (const L of Z.layers) {
     if (!SPRITE_DEFS[L.name]) continue;
     const c = camPar(cam, L.parallax);
     ctx.save(); camApply(ctx, c);
-    if (L.name === 'z-sarkan-dal') drawSpr(ctx, bake(L.name), L.x, L.y, 1, lerp(Z.branch.restRot, Z.branch.lowerRot, lower));
+    const rot = lerp(Z.branch.restRot, Z.branch.lowerRot, lower);
+    if (L.name === 'z-sarkan-dal') { if (fruit) { bake('z-dal-bos'); bake('z-dal-nar'); Z.drawBranch(ctx, rot, fruit.s, fruit.a); } else drawSpr(ctx, bake(L.name), Z.branch.x, Z.branch.y, 1, rot); }
+    else if (L.name === 'z-akvab') { for (const [x, y] of Z.cups) drawSpr(ctx, bake('z-akvab'), x, y); }
     else drawSpr(ctx, bake(L.name), L.x, L.y, L.scale || 1);
-    if (L.name === 'z-platform') {
-      for (const [x, y, s] of Z.pebbles) drawSpr(ctx, bake('z-inci'), x, y, s, 0, 0.9);
-    }
     ctx.restore();
   }
 }
 window.show = async () => { reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx); };
-// sayfa 3: kamera itmesi sonu + dal alçalmış + altyazı okunurluk denemesi
+// sayfa 3: kamera itmesi sonu (z 1.12) + dal alçalmış + altyazı okunurluk denemesi
 window.show3 = async () => {
   reset(); world({ x: 540, y: 1000, z: 1.12 }, 1); Post.apply(ctx);
   ctx.save(); ctx.font = '600 64px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
-  ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 3; ctx.fillText('sonsuzluğa', 540, 1405); ctx.restore();
+  ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 3; ctx.fillText('ebediyete lâyık sonsuzluğa', 540, 1405); ctx.restore();
 };
-// sayfa 2: dal (dinlenme / alçalmış), kadeh ve ibrik büyük, tepsi büyük
+// ölçüm için: show3 ve show5'in yazısız hâli (altyazı bandı parlaklık denetimi)
+window.show3n = async () => { reset(); world({ x: 540, y: 1000, z: 1.12 }, 1); Post.apply(ctx); };
+window.show5n = async () => { reset(); world({ x: 548, y: 990, z: 1.065 }, 1, { s: 0.55, a: 1 }); Post.apply(ctx); };
+// sayfa 5: filmdeki kamera (feastCam sonu ≈ 548,990, z 1.065), dal alçalmış, meyve yeniden bitmekte (ölçek 0.55)
+window.show5 = async () => {
+  reset(); world({ x: 548, y: 990, z: 1.065 }, 1, { s: 0.55, a: 1 }); Post.apply(ctx);
+  ctx.save(); ctx.font = '600 60px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 3; ctx.fillText('cismanî ziyafetler olacaktır.', 540, 1400); ctx.restore();
+};
+// sayfa 2: dal (dinlenme / alçalmış), meyvenin yeniden bitişi, kadeh ve ibrik büyük, tepsi büyük
 window.show2 = async () => {
   reset('#2F4A48');
-  // koyu yeşil gölge zemini (kanopi altı tonu)
-  ctx.fillStyle = '#21423B'; ctx.fillRect(0, 0, 1080, 760);
-  const Z = ZIYAFET;
-  if (SPRITE_DEFS['z-sarkan-dal']) {
-    drawSpr(ctx, bake('z-sarkan-dal'), 40, 50, 1.2, Z.branch.restRot);
-    drawSpr(ctx, bake('z-sarkan-dal'), 590, 50, 1.2, Z.branch.lowerRot);
-    ctx.fillStyle = '#F1CB60'; for (const x of [40, 590]) { ctx.beginPath(); ctx.arc(x, 50, 6, 0, 7); ctx.fill(); }
-  }
-  ctx.fillStyle = '#5B4A6E'; ctx.fillRect(0, 760, 1080, 560);
-  drawSpr(ctx, bake('z-akvab'), 200, 1250, 3.4);
-  drawSpr(ctx, bake('z-akvab'), 470, 1250, 1.6);
-  drawSpr(ctx, bake('z-ibrik'), 800, 1290, 1.75);
-  ctx.fillStyle = '#7A2034'; ctx.fillRect(0, 1320, 1080, 600);
-  drawSpr(ctx, bake('z-tepsi'), 540, 1640, 1.95);
+  ctx.fillStyle = '#1D3B35'; ctx.fillRect(0, 0, 1080, 700);
+  const Z = ZIYAFET; const b = Z.branch; const sc = 0.98;
+  // dal sprite'ı pivotun ~470 px solunda; iki kopya: dinlenme (sol) ve alçalmış (sağ)
+  const piv = [[520, 130], [1066, 130]];
+  ctx.save(); ctx.translate(piv[0][0], piv[0][1]); ctx.scale(sc, sc); drawSpr(ctx, bake('z-sarkan-dal'), 0, 0, 1, b.restRot); ctx.restore();
+  ctx.save(); ctx.translate(piv[1][0], piv[1][1]); ctx.scale(sc, sc);
+  ctx.globalAlpha = 0.28; drawSpr(ctx, bake('z-sarkan-dal'), 0, 0, 1, b.restRot); ctx.globalAlpha = 1;
+  drawSpr(ctx, bake('z-sarkan-dal'), 0, 0, 1, b.lowerRot); ctx.restore();
+  ctx.fillStyle = '#F1CB60'; for (const [x, y] of piv) { ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill(); }
+  // yeniden biten nar: z-dal-bos + z-dal-nar ölçek 0, 0.4, 0.75, 1 (alt şerit)
+  ctx.fillStyle = '#18332E'; ctx.fillRect(0, 560, 1080, 140);
+  [0.0, 0.4, 0.75, 1].forEach((s, i) => { const cx = 140 + i * 260; ctx.save(); ctx.beginPath(); ctx.rect(cx - 120, 560, 240, 140); ctx.clip(); ctx.translate(cx, 560); ctx.scale(0.8, 0.8); ctx.translate(-Z.fruitPos(0)[0] + 20, -400); bake('z-dal-bos'); bake('z-dal-nar'); Z.drawBranch(ctx, 0, s, 1); ctx.restore(); });
+  ctx.fillStyle = '#5B4A6E'; ctx.fillRect(0, 700, 1080, 600);
+  ctx.fillStyle = '#0F5A40'; ctx.fillRect(0, 1060, 1080, 240);
+  drawSpr(ctx, bake('z-akvab'), 210, 1250, 5.6);
+  drawSpr(ctx, bake('z-akvab'), 470, 1250, 1);
+  drawSpr(ctx, bake('z-akvab'), 560, 1250, 2.4);
+  drawSpr(ctx, bake('z-ibrik'), 860, 1270, 2.9);
+  ctx.fillStyle = '#7A2034'; ctx.fillRect(0, 1300, 1080, 620);
+  drawSpr(ctx, bake('z-tepsi'), 540, 1600, 2.3);
   Post.apply(ctx);
 };
-// sayfa 4: meta veri denetimi — ırmak yolu, akış yönü, kadeh noktaları, dal ekseni
+// sayfa 4: meta veri denetimi — ırmak yolu, akış yönü, kadeh noktaları, dal ekseni ve meyve çapası
 window.show4 = async () => {
   reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx);
   const Z = ZIYAFET; ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#FF00CC'; ctx.fill(Z.streamPath()); ctx.restore();
-  ctx.save(); ctx.strokeStyle = '#FFFF00'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(400, 1860); ctx.lineTo(400 + Z.streamDir[0] * 200, 1860 + Z.streamDir[1] * 200); ctx.stroke();
+  ctx.save(); ctx.strokeStyle = '#FFFF00'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(400, 1760); ctx.lineTo(400 + Z.streamDir[0] * 200, 1760 + Z.streamDir[1] * 200); ctx.stroke();
   ctx.fillStyle = '#FFFF00'; for (const [x, y] of Z.cups) { ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill(); }
-  ctx.beginPath(); ctx.arc(Z.branch.x, Z.branch.y, 9, 0, 7); ctx.fill(); ctx.restore();
+  ctx.beginPath(); ctx.arc(Z.branch.x, Z.branch.y, 9, 0, 7); ctx.fill();
+  ctx.fillStyle = '#00FFFF'; for (const r of [0, Z.branch.lowerRot]) { const [x, y] = Z.fruitPos(r); ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill(); }
+  ctx.strokeStyle = '#00FF66'; ctx.lineWidth = 3; ctx.strokeRect(0, 1330, 1080, 110);
+  ctx.restore();
 };
 window.READY = true;
 </script></body></html>

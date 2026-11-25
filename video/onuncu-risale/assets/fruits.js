@@ -88,10 +88,17 @@ const YIY = (() => {
     if (o.clip) withClip(S, o.clip, draw); else draw();
     return list.length;
   }
-  // katman: kırpılmış düz taban + üstünde fırça alanı (basamaklı ton katı)
+  // katman: basamaklı ton katı.
+  //  sert (varsayılan): clip listesinin tamamına kırpılmış düz taban + fırça alanı
+  //  yumuşak (o.soft): taban yok; darbeler clip[1..] içinde örneklenir ama yalnız clip[0]'a (gövde) kırpılır,
+  //  böylece katın kenarı fırça uçlarından oluşur (kırık, basamaklı akrilik kenar)
   function layer(S, o) {
     const clips = normClips(o.clip);
     if (o.rim) { const rp = o.rimPath || clips[0][0]; S.rim(rp, typeof o.rim === 'object' ? { w: 2.2, ...o.rim } : { w: 2.2 }); }
+    if (o.soft) {
+      withClip(S, clips.slice(0, 1), () => field(S, { ...o, clip: null, inside: o.inside ?? clips.slice(1) }));
+      return;
+    }
     withClip(S, clips, () => {
       if (o.base !== null) {
         const bcol = o.base ?? o.cols[Math.floor(o.cols.length / 2)];
@@ -101,8 +108,23 @@ const YIY = (() => {
       field(S, { ...o, clip: null, inside: o.inside ?? clips });
     });
   }
-  // fırçalı yay/çizgi: tek renk, sivrilen uçlar (S.line sarmalayıcı; ölçek k)
-  const line = (S, pts, w0, col, o = {}) => S.line(pts, w0 * S.k, col, { edge: false, ...o, w1: (o.w1 ?? w0) * S.k });
+  // fırçalı yay/çizgi: tek renk (S.line sarmalayıcı; genişlik ekran px). o.height:false → kabartma yok
+  const DUMMY = makeCanvas(2, 2).getContext('2d');
+  function line(S, pts, w0, col, o = {}) {
+    const hx = S.hx; if (o.height === false) S.hx = DUMMY;
+    S.line(pts, w0 * S.k, col, { edge: false, ...o, w1: (o.w1 ?? w0) * S.k });
+    S.hx = hx;
+  }
+  // kırışık / oluk: renkte koyu çizgi + ışık yanında açık sırt; yükseklikte oluk(koyu)+sırt(açık)
+  function crease(S, pts, w, dark, light, o = {}) {
+    const k = S.k; const n = pts.length; if (n < 2) return;
+    const off = (d) => pts.map((q, i) => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)]; const dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; let nx = -dy / l, ny = dx / l; if (nx * LT[0] + ny * LT[1] < 0) { nx = -nx; ny = -ny; } return [q[0] + nx * d, q[1] + ny * d]; });
+    const tap = (i) => Math.sin(Math.PI * (i / (n - 1))) * 0.85 + 0.15;
+    const strokeP = (ctx, P, wid, col, alpha) => { ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineCap = 'round'; for (let i = 0; i < P.length - 1; i++) { ctx.lineWidth = Math.max(0.6, wid * tap(i)); ctx.beginPath(); ctx.moveTo(P[i][0], P[i][1]); ctx.lineTo(P[i + 1][0], P[i + 1][1]); ctx.stroke(); } ctx.restore(); };
+    strokeP(S.x, pts, w * k, dark, o.alpha ?? 0.9);
+    if (light) strokeP(S.x, off(w * k * 0.9), w * k * 0.55, light, (o.alpha ?? 0.9) * 0.8);
+    if (o.height !== false) { strokeP(S.hx, pts, w * k * 1.2, 'rgb(84,84,84)', 0.8); strokeP(S.hx, off(w * k * 1.0), w * k * 0.9, 'rgb(186,186,186)', 0.7); }
+  }
   // yarı saydam fırçalı çizgi (cam, parıltı)
   function softLine(S, pts, w, col, alpha = 1, o = {}) {
     const ctx = S.x; ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineCap = o.cap ?? 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = w * S.k;
@@ -138,156 +160,196 @@ const YIY = (() => {
     if (o.vein !== false) line(S, L.mid.slice(1, Math.round(L.mid.length * 0.9)), clamp(ls * 0.022, 1.1, 3), o.vein ?? shade(pal[Math.min(pal.length - 1, 4 + pd)], 0.08, 0.7), { w1: 0.5 });
     return { sh, mid: L.mid, lightTop };
   }
-  return { TAU, LT, poly, bboxOf, circ, ellPts, shape, polyShape, ellShape, outside, crPts, withClip, fill, dab, field, layer, line, softLine, leafPts, leaf, normClips, makeTest };
+    // yolu kaydır / ölçekle (Path2D kopyası)
+  function moved(path, dx, dy, sc = 1, ox = 0, oy = 0) { const p = new Path2D(); p.addPath(path, new DOMMatrix().translateSelf(dx + ox, dy + oy).scaleSelf(sc, sc).translateSelf(-ox, -oy)); return p; }
+  // gövdenin, ışığa doğru kaydırılmış kopyası DIŞINDA kalan hilal (evenodd kırpma)
+  function crescent(path, bb, d, sc = 1, ox = 0, oy = 0) { const ln = Math.hypot(LT[0], LT[1]); const p = new Path2D(); p.rect(bb[0] - 60, bb[1] - 60, bb[2] - bb[0] + 120, bb[3] - bb[1] + 120); p.addPath(moved(path, (LT[0] / ln) * d, (LT[1] / ln) * d, sc, ox, oy)); return [p, 'evenodd']; }
+  // ---- basamaklı ton topu: yuvarlak gövdeler için ortak boyama (Kurzgesagt sadeliğinde katlar + akrilik darbe)
+  // o: cx, cy, R (sprite px), P: 9 renk (0 en koyu … 6 vurgu, 7 parlak, 8 beyaz-sıcak), dir: (x,y)→açı,
+  //    sL/sW: darbe boy/en (ekran px), seed, refl: yansıyan ışık rengi, gloss 0..1, rimW
+  function toneBall(S, body, o) {
+    const { cx, cy, R } = o; const P = o.P; const bp = body.path, bb = body.bb; const k = S.k;
+    const ln = Math.hypot(LT[0], LT[1]); const ox = LT[0] / ln, oy = LT[1] / ln;
+    const at = (d) => [cx + ox * R * d, cy + oy * R * d];
+    const dir = o.dir; const sL = o.sL, sW = o.sW; const sd = o.seed ?? 1;
+    const ry = o.ry ?? 1; // dikey basıklık (elips gövdeler)
+    const blobAt = (x0, y0, rx, ryy, rot, s2) => smoothPath(blobPts(x0, y0, rx, ryy, 22, o.blobAmp ?? 0.06, s2, rot));
+    const breakup = (path, x0, y0, sc, cols, cover) => { // kenarı fırça uçlarıyla kır
+      const big = moved(path, 0, 0, sc, x0, y0), small = moved(path, 0, 0, 2 - sc, x0, y0);
+      const ring = new Path2D(); ring.rect(bb[0] - 60, bb[1] - 60, bb[2] - bb[0] + 120, bb[3] - bb[1] + 120); ring.addPath(small);
+      layer(S, { clip: [bp], inside: [big, [ring, 'evenodd']], bb, cols, dir, len: [sL[0] * 0.7, sL[1] * 0.7], wid: [sW[0] * 0.8, sW[1] * 0.8], soft: true, cover, sort: false });
+    };
+    layer(S, { clip: bp, bb, cols: [P[2], P[3], P[3]], base: P[3], dir, len: sL, wid: sW, cover: 1.4, rim: o.rim === false ? false : { w: o.rimW ?? clamp(R / k * 0.016, 1.2, 3.4), alpha: 0.9 } });
+    if (o.shadow !== false) {
+      // gölge: keskin hilal kat + sınırında kısa fırça uçlarıyla kırılma
+      const sd0 = R * (o.shadowD ?? 0.34);
+      layer(S, { clip: [bp, crescent(bp, bb, sd0)], bb, cols: [P[1], P[2]], base: P[1], dir, len: sL, wid: sW, cover: 1.3 });
+      const ring = (() => { const p = new Path2D(); p.rect(bb[0] - 60, bb[1] - 60, bb[2] - bb[0] + 120, bb[3] - bb[1] + 120); p.addPath(moved(bp, ox * sd0 * 1.25, oy * sd0 * 1.25)); return [p, 'evenodd']; })();
+      layer(S, { clip: [bp], inside: [bp, ring, moved(bp, ox * sd0 * 0.75, oy * sd0 * 0.75)], bb, cols: [P[1], P[2], P[2]], dir, len: [sL[0] * 0.5, sL[1] * 0.55], wid: [sW[0] * 0.8, sW[1] * 0.8], soft: true, cover: 0.9, sort: false });
+    }
+    if (o.refl) layer(S, { clip: [bp, crescent(bp, bb, R * (o.reflD ?? 0.075))], bb, cols: [o.refl, shade(o.refl, 0.04)], base: o.refl, dir, len: [sL[0] * 0.5, sL[1] * 0.5], wid: [sW[0] * 0.6, sW[1] * 0.6], cover: 1.6 });
+    const [l1x, l1y] = at(o.litD ?? 0.3);
+    const lit = blobAt(l1x, l1y, R * (o.litR ?? 0.84), R * (o.litR ?? 0.84) * 0.97 * ry, 0.3, sd + 5);
+    layer(S, { clip: [bp, lit], bb, cols: [P[4], P[4], P[5]], base: P[4], dir, len: sL, wid: sW, cover: 1.3, broken: 0.08, shade: (x, y) => clamp(0.92 - Math.hypot(x - l1x, y - l1y) / R), noise: 0.05 });
+    breakup(lit, l1x, l1y, 1.07, [P[4], P[4]], 0.9);
+    const [l2x, l2y] = at(o.lightD ?? 0.5);
+    const lr = o.lightR ?? [0.5, 0.43];
+    const light = blobAt(l2x, l2y, R * lr[0], R * lr[1] * ry, 0.65, sd + 6);
+    layer(S, { clip: [bp, light], bb, cols: [P[5], P[5], P[6]], base: P[5], dir, len: [sL[0] * 0.8, sL[1] * 0.8], wid: [sW[0] * 0.85, sW[1] * 0.85], cover: 1.3, shade: (x, y) => clamp(0.95 - Math.hypot(x - l2x, y - l2y) / (R * 0.58)), noise: 0.06 });
+    breakup(light, l2x, l2y, 1.1, [P[5]], 0.9);
+    const g = o.gloss ?? 1;
+    if (g > 0.05) {
+      const [l3x, l3y] = at(o.hiD ?? 0.6); const hr = o.hiR ?? [0.22, 0.15];
+      layer(S, { clip: [bp, ellipsePath(l3x, l3y, R * hr[0], R * hr[1] * ry, -0.75)], bb, cols: [P[6], P[7]], alpha: g, dir, len: [sL[0] * 0.5, sL[1] * 0.55], wid: [sW[0] * 0.65, sW[1] * 0.65], soft: true, cover: 2.6, shade: (x, y) => clamp(0.95 - Math.hypot(x - l3x, y - l3y) / (R * (hr[0] + 0.04))) });
+    }
+    return { at, ox, oy };
+  }
+  return { toneBall, TAU, LT, poly, bboxOf, circ, ellPts, shape, polyShape, ellShape, outside, crPts, withClip, fill, dab, field, layer, line, crease, softLine, leafPts, leaf, normClips, makeTest, moved, crescent };
 })();
 
 // ------------------------------------------------------------------------------------------------
 // NAR: koyu doygun nar kırmızısı, doğal ve hafif düzensiz taç (kaliks).
 // pomegranateOn(S, cx, cy, R, o): var olan sprite'a boyar. o.wither 0..1 kuruma, o.crownAng taç yönü
-const NAR_PAL = ['#2E0618', '#4E0A22', '#740E2A', '#9C1230', '#BF1A35', '#DA2A3C', '#EE5450', '#F88E84', '#FFE2DA'];
-const NAR_KURU = ['#24100F', '#361714', '#4A1F1A', '#5E2A22', '#70342A', '#824034', '#955040', '#A86A56', '#C9A08A'];
+const NAR_PAL = ['#2E0418', '#4C0820', '#720C28', '#990F2C', '#BC1530', '#D92436', '#EE4A44', '#FA8A7A', '#FFE4DA'];
+const NAR_KURU = ['#1C0A0E', '#2C1014', '#401A1C', '#562426', '#6E302C', '#863E34', '#9C503E', '#B46C54', '#C49A86'];
 function pomegranateOn(S, cx, cy, R, o = {}) {
-  const { poly, bboxOf, layer, fill, dab, line, withClip, outside, shape } = YIY;
+  const { layer, dab, line, crease, withClip, crescent, shape, circ } = YIY;
   const wi = o.wither ?? 0; const r = S.r; const k = S.k; const Rs = R / k;
   const seed = o.seed ?? 11; const rr = rng(seed);
-  const P = (o.pal ?? NAR_PAL).map((c, i) => (wi > 0 ? mix(c, NAR_KURU[i], wi) : c));
+  const P = (o.pal ?? NAR_PAL).map((c, i) => (wi > 0 ? mix(c, NAR_KURU[i], wi * 0.88) : c));
   const ca = o.crownAng ?? -Math.PI / 2 + 0.1; // taç yönü
   const ax = Math.cos(ca), ay = Math.sin(ca);
-  // gövde: hafif köşeli küre (5 belirsiz yüz), taç tarafı omuzlu; kuruyunca göçük
-  const pts = []; const N = 44; const ph = rr() * 6;
+  // gövde: hafif köşeli küre (5 belirsiz yüz), taç tarafı omuzlu; kuruyunca göçük, sarkık
+  const pts = []; const N = 48; const ph = rr() * 6;
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2;
-    const rel = Math.cos(a - ca); // taca yakınlık
-    let m = 1 + 0.022 * Math.cos(5 * (a - ca) + ph) - 0.05 * Math.pow(Math.max(0, rel), 3) + 0.018 * Math.sin(a * 2 + ph);
-    if (wi > 0) m *= 1 + wi * (0.05 * Math.sin(a * 3 + ph * 2) + 0.035 * Math.sin(a * 7 + ph) - 0.04 * Math.pow(Math.max(0, -Math.sin(a)), 2));
-    pts.push([cx + Math.cos(a) * R * m * 1.02, cy + Math.sin(a) * R * m * 0.97]);
+    const rel = Math.cos(a - ca);
+    let m = 1 + 0.02 * Math.cos(5 * (a - ca) + ph) - 0.05 * Math.pow(Math.max(0, rel), 3) + 0.015 * Math.sin(a * 2 + ph);
+    if (wi > 0) m *= 1 + wi * (0.045 * Math.sin(a * 3 + ph * 2) + 0.03 * Math.sin(a * 7 + ph) + 0.02 * Math.sin(a * 11 + ph * 3) - 0.07 * Math.pow(Math.max(0, rel), 2));
+    pts.push([cx + Math.cos(a) * R * m * 1.02, cy + Math.sin(a) * R * m * (0.97 - wi * 0.05)]);
   }
-  const body = shape(pts, 0.5); const bb = body.bb;
-  const tipX = cx + ax * R * 0.93, tipY = cy + ay * R * 0.93; // tacın kökü
-  const merid = (x, y) => Math.atan2(y - (tipY + ay * R * 0.25), x - (tipX + ax * R * 0.25)) + (r() - 0.5) * 0.22;
-  const sL = [Rs * 0.2, Rs * 0.38], sW = [clamp(Rs * 0.075, 5, 18), clamp(Rs * 0.115, 7, 24)];
-  const L = YIY.LT; const ox = L[0] / Math.hypot(L[0], L[1]), oy = L[1] / Math.hypot(L[0], L[1]);
+  const body = shape(pts, 0.5); const bb = body.bb; const bp = body.path;
+  const tipX = cx + ax * R * (0.93 - wi * 0.08), tipY = cy + ay * R * (0.93 - wi * 0.08); // tacın kökü
+  const merid = (x, y) => Math.atan2(y - (tipY + ay * R * 0.25), x - (tipX + ax * R * 0.25)) + (r() - 0.5) * 0.24;
+  const sL = [Rs * 0.2, Rs * 0.38], sW = [clamp(Rs * 0.075, 4, 18), clamp(Rs * 0.115, 6, 24)];
+  const L = YIY.LT; const ln = Math.hypot(L[0], L[1]); const ox = L[0] / ln, oy = L[1] / ln;
   const at = (d) => [cx + ox * R * d, cy + oy * R * d];
-  // 1) taban: orta-koyu
-  layer(S, { clip: body.path, bb, cols: [P[2], P[3]], base: P[3], dir: merid, len: sL, wid: sW, cover: 1.6, rim: { w: clamp(Rs * 0.016, 1.6, 3.4), alpha: 0.9 } });
-  // 2) gölge hilali (sağ alt) + koyu çekirdek + yansıyan ışık
-  const [c1x, c1y] = at(0.2);
-  layer(S, { clip: [body.path, outside(bb, c1x, c1y, R * 0.9, R * 0.88)], bb, cols: [P[1], P[2]], base: P[2], dir: merid, len: sL, wid: sW, cover: 1.8 });
-  const [c2x, c2y] = at(0.06);
-  layer(S, { clip: [body.path, outside(bb, c2x, c2y, R * 0.985, R * 0.95)], bb, cols: [mix(P[2], '#5A1E6A', 0.35 + wi * -0.2), mix(P[3], '#6A2A70', 0.3 - wi * 0.2)], base: mix(P[2], '#5A1E6A', 0.3 - wi * 0.15), dir: merid, len: [sL[0] * 0.6, sL[1] * 0.6], wid: [sW[0] * 0.7, sW[1] * 0.7], cover: 1.6 });
-  // 3) ışık katları (sol üst): aydınlık, açık, vurgu
-  const [l1x, l1y] = at(0.34);
-  layer(S, { clip: [body.path, YIY.circ(l1x, l1y, R * 0.93)], bb, cols: [P[4], P[4], P[5]], base: P[4], dir: merid, len: sL, wid: sW, cover: 1.8, broken: 0.1, shade: (x, y) => clamp(0.85 - Math.hypot(x - l1x, y - l1y) / (R * 1.05)), jitter: 10, noise: 0.06 });
-  const [l2x, l2y] = at(0.5);
-  layer(S, { clip: [body.path, ellipsePath(l2x, l2y, R * 0.56, R * 0.52, 0.6)], bb, cols: [P[5], P[5], P[6]], base: P[5], dir: merid, len: [sL[0] * 0.85, sL[1] * 0.85], wid: [sW[0] * 0.85, sW[1] * 0.85], cover: 1.8, shade: (x, y) => clamp(0.9 - Math.hypot(x - l2x, y - l2y) / (R * 0.6)), jitter: 8, noise: 0.08 });
-  if (wi < 0.6) {
-    const [l3x, l3y] = at(0.6);
-    layer(S, { clip: [body.path, ellipsePath(l3x, l3y, R * 0.26, R * 0.19, -0.75)], bb, cols: [P[6], P[7]], base: P[6], alpha: 1 - wi * 1.4, baseAlpha: (1 - wi * 1.4) * 0.9, dir: merid, len: [sL[0] * 0.6, sL[1] * 0.6], wid: [sW[0] * 0.7, sW[1] * 0.7], cover: 1.6, shade: (x, y) => clamp(0.9 - Math.hypot(x - l3x, y - l3y) / (R * 0.3)) });
-  }
-  // 4) belirsiz yüz sırtları (meridyen): küre üzerinde taçtan inen ince çizgiler
-  withClip(S, body.path, () => {
-    const vx = -ay, vy = ax; // taç eksenine dik
-    for (let i = 0; i < 5; i++) {
-      const phi = (i - 2) * 0.62 + (rr() - 0.5) * 0.14;
-      const q = []; for (let j = 0; j <= 16; j++) { const t = 0.1 + (j / 16) * 0.8; const u = Math.cos(Math.PI * t) * R * 0.95, v = Math.sin(Math.PI * t) * Math.sin(phi) * R; q.push([cx + ax * u + vx * v, cy + ay * u + vy * v]); }
-      const mx = q[8][0] - cx, my = q[8][1] - cy; const lit = mx * L[0] + my * L[1] > -R * 0.15;
-      line(S, q, clamp(Rs * 0.011, 1.1, 2.4), lit ? shade(P[5], 0.06, 0.9) : P[2], { w1: 0.7, taper: true });
+  YIY.toneBall(S, body, { cx, cy, R, P, dir: merid, sL, sW, seed, shadowD: 0.42, litD: 0.36, litR: 0.8, gloss: 1 - wi * 1.4, refl: mix(P[2], '#62207A', 0.36 - wi * 0.24), rimW: clamp(Rs * 0.016, 1.6, 3.4) });
+  // 4) belirsiz yüz sırtları (meridyen): taçtan inen çok ince çizgiler (kabartmasız)
+  withClip(S, bp, () => {
+    const vx = -ay, vy = ax;
+    for (let i = 0; i < 4; i++) {
+      const phi = (i - 1.5) * 0.7 + (rr() - 0.5) * 0.14;
+      const q = []; for (let j = 0; j <= 16; j++) { const t = 0.12 + (j / 16) * 0.72; const u = Math.cos(Math.PI * t) * R * 0.95, v = Math.sin(Math.PI * t) * Math.sin(phi) * R; q.push([cx + ax * u + vx * v, cy + ay * u + vy * v]); }
+      const mx = q[8][0] - cx, my = q[8][1] - cy; const lit = mx * L[0] + my * L[1] > -R * 0.1;
+      line(S, q, clamp(Rs * 0.01, 1, 2.2), lit ? shade(P[5], 0.04, 0.9) : P[2], { w1: 0.6, taper: true, height: false });
     }
   });
-  // 5) kuruma: kırışıklar (koyu oluk + ışık tarafında ince sırt)
+  // 5) kuruma: düzensiz kırışık ağı (oluk + sırt, kabartmalı) ve birkaç göçük
   if (wi > 0.05) {
-    withClip(S, body.path, () => {
-      const nW = Math.round(16 * wi);
+    withClip(S, bp, () => {
+      const vx = -ay, vy = ax;
+      const sphPt = (t, phi) => { const u = Math.cos(Math.PI * t) * R * 0.95, v = Math.sin(Math.PI * t) * Math.sin(phi) * R * 0.98; return [cx + ax * u + vx * v, cy + ay * u + vy * v]; };
+      // ana oluklar: taçtan yanlara kavisli, kısa-orta boy, dallanan
+      const nW = Math.round(10 * wi);
       for (let i = 0; i < nW; i++) {
-        const a = rr() * Math.PI * 2, d = R * (0.2 + rr() * 0.75); const x0 = cx + Math.cos(a) * d, y0 = cy + Math.sin(a) * d * 0.97;
-        const dir = a + Math.PI / 2 + (rr() - 0.5) * 1.2; const len = R * (0.18 + rr() * 0.3); const bend = (rr() - 0.5) * 0.9;
-        const q = []; for (let j = 0; j <= 8; j++) { const t = j / 8 - 0.5; const aa = dir + bend * t; q.push([x0 + Math.cos(dir) * len * t + Math.cos(aa + Math.PI / 2) * bend * len * 0.2 * (1 - 4 * t * t), y0 + Math.sin(dir) * len * t + Math.sin(aa + Math.PI / 2) * bend * len * 0.2 * (1 - 4 * t * t)]); }
-        line(S, q, clamp(Rs * 0.022, 2, 4.4), P[1], { taper: true });
-        const nx = -Math.sin(dir), ny = Math.cos(dir); const s = nx * L[0] + ny * L[1] > 0 ? 1 : -1; const off = clamp(Rs * 0.02, 2, 4) * k * s;
-        line(S, q.map(([x, y]) => [x + nx * off, y + ny * off]), clamp(Rs * 0.012, 1.2, 2.6), P[6], { taper: true });
+        const phi = (rr() - 0.5) * 2.8; const t0 = 0.12 + rr() * 0.45, t1 = t0 + 0.12 + rr() * 0.28; const sw = (rr() - 0.5) * 0.9;
+        const q = []; for (let j = 0; j <= 10; j++) { const tt = lerp(t0, t1, j / 10); q.push(sphPt(tt, phi + sw * (j / 10) + Math.sin(tt * 14 + i) * 0.05)); }
+        crease(S, q, clamp(Rs * 0.028, 2.4, 6), P[1], P[7], { alpha: 0.9 });
+        if (rr() < 0.5) { const j0 = 4 + Math.floor(rr() * 4); const br = []; const d = rr() < 0.5 ? 1 : -1; for (let j = 0; j <= 5; j++) { const p0 = q[j0]; br.push([p0[0] + j * R * 0.025 * d, p0[1] + j * R * 0.02 + Math.sin(j) * 2]); } crease(S, br, clamp(Rs * 0.018, 1.6, 4), P[1], P[6], { alpha: 0.8 }); }
+      }
+      // ince buruşukluklar
+      for (let i = 0; i < Math.round(14 * wi); i++) {
+        const t = 0.15 + rr() * 0.75, phi = (rr() - 0.5) * 2.9; const [x0, y0] = sphPt(t, phi);
+        const dir = rr() * Math.PI; const len = R * (0.06 + rr() * 0.1);
+        const q = []; for (let j = 0; j <= 5; j++) { const tt = j / 5 - 0.5; q.push([x0 + Math.cos(dir) * len * tt, y0 + Math.sin(dir) * len * tt + Math.sin(tt * 5 + i) * 2 * k]); }
+        crease(S, q, clamp(Rs * 0.016, 1.4, 3.2), P[1], P[6], { alpha: 0.7 });
       }
     });
   }
-  // 6) parlak vurgu: kısa, keskin, forma sarılan darbeler (kuruyunca yok)
+  // 6) parlak vurgu: kısa keskin darbeler + beyazımsı nokta (kuruyunca yok)
   if (wi < 0.5) {
     const ha = 1 - wi * 2;
-    const [hx0, hy0] = at(0.64);
+    const [hx0, hy0] = at(0.66); const ta = Math.atan2(oy, ox) + Math.PI / 2;
     for (let i = 0; i < 4; i++) {
-      const t = (i - 1.5) * 0.16; const ang = Math.atan2(oy, ox) + Math.PI / 2 + t * 1.1;
-      const q = [hx0 + Math.cos(ang) * R * 0.15 * (i - 1.5) * 0.7, hy0 + Math.sin(ang) * R * 0.15 * (i - 1.5) * 0.7];
-      dab(S, q[0], q[1], ang + 0.15, Rs * (0.1 + 0.04 * (1 - Math.abs(i - 1.5) / 1.5)), Rs * 0.04, P[7], { alpha: 0.95 * ha, dry: 0.4 });
+      const u = (i - 1.5) / 1.5;
+      dab(S, hx0 + Math.cos(ta) * R * 0.09 * u, hy0 + Math.sin(ta) * R * 0.09 * u + Math.abs(u) * R * 0.02, ta + 0.2 + u * 0.25, Rs * (0.07 + 0.04 * (1 - Math.abs(u))), Rs * 0.036, P[7], { alpha: 0.95 * ha, dry: 0.4 });
     }
-    dab(S, hx0 - R * 0.01, hy0 - R * 0.02, Math.atan2(oy, ox) + Math.PI / 2 + 0.1, Rs * 0.07, Rs * 0.03, P[8], { alpha: ha });
-    // alt kenarda ince soğuk yansıma çizgisi
-    const q = []; for (let j = 0; j <= 10; j++) { const a = 0.15 + j * 0.11; q.push([cx + Math.cos(a) * R * 0.9, cy + Math.sin(a) * R * 0.86]); }
-    line(S, q, clamp(Rs * 0.016, 1.4, 3), mix(P[4], '#9A5AA8', 0.45), { taper: true });
+    dab(S, hx0 - R * 0.015, hy0 - R * 0.01, ta + 0.25, Rs * 0.06, Rs * 0.026, P[8], { alpha: ha });
   }
-  // ---- taç (kaliks): yerel çerçevede (taç ekseni -y), sonra döndürülür
   crownOn(S, tipX, tipY, R, ca, P, wi, rr);
   return body;
 }
+// taç (kaliks): kısa huni boyun, ağız çevresinde 6 etli, düzensiz çanak yaprak; içte koyu çukur ve kuru ercikler
 function crownOn(S, tx, ty, R, ca, P, wi, rr) {
-  const { poly, bboxOf, layer, fill, dab, line, withClip } = YIY;
+  const { layer, fill, line } = YIY;
   const k = S.k; const Rs = R / k;
   const rot = ca + Math.PI / 2; const c = Math.cos(rot), s = Math.sin(rot);
   const T = ([u, v]) => [tx + u * c - v * s, ty + u * s + v * c];
   const TP = (pts) => pts.map(T);
-  const sc = R / 200 * (1 - wi * 0.12);
-  const tubeH = 30 * sc, rw = 30 * sc, rry = 9.5 * sc; // boyun yüksekliği, ağız yarıçapı, ağız elipsi
-  const cb = mix(P[3], '#5C2A1E', 0.28 + wi * 0.3); // taç gövde rengi (biraz kurumsu)
-  const CP = [shade(cb, -0.2, 1.05), shade(cb, -0.1), cb, shade(cb, 0.08, 0.95, 4), shade(cb, 0.17, 0.85, 8)];
-  const tipC = mix(cb, '#4A2416', 0.5);
-  // boyun (kısa, hafif bel veren tüp)
-  const neck = TP([[-rw * 1.18, 14 * sc], [-rw * 1.02, -tubeH * 0.4], [-rw * 0.98, -tubeH], [rw * 0.98, -tubeH], [rw * 1.04, -tubeH * 0.4], [rw * 1.2, 14 * sc], [0, 22 * sc]]);
-  const neckSh = YIY.shape(neck, 0.35);
-  const lx = Math.cos(Math.atan2(YIY.LT[1], YIY.LT[0]) - rot); // ışığın yerel x bileşeni
-  layer(S, { clip: neckSh.path, bb: neckSh.bb, cols: CP.slice(1, 4), base: CP[2], shade: (x, y) => { const u = (x - tx) * c + (y - ty) * s; return clamp(0.55 - (u / rw) * 0.45 * Math.sign(-lx || 1)); }, dir: rot - Math.PI / 2, dirJit: 0.15, len: [10, 18], wid: [5, 8], cover: 2.4, rim: { w: 1.6, alpha: 0.8 } });
-  // çanak yaprakları: ağız elipsi çevresinde 6 tane, düzensiz
-  const n = 6; const sep = [];
-  const th0 = rr() * 0.5;
+  const sc = (R / 192) * 1.25 * (1 - wi * 0.1); // geometri ölçeği (sprite px)
+  const ss = clamp(Rs / 192, 0.3, 2); // darbe ölçeği (ekran px)
+  const rimY = -27 * sc, rw = 25 * sc, rry = 8.5 * sc;
+  const cb = mix(P[3], '#641A1E', 0.14 + wi * 0.36);
+  const CP = [shade(cb, -0.17, 1.05, -4), shade(cb, -0.08), cb, shade(cb, 0.08, 0.95, 5), shade(cb, 0.16, 0.85, 9)];
+  const tipC = mix(cb, '#3A1A10', 0.6);
+  const lx = Math.cos(Math.atan2(YIY.LT[1], YIY.LT[0]) - rot); const sg = lx <= 0 ? -1 : 1; // ışık hangi yandan
+  const lean = (rr() - 0.5) * 0.12; // bütün tacın hafif eğikliği
+  const LN = ([u, v]) => [u + v * -lean, v]; // eğiklik: üst kısım yana kayar
+  // gövdeye oturduğu yerde koyu gölge halkası (gövde üstünde)
+  fill(S, YIY.shape(TP(YIY.ellPts(0, 10 * sc, rw * 1.45, 9 * sc, 0, 20)), 0.5).path, P[2], { alpha: 0.8, height: false });
+  // boyun: huni (dipte geniş yumuşak omuz, belde ince, ağızda açılan)
+  const neckL = [[-34, 18], [-27, 8], [-19, -6], [-19, -16], [-24, -27]].map(([u, v]) => LN([u * sc, v * sc]));
+  const neckR = [[24, -27], [20, -16], [20, -6], [28, 8], [35, 18]].map(([u, v]) => LN([u * sc, v * sc]));
+  const neckPts = TP([...YIY.crPts(neckL, 2), ...YIY.crPts([[-24 * sc, rimY], [0, rimY - rry * 0.2], [24 * sc, rimY]].map(LN), 3).slice(1, -1), ...YIY.crPts(neckR, 2), [0, 24 * sc]]);
+  const neck = YIY.polyShape(neckPts);
+  layer(S, { clip: neck.path, bb: neck.bb, cols: CP.slice(1, 5), base: CP[2], shade: (x, y) => { const u = (x - tx) * c + (y - ty) * s; return clamp(0.48 + (u / (rw * 1.1)) * 0.55 * sg); }, dir: rot - Math.PI / 2, dirJit: 0.12, len: [8 * ss, 15 * ss], wid: [4.5 * ss, 7 * ss], cover: 1.6, noise: 0.04 });
+  // çanak yaprakları
+  const n = 6; const sep = []; const th0 = rr() * 1.0;
   for (let i = 0; i < n; i++) {
     const th = th0 + (i / n) * Math.PI * 2 + (rr() - 0.5) * 0.35;
-    const bx = Math.cos(th) * rw * 0.95, by = -tubeH + Math.sin(th) * rry;
-    const front = Math.sin(th) > -0.05;
-    let len = (front ? 34 : 26) * sc * (0.78 + rr() * 0.5) * (1 - wi * 0.25);
-    const lean = Math.cos(th) * (0.55 + rr() * 0.3) + (rr() - 0.5) * 0.25 + (wi > 0 ? (rr() - 0.5) * 0.8 * wi : 0);
-    const curl = (0.25 + rr() * 0.45) * Math.sign(Math.cos(th) || 1) * (1 + wi * 0.8);
-    const bw = (2 * Math.PI * rw / n) * 0.55 * (0.85 + rr() * 0.3);
-    sep.push({ th, bx, by, front, len, lean, curl, bw, broken: wi > 0.3 && rr() < 0.3 });
+    const cs = Math.cos(th), sn = Math.sin(th);
+    const base = LN([cs * rw * 0.96, rimY + sn * rry]);
+    const L0 = (22 + rr() * 11) * sc * (1 - wi * 0.25) * (sn > 0 ? 1 : 0.9);
+    const out = (0.55 + rr() * 0.35); const curl = (0.25 + rr() * 0.5) * (1 + wi);
+    const broken = wi > 0.3 && rr() < 0.35;
+    sep.push({ th, cs, sn, base, L0, out, curl, broken, hw: (10.5 + rr() * 3.5) * sc });
   }
   const sepal = (q) => {
-    // taban (bx,by) genişliği bw, uç yönü: yukarı + dışa (lean), kıvrık uç
-    const a = -Math.PI / 2 + q.lean; const L2 = q.len * (q.broken ? 0.6 : 1);
-    const tip = [q.bx + Math.cos(a) * L2 + Math.cos(a + q.curl) * L2 * 0.25, q.by + Math.sin(a) * L2 + Math.sin(a + q.curl) * L2 * 0.25];
-    const mid = [q.bx + Math.cos(a) * L2 * 0.55, q.by + Math.sin(a) * L2 * 0.55];
-    const px = -Math.sin(a), py = Math.cos(a);
-    const w = q.bw;
-    const ptsL = [[q.bx - px * w * 0.55, q.by - py * w * 0.55 + 3 * sc], [mid[0] - px * w * 0.3, mid[1] - py * w * 0.3], tip];
-    const ptsR = [tip, [mid[0] + px * w * 0.3, mid[1] + py * w * 0.3], [q.bx + px * w * 0.55, q.by + py * w * 0.55 + 3 * sc]];
-    const pl = TP([...YIY.crPts(ptsL, 3), ...YIY.crPts(ptsR, 3).slice(1), [q.bx, q.by + 6 * sc]]);
-    const sh = YIY.polyShape(pl);
-    // ışığa bakan yarı açık
-    const half = TP([[q.bx, q.by + 6 * sc], [q.bx - px * w * 0.6, q.by - py * w * 0.6], ...YIY.crPts([[mid[0] - px * w * 0.32, mid[1] - py * w * 0.32], tip], 3), [mid[0], mid[1]]]);
-    const leftLit = (-px) * lx + 0 > -0.05 ? true : (-px * lx) > 0;
-    const inner = !q.front; // arka yaprakların iç yüzü görünür: daha koyu
+    const L2 = q.L0 * (q.broken ? 0.55 : 1);
+    // 3B yön: dışa (cs, sn·ezik) + yukarı; üst yarıda dışa kıvrılır
+    const dx = q.cs * q.out, dy = -1 + q.sn * 0.25 * q.out; const dl = Math.hypot(dx, dy);
+    const ux = dx / dl, uy = dy / dl; const px = -uy, py = ux; // yan yön
+    const mid = [q.base[0] + ux * L2 * 0.5, q.base[1] + uy * L2 * 0.5];
+    const ca2 = Math.atan2(uy, ux) + q.curl * Math.sign(q.cs || 0.01);
+    const tip = [mid[0] + Math.cos(ca2) * L2 * 0.55, mid[1] + Math.sin(ca2) * L2 * 0.55];
+    const w = q.hw * (0.75 + 0.25 * Math.abs(q.cs)); // önden bakılanlar daha dar görünür
+    const b0 = [q.base[0] - px * w, q.base[1] - py * w + 3 * sc], b1 = [q.base[0] + px * w, q.base[1] + py * w + 3 * sc];
+    const m0 = [mid[0] - px * w * 0.62, mid[1] - py * w * 0.62], m1 = [mid[0] + px * w * 0.62, mid[1] + py * w * 0.62];
+    const loc = [...YIY.crPts([b0, m0, tip], 2.5), ...YIY.crPts([tip, m1, b1], 2.5).slice(1), [q.base[0], q.base[1] + 7 * sc]];
+    const sh = YIY.polyShape(TP(loc));
+    const inner = q.sn < 0; // arkadakilerin iç yüzü görünür
+    const litSide = sg; // yerel ışık yönü
+    const sideLit = (px * litSide > 0) ? 1 : -1; // hangi kenar (b1:+1 / b0:-1) ışığa bakar
+    const mS = sideLit > 0 ? m1 : m0, bS = sideLit > 0 ? b1 : b0;
+    const half = YIY.poly(TP([[q.base[0], q.base[1] + 7 * sc], bS, ...YIY.crPts([bS, mS, tip], 2.5), mid]));
     const base = inner ? CP[1] : CP[2];
-    layer(S, { clip: sh.path, bb: sh.bb, cols: [shade(base, -0.03), base], base, dir: rot + a, dirJit: 0.12, len: [8, 15], wid: [4, 6.5], cover: 2.2, rim: { w: 1.3, alpha: 0.85 } });
-    layer(S, { clip: [sh.path, YIY.poly(half)], bb: sh.bb, cols: [inner ? CP[2] : CP[3], inner ? CP[3] : CP[4]], base: inner ? CP[2] : CP[3], dir: rot + a, dirJit: 0.12, len: [8, 14], wid: [4, 6], cover: 2.2 });
-    // kuru uç
-    const tp = T(tip); const tq = T([lerp(tip[0], mid[0], 0.35), lerp(tip[1], mid[1], 0.35)]);
-    line(S, [tq, tp], 3.4 * sc / (k / k), tipC, { w1: 1, taper: false });
+    layer(S, { clip: sh.path, bb: sh.bb, cols: [shade(base, -0.03), base], base, dir: rot + Math.atan2(uy, ux), dirJit: 0.1, len: [8 * ss, 14 * ss], wid: [4.5 * ss, 7 * ss], cover: 1.5, rim: { w: 1.25 * ss, alpha: 0.85 } });
+    layer(S, { clip: [sh.path, half], bb: sh.bb, cols: [inner ? CP[2] : CP[3], inner ? CP[3] : CP[4]], base: inner ? CP[2] : CP[3], dir: rot + Math.atan2(uy, ux), dirJit: 0.1, len: [8 * ss, 13 * ss], wid: [4.5 * ss, 6.5 * ss], cover: 1.5 });
+    // kurumuş, koyu uç
+    line(S, TP(YIY.crPts([[lerp(mid[0], tip[0], 0.5), lerp(mid[1], tip[1], 0.5)], tip], 2)), 3.4 * ss, tipC, { w1: 1.1 * ss, height: false });
   };
-  // arka yapraklar
-  for (const q of sep.filter((q) => !q.front)) sepal(q);
-  // ağız içi: koyu çukur + kurumuş ercik telleri
-  const mouth = YIY.shape(TP(YIY.ellPts(0, -tubeH, rw * 0.92, rry * 0.95, 0, 20)), 0.5);
-  fill(S, mouth.path, mix('#24060F', P[0], 0.3), { h: 112 });
-  for (let i = 0; i < 9; i++) {
-    const u = (rr() - 0.5) * rw * 1.3, v = -tubeH + (rr() - 0.4) * rry * 0.9; const q0 = T([u, v]), q1 = T([u + (rr() - 0.5) * 6 * sc, v - (6 + rr() * 8) * sc]);
-    YIY.line(S, [q0, q1], 2.2 * sc, rr() < 0.5 ? mix('#B0784A', P[3], wi * 0.5) : mix('#7A4A30', P[2], wi * 0.5), { w1: 1.2 });
+  // arka yapraklar (iç yüz), ağız, ercikler, ön yapraklar
+  const order = sep.slice().sort((a, b) => a.sn - b.sn);
+  for (const q of order.filter((q) => q.sn < 0)) sepal(q);
+  const mouth = YIY.shape(TP(YIY.ellPts(LN([0, rimY])[0], rimY, rw * 0.92, rry * 0.9, 0, 20)), 0.5);
+  fill(S, mouth.path, mix('#1E040C', P[0], 0.35), { h: 108 });
+  for (let i = 0; i < 12; i++) {
+    const u = (rr() - 0.5) * rw * 1.3, v = rimY + (rr() - 0.3) * rry * 0.7;
+    const q0 = T(LN([u, v])), q1 = T(LN([u + (rr() - 0.5) * 6 * sc, v - (4 + rr() * 8) * sc]));
+    line(S, [q0, q1], 2 * ss, rr() < 0.55 ? mix('#C89458', P[3], 0.15 + wi * 0.5) : mix('#7E4C30', P[2], wi * 0.5), { w1: 1 * ss, height: false });
   }
-  // ön yapraklar
-  for (const q of sep.filter((q) => q.front).sort((a, b) => Math.sin(a.th) - Math.sin(b.th))) sepal(q);
+  for (const q of order.filter((q) => q.sn >= 0)) sepal(q);
 }
 
 function paintPomegranate(o = {}) {
@@ -295,7 +357,7 @@ function paintPomegranate(o = {}) {
   const S = Paint.sprite(w, h, { seed: o.seed ?? 11, k });
   const cx = 250 * k, cy = 284 * k, R = 192 * k * (1 - (o.wither ?? 0) * 0.15);
   pomegranateOn(S, cx, cy + (o.wither ?? 0) * 20 * k, R, o);
-  return { canvas: S.finish({ emboss: 0.6 }), px: cx, py: cy, k };
+  return { canvas: S.finish({ emboss: 0.42 }), px: cx, py: cy, k };
 }
 defSprite('nar', () => paintPomegranate({ seed: 11 }));
 defSprite('nar-kuru', () => paintPomegranate({ wither: 1, seed: 11 }));

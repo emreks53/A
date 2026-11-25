@@ -10,55 +10,80 @@ const out = document.getElementById('out'); const ctx = out.getContext('2d');
 const T = {};
 function bake(name) { const t0 = performance.now(); const s = spr(name); if (!T[name]) { T[name] = Math.round(performance.now() - t0); console.log('bake', name, s.canvas.width + 'x' + s.canvas.height, 'k=' + s.k, T[name] + ' ms'); } return s; }
 function reset() { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = '#D8562F'; ctx.fillRect(0, 0, 1080, 1920); }
-// paralakslı kamera (sahnelerdeki camPar ile aynı; REF = 540,960)
+// paralakslı kamera (scenes/ortak.js camPar ile aynı; REF = 540,960)
 function camPar(cam, p) { return { x: 540 + (cam.x - 540) * p, y: 960 + (cam.y - 960) * p, z: Math.exp(Math.log(cam.z) * p) }; }
 function camApply(ctx, c) { ctx.translate(540, 960); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y); }
+// sahne gibi: manzarada bulut kuşağı çizilmez (kuşak yalnız yükselişte, ayrı yolda)
 function world(cam, o = {}) {
   const M = CENNET_M;
   for (const L of M.layers) {
+    if (L.name === 'bulut-kusagi' && !o.band) continue;
     const c = camPar(cam, L.parallax);
     ctx.save(); camApply(ctx, c);
-    drawSpr(ctx, bake(L.name), L.x, L.y);
+    drawSpr(ctx, bake(L.name), L.x, L.y, 1, 0, 1);
     if (L.name === 'cennet-irmak') {
-      // örnek akış darbeleri (sahnede canlandırılacak): riverPath + flowDir
-      if (o.flow !== false) {
+      if (o.flow !== false) { // örnek akış darbeleri (sahnede canlandırılır): riverPath + flowDir
         const r = rng(4); ctx.save(); ctx.clip(M.riverPath());
-        for (let i = 0; i < 160; i++) {
-          const x = 300 + r() * 560, y = 1060 + r() * 900; if (!ctx.isPointInPath(M.riverPath(), (x - c.x) * c.z + 540, (y - c.y) * c.z + 960)) continue;
-          const [dx, dy] = M.flowDir(x, y); const s = 0.6 + (y - 1050) / 800;
+        for (let i = 0; i < 170; i++) {
+          const x = 140 + r() * 760, y = 1080 + r() * 1300; const [dx, dy] = M.flowDir(x, y); const s = 0.6 + (y - 1050) / 800;
+          if (y > 1322 && y < 1448) continue;
           ctx.globalAlpha = 0.5; ctx.fillStyle = r() < 0.6 ? '#F2FFFC' : '#B5ECE5';
           ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); ctx.beginPath(); ctx.ellipse(0, 0, 18 * s, 1.6 * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
         }
         ctx.restore();
       }
-      for (const [x, y, n, s] of M.flowerSpots) drawSpr(ctx, bake(n), x, y, s);
+      if (o.flowers !== false) for (const [x, y, n, s] of M.flowerSpots) drawSpr(ctx, bake(n), x, y, s);
     }
     ctx.restore();
   }
 }
-window.show = async () => { reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx); };
-window.show2 = async () => { reset(); ctx.fillStyle = '#1C1A45'; ctx.fillRect(0, 0, 1080, 1920); world({ x: 540, y: -150, z: 1 }, { flow: false }); Post.apply(ctx); };
+// alt yazı kuşağı ölçümü (y 1330–1440): ortalama parlaklık ve çok açık piksel oranı
+function subStats(tag) {
+  const d = ctx.getImageData(0, 1330, 1080, 110).data; let s = 0, hi = 0, n = 0;
+  for (let i = 0; i < d.length; i += 16) { const L = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; s += L; if (L > 216) hi++; n++; }
+  console.log('subband', tag, 'meanL=' + (s / n).toFixed(1), 'pale>216=' + ((hi / n) * 100).toFixed(1) + '%');
+}
+// sahnedeki yükseliş (scenes/p5-ahiret.js ile aynı hesap): manzara bütün olarak aşağı iner, altında A ve ters B kuşağı
+const BANDS = { sc: 1.2, topA: 1920 - 150 }; BANDS.topB = BANDS.topA + 480 * BANDS.sc;
+const RISE = { t0: 27.38, t1: 29.6, dist: BANDS.topB + 900 * BANDS.sc };
+const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
+function sceneRise(t, helper) {
+  reset(); ctx.fillStyle = '#1C1A45'; ctx.fillRect(0, 0, 1080, 1920);
+  const off = -(RISE.dist - riseY(t));
+  ctx.save(); ctx.translate(0, off);
+  world({ x: 540, y: 960, z: 1 }, { flowers: false });
+  const b = bake('bulut-kusagi'); const sc = BANDS.sc; const bw = 1480 * sc; const L = 540 - bw / 2;
+  const p = E.io2(inv(0.86, 1, riseY(t) / RISE.dist));
+  if (helper) { CENNET_M.drawBand(ctx, L, BANDS.topA, sc, p, false); CENNET_M.drawBand(ctx, L, BANDS.topB, sc, p, true); }
+  else {
+    const at = (top, flip) => { ctx.save(); ctx.globalAlpha *= 1 - p; if (flip) { ctx.translate(0, top + 900 * sc); ctx.scale(1, -1); top = 0; } drawSpr(ctx, b, L, top, sc); ctx.restore(); };
+    at(BANDS.topA, false); at(BANDS.topB, true);
+  }
+  ctx.restore();
+  subStats('rise t=' + t + (helper ? ' (drawBand)' : ' (alpha)'));
+}
+window.show = async () => { { const t0 = performance.now(); CENNET_M.depthAt(300, 1300); console.log('grid', Math.round(performance.now() - t0) + ' ms'); } reset(); world({ x: 540, y: 960, z: 1 }); subStats('vista'); Post.apply(ctx); };
+window.show2 = async () => { sceneRise(28.75, false); Post.apply(ctx); }; // kuşağın ortası (alt yazı kuşağın gövdesinde)
 window.show3 = async () => { // köşkler ve çiçekler tek tek
   reset(); ctx.fillStyle = '#6B7091'; ctx.fillRect(0, 0, 1080, 1920);
-  drawSpr(ctx, bake('kasr-sol'), 285, 930, 0.9);
-  drawSpr(ctx, bake('kasr-sag'), 805, 880, 0.9);
-  drawSpr(ctx, bake('cennet-cicek-1'), 190, 1230, 1);
-  drawSpr(ctx, bake('cennet-cicek-2'), 540, 1230, 1);
-  drawSpr(ctx, bake('cennet-cicek-3'), 890, 1230, 1);
-  // yakın plan: sol köşkün alt katı ve terası (1.6x)
-  ctx.save(); ctx.beginPath(); ctx.rect(20, 1290, 1040, 610); ctx.clip();
-  drawSpr(ctx, bake('kasr-sol'), 540, 2010, 1.6);
+  drawSpr(ctx, bake('kasr-sol'), 300, 880, 0.95);
+  drawSpr(ctx, bake('kasr-sag'), 800, 640, 0.95);
+  drawSpr(ctx, bake('cennet-cicek-1'), 700, 900, 0.8);
+  drawSpr(ctx, bake('cennet-cicek-2'), 860, 900, 0.8);
+  drawSpr(ctx, bake('cennet-cicek-3'), 1000, 900, 0.8);
+  // yakın plan: sol köşkün revağı, havuz ve sedirler (2.1x — sahnedeki yakınlaşma hedefi)
+  ctx.save(); ctx.beginPath(); ctx.rect(20, 960, 1040, 940); ctx.clip();
+  drawSpr(ctx, bake('kasr-sol'), 540, 1700, 2.1);
   ctx.restore();
   Post.apply(ctx);
 };
-window.show4 = async () => { // ağaçlar tek başına + ırmak (ölçek 0.5)
-  reset(); ctx.fillStyle = '#6B7091'; ctx.fillRect(0, 0, 1080, 1920);
-  ctx.save(); ctx.scale(0.5, 0.5); ctx.translate(540, 1800);
-  drawSpr(ctx, bake('cennet-irmak'), -200, 1000 - 1800 + 1700);
-  ctx.restore();
-  drawSpr(ctx, bake('cennet-agac-sol'), 140, 1900, 0.45);
-  drawSpr(ctx, bake('cennet-agac-sag'), 940, 1900, 0.45);
-  Post.apply(ctx);
-};
+window.show4 = async () => { reset(); world({ x: 600, y: 760, z: 1.22 }); Post.apply(ctx); };
+window.show5 = async () => { reset(); world({ x: 548, y: 990, z: 1.085 }); Post.apply(ctx); }; // vistaCam ara durak
+window.show6 = async () => { reset(); world({ x: 440, y: 1070, z: 1.6 }); Post.apply(ctx); };
+window.show7 = async () => { reset(); world({ x: 330, y: 1150, z: 2.3 }); Post.apply(ctx); }; // vistaCam yakınlaşma hedefi
+window.show8 = async () => { sceneRise(29.05, true); Post.apply(ctx); }; // varış: kuşak drawBand ile dağılır
+window.show9 = async () => { sceneRise(28.45, false); Post.apply(ctx); };
+window.show10 = async () => { sceneRise(29.05, false); Post.apply(ctx); };
+window.show11 = async () => { reset(); ctx.fillStyle = '#1C1A45'; ctx.fillRect(0, 0, 1080, 1920); const b = bake('bulut-kusagi'); drawSpr(ctx, b, 0, 40, 0.72); ctx.save(); ctx.translate(0, 1300); ctx.scale(1, -1); drawSpr(ctx, b, 0, -560, 0.72); ctx.restore(); Post.apply(ctx); }; // kuşak tek başına (düz ve ters)
 window.READY = true;
 </script></body></html>

@@ -13,19 +13,22 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
   const tVista = 29.5, tToFeast = 32.55, tFeast = 33.05;
 
   function vistaCam(t) {
+    // ırmak cümlesinde kadraj suyu izleyerek hafifçe aşağı süzülür; "kasırların altında"da köşklere yönelir,
+    // sonra sol köşkün açık revağına dalınır (ziyafet o revağın altında açılır).
     const c = camAt([
       [tVista, { x: 540, y: 960, z: 1.0 }],
-      [tToFeast, { x: 548, y: 990, z: 1.085 }, E.ioSine],
-      [tFeast + 0.25, { x: 330, y: 1150, z: 2.3 }, E.in3],
+      [31.35, { x: 566, y: 1075, z: 1.07 }, E.ioSine],
+      [32.45, { x: 452, y: 990, z: 1.22 }, E.ioSine],
+      [tFeast + 0.17, { x: 385, y: 1042, z: 4.4 }, E.in2],
     ], t);
     const b = breathe(t, 0.5); c.x += b.x; c.y += b.y; c.r = b.r;
     return c;
   }
   function feastCam(t) {
     const c = camAt([
-      [tFeast - 0.1, { x: 540, y: 1000, z: 1.32 }],
-      [tFeast + 0.75, { x: 540, y: 980, z: 1.0 }, E.out3],
-      [T1, { x: 548, y: 990, z: 1.065 }, E.ioSine],
+      [tFeast - 0.03, { x: 540, y: 1000, z: 0.95 }],
+      [tFeast + 0.9, { x: 540, y: 988, z: 1.07 }, E.out3],
+      [T1, { x: 548, y: 994, z: 1.12 }, E.ioSine],
     ], t);
     const b = breathe(t, 0.45); c.x += b.x; c.y += b.y; c.r = b.r; return c;
   }
@@ -43,25 +46,21 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
         if (L.name === 'cennet-irmak' && M.riverPath) {
           const fl = M.flowDir || (() => [0, 1]);
           waterShimmer(ctx, M.riverPath(), t, { n: 150, bbox: [-100, 1000, 1180, 2000], speed: 26, flow: fl, len: 28, wid: 3.5, alpha: 0.8, c1: '#FFFFFF', c2: '#C9F4F2', seed: 51 });
+          for (const [i, [fx, fy, fn, fs]] of (M.flowerSpots || []).entries()) if (hasSpr(fn)) drawSpr(ctx, spr(fn), fx, fy, fs, Math.sin(t * 1.1 + i * 1.7) * 0.03);
         }
       });
     }
   }
   // yükseliş sırasında geçilen bulut kuşağı (dünyanın altında, yukarıdan iner)
   function drawCloudBand(ctx, t) {
-    if (!hasSpr('bulut-kusagi')) return;
+    const M = window.CENNET_M; if (!hasSpr('bulut-kusagi')) return;
     const b = spr('bulut-kusagi'); const k = b.k || 1, sc = BAND.sc;
-    const cw = b.canvas.width / k, ch = b.canvas.height / k; const bw = cw * sc, bh = ch * sc;
-    const px = (b.px ?? cw * k / 2) / k, py = (b.py ?? ch * k / 2) / k;
-    const L = W / 2 - bw / 2;
-    const a = 1 - E.io2(inv(0.86, 1, riseY(t) / RISE.dist)); // varışta kuşak çözülür
-    const at = (top, flip) => {
-      ctx.save(); ctx.globalAlpha *= a;
-      if (flip) { ctx.translate(0, top + bh); ctx.scale(1, -1); top = 0; }
-      drawSpr(ctx, b, L + px * sc, top + py * sc, sc); ctx.restore();
-    };
-    at(BAND.topA, false);  // kabarık üst kenar manzaraya bakar
-    at(BAND.topB, true);   // ters kat: kabarık kenarı aşağıya, önceki sahneye bakar
+    const bw = (b.canvas.width / k) * sc; const L = W / 2 - bw / 2;
+    // varışta kuşak alfa ile değil, kümeler kenarlara çekilerek çözülür
+    const p = E.io2(inv(0.86, 1, riseY(t) / RISE.dist));
+    if (M && M.drawBand) { M.drawBand(ctx, L, BAND.topA, sc, p, false); M.drawBand(ctx, L, BAND.topB, sc, p, true); return; }
+    const at = (top, flip) => { ctx.save(); ctx.globalAlpha *= 1 - p; if (flip) { ctx.translate(0, top + b.canvas.height / k * sc); ctx.scale(1, -1); top = 0; } drawSpr(ctx, b, L, top, sc); ctx.restore(); };
+    at(BAND.topA, false); at(BAND.topB, true);
   }
 
   function drawFeast(ctx, t) {
@@ -84,14 +83,20 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
         }
       });
     }
-    // kadehlerde ara sıra yumuşak inci parıltısı (patlama efekti değil)
-    if (window.UI && Z.cups) Z.cups.forEach(([x, y], i) => { const per = 2.4, ph = (t - tFeast + i * 0.8) % per; if (ph < 0.6) { const [sx, sy] = w2s(c, x, y - 40); UI.sparkle(ctx, sx + 18, sy, 18, ph, '#FFFFFF'); } });
+    // kadehlerde yavaş, yumuşak inci parlaklığı (patlama/ışın yok)
+    if (Z.cups) Z.cups.forEach(([x, y], i) => {
+      const a = 0.16 * (0.5 + 0.5 * Math.sin((t - tFeast) * 1.6 + i * 2.1)) * E.io2(inv(tFeast, tFeast + 0.8, t));
+      if (a < 0.01) return; const [sx, sy] = w2s(c, x, y - 44);
+      ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = a;
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 34 * c.z); g.addColorStop(0, '#FFF8EE'); g.addColorStop(1, 'rgba(255,248,238,0)');
+      ctx.fillStyle = g; ctx.fillRect(sx - 40 * c.z, sy - 40 * c.z, 80 * c.z, 80 * c.z); ctx.restore();
+    });
   }
 
   Engine.add({
     name: 'p5', t0: T0, t1: T1, z: 5,
     draw(ctx, t) {
-      const feastA = E.io2(inv(tFeast - 0.15, tFeast + 0.2, t));
+      const feastA = E.io2(inv(tFeast - 0.03, tFeast + 0.15, t));
       if (feastA < 1) {
         // yükseliş: bütün manzara (katmanları bozulmadan) yukarıdan iner; altında bulut kuşağı
         const off = -(RISE.dist - riseY(t));
