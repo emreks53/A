@@ -156,7 +156,7 @@
     name: 'p1', t0: T0, t1: T1, z: 1,
     draw(ctx, t) {
       const c = cam(t);
-      const reveal = inv(0, 0.95, t);
+      const reveal = inv(-0.22, 0.8, t); // ilk karede boya darbeleri zaten yolda (düz turuncu kare yok)
       if (reveal < 1) { ctx.save(); ctx.clip(BrushWipe.mask(reveal * 1.0, 21)); }
       drawWorld(ctx, t, c, 0, { 'tepe-orta': (x) => drawHaze(x, t, c) });
       // çiçek yaprakları süzülür

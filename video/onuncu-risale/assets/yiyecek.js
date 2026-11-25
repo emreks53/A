@@ -13,7 +13,7 @@
 //   sofra: { rx, ry, clothRx, clothRy, hang } üst yüz ve örtü elipsleri, örtü eteği sarkması; PAL: paletler }
 // Işıklı sprite'lar döndürülmez (en çok ±0.15 rad); sofrada yatan salkım için 'uzum-yatik' / 'uzum-yatik-kuru' kullanın.
 'use strict';
-const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0, 192], 'nar-kuru': [0, 170] }, size: { nar: [399, 448], 'nar-kuru': [339, 336] } };
+const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0, 192], 'nar-kuru': [0, 192] }, size: { nar: [399, 448], 'nar-kuru': [378, 407] } };
 
 (() => {
   const { TAU, LT, poly, bboxOf, circ, ellPts, shape, polyShape, ellShape, outside, crPts, withClip, fill, dab, field, layer, line, crease, softLine, leaf, moved, crescent, toneBall, gridEval, gridMask, masked, stepBody, L3 } = YIY;
@@ -300,7 +300,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     return done(S, cx, cy0 + (DOWN0 - RY0) * 0.5 + 6 * K, 0.4);
   }
   reg('nar-acik', () => paintNarAcik(0), { size: [465, 327], base: [0, 125] });
-  reg('nar-acik-kuru', () => paintNarAcik(1), { size: [443, 319], base: [0, 125] });
+  reg('nar-acik-kuru', () => paintNarAcik(1), { size: [443, 312], base: [0, 125] });
 
   // ================================================================ ÜZÜM
   // tek tane: az sayıda, büyük, keskin ton basamağı (taban, gölge hilali, ışık düzlemi, vurgu) — her basamak görünür
@@ -472,7 +472,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     return done(S, cx, 250 * K, 0.4);
   }
   reg('uzum', () => paintUzum('mor'), { size: [306, 423], base: [0, 183] });
-  reg('uzum-kuru', () => paintUzum('kuru'), { size: [277, 372], base: [0, 183] });
+  reg('uzum-kuru', () => paintUzum('kuru'), { size: [297, 413], base: [0, 183] });
   reg('uzum-yesil', () => paintUzum('yesil'), { size: [297, 408], base: [0, 174] });
 
   // ================================================================ ÜZÜM YATIK (sofrada yatan salkım; tabla düzleminde kısalmış, ışık sol üstten)
@@ -536,7 +536,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     return done(S, cx, cy, 0.4);
   }
   reg('uzum-yatik', () => paintUzumYatik(false), { size: [423, 184], base: [0, 34] });
-  reg('uzum-yatik-kuru', () => paintUzumYatik(true), { size: [410, 161], base: [0, 34] });
+  reg('uzum-yatik-kuru', () => paintUzumYatik(true), { size: [423, 178], base: [0, 34] });
 
   // ---- serbest biçimli gövde için basamaklı tonlar (gövdenin kaydırılmış/küçültülmüş kopyalarıyla katlar)
   // o: c=[cx,cy] ölçek merkezi, size (sprite px, tipik yarıçap), P (8-9 renk), dir, sL, sW
@@ -1496,7 +1496,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
   golge('bal', 106, 26, 24, 134, { core: 0.7 });
   golge('hurma', 138, 32, 14, 52);
   golge('nar', 176, 44, 34, 168);
-  golge('nar-kuru', 156, 40, 30, 152);
+  golge('nar-kuru', 168, 42, 32, 168); // solmuş nar: tazeyle aynı alt nokta, %5 dar
   golge('elma', 140, 36, 26, 124);
   golge('incir', 172, 38, 22, 120);
   golge('sut', 98, 24, 22, 180);

@@ -91,6 +91,31 @@ const BrushWipe = (() => {
     }
     return (cache[seed] = list);
   }
+  // boyalı fırça darbesi maskesi: kenarlar kıl izleriyle hafif tırtıllı, öndeki uç kuru fırça gibi parmak parmak
+  function wipeShape(len, wid, seed) {
+    const r = rng(seed); const p = new Path2D(); const l = len / 2, w = wid / 2;
+    const ph1 = r() * 10, ph2 = r() * 10, bend = (r() - 0.5) * wid * 0.25;
+    const edge = (x, side, ph) => side * w * (0.94 + 0.05 * Math.sin(x * 0.021 + ph) + 0.035 * Math.sin(x * 0.083 + ph * 2.3)) + bend * (1 - (x / Math.max(l, 1)) ** 2);
+    const step = 26;
+    const tipLen = Math.min(wid * 1.1, len * 0.45);
+    const xf = l - tipLen * 0.35; // parmakların başladığı yer
+    p.moveTo(-l, edge(-l, -1, ph1));
+    for (let x = -l + step; x < xf; x += step) p.lineTo(x, edge(x, -1, ph1));
+    // ön uç: kuru fırça parmakları (üstten alta)
+    const n = 6 + Math.floor(r() * 4);
+    for (let i = 0; i < n; i++) {
+      const y0 = lerp(-w, w, i / n), y1 = lerp(-w, w, (i + 0.5) / n), y2 = lerp(-w, w, (i + 1) / n);
+      const reach = xf + tipLen * (0.25 + 0.75 * r()) * (1 - 0.5 * Math.abs(y1 / w));
+      p.lineTo(xf + (r() - 0.5) * 8, y0 * 0.98);
+      p.lineTo(reach, y1);
+      p.lineTo(xf + (r() - 0.5) * 8, y2 * 0.98);
+    }
+    for (let x = xf; x > -l; x -= step) p.lineTo(x, edge(x, 1, ph2));
+    // arka uç: yuvarlak basış
+    p.bezierCurveTo(-l - w * 0.45, w * 0.6, -l - w * 0.45, -w * 0.6, -l, edge(-l, -1, ph1));
+    p.closePath();
+    return p;
+  }
   // maske yolu: geçişin ilerleyişine göre darbelerin kapladığı alan
   function mask(p, seed = 5) {
     const path = new Path2D(); const L = strokes(seed);
@@ -98,7 +123,7 @@ const BrushWipe = (() => {
       const q = E.io2(clamp((p * 1.12 - s.delay) / 0.5));
       if (q <= 0) continue;
       const len = (W + 400) * q; const x0 = s.d > 0 ? -200 : W + 200;
-      const sh = Paint.strokeShape(len, s.w, rng(Math.floor(s.y)));
+      const sh = wipeShape(len, s.w, Math.floor(s.y) * 7 + 3);
       const m = new DOMMatrix().translate(x0 + (s.d * len) / 2, s.y).rotate((s.ang * 180) / Math.PI);
       path.addPath(sh, m);
     }

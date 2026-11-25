@@ -11,6 +11,6 @@ ffmpeg -y -v error -framerate 30 -i "$frames/f%05d.png" -i "$audio" \
 ffmpeg -y -v error -i "$out/$name-1080x1920.mp4" -vf "scale=720:1280:flags=lanczos,format=yuv420p" \
   -c:v libx264 -preset slow -profile:v high -crf 23 -maxrate 2500k -bufsize 5000k -g 48 \
   -c:a aac -b:a 128k -movflags +faststart "$out/$name.mp4"
-ffmpeg -y -v error -ss 0.5 -i "$out/$name.mp4" -frames:v 1 -q:v 4 "$out/$name-kapak.jpg"
+ffmpeg -y -v error -ss 1.0 -i "$out/$name.mp4" -frames:v 1 -q:v 4 "$out/$name-kapak.jpg"
 ffmpeg -y -v error -ss 6 -i "$out/$name.mp4" -frames:v 1 -q:v 3 "$out/$name-onizleme.jpg"
 ls -la "$out"

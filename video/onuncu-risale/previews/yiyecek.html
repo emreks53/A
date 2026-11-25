@@ -74,6 +74,44 @@ window.show6 = async () => {
   ctx.restore();
   Post.apply(ctx);
 };
+// fânilik karşılaştırması: taze | solmuş yan yana (aynı pivot noktası işaretli), üst yarı düz ışık, alt yarı p2'deki
+// akşam çarpma tonu (multiply, 0.55) altında — solmuş eşler kahve/siyah değil, tozlu ve sönük okunmalı
+window.show7 = async () => {
+  reset(); ctx.fillStyle = '#E9E2EC'; ctx.fillRect(0, 0, 1080, 1920);
+  const pair = (y0) => {
+    drawSpr(ctx, bake('nar-acik'), 280, y0 + 130, 1.05); drawSpr(ctx, bake('nar-acik-kuru'), 800, y0 + 130, 1.05);
+    drawSpr(ctx, bake('uzum-yatik'), 280, y0 + 360, 1.05); drawSpr(ctx, bake('uzum-yatik-kuru'), 800, y0 + 360, 1.05);
+    for (const x of [280, 800]) { ctx.fillStyle = '#1E2A5C'; ctx.fillRect(x - 6, y0 + 129, 12, 2); ctx.fillRect(x - 1, y0 + 124, 2, 12); } // pivot
+  };
+  pair(0);
+  drawSpr(ctx, bake('uzum'), 150, 760, 0.62); drawSpr(ctx, bake('uzum-kuru'), 370, 760, 0.62); drawSpr(ctx, bake('nar'), 690, 750, 0.5); drawSpr(ctx, bake('nar-kuru'), 920, 750, 0.5);
+  pair(960);
+  drawSpr(ctx, bake('uzum'), 150, 1720, 0.62); drawSpr(ctx, bake('uzum-kuru'), 370, 1720, 0.62); drawSpr(ctx, bake('nar'), 690, 1710, 0.5); drawSpr(ctx, bake('nar-kuru'), 920, 1710, 0.5);
+  ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.55;
+  const g = ctx.createLinearGradient(0, 960, 0, 1920); g.addColorStop(0, '#9A6A9A'); g.addColorStop(0.6, '#C98A6A'); g.addColorStop(1, '#7A5A7A');
+  ctx.fillStyle = g; ctx.fillRect(0, 960, 1080, 960); ctx.restore();
+  label('taze', 240, 40); label('solmuş', 740, 40); label('akşam tonu altında', 400, 1000);
+  Post.apply(ctx);
+};
+// solmuş eşlerin değer denetimi: opak piksellerde çok koyu (OKLab L < 0.22) ve koyu-kahve (L < 0.42, ton 35°–95°, renkli)
+// oranı; taze eşle karşılaştırma için ortalama L ve renklilik. Konsola 'WITHER {...}'
+window.witherCheck = async () => {
+  const out = {};
+  for (const n of ['nar-acik', 'nar-acik-kuru', 'uzum-yatik', 'uzum-yatik-kuru', 'uzum', 'uzum-kuru', 'nar', 'nar-kuru']) {
+    const c = bake(n).canvas; const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let cnt = 0, dark = 0, brown = 0, sL = 0, sC = 0; const Ls = [];
+    for (let i = 0; i < d.length; i += 16) {
+      if (d[i + 3] < 250) continue;
+      const [L, a, b] = rgb2oklab(d[i], d[i + 1], d[i + 2]); const C = Math.hypot(a, b); const h = (Math.atan2(b, a) * 180) / Math.PI;
+      cnt++; sL += L; sC += C; Ls.push(L);
+      if (L < 0.22) dark++;
+      if (L < 0.42 && C > 0.025 && h > 35 && h < 95) brown++;
+    }
+    Ls.sort((x, y) => x - y);
+    out[n] = { meanL: +(sL / cnt).toFixed(3), meanC: +(sC / cnt).toFixed(3), p2L: +Ls[Math.floor(Ls.length * 0.02)].toFixed(3), darkPct: +((dark / cnt) * 100).toFixed(2), brownPct: +((brown / cnt) * 100).toFixed(2) };
+  }
+  console.log('WITHER ' + JSON.stringify(out));
+};
 // ölçüm: her sprite'ın görünür (alfa) sınır kutusu, pivota göre ekran px (ölçek 1)
 window.measure = async () => {
   const out = {};

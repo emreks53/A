@@ -6,6 +6,8 @@
 <script src="../lib/post.js"></script>
 <script src="../assets/fruits.js"></script>
 <script src="../assets/adam.js"></script>
+<script src="../assets/yiyecek.js"></script>
+<script>const hasSpr = (n) => !!SPRITE_DEFS[n];</script>
 <script>
 const out = document.getElementById('out'); const ctx = out.getContext('2d');
 function timed(name) { const t0 = performance.now(); const s = spr(name); console.log('bake', name, s.canvas.width + 'x' + s.canvas.height, 'k=' + (s.k || 1), Math.round(performance.now() - t0) + 'ms'); return s; }
@@ -135,6 +137,37 @@ window.show8 = async () => {
   const A = ADAM.yakin, ox = 300 - A.neck[0], oy = 1112 - A.neck[1];
   drawPart(ctx, spr('adam-yakin-bas'), ox, oy, 1, 0); drawPart(ctx, spr('adam-yakin-govde'), ox, oy, 1); drawPart(ctx, spr('adam-yakin-kol'), ox, oy, 1, 0);
   table(1560);
+  Post.apply(ctx);
+};
+// ---- hata ayıklama görünümleri (geçici)
+window.dbgYkParts = async () => {
+  bg1();
+  const s = 0.6;
+  drawPart(ctx, spr('adam-yakin-govde'), 0, 0, s);
+  drawPart(ctx, spr('adam-yakin-kol'), 0, 0, s);
+  drawPart(ctx, spr('adam-yakin-govde'), 360, 900, s);
+  drawPart(ctx, spr('adam-yakin-kol'), 360 + 280, 0, s);
+  Post.apply(ctx);
+};
+function sceneYk(ny, armRot, z = 1, cy = 960, cx = 540, bas = 'adam-yakin-kol') {
+  if (!BG2) BG2 = paintedBg('#D9853F', '#B8562F', 8);
+  ctx.drawImage(BG2, 0, 0);
+  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-cx, -cy);
+  const A = ADAM.yakin, ox = 300 - A.neck[0], oy = ny - A.neck[1];
+  drawPart(ctx, spr('adam-yakin-govde'), ox, oy, 1); drawPart(ctx, spr('adam-yakin-bas'), ox, oy, 1, 0); drawPart(ctx, spr(bas), ox, oy, 1, armRot);
+  if (hasSpr('sofra')) drawSpr(ctx, spr('sofra'), 600, 1712, 1);
+  ctx.restore();
+}
+window.dbgT0 = async () => { sceneYk(1112, 0); Post.apply(ctx); };
+window.dbgT1 = async () => { sceneYk(window.NY || 966, 0); Post.apply(ctx); };
+window.dbgT2 = async () => { sceneYk(window.NY || 966, 0.3); Post.apply(ctx); };
+window.dbgT3 = async () => { sceneYk(window.NY || 966, 0.4); Post.apply(ctx); };
+window.dbgT4 = async () => { sceneYk(window.NY || 966, 0.3, 1.12, 1240, 640); Post.apply(ctx); };
+window.dbgSit = async () => {
+  bg1();
+  const B = ADAM.oturan, sc = 4.2;
+  ctx.fillStyle = '#6FA84A';
+  drawPart(ctx, spr('adam-oturan-govde'), 540 - B.knee[0] * sc, 760 - B.knee[1] * sc, sc);
   Post.apply(ctx);
 };
 window.meta = async () => {

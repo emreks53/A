@@ -267,7 +267,7 @@ function narBodyPts(cx, cy, R, ca, ph, wi) {
     const rel = Math.cos(a - ca);
     let m = 1 + 0.02 * Math.cos(5 * (a - ca) + ph) - 0.05 * Math.pow(Math.max(0, rel), 3) + 0.015 * Math.sin(a * 2 + ph);
     if (wi > 0) m *= 1 + wi * (0.012 * Math.sin(a * 3 + ph * 2) + 0.009 * Math.sin(a * 7 + ph) - 0.03 * Math.pow(Math.max(0, rel), 2) - 0.012 * Math.pow(Math.max(0, -rel), 3));
-    pts.push([cx + Math.cos(a) * R * m * 1.02, cy + Math.sin(a) * R * m * (0.97 - wi * 0.02)]);
+    pts.push([cx + Math.cos(a) * R * m * 1.02, cy + Math.sin(a) * R * m * (0.97 - wi * 0.012)]);
   }
   return pts;
 }
@@ -350,7 +350,7 @@ function crownOn(S, tx, ty, R, ca, P, wi, rr) {
   const rot = ca + Math.PI / 2; const c = Math.cos(rot), s = Math.sin(rot);
   const T = ([u, v]) => [tx + u * c - v * s, ty + u * s + v * c];
   const TP = (pts) => pts.map(T);
-  const sc = (R / 192) * 1.25 * (1 - wi * 0.04); // geometri ölçeği (sprite px)
+  const sc = (R / 192) * 1.25 * (1 - wi * 0.02); // geometri ölçeği (sprite px)
   const ss = clamp(Rs / 192, 0.3, 2); // darbe ölçeği (ekran px)
   const rimY = -27 * sc, rw = 25 * sc, rry = 8.5 * sc;
   const cb = mix(P[3], '#641A1E', 0.14 - wi * 0.04);
@@ -373,8 +373,8 @@ function crownOn(S, tx, ty, R, ca, P, wi, rr) {
     const th = th0 + (i / n) * Math.PI * 2 + (rr() - 0.5) * 0.35;
     const cs = Math.cos(th), sn = Math.sin(th);
     const base = LN([cs * rw * 0.96, rimY + sn * rry]);
-    const L0 = (31 + rr() * 12) * sc * (1 - wi * 0.1) * (sn > 0 ? 1 : 0.88);
-    const out = (0.7 + rr() * 0.45) * (1 + wi * 0.12); const curl = (0.55 + rr() * 0.5) * (1 + wi * 0.35); // solunca hafif sarkık
+    const L0 = (31 + rr() * 12) * sc * (1 - wi * 0.06) * (sn > 0 ? 1 : 0.88);
+    const out = (0.7 + rr() * 0.45) * (1 + wi * 0.12); const curl = (0.55 + rr() * 0.5) * (1 + wi * 0.25); // solunca hafif sarkık
     sep.push({ th, cs, sn, base, L0, out, curl, hw: (10.5 + rr() * 3) * sc });
   }
   const sepal = (q) => {
@@ -418,8 +418,8 @@ function crownOn(S, tx, ty, R, ca, P, wi, rr) {
 function paintPomegranate(o = {}) {
   const k = o.k ?? 1; const w = 500 * k, h = 520 * k;
   const S = Paint.sprite(w, h, { seed: o.seed ?? 11, k });
-  const wi = o.wither ?? 0; const cx = 250 * k, cy = 284 * k, R0 = 192 * k, R = R0 * (1 - wi * 0.06);
-  // solmuş: aynı pivot, %6 küçük; alt nokta (sofraya değdiği yer) tazeyle aynı kalsın diye aşağı kaydır
+  const wi = o.wither ?? 0; const cx = 250 * k, cy = 284 * k, R0 = 192 * k, R = R0 * (1 - wi * 0.05);
+  // solmuş: aynı pivot, %5 küçük; alt nokta (sofraya değdiği yer) tazeyle aynı kalsın diye aşağı kaydır
   let dy = 0;
   if (wi) { const ph = rng(o.seed ?? 11)() * 6; const ca = o.crownAng ?? -Math.PI / 2 + 0.1; const bot = (P) => Math.max(...P.map((q) => q[1])); dy = bot(narBodyPts(cx, cy, R0, ca, ph, 0)) - bot(narBodyPts(cx, cy, R, ca, ph, wi)); }
   pomegranateOn(S, cx, cy + dy, R, o);
