@@ -22,9 +22,9 @@
     const c = camAt([
       [0.0, { x: 444, y: 1492, z: 1.62 }],
       [2.42, { x: 448, y: 1478, z: 1.79 }, E.ioSine],
-      [4.08, { x: 540, y: 962, z: 1.0 }, E.io3],
-      [6.1, { x: 542, y: 958, z: 1.005 }, E.ioSine],
-      [10.4, { x: 548, y: 925, z: 1.04 }, E.ioSine],
+      [4.08, { x: 580, y: 972, z: 1.0 }, E.io3],
+      [6.1, { x: 600, y: 968, z: 1.01 }, E.ioSine],
+      [10.4, { x: 640, y: 950, z: 1.06 }, E.ioSine],
     ], t);
     const b = breathe(t, 0.8); c.x += b.x; c.y += b.y; c.r = b.r;
     return c;
@@ -68,11 +68,17 @@
   // (görünmeyen asıllarına) uzanan noktalı gösterge çizgileri. Sayfa/liste çizilmez (mecaz maddileştirilmez).
   const FLOAT = 104;          // madalyonun noktanın üstünde süzüldüğü yükseklik
   const MED_PX = 118;         // madalyon ekran çapı
-  function horizonPt(c) { const M = window.MANZARA; const hz = (M && M.horizon) || [560, 905]; const [x, y] = w2s(camPar(c, 0.35), hz[0], hz[1]); return [x, y - 40]; }
+  // madalyonların noktalarına göre süzülme yerleri (birbirini örtmesin diye ayrı ayrı)
+  const OFF = { nar: [-40, -150], kovan: [-30, -120], uzum: [-40, -140], bugday: [-20, -140], nehir: [-40, -125], cicek: [-30, -150] };
+  function horizonPt(c) { const [x, y] = w2s(camPar(c, 0.35), 600, 872); return [x, y]; }
+  function spotScreen(c, en) {
+    const M = window.MANZARA; const sp = M && M.spots[en.spot]; if (!sp) return null;
+    const pv = (M.spotPar && M.spotPar[en.spot]) ?? 0.8; return w2s(camPar(c, pv), sp[0], sp[1]);
+  }
   function markerPos(c, en, t, i) {
-    const M = window.MANZARA; const sp = M && M.spots[en.spot]; if (!sp) return [200 + i * 130, 1200];
-    const pv = (M.spotPar && M.spotPar[en.spot]) ?? 0.8; const [x, y] = w2s(camPar(c, pv), sp[0], sp[1]);
-    return [x, y - FLOAT + Math.sin(t * 1.7 + i * 1.1) * 5];
+    const s = spotScreen(c, en); if (!s) return [200 + i * 130, 1200];
+    const o = OFF[en.spot] || [0, -FLOAT];
+    return [s[0] + o[0] * c.z, s[1] + o[1] * c.z + Math.sin(t * 1.7 + i * 1.1) * 5];
   }
   function drawIndex(ctx, t, c) {
     const tf = tF(); if (t < tf - 0.05) return;
@@ -106,15 +112,16 @@
     // madalyonlar: noktalarından kalkıp üstlerinde süzülür, ince sapla bağlı
     ENTRIES.forEach((en, i) => {
       const st = tf + i * 0.09; const p = inv(st, st + 0.6, t); if (p <= 0) return;
-      const M = window.MANZARA; const sp = M && M.spots[en.spot];
-      const [mx, my] = markerPos(c, en, t, i); const isNar = i === 0;
-      const rise = E.out3(p); const yy = lerp(my + FLOAT, my, rise);
+      const sp = spotScreen(c, en);
+      const [mx0, my] = markerPos(c, en, t, i); const isNar = i === 0;
+      const rise = E.out3(p); const yy = sp ? lerp(sp[1], my, rise) : my; const mx = sp ? lerp(sp[0], mx0, rise) : mx0;
       const dim = isNar ? 1 : lerp(1, 0.3, hiP);
       const pop = E.outBack(clamp(p * 1.5), 1.8);
-      if (sp) { // sap
-        ctx.save(); ctx.globalAlpha = dim * 0.85 * rise; ctx.strokeStyle = '#FFF0CF'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(mx, yy + MED_PX * 0.45); ctx.lineTo(mx, my + FLOAT - 8); ctx.stroke();
-        ctx.fillStyle = '#FFF0CF'; ctx.beginPath(); ctx.arc(mx, my + FLOAT - 6, 5, 0, 7); ctx.fill(); ctx.restore();
+      if (sp) { // sap: madalyondan nimetin kendisine ince çizgi ve küçük halka
+        ctx.save(); ctx.globalAlpha = dim * 0.9 * rise; ctx.strokeStyle = '#FFF0CF'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+        const dx = sp[0] - mx, dy = sp[1] - yy, L = Math.hypot(dx, dy) || 1;
+        ctx.beginPath(); ctx.moveTo(mx + dx / L * MED_PX * 0.48, yy + dy / L * MED_PX * 0.48); ctx.lineTo(sp[0] - dx / L * 12, sp[1] - dy / L * 12); ctx.stroke();
+        ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sp[0], sp[1], 11, 0, 7); ctx.stroke(); ctx.restore();
       }
       if (isNar && hiP > 0 && hasUI) { UI.glow(ctx, mx, yy, 140, '#FFC56B', 0.32 * hiP); UI.ring(ctx, mx, yy, MED_PX * 0.5 + 14, hiP, '#FFD36E', 7, 4); }
       const sc = (MED_PX / 300) * pop * (isNar ? 1 + 0.2 * hiP : 1);

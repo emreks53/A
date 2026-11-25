@@ -13,11 +13,13 @@ function reset() { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.
 // paralakslı kamera (sahnelerdeki camPar ile aynı)
 function camPar(cam, p) { return { x: 540 + (cam.x - 540) * p, y: 960 + (cam.y - 960) * p, z: Math.exp(Math.log(cam.z) * p) }; }
 function camApply(ctx, c) { ctx.translate(540, 960); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y); }
-function man(ctx) { // yer tutucu: oturan adam (oturma noktası M.man, ~560 px)
-  const [x, y] = MANZARA.man; ctx.fillStyle = 'rgba(30,24,40,0.9)';
-  ctx.beginPath(); ctx.ellipse(x - 10, y - 250, 95, 250, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x + 30, y - 470, 50, 58, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x + 130, y - 40, 150, 50, -0.2, 0, Math.PI * 2); ctx.fill();
+function man(ctx) { // yer tutucu: oturan adam (M.man = oturma noktası; adam.js geometrisi: baş tepesi ~(+133,-548), diz ~(+116,-259), ayak ~(+250,-40))
+  const [x, y] = MANZARA.man; ctx.save(); ctx.fillStyle = 'rgba(40,60,90,0.92)';
+  ctx.beginPath(); ctx.ellipse(x + 50, y - 230, 70, 210, 0.2, 0, Math.PI * 2); ctx.fill();          // gövde
+  ctx.beginPath(); ctx.ellipse(x + 110, y - 480, 52, 64, 0, 0, Math.PI * 2); ctx.fill();            // baş
+  ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(40,60,90,0.92)'; ctx.lineWidth = 70;
+  ctx.beginPath(); ctx.moveTo(x, y - 40); ctx.lineTo(x + 116, y - 259); ctx.lineTo(x + 245, y - 30); ctx.stroke(); // bacak
+  ctx.restore();
 }
 function world(cam, dusk = 0) {
   const M = MANZARA;
@@ -44,6 +46,8 @@ window.show2 = async () => { // tek tek sprite'lar + akşam göğü küçük
 window.show3 = async () => { reset(); world({ x: 444, y: 1492, z: 1.62 }); Post.apply(ctx); };
 window.show4 = async () => { reset(); world({ x: 540, y: 960, z: 1 }, 1); Post.apply(ctx); };
 window.show5 = async () => { reset(); world({ x: 448, y: 1478, z: 1.79 }); Post.apply(ctx); };
+window.show6 = async () => { reset(); world({ x: 492, y: 1230, z: 1.32 }); Post.apply(ctx); };
+window.show7 = async () => { reset(); world({ x: 540, y: 860, z: 0.93 }, 1); Post.apply(ctx); };
 let SHOW2 = [
   ['gunes', 760, 180, 1], ['bulut-2', 860, 470, 1],
   ['bulut-1', 260, 760, 1], ['bulut-3', 760, 760, 1],

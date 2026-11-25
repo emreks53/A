@@ -38,7 +38,7 @@
   function drawMan(ctx, t) {
     if (!window.ADAM || !hasSpr('adam-yakin-govde')) { ctx.fillStyle = '#2B5D78'; ctx.beginPath(); ctx.ellipse(300, 1100, 260, 380, 0, 0, 7); ctx.fill(); return; }
     const A = ADAM.yakin; const sc = 1;
-    const ox = 300 - A.neck[0], oy = 1020 - A.neck[1];
+    const ox = 300 - A.neck[0], oy = 1112 - A.neck[1];
     // kol: aşağıdan ağza, sonra hafifçe iner
     const up = E.io3(inv(11.15, 12.6, t)); const down = E.io2(inv(13.15, 14.2, t));
     const armRot = lerp(0.55, 0, up) + down * 0.32;

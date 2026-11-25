@@ -71,8 +71,8 @@
       // yukarı dönüş: her şey aşağı kayar
       ctx.translate(0, riseY(t));
       const diag = E.io2(inv(tInsan() - 0.15, tInsan() + 0.55, t));
-      drawSpr(ctx, spr('p4-sicak'), 0, 0, 1, 0, 1);
-      if (diag > 0) drawSpr(ctx, spr('p4-civit'), 0, 0, 1, 0, diag);
+      drawSpr(ctx, spr('p4-sicak'), -48, -170, 1.09, 0, 1); // zemin üstten taşar: yükselişte bulut kenarı arasından astar görünmesin
+      if (diag > 0) drawSpr(ctx, spr('p4-civit'), -48, -170, 1.09, 0, diag);
       const fr = manFrame();
       const head = fr ? P(fr, 'nose') : [600, 640];
       // nimet ↔ adam: noktalı yaylar (hissettirmek)

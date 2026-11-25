@@ -17,6 +17,12 @@ body{margin:0;background:#111}canvas{display:block}
 <script src="lib/subs.js"></script>
 <script src="lib/engine.js"></script>
 <script src="assets/fruits.js"></script>
+<script src="assets/manzara.js"></script>
+<script src="assets/adam.js"></script>
+<script src="assets/yiyecek.js"></script>
+<script src="assets/arayuz.js"></script>
+<script src="assets/cennet-manzara.js"></script>
+<script src="assets/cennet-ziyafet.js"></script>
 <!-- ASSETS -->
 <script src="scenes/ortak.js"></script>
 <script src="scenes/p1-dunya.js"></script>
@@ -30,5 +36,7 @@ body{margin:0;background:#111}canvas{display:block}
 const out = document.getElementById('out'); const ctx = out.getContext('2d', { willReadFrequently: false });
 ctx.imageSmoothingQuality = 'high';
 window.renderFrame = async (t) => { await Engine.render(ctx, t); };
+// nesne dosyalarındaki üst düzey const'ları window'a bağla (sahneler window.X ile okur)
+for (const n of ['ADAM', 'UI', 'MANZARA', 'CENNET_M', 'ZIYAFET', 'YIYECEK']) { try { if (!window[n]) window[n] = (0, eval)(n); } catch (e) {} }
 (async () => { await Engine.init(); if (window.FOTO_READY) await window.FOTO_READY(); window.READY = true; })();
 </script></body></html>

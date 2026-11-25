@@ -42,7 +42,6 @@ function adamBBox(poly, pad = 6) {
 }
 // biçim: {poly, path, bb}
 function adamShape(pts, closed = true, step = 2.5) { const poly = adamCurve(pts, closed, step); return { poly, path: adamPoly(poly, closed), bb: adamBBox(poly) }; }
-function adamShapeFromPoly(poly) { return { poly, path: adamPoly(poly), bb: adamBBox(poly) }; }
 const adamMap = (pts, f) => pts.map((p) => { const q = f(p[0], p[1]); return p.length > 2 ? [q[0], q[1], p[2]] : q; });
 // (x,y) noktasını (cx,cy) çevresinde döndür
 const adamRot = (cx, cy, a) => { const c = Math.cos(a), s = Math.sin(a); return (x, y) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]; };
@@ -115,17 +114,36 @@ function adamAlong(axis, S, jit = 0.22, off = 0) {
 }
 // yumuşak "leke": merkez çevresinde ±amt (gölge/ışık eklemek için)
 const adamSpot = (cx, cy, rx, ry, amt) => (x, y) => { const d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2; return d >= 1 ? 0 : amt * (1 - d); };
-const adamSum = (...fs) => (x, y) => { let s = 0; for (const f of fs) s += f(x, y); return s; };
 
 // boyama kısayolu: bbox'u biçimden alır
-function adamRegion(S, sh, o) { return S.region(sh.path, { bbox: sh.bb, ...o }); }
+function adamRegion(S, sh, o) { return S.region(sh.path, { bbox: sh.bb, lJit: 0.022, broken: 0.035, ...o }); }
+// kolun gövdeye düşen gölgesi (ışık sol üstten → gölge sağ alta), clip biçimlerine kırpılır
+function adamArmShadow(S, armPath, clipPaths, col, dx = 7, dy = 8, alpha = 0.9) {
+  const c = S.x; c.save();
+  const cp = new Path2D(); for (const p of clipPaths) cp.addPath(p); c.clip(cp);
+  c.translate(dx, dy); c.globalAlpha = alpha; c.fillStyle = col; c.fill(armPath); c.restore();
+}
+// örtüşme çizgisi: kolun kenarı boyunca, arkadaki biçime (clip) kırpılmış koyu şerit; kol sonra üstüne boyanır
+function adamOccl(S, poly, clipPaths, col, w = 3, alpha = 0.9) {
+  const c = S.x; c.save();
+  const cp = new Path2D(); for (const p of clipPaths) cp.addPath(p); c.clip(cp);
+  c.globalAlpha = alpha; c.strokeStyle = col; c.lineWidth = w * 2; c.lineJoin = 'round'; c.lineCap = 'round';
+  c.stroke(adamPoly(poly, false)); c.restore();
+}
+// omuz dikişi: kol başının üstünde ince koyu yay
+function adamSeam(S, cx, cy, r, col, w = 2.6, a0 = -2.75, a1 = -0.45) {
+  const pts = []; for (let i = 0; i <= 16; i++) { const a = lerp(a0, a1, i / 16); pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
+  S.line(pts, w, col, { w1: w * 0.6, edge: false });
+}
 // sert düz dolgu (minik ayrıntılar: fırça izi yok)
 function adamFill(S, path, col, alpha = 1) { const c = S.x; c.save(); c.globalAlpha = alpha; c.fillStyle = col; c.fill(path); c.restore(); }
 // kırık astar kenarı: dış hat boyunca genişliği gürültüyle 0..w arasında değişen şerit.
 // Biçimin dolgusundan ÖNCE çağrılır; iç yarısı dolguyla örtülür, dışta yer yer astar görünür.
+const ADAM_RIMK = 1.35; // astar kenarı genel kalınlık çarpanı
 function adamRim(S, poly, w = 2, o = {}) {
   if (!Array.isArray(poly) || poly.length < 2) return;
-  const n = poly.length, sd = S.r() * 200, fq = (o.freq ?? 0.03), th = o.th ?? 0.4;
+  w *= ADAM_RIMK;
+  const n = poly.length, sd = S.r() * 200, fq = (o.freq ?? 0.03), th = o.th ?? 0.34;
   const A = [], B = []; let acc = 0;
   for (let i = 0; i < n; i++) {
     const a = poly[Math.max(0, i - 1)], b = poly[Math.min(n - 1, i + 1)];
@@ -209,34 +227,39 @@ function adamPaintHead(S, ox, oy, hs, o = {}) {
   adamRim(S, adamMap(adamCurve(HD.neck.slice(10, 15), false), X), rimW);
   adamRegion(S, neck, {
     ramp: SK, shade: adamTubeShade(neckAxis, 0.27 * hs, { amb: 0.1, lz: 0.9, gain: 0.7, bias: 0.02 }), dir: adamAlong(neckAxis, S, 0.3),
-    len: [18 * ss * sz, 34 * ss * sz], wid: [7 * ss * sz, 11 * ss * sz], cover: 2.6, jitter: 6 * ss, rim: false, noise: 0.03,
+    len: [18 * ss * sz, 34 * ss * sz], wid: [7 * ss * sz, 11 * ss * sz], cover: 2.6, jitter: 6 * ss, rim: false, noise: 0.015, broken: hs > 300 ? 0.005 : 0.03, lJit: hs > 300 ? 0.012 : 0.02,
   });
   const jawSh = sh([[-0.16, 0.98], [-0.23, 1.05], [-0.33, 1.075], [-0.45, 1.03], [-0.56, 0.93], [-0.64, 0.84], [-0.55, 0.78], [-0.3, 0.9]]);
   S.x.save(); S.x.clip(neck.path); S.hx.save(); S.hx.clip(neck.path);
+  // boyun planı: göğüs-köprücük-kulak kası çizgisinin önü (gırtlak üçgeni) bir ton gölgede
+  const scm = sh([[-0.54, 0.84], [-0.44, 1.12], [-0.37, 1.46], [-0.18, 1.62], [-0.12, 1.0], [-0.3, 0.9]]);
+  adamRegion(S, scm, { ramp: [mix(SK[1], SK[2], 0.55), mix(SK[1], SK[2], 0.7)], shade: Paint.cst(0.5), dir: adamAlong(neckAxis, S, 0.25), len: [16 * ss * sz, 30 * ss * sz], wid: [7 * ss * sz, 10 * ss * sz], cover: 2.4, rim: false, jitter: 2 * ss, lJit: 0.012 });
   adamRegion(S, jawSh, { ramp: [mix(SK[1], SK[2], 0.35), mix(SK[1], SK[2], 0.25)], shade: Paint.cst(0.5), dir: 0.15, len: [14 * ss, 26 * ss], wid: [6 * ss, 9 * ss], cover: 2.2, rim: false, jitter: 0 });
   S.x.restore(); S.hx.restore();
 
   // yüz + kafatası
   const face = sh(HD.face);
   const faceShade = adamEllShade(ox - 0.38 * hs, oy + 0.48 * hs, 0.62 * hs, 0.66 * hs, {
-    amb: 0.2, lz: 1.0, bias: -0.1,
-    add: adamSum(
-      adamSpot(ox - 0.105 * hs, oy + 0.495 * hs, 0.085 * hs, 0.06 * hs, -0.16), // göz çukuru
-      adamSpot(ox - 0.22 * hs, oy + 0.6 * hs, 0.15 * hs, 0.09 * hs, 0.08), // elmacık
-      adamSpot(ox + 0.035 * hs, oy + 0.57 * hs, 0.05 * hs, 0.09 * hs, 0.06), // burun sırtı
-      adamSpot(ox - 0.04 * hs, oy + 0.3 * hs, 0.1 * hs, 0.14 * hs, 0.06), // alın
-    ),
+    amb: 0.2, lz: 1.0, bias: -0.08,
+    add: adamSpot(ox - 0.06 * hs, oy + 0.3 * hs, 0.12 * hs, 0.16 * hs, 0.05), // alın
   });
   adamRim(S, adamMap(adamCurve(HD.face.slice(1, 23), false), X), rimW * 0.9, { gap: 1.6 });
   adamRegion(S, face, {
-    ramp: SK, shade: faceShade,
+    ramp: SK.slice(0, 4), shade: faceShade,
     dir: (x, y) => { const u = U(x), v = V(y); return Math.atan2(v - 0.52, u + 0.36) + Math.PI / 2 + (S.r() - 0.5) * 0.25; },
-    len: [18 * ss * sz, 32 * ss * sz], wid: [7.5 * ss * sz, 11.5 * ss * sz], cover: 2.3, jitter: 4 * ss, jitterFreq: 0.02 / ss, noise: 0.015, broken: 0.02, lJit: 0.02, rim: false,
+    len: [18 * ss * sz, 32 * ss * sz], wid: [7.5 * ss * sz, 11.5 * ss * sz], cover: 2.5, jitter: 3 * ss, jitterFreq: 0.014 / ss, noise: 0.01, broken: hs > 300 ? 0 : 0.02, lJit: hs > 300 ? 0.012 : 0.02, rim: false,
   });
 
   // saç
   const hair = sh(HD.hair);
   const HR = adamRamp(ADAM_C.hair, 4, { span: 0.2, cool: 8, warm: 20, chromaLight: 1.15 });
+  // yüz düzlemleri: göz çukuru gölgesi, elmacık ışığı, alt dudak altı gölgesi (yüze kırpılı, düz ton katları)
+  S.x.save(); S.x.clip(face.path); S.hx.save(); S.hx.clip(face.path);
+  const plane = (pts, cols, dirA, f = 1) => adamRegion(S, sh(pts), { ramp: cols, shade: Paint.cst(0.5), dir: () => dirA + (S.r() - 0.5) * 0.3, len: [12 * ss * sz * f, 22 * ss * sz * f], wid: [6 * ss * sz * f, 9 * ss * sz * f], cover: 2.6, jitter: 1.5 * ss, rim: false, lJit: 0.012, broken: 0 });
+  plane([[-0.165, 0.462], [-0.11, 0.452], [-0.05, 0.46], [-0.04, 0.49], [-0.058, 0.53], [-0.1, 0.545], [-0.155, 0.53], [-0.178, 0.495]], [mix(SK[1], SK[2], 0.45)], 0.1, 0.8);
+  plane([[-0.37, 0.52], [-0.27, 0.5], [-0.18, 0.53], [-0.15, 0.58], [-0.22, 0.625], [-0.33, 0.63], [-0.39, 0.585]], [mix(SK[2], SK[3], 0.6)], 0.5);
+  plane([[-0.03, 0.835], [0.012, 0.84], [0.0, 0.875], [-0.03, 0.88]], [mix(SK[1], SK[2], 0.4)], 0.3, 0.6);
+  S.x.restore(); S.hx.restore();
   adamRim(S, adamMap(adamCurve(HD.hair.slice(0, 14), false), X), rimW, { gap: 1.3 });
   adamRegion(S, hair, {
     ramp: HR, shade: adamEllShade(ox - 0.52 * hs, oy + 0.44 * hs, 0.48 * hs, 0.52 * hs, { amb: 0.0, lz: 0.45, bias: -0.04 }),
@@ -265,16 +288,16 @@ function adamPaintHead(S, ox, oy, hs, o = {}) {
 
   // sakal + bıyık (kısa, düzgün kesilmiş: tenden biraz açık, kenarda kuru fırça)
   const beard = sh(HD.beard);
-  const BR = adamRamp(mix(ADAM_C.beard, ADAM_C.skin, 0.22), 4, { span: 0.2, warm: 18, chromaLight: 1.1 });
+  const BR = adamRamp(mix(ADAM_C.beard, '#7A5038', 0.3), 4, { span: 0.2, cool: 10, warm: 16, chromaLight: 1.05 });
   adamRegion(S, beard, {
     ramp: BR, shade: adamEllShade(ox - 0.3 * hs, oy + 0.72 * hs, 0.42 * hs, 0.34 * hs, { amb: 0.05, lz: 0.55 }),
     dir: (x, y) => 1.3 + (S.r() - 0.5) * 0.5, len: [8 * ss * sz, 15 * ss * sz], wid: [3.5 * ss * sz, 6 * ss * sz], cover: 3.2, jitter: 2 * ss, rim: false,
   });
   // yanak sınırında birkaç kısa kıl darbesi (yumuşak geçiş)
   const cheek = adamCurve(adamMap(HD.beard.slice(0, 6), X), false, 2);
-  for (let i = 0; i < 9; i++) {
-    const [bx, by] = cheek[Math.floor((0.05 + 0.9 * S.r()) * cheek.length)];
-    S.dab(bx, by + (S.r() - 0.2) * 2 * ss, 1.3 + (S.r() - 0.5) * 0.5, (3 + S.r() * 4) * ss, (1.4 + S.r()) * ss, shade(BR[1 + (S.r() < 0.5 ? 1 : 0)], 0.02), { alpha: 0.6 });
+  for (let i = 0; i < 6; i++) {
+    const [bx, by] = cheek[Math.floor((0.08 + 0.84 * ((i + S.r() * 0.8) / 6)) * cheek.length)];
+    S.dab(bx, by + (S.r() - 0.3) * 2 * ss, 1.25 + (S.r() - 0.5) * 0.6, (4 + S.r() * 5) * ss * sz, (2 + S.r() * 1.5) * ss * sz, shade(BR[2], 0.01), { alpha: 0.55 });
   }
   // dudaklar (sade, tene yakın)
   adamFill(S, sh(HD.lips).path, mix(ADAM_C.skin, ADAM_C.lip, 0.55), 0.95);
@@ -367,15 +390,24 @@ function adamStandFarLeg() { // uzak bacak: diz üstü gizli, alt bacakta önde 
 }
 function adamStandShoe(dx = 0) {
   return [
-    [224, 1200, 0.3], [215, 1188], [215, 1166], [223, 1146, 0.5], [258, 1139], [292, 1145], [324, 1157], [358, 1167],
-    [388, 1173], [405, 1181], [411, 1192, 0.6], [402, 1200, 0.3],
+    [222, 1200, 0.3], [214, 1187], [213, 1167], [222, 1146, 0.5], [258, 1139], [292, 1142], [322, 1150], [352, 1160],
+    [380, 1167], [400, 1174], [411, 1185], [409, 1196, 0.6], [398, 1200, 0.3],
   ].map(([x, y, t]) => (t === undefined ? [x + dx, y] : [x + dx, y, t]));
+}
+// ayakkabı ayrıntısı: taban bandı (topuk + kemer), burun parıltısı, saya dikişi
+function adamShoeDetail(S, f, dk = 0) {
+  const sole = adamShape(adamMap([[214, 1191], [262, 1192], [300, 1194], [350, 1193], [409, 1191], [408, 1197, 0.6], [398, 1201, 0], [300, 1201], [222, 1201, 0], [214, 1197]], f), true, 1.5);
+  adamFill(S, sole.path, shade(ADAM_C.shoe, -0.13 + dk), 1);
+  S.line(adamCurve(adamMap([[218, 1191.5], [300, 1193.5], [404, 1191.5]], f), false), 1.4, shade(ADAM_C.shoe, 0.1 + dk), { edge: false });
+  S.line(adamCurve(adamMap([[262, 1192], [264, 1200]], f), false), 1.4, shade(ADAM_C.shoe, -0.2 + dk), { edge: false });
+  S.line(adamCurve(adamMap([[300, 1147], [318, 1166], [346, 1180], [372, 1184]], f), false), 1.6, shade(ADAM_C.shoe, -0.12 + dk), { w1: 0.8, edge: false });
+  const [tx, ty] = f(388, 1174); S.dab(tx, ty, 0.25, 22, 4, shade(ADAM_C.shoe, 0.2 + dk, 0.8, 10), { alpha: 0.8 });
 }
 function adamStandTorso() {
   return [
-    [212, 234, 0], [198, 247], [187, 270], [180, 305], [179, 345], [183, 395], [190, 445], [195, 495], [194, 545],
+    [212, 231, 0], [198, 245], [187, 270], [180, 305], [179, 345], [183, 395], [190, 445], [195, 495], [194, 545],
     [189, 595], [187, 626], [189, 648, 0], [235, 654], [282, 652], [323, 645, 0], [328, 612], [330, 556], [327, 500],
-    [326, 455], [332, 412], [339, 368], [338, 326], [328, 293], [312, 276], [296, 268, 0], [270, 262], [244, 254], [224, 244],
+    [326, 455], [332, 412], [339, 368], [338, 326], [328, 291], [313, 272], [298, 262, 0], [272, 256], [246, 248], [225, 240],
   ];
 }
 function adamStandArmGeom() {
@@ -394,6 +426,7 @@ function adamPaintStandArm(S, o = {}) {
   const { axis, half } = adamStandArmGeom();
   const hp = adamHandRelaxed(S, ...adamStandHandPlace(), 1);
   adamPaintSleeve(S, axis, half);
+  adamSeam(S, axis[0][0], axis[0][1] + 4, half[0] * 0.98, shade(ADAM_C.shirt, -0.075), 2.2, -2.6, -0.55);
   // manşet: kol ucundan biraz yukarıda koyu bant çizgisi
   const n = axis.length, t = 0.82, a = axis[n - 2], b = axis[n - 1];
   const cxm = lerp(a[0], b[0], t), cym = lerp(a[1], b[1], t), dl = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -415,7 +448,7 @@ function adamPaintStandBody(S, o = {}) {
       ramp: SHR.map((c) => shade(c, dk)), shade: adamEllShade(300 + dx, 1140, 130, 60, { amb: 0.15, lz: 0.8 }),
       dir: 0.12, len: [16, 30], wid: [6, 10], cover: 3, jitter: 4, rim: false,
     });
-    S.line(adamCurve([[220 + dx, 1195], [300 + dx, 1196.5], [404 + dx, 1196]], false), 5, shade(ADAM_C.shoe, -0.12 + dk), { edge: false });
+    adamShoeDetail(S, (x, y) => [x + dx, y], dk);
     const leg = adamShape(far ? adamStandFarLeg() : adamStandLeg());
     const ax = far ? [[262, 600], [278, 888], [300, 1145]] : legAxis;
     if (far) adamRim(S, adamCurve(adamStandFarLeg().slice(3, 8), false), 2.2);
@@ -441,7 +474,7 @@ function adamPaintStandBody(S, o = {}) {
   // etek kenarı: hafif koyu kıvrım
   S.line(adamCurve([[192, 640], [240, 646], [285, 645], [320, 638]], false), 4, shade(ADAM_C.shirt, -0.1), { w1: 3, edge: false });
   // yaka çizgisi
-  S.line(adamCurve([[214, 238], [240, 254], [268, 264], [290, 268]], false), 3.4, shade(ADAM_C.shirt, -0.14), { w1: 2.4, edge: false });
+  S.line(adamCurve([[214, 235], [242, 248], [270, 258], [294, 263]], false), 3.4, shade(ADAM_C.shirt, -0.14), { w1: 2.4, edge: false });
 }
 
 defSprite('adam-ayakta-bas', () => {
@@ -658,7 +691,8 @@ function adamSitLeg() {
 }
 function adamSitShoe(dx = 0, dy = 0) {
   const A = ADAM_SIT.ankle, k = ADAM_SIT.kS, g = ADAM_SIT.ground;
-  return adamStandShoe(0).map(([x, y, t]) => { const p = [A[0] + (x - 262) * k + dx, g + (y - 1200) * k + dy]; return t === undefined ? p : [...p, t]; });
+  const r = adamStandShoe(0).map(([x, y, t]) => { const p = [A[0] + (x - 262) * k + dx, g + (y - 1200) * k + dy]; return t === undefined ? p : [...p, t]; });
+  r.dx = dx; return r;
 }
 function adamSitTorso() {
   const T = ADAM_SIT.T, st = adamStandTorso();
@@ -691,8 +725,10 @@ function adamPaintSitArm(S, o = {}) {
   const pu = adamCurve(tu), pf = adamCurve(tf);
   path.addPath(adamPoly(pu)); path.addPath(adamPoly(pf));
   const axis = [g.sh, g.el, g.wr];
+  if (o.shadowOn) { adamArmShadow(S, path, o.shadowOn, shade(ADAM_C.shirt, -0.12), 8, 8, 0.85); adamOccl(S, pu.slice(0, Math.floor(pu.length * 0.8)), o.shadowOn, shade(ADAM_C.shirt, -0.16), 2.4, 0.85); adamOccl(S, pf, o.shadowOn, shade(ADAM_C.shirt, -0.16), 2.4, 0.85); }
   if (!dk) { adamRim(S, adamCurve(tu.slice(1, 4), false), 2.2); adamRim(S, adamCurve(tf.slice(3, 9), false), 2.2); }
-  S.region(path, { bbox: adamBBox(pu.concat(pf)), ramp: SR, shade: adamTubeShade(axis, [36, 30, 24], { amb: 0.08, lz: 0.8 }), dir: adamAlong(axis, S, 0.2), len: [24, 46], wid: [10, 15], cover: 2.6, jitter: 7, rim: false });
+  S.region(path, { bbox: adamBBox(pu.concat(pf)), ramp: SR.map((c) => shade(c, 0.015)), shade: adamTubeShade(axis, [36, 30, 24], { amb: 0.1, lz: 0.8 }), dir: adamAlong(axis, S, 0.2), len: [24, 46], wid: [10, 15], cover: 2.6, jitter: 7, rim: false, lJit: 0.02, broken: 0.03 });
+
   // dirsek kıvrımı + manşet
   S.line(adamCurve([[g.el[0] + 10, g.el[1] - 52], [g.el[0] + 20, g.el[1] - 30], [g.el[0] + 18, g.el[1] - 12]], false), 3, shade(ADAM_C.shirt, -0.14 + dk), { w1: 1.4, edge: false });
   const a = g.fo[1], b = g.wr, t = 0.8, cx = lerp(a[0], b[0], t), cy = lerp(a[1], b[1], t), dl = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -716,7 +752,7 @@ function adamPaintSitBody(S) {
     const sh = adamShape(pts);
     if (!dk) adamRim(S, sh.poly, 1.6);
     adamRegion(S, sh, { ramp: SHR.map((c) => shade(c, dk)), shade: adamEllShade(A[0] + 30, A[1] - 10, 120, 56, { amb: 0.15, lz: 0.8 }), dir: 0.12, len: [14, 28], wid: [6, 9], cover: 3, jitter: 4, rim: false });
-    S.line(adamCurve([[pts[0][0] - 4, ADAM_SIT.ground - 4], [pts[pts.length - 1][0], ADAM_SIT.ground - 4]], false), 4.4, shade(ADAM_C.shoe, -0.12 + dk), { edge: false });
+    adamShoeDetail(S, (x, y) => [A[0] + (x - 262) * ADAM_SIT.kS + (pts.dx || 0), ADAM_SIT.ground + (y - 1200) * ADAM_SIT.kS], dk);
   };
   // uzak bacak + ayakkabı (biraz önde ve yukarıda, koyu)
   const fdx = 22, fdy = -8;
@@ -744,8 +780,8 @@ function adamPaintSitBody(S) {
   adamRegion(S, flap, { ramp: SR, shade: adamTubeShade(tAx, [76, 76, 70], { amb: 0.08, lz: 0.8 }), dir: adamAlong(tAx, S, 0.22), len: [26, 50], wid: [11, 16], cover: 2.6, jitter: 9, rim: false });
   S.x.restore(); S.hx.restore();
   S.line(adamCurve(flapPts.slice(1).map(([x, y]) => [x - 2, y - 1]), false), 3.6, shade(ADAM_C.shirt, -0.13), { w1: 2.4, edge: false });
-  // yakın kol
-  return adamPaintSitArm(S, {});
+  // yakın kol (gövdeye ve bacağa düşen gölgesiyle)
+  return adamPaintSitArm(S, { shadowOn: [torso.path, leg.path] });
 }
 
 defSprite('adam-oturan-bas', () => {
@@ -786,9 +822,9 @@ function adamYkForearm() {
 function adamAril(S, cx, cy, r, ang, seed) {
   const rr = rng(seed), pts = [];
   for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2, el = 1 + 0.32 * Math.cos(a); // bir yana sivri
+    const a = (i / 7) * Math.PI * 2, el = 1 + 0.38 * Math.cos(a) * (Math.cos(a) > 0 ? 1 : 0.4); // bir yana sivri
     const q = r * el * (0.92 + rr() * 0.12), x = Math.cos(a) * q * 1.12, y = Math.sin(a) * q * 0.88;
-    pts.push([cx + x * Math.cos(ang) - y * Math.sin(ang), cy + x * Math.sin(ang) + y * Math.cos(ang), 0.75]);
+    pts.push([cx + x * Math.cos(ang) - y * Math.sin(ang), cy + x * Math.sin(ang) + y * Math.cos(ang), 0.55]);
   }
   const sh = adamShape(pts, true, 1.5);
   adamRim(S, sh.poly, 1.6, { th: 0.2 });
@@ -804,53 +840,50 @@ function adamAril(S, cx, cy, r, ang, seed) {
 }
 
 // Tutam (çimdik) eli: başparmak ve işaret parmağı uçları buluşur, 3 nar tanesi dudak önünde.
-// Yerel çerçeve: köken bilek, a = elin ekseni (bilekten parmaklara), +v yüz (sol) yanı.
+// Yerel çerçeve: köken bilek; u el ekseni boyunca (yukarı), v eksene dik (+v sola: yüze doğru). Birim: ayakta px (× k).
 function adamHandPinch(S, o = {}) {
   const k = ADAM_YK.k, W0 = ADAM_YK.wrist;
-  const ang = -1.42; // el ekseni: yukarı, hafif sağa
-  const c = Math.cos(ang), s = Math.sin(ang);
-  // u: eksen boyunca px, v: eksene dik px (+v sola: yüze doğru)
-  const M = (pts) => pts.map(([u, v, t]) => { const p = [W0[0] + c * u * k + s * v * k, W0[1] + s * u * k - c * v * k]; return t === undefined ? p : [...p, t]; });
+  const ang = -1.45, c = Math.cos(ang), s = Math.sin(ang);
+  const M = (pts) => pts.map(([u, v, t]) => { const p = [W0[0] + (c * u + s * v) * k, W0[1] + (s * u - c * v) * k]; return t === undefined ? p : [...p, t]; });
   const SK = ADAM_SKIN();
-  const dk = shade(ADAM_C.skin, -0.16, 1.08, -6), dk2 = shade(ADAM_C.skin, -0.24, 1.1, -10);
-  // kıvrık parmaklar (orta, yüzük, serçe): avuca kıvrılmış yumruk kütlesi (arkada)
-  const fist = [[-6, -22], [18, -26], [40, -27], [58, -24], [66, -14], [64, -2], [56, 6], [44, 9], [30, 10], [14, 8], [-6, 6]];
-  // işaret parmağı: boğumdan yukarı ve yüze doğru kıvrılır
-  const index = [[38, -18], [52, -18], [64, -12], [72, -2], [74, 10], [70, 20, 0.6], [64, 22], [60, 14], [58, 6], [50, 0], [40, -2]];
-  // başparmak: bilek yanından yukarı, ucu işaret ucuna değer
-  const thumb = [[2, 6], [14, 14], [28, 20], [44, 24], [58, 26], [66, 26, 0.6], [68, 20], [60, 16], [48, 12], [34, 7], [18, 2]];
-  // el sırtı (avuç kütlesi)
-  const palm = [[-8, -20], [10, -24], [30, -24], [44, -20], [50, -10], [50, 4], [40, 12], [24, 14], [8, 12], [-8, 10]];
-  const paint = (pts, shf, dirA, lw = [10, 18], ww = [4.5, 7]) => {
+  const line = shade(ADAM_C.skin, -0.24, 1.1, -10), dk = shade(ADAM_C.skin, -0.16, 1.08, -6);
+  const lw = 1.5 * k; // ayrım çizgisi kalınlığı
+  // avuç + kıvrık parmaklar (tek kütle)
+  const mass = [[-2, -19], [16, -22.5], [34, -23.5], [47, -21], [57, -16], [62, -7], [62, 3], [57, 10], [48, 13], [38, 16], [24, 19], [10, 18.5], [-2, 17]];
+  // işaret parmağı: boğumdan yükselir, ucu yüze doğru kıvrılır
+  const index = [[44, -15], [56, -17], [66, -13], [73.5, -5], [76.5, 5], [74.5, 14], [69.5, 20.5, 0.6], [64.5, 19.5], [63.5, 12], [60, 5], [53, 1], [45, 0]];
+  // başparmak: avuç yanından yükselir, ucu işaret ucuna değer
+  const thumb = [[6, 15], [18, 22.5], [32, 26.5], [46, 27.5], [58, 26.5], [65.5, 23.5, 0.6], [66.5, 18.5], [59, 16.5], [47, 16.5], [34, 15.5], [20, 12.5]];
+  const tub = (a, b2, r, bias = 0) => adamTubeShade(M([a, b2]), r * k, { amb: 0.2, lz: 0.95, gain: 0.8, bias: bias - 0.06 });
+  const reg = (pts, shf, dirA, big = 1) => {
     const sh = adamShape(M(pts), true, 1.5);
-    adamRim(S, sh.poly, 2.2);
-    adamRegion(S, sh, { ramp: SK, shade: shf, dir: () => ang + dirA + (S.r() - 0.5) * 0.3, len: lw.map((v) => v * k * 0.6), wid: ww.map((v) => v * k * 0.6), cover: 2.8, jitter: 3, noise: 0.02, rim: false });
+    adamRegion(S, sh, { ramp: SK, shade: shf, dir: () => ang + dirA + (S.r() - 0.5) * 0.25, len: [16 * big, 30 * big], wid: [7 * big, 11 * big], cover: 2.6, jitter: 4, noise: 0.01, lJit: 0.015, broken: 0.02, rim: false });
     return sh;
   };
-  const axisSh = (a, b, r, o2 = {}) => adamTubeShade(M([a, b]), r * k, { amb: 0.2, lz: 0.9, gain: 0.85, ...o2 });
-  const sF = paint(fist, axisSh([0, -10], [64, -10], 22, { bias: -0.05 }), 0);
-  const sP = paint(palm, axisSh([0, -6], [50, -6], 20), 0);
-  // nar taneleri (parmak uçlarının arasında, dudağa doğru taşar)
-  const tip = M([[70, 23]])[0];
-  const ar = 11.5 * k * 0.6;
-  const A = M([[66, 33], [77, 30], [58, 37]]);
-  adamAril(S, A[2][0], A[2][1], ar * 0.95, ang + 0.9, 301);
-  adamAril(S, A[1][0], A[1][1], ar, ang + 1.5, 302);
-  adamAril(S, A[0][0], A[0][1], ar * 1.05, ang + 1.2, 303);
-  const sT = paint(thumb, axisSh([4, 10], [66, 22], 9), -0.25, [8, 14], [3.5, 6]);
-  const sI = paint(index, axisSh([40, -10], [72, 12], 9), 0.5, [8, 14], [3.5, 6]);
-  // eklem çizgileri, tırnaklar
-  S.line(adamCurve(M([[44, -16], [56, -12], [62, -4]]), false, 2), 2.6 * k * 0.6, dk, { w1: 1.4 * k * 0.6, edge: false });
-  S.line(adamCurve(M([[22, 2], [36, 8], [50, 12]]), false, 2), 2.6 * k * 0.6, dk, { w1: 1.4 * k * 0.6, edge: false });
-  S.line(adamCurve(M([[58, -24], [64, -16], [66, -6]]), false, 2), 2.2 * k * 0.6, dk, { w1: 1.2 * k * 0.6, edge: false });
-  S.line(adamCurve(M([[48, -26], [56, -22]]), false, 2), 2.2 * k * 0.6, dk, { w1: 1.2 * k * 0.6, edge: false });
-  const nail = (pts) => { const sh = adamShape(M(pts), true, 1); adamFill(S, sh.path, shade(ADAM_C.skin, 0.12, 0.7, 8), 0.9); S.line(sh.poly.concat([sh.poly[0]]), 1.6, dk, { edge: false }); };
-  nail([[64, 22.5], [68, 21.5], [69, 25], [65, 26]]);
-  nail([[70, 12], [73.5, 12], [72.5, 18], [69, 17]]);
-  // eklem ışıkları
-  S.dab(...M([[30, -20]])[0], ang, 16 * k * 0.6, 5 * k * 0.6, shade(SK[3], 0.03), { alpha: 0.7 });
-  S.dab(...M([[50, -24]])[0], ang + 0.3, 10 * k * 0.6, 4 * k * 0.6, shade(SK[3], 0.03), { alpha: 0.7 });
-  return { pinch: tip, arils: A, shapes: [sF, sP, sT, sI] };
+  const outline = (sh, from = 0, to = 1, wd = lw) => { const P2 = sh.poly.concat([sh.poly[0]]); S.line(P2.slice(Math.floor(from * P2.length), Math.ceil(to * P2.length)), wd, line, { edge: false }); };
+  const shMass = adamShape(M(mass), true, 1.5);
+  adamRim(S, shMass.poly.slice(0, Math.floor(shMass.poly.length * 0.55)), 2.6);
+  reg(mass, tub([0, -3], [62, -3], 22, -0.02), 0, 1.1);
+  // kıvrık parmak boğumları (arka kenarda iki küçük çizgi) ve eklem ışığı
+  S.line(adamCurve(M([[50, -19], [55, -13]]), false, 2), lw * 0.8, dk, { w1: lw * 0.4, edge: false });
+  S.dab(...M([[30, -17]])[0], ang, 18 * k * 0.6, 5.5 * k * 0.6, shade(SK[3], 0.03), { alpha: 0.6 });
+  // nar taneleri: parmak uçlarının arasında, dudağa doğru taşar (parmakların arkasında başlar)
+  const ar = 6.6 * k;
+  const A = M([[71, 27.5], [63.5, 31.5], [77, 22.5]]);
+  adamAril(S, A[1][0], A[1][1], ar * 0.92, ang + 0.7, 301);
+  adamAril(S, A[2][0], A[2][1], ar * 0.95, ang + 1.9, 302);
+  adamAril(S, A[0][0], A[0][1], ar * 1.05, ang + 1.25, 303);
+  // başparmak ve işaret parmağı (üstte, ince koyu ayrım çizgileriyle)
+  const shT = reg(thumb, tub([8, 18], [66, 21], 7.5, -0.03), -0.22, 0.75);
+  outline(shT, 0.47, 0.66);
+  const shI = reg(index, tub([46, -8], [72, 14], 7, 0.04), 0.55, 0.75);
+  outline(shI, 0.5, 0.74);
+  adamRim(S, shI.poly.slice(0, Math.floor(shI.poly.length * 0.5)), 2.2);
+  // tırnaklar
+  const nail = (pts) => { const sh = adamShape(M(pts), true, 1); adamFill(S, sh.path, shade(ADAM_C.skin, 0.1, 0.75, 8), 0.95); S.line(sh.poly.concat([sh.poly[0]]), lw * 0.6, dk, { edge: false }); };
+  nail([[62, 23.5], [66, 22.8], [66.5, 26], [62.5, 26.5]]);
+  nail([[71.5, 11], [75, 11.5], [73.5, 17.5], [70.5, 16.5]]);
+  return { pinch: M([[69, 22]])[0], arils: A, shapes: [shMass, shT, shI] };
 }
 
 function adamPaintYkBody(S) {
@@ -868,8 +901,13 @@ function adamPaintYkBody(S) {
   const { axis, half } = adamYkUpperArm();
   const tu = adamTube(axis, half, { startCap: 1.06, endCap: 1.0 });
   const sh = adamShape(tu);
+  // örtüşme çizgileri: arka kenar (omuzdan dirseğe doğru) ve ön kenar (koltuk altından)
+  const Ls = adamTube(axis, half, {}).slice(0, 3), Rs = adamTube(axis, half, {}).slice(3).reverse();
+  const part = (P2, t0, t1) => { const c2 = adamCurve(P2, false); return c2.slice(Math.floor(t0 * c2.length), Math.floor(t1 * c2.length)); };
+  adamOccl(S, part(Ls, 0.02, 0.8), [torso.path], shade(ADAM_C.shirt, -0.16), 5, 0.85);
+  adamOccl(S, part(Rs, 0.1, 0.75), [torso.path], shade(ADAM_C.shirt, -0.16), 5, 0.85);
   adamRim(S, adamCurve(tu.slice(1, 3), false), 3);
-  adamRegion(S, sh, { ramp: SR.map((c) => shade(c, 0.01)), shade: adamTubeShade(axis, half, { amb: 0.08, lz: 0.8 }), dir: adamAlong(axis, S, 0.22), len: [36, 66], wid: [14, 21], cover: 2.6, jitter: 12, rim: false });
+  adamRegion(S, sh, { ramp: SR.map((c) => shade(c, 0.035)), shade: adamTubeShade(axis, half, { amb: 0.08, lz: 0.8 }), dir: adamAlong(axis, S, 0.22), len: [36, 66], wid: [14, 21], cover: 2.6, jitter: 12, rim: false });
   // koltuk altı / göğüs gölge kıvrımı
   S.line(adamCurve([[axis[1][0] + half[1] - 6, axis[1][1] - 60], [axis[1][0] + half[1] + 4, axis[1][1] + 20], [axis[2][0] + half[2] - 2, axis[2][1] - 30]], false), 6, shade(ADAM_C.shirt, -0.15), { w1: 3, edge: false });
 }
@@ -881,7 +919,8 @@ function adamPaintYkArm(S) {
   const tf = adamTube(axis, half, { startCap: 1.0 });
   const sh = adamShape(tf);
   adamRim(S, adamCurve(tf.slice(1, 3), false), 3); adamRim(S, adamCurve(tf.slice(4, 7), false), 3);
-  adamRegion(S, sh, { ramp: SR.map((c) => shade(c, 0.02)), shade: adamTubeShade(axis, half, { amb: 0.1, lz: 0.8 }), dir: adamAlong(axis, S, 0.2), len: [36, 66], wid: [14, 21], cover: 2.6, jitter: 12, rim: false });
+  const SRf = adamRamp(shade(ADAM_C.shirt, 0.03), 4, { span: 0.24, cool: 10, warm: 14 });
+  adamRegion(S, sh, { ramp: SRf, shade: adamTubeShade(axis, half.map((h) => h * 1.1), { amb: 0.12, lz: 0.9 }), dir: adamAlong(axis, S, 0.14), len: [40, 80], wid: [14, 22], cover: 2.6, jitter: 18, jitterFreq: 0.008, rim: false, lJit: 0.015, broken: 0.02 });
   // manşet bandı + kumaş kıvrımları
   const a = axis[1], b = axis[2], t = 0.86, cx = lerp(a[0], b[0], t), cy = lerp(a[1], b[1], t), dl = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const nx = -(b[1] - a[1]) / dl, ny = (b[0] - a[0]) / dl, hw = lerp(half[1], half[2], t) - 2;
@@ -920,7 +959,20 @@ ADAM.draw = (ctx, pose, x, y, sc = 1, o = {}) => {
     drawSpr(ctx, k, kp[0], kp[1], sc, o.arm || 0, a);
   }
 };
-ADAM.pt = (pose, name, x, y, sc = 1) => { const g = spr('adam-' + pose + '-govde'), p = ADAM[pose][name]; return [x + (p[0] - g.px) * sc, y + (p[1] - g.py) * sc]; };
+// ölçü noktasını ekrana taşır; baş/kol dönüşlerini (o.head, o.arm) hesaba katar
+ADAM.PARTS = {
+  ayakta: { head: ['eye', 'ear', 'nose', 'mouth'], arm: ['fingertip', 'palm'] },
+  oturan: { head: ['eye', 'ear', 'nose', 'mouth'], arm: [] },
+  yakin: { head: ['eye', 'ear', 'nose', 'mouth'], arm: ['handAtMouth', 'arils', 'wrist'] },
+};
+ADAM.pt = (pose, name, x, y, sc = 1, o = {}) => {
+  const g = spr('adam-' + pose + '-govde'), M = ADAM[pose], P = ADAM.PARTS[pose];
+  let p = M[name];
+  const rot = (q, c, a) => adamRot(c[0], c[1], a)(q[0], q[1]);
+  if (o.head && P.head.includes(name)) p = rot(p, M.neck, o.head);
+  if (o.arm && P.arm.includes(name)) p = rot(p, pose === 'yakin' ? M.elbow : M.shoulder, o.arm);
+  return [x + (p[0] - g.px) * sc, y + (p[1] - g.py) * sc];
+};
 
 // ---- dışa açık ölçüler (her biri kendi poz çerçevesinin koordinatlarında, px)
 ADAM.ayakta = (() => {
@@ -939,5 +991,7 @@ ADAM.oturan = (() => {
 })();
 ADAM.yakin = (() => {
   const X = (u, v) => [ADAM_YK.gx + u * ADAM_YK.hs, ADAM_YK.top + v * ADAM_YK.hs], P = ADAM_HEAD.pts;
-  return { w: ADAM_YK.w, h: ADAM_YK.h, neck: ADAM_YK.neck, elbow: ADAM_YK.elbow, mouth: X(...P.mouth), eye: X(...P.eye), nose: X(...P.nose), ear: X(...P.ear), handAtMouth: null };
+  const k = ADAM_YK.k, W0 = ADAM_YK.wrist, a = -1.45, c = Math.cos(a), s = Math.sin(a);
+  const M = (u, v) => [W0[0] + (c * u + s * v) * k, W0[1] + (s * u - c * v) * k];
+  return { w: ADAM_YK.w, h: ADAM_YK.h, neck: ADAM_YK.neck, elbow: ADAM_YK.elbow, mouth: X(...P.mouth), eye: X(...P.eye), nose: X(...P.nose), ear: X(...P.ear), handAtMouth: M(69, 22), arils: M(70, 28), wrist: W0 };
 })();

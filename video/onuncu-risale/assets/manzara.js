@@ -276,7 +276,7 @@ const MANZARA = (() => {
     fill(S, circ(x, y, rr), dk, { h: 150 });
     fill(S, circ(x - rr * 0.18, y - rr * 0.2, rr * 0.78), md, { h: 160 });
     fill(S, circ(x - rr * 0.36, y - rr * 0.4, rr * 0.4), lt, { h: 170 });
-    if (o.fruit) { const rr2 = Math.max(1.1, rr * 0.2); for (const [fx, fy] of [[0.35, -0.1], [-0.2, 0.3], [0.1, 0.45], [-0.45, -0.05], [0.4, 0.35]]) fill(S, circ(x + fx * rr, y + fy * rr, rr2), o.fruit, { h: 175 }); }
+    if (o.fruit) { const rr2 = Math.max(1.1, rr * 0.19); const n = 4 + Math.floor(S.r() * 3); for (let i = 0; i < n; i++) { const a = S.r() * TAU, d = Math.sqrt(S.r()) * rr * 0.68; const fx = x + Math.cos(a) * d, fy = y + Math.sin(a) * d; fill(S, circ(fx, fy, rr2), o.fruit, { h: 175 }); if (rr2 > 2) { S.x.fillStyle = '#FF9A90'; S.x.beginPath(); S.x.arc(fx - rr2 * 0.35, fy - rr2 * 0.35, rr2 * 0.35, 0, TAU); S.x.fill(); } } }
     if (o.bloom) { const rr2 = Math.max(1, rr * 0.18); for (const [fx, fy] of [[0.3, -0.35], [-0.3, -0.5], [-0.55, 0.05], [0.45, 0.2], [0, 0.1], [-0.1, -0.2]]) fill(S, circ(x + fx * rr, y + fy * rr, rr2), o.bloom, { h: 175 }); }
   }
   function paintMid() {
@@ -363,6 +363,12 @@ const MANZARA = (() => {
     for (let i = 0; i < P.length; i += 2) { const d = (P[i][0] - x) ** 2 + (P[i][1] - y) ** 2; if (d < bd) { bd = d; bi = i; } }
     const a = P[Math.max(0, bi - 2)], b = P[Math.min(P.length - 1, bi + 2)]; const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
     return [(b[0] - a[0]) / l, (b[1] - a[1]) / l];
+  }
+  // nehir içinde nokta: u 0..1 kaynaktan ağza (orta hat boyunca), v -1..1 kıyıdan kıyıya → [x, y, akış açısı, yerel genişlik]
+  function riverSample(u, v = 0) {
+    const { P, L, R, T } = riverGeom(); const f = clamp(u) * (P.length - 1); const i = Math.min(P.length - 2, Math.floor(f)), t = f - i;
+    const lx = lerp(L[i][0], L[i + 1][0], t), ly = lerp(L[i][1], L[i + 1][1], t), rx = lerp(R[i][0], R[i + 1][0], t), ry = lerp(R[i][1], R[i + 1][1], t);
+    const q = (clamp(v, -1, 1) + 1) / 2; return [lerp(lx, rx, q), lerp(ly, ry, q), lerp(T[i], T[i + 1], t), Math.hypot(rx - lx, ry - ly)];
   }
   const SPOTS = { nar: [962, 1478], bugday: [1012, 1288], uzum: [790, 1404], nehir: [884, 1160], cicek: [850, 1792], kovan: [1052, 1552], koy: [748, 1172] };
 
@@ -606,21 +612,25 @@ const MANZARA = (() => {
   function hives(S, X, Y, k, r) {
     const [hx0, hy0] = SPOTS.kovan;
     fill(S, smoothPath(blobPts(X(hx0 + 6), Y(hy0 + 2), 80 * k, 14 * k, 16, 0.1, 9)), '#8CC85A', { h: 140 });
-    for (const dx of [-45, -15, 15, 45]) {
-      const y0 = hy0 + Math.abs(dx) * 0.05; const ss = depthS(y0); const wd = (16 + 7 * ss) * k, ht = (16 + 7 * ss) * k;
-      const x = X(hx0 + dx) - wd / 2, y = Y(y0); const sd = wd * 0.32;
+    const bodies = [['#FBF8F0', '#B3ADCF', '#2E6FBF'], ['#FBF8F0', '#B3ADCF', '#D8562F'], ['#FBF8F0', '#B3ADCF', '#2E6FBF'], ['#FBF8F0', '#B3ADCF', '#D8562F']];
+    [-45, -15, 15, 45].forEach((dx, hi) => {
+      const y0 = hy0 + Math.abs(dx) * 0.05; const ss = depthS(y0); const wd = (16 + 7 * ss) * k, ht = (17 + 7 * ss) * k;
+      const x = X(hx0 + dx) - wd / 2, y = Y(y0); const sd = wd * 0.32; const [cf, cs, cl] = bodies[hi];
       S.x.save(); S.x.globalAlpha = 0.4; S.x.fillStyle = '#1F4A2A'; S.x.beginPath(); S.x.ellipse(x + wd * 0.9, y + 1 * k, wd * 0.75, 2.6 * k, 0, 0, TAU); S.x.fill(); S.x.restore();
-      fill(S, rectPath(x + wd * 0.12, y - 2 * k, wd * 0.76, 2 * k), '#5A4636', { h: 140 }); // ayaklık
-      const body = y - 2 * k;
-      fill(S, poly([[x + wd, body], [x + wd + sd, body - sd * 0.5], [x + wd + sd, body - ht - sd * 0.5], [x + wd, body - ht]]), '#B3ADCF', { h: 150 });
-      fill(S, rectPath(x, body - ht, wd, ht), '#FBF8F0', { h: 172 });
-      S.x.fillStyle = '#D6D0E4'; S.x.fillRect(x, body - ht * 0.52, wd, Math.max(1, ht * 0.08));
-      S.x.fillStyle = '#E9E5F2'; S.x.fillRect(x, body - ht, Math.max(1, wd * 0.12), ht);
-      // kapak: hafif taşan, açık gri üst yüz + koyu ön kenar
-      fill(S, poly([[x - wd * 0.08, body - ht], [x + wd * 1.08, body - ht], [x + wd + sd * 1.15, body - ht - sd * 0.5], [x + sd * 0.1, body - ht - sd * 0.5]]), '#ECE9F4', { h: 185 });
-      fill(S, rectPath(x - wd * 0.08, body - ht, wd * 1.16, Math.max(1.2 * k, ht * 0.12)), '#8D86AE', { h: 160 });
-      S.x.fillStyle = '#3B2E40'; S.x.fillRect(x + wd * 0.28, body - ht * 0.14, wd * 0.44, Math.max(1, ht * 0.08));
-    }
+      fill(S, rectPath(x + wd * 0.12, y - 2.4 * k, wd * 0.76, 2.4 * k), '#5A4636', { h: 140 }); // ayaklık
+      const body = y - 2.4 * k;
+      fill(S, poly([[x + wd, body], [x + wd + sd, body - sd * 0.5], [x + wd + sd, body - ht - sd * 0.5], [x + wd, body - ht]]), cs, { h: 150 });
+      fill(S, rectPath(x, body - ht, wd, ht), cf, { h: 172 });
+      // iki kat (gövde + ballık) arasında gölge çizgisi, ışık kenarı
+      S.x.fillStyle = shade(cf, -0.14, 1.1); S.x.fillRect(x, body - ht * 0.5, wd, Math.max(1, ht * 0.08));
+      S.x.fillStyle = shade(cf, 0.05, 0.8); S.x.fillRect(x, body - ht, Math.max(1, wd * 0.12), ht);
+      // kapak: hafif taşan, beyaz üst yüz + koyu ön kenar
+      fill(S, poly([[x - wd * 0.1, body - ht], [x + wd * 1.1, body - ht], [x + wd + sd * 1.15, body - ht - sd * 0.5], [x + sd * 0.1, body - ht - sd * 0.5]]), '#F2EFF7', { h: 185 });
+      fill(S, rectPath(x - wd * 0.1, body - ht, wd * 1.2, Math.max(1.6 * k, ht * 0.16)), cl, { h: 160 });
+      // giriş deliği ve uçuş tahtası
+      S.x.fillStyle = '#3B2E40'; S.x.fillRect(x + wd * 0.26, body - ht * 0.15, wd * 0.48, Math.max(1, ht * 0.08));
+      S.x.fillStyle = shade(cf, -0.2, 1); S.x.fillRect(x + wd * 0.2, body - ht * 0.06, wd * 0.6, Math.max(1, ht * 0.05));
+    });
   }
   defSprite('vadi', paintValley);
 
@@ -683,9 +693,11 @@ const MANZARA = (() => {
       for (let j = 0; j < n; j++) { const x = cx0 + (r() - 0.5) * 50 * ss, y = cy0 + (r() - 0.5) * 18 * ss; S.line([[X(x), Y(y)], [X(x), Y(y + 14 * ss)]], 1.8 * k, '#246E3C', { rim: false, edge: false }); flower(S, X(x), Y(y), (6 + r() * 3) * ss * k, pc, cc, 5, r() * 6); }
     }
     // ağacın altında dökülmüş pembe-beyaz taç yaprakları
-    for (let i = 0; i < 60; i++) {
-      const a = r() * TAU, d = Math.sqrt(r()); const x = 330 + Math.cos(a) * d * 330, y = 1760 + Math.sin(a) * d * 90; if (y < knollTop(x) + 30) continue;
-      const pp = ellipsePath(X(x), Y(y), (3.4 + r() * 1.6) * k, (2.2 + r()) * k, r() * TAU); fill(S, pp, r() < 0.55 ? '#F7A8CB' : '#FFF4F8', { h: 185 });
+    for (let i = 0; i < 38; i++) {
+      const a = r() * TAU, d = Math.pow(r(), 0.7); const x = 360 + Math.cos(a) * d * 300, y = 1750 + Math.sin(a) * d * 80; if (y < knollTop(x) + 30) continue;
+      const rot = r() * TAU, rw = (4.6 + r() * 2) * k, rh = (3 + r() * 1.2) * k; const col = r() < 0.55 ? '#F7A8CB' : '#FFF4F8';
+      fill(S, ellipsePath(X(x), Y(y), rw, rh, rot), col, { h: 185 });
+      S.x.fillStyle = shade(col, -0.12, 1.2); S.x.beginPath(); S.x.ellipse(X(x) + Math.cos(rot) * rw * 0.3, Y(y) + Math.sin(rot) * rw * 0.3, rw * 0.45, rh * 0.5, rot, 0, TAU); S.x.fill();
     }
     // ÇİÇEK TARHI (tanınır öbek): kaynak resimdeki gibi iri beyaz-pembe kır gülleri, koyu yapraklar, tomurcuklar
     const [fx, fy] = SPOTS.cicek;
@@ -749,11 +761,6 @@ const MANZARA = (() => {
     const S = Paint.sprite(w * k, h * k, { seed: 901, k }); const r = S.r;
     const X = (x) => (x - ox) * k, Y = (y) => (y - oy) * k; const XY = (pts) => pts.map(([x, y]) => [X(x), Y(y)]);
     const bark = ['#3A231C', '#523223', '#6C442C', '#8B5C39', '#AA784A'];
-    const trunkL = [[226, 1714], [250, 1694], [262, 1648], [268, 1570], [270, 1480], [272, 1400], [270, 1330], [262, 1280]];
-    const trunkR = [[386, 1714], [354, 1694], [340, 1648], [334, 1570], [334, 1480], [336, 1400], [342, 1336], [354, 1280]];
-    const trunk = smoothPath(XY(trunkL.concat(trunkR.slice().reverse())), true, 0.45);
-    S.rim(trunk, { w: 3 });
-    S.region(trunk, { ramp: bark, shade: (x, y) => { const xw = x / k + ox, yw = y / k + oy; const v = Paint.cylX(304, 64, [LX, LY], 0.1)(xw); return clamp(v - (yw < 1360 ? (1360 - yw) / 260 : 0) * 0.5); }, dir: (x, y) => -Math.PI / 2 + (r() - 0.5) * 0.14, len: [34, 70], wid: [9, 15], cover: 3, jitter: 5, noise: 0.05, rim: false });
     // kabuk yarıkları ve kök çıkıntıları
     for (let i = 0; i < 16; i++) { const x0 = 274 + r() * 56, y0 = 1340 + r() * 330; S.line(XY([[x0, y0], [x0 + (r() - 0.5) * 5, y0 + 26 + r() * 40]]), (1.6 + r() * 1.6) * k, x0 < 292 ? '#C79560' : '#2F1C16', { rim: false, edge: false, taper: true }); }
     for (const [x0, x1, y1] of [[262, 214, 1716], [342, 400, 1716], [300, 300, 1720]]) S.line(XY([[x0, 1676], [lerp(x0, x1, 0.6), 1702], [x1, y1]]), 14 * k, '#5A3826', { w1: 4 * k, rim: false });
@@ -764,12 +771,20 @@ const MANZARA = (() => {
     const und = smoothPath(XY([[-60, 960], [60, 820], [250, 760], [430, 770], [600, 830], [690, 900], [620, 968], [520, 972], [430, 962], [330, 1000], [250, 1050], [120, 1070], [0, 1040]]), true, 0.5);
     fill(S, und, '#0B3A2B', { h: 130 });
     field(S, { bbox: [X(-80), Y(740), X(710), Y(1080)], clip: und, ramp: ['#08301F', '#0B3A2B', '#0F4733'], shade: Paint.cst(0.5), dir: 0.3, dirJit: 2, len: [14, 24], wid: [7, 11], cover: 1.2, noise: 0.5 });
-    // ---- dallar: gövdenin üstünde başlar (eklem yeri çizgisiz)
-    limb(S, XY([[298, 1400], [270, 1300], [222, 1200], [156, 1084], [80, 960]]), 64, 20, { dark: 0.05, rim: false });
+    // ---- dallar önce, gövde sonra: gövdenin üst kenarı V biçimli çatal (yatay ek yeri yok)
+    limb(S, XY([[296, 1330], [270, 1290], [222, 1200], [156, 1084], [80, 960]]), 64, 20, { dark: 0.05, rim: false });
     limb(S, XY([[200, 1160], [236, 1060], [262, 960], [270, 860]]), 26, 10, { dark: 0.12 });
-    limb(S, XY([[306, 1400], [334, 1300], [354, 1204], [402, 1104], [490, 1030], [602, 978], [720, 930]]), 62, 13, { rim: false });
+    limb(S, XY([[310, 1330], [334, 1290], [352, 1196], [396, 1086], [484, 1008], [598, 962], [720, 924]]), 62, 13, { rim: false });
     limb(S, XY([[180, 1110], [90, 1060], [-40, 1030]]), 22, 8, { dark: 0.1 });
-    limb(S, XY([[464, 1050], [482, 980], [516, 900]]), 18, 7, { dark: 0.1 });
+    limb(S, XY([[458, 1030], [478, 966], [512, 890]]), 18, 7, { dark: 0.1 });
+    const trunkL = [[226, 1714], [250, 1694], [262, 1648], [268, 1570], [270, 1480], [268, 1400], [258, 1330], [244, 1282], [228, 1246]];
+    const crotch = [[250, 1238], [276, 1262], [304, 1300], [318, 1268], [336, 1240], [372, 1236]];
+    const trunkR = [[386, 1714], [354, 1694], [340, 1648], [334, 1570], [334, 1480], [336, 1400], [342, 1336], [354, 1286], [368, 1250]];
+    const trunk = smoothPath(XY(trunkL.concat(crotch, trunkR.slice().reverse())), true, 0.45);
+    // astar kenarı yalnız gövdenin iki yanında
+    const sides = new Path2D(); smoothPath(XY(trunkL.slice().reverse()), false, 0.45, sides); smoothPath(XY(trunkR.slice().reverse()), false, 0.45, sides);
+    S.rim(sides, { w: 3 });
+    S.region(trunk, { ramp: bark, shade: (x, y) => { const xw = x / k + ox, yw = y / k + oy; const v = Paint.cylX(304, 64, [LX, LY], 0.1)(xw); return clamp(v - (yw < 1360 ? (1360 - yw) / 260 : 0) * 0.5); }, dir: (x, y) => -Math.PI / 2 + (r() - 0.5) * 0.14, len: [34, 70], wid: [9, 15], cover: 3, jitter: 5, noise: 0.05, rim: false });
     const G = ['#0A3729', '#0F4B35', '#16643E', '#1F7F46', '#2F9A4C', '#55B44F', '#93D052', '#BFE36A'];
     const leafCluster = (px, py, a, col, n, L0) => { for (let j = 0; j < n; j++) { const aa = a + (j / (n - 1) - 0.5) * 2.5; leaf(S, px + Math.cos(aa) * 7 * k, py + Math.sin(aa) * 7 * k, aa, L0 + r() * 8, 9 + r() * 3.5, shade(col, (r() - 0.5) * 0.03)); } };
     TREE_MASSES.forEach((M, mi) => {
@@ -960,8 +975,9 @@ const MANZARA = (() => {
   }
   return {
     layers, spots, spotPar, man: [430, 1640], manLayer: 'agac-buyuk',
-    riverPath: () => riverPathWorld(), riverFlow, riverBBox, riverCenter: RIVER_C,
+    riverPath: () => riverPathWorld(), riverFlow, riverSample, riverBBox, riverCenter: RIVER_C,
     knollTop, layerCam, sun: SUN, horizon: 1000, skyHorizon: 880,
     treeBase: TREE.base, canopy: { x0: -230, y0: 480, x1: 820, y1: 1225 },
   };
 })();
+window.MANZARA = MANZARA; // sahneler window.MANZARA üzerinden okur (üst düzey const window'a bağlanmaz)

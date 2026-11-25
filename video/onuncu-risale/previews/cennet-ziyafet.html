@@ -22,10 +22,19 @@ function world(cam, lower = 0) {
     ctx.save(); camApply(ctx, c);
     if (L.name === 'z-sarkan-dal') drawSpr(ctx, bake(L.name), L.x, L.y, 1, lerp(Z.branch.restRot, Z.branch.lowerRot, lower));
     else drawSpr(ctx, bake(L.name), L.x, L.y, L.scale || 1);
+    if (L.name === 'z-platform') {
+      for (const [x, y, s] of Z.pebbles) drawSpr(ctx, bake('z-inci'), x, y, s, 0, 0.9);
+    }
     ctx.restore();
   }
 }
 window.show = async () => { reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx); };
+// sayfa 3: kamera itmesi sonu + dal alçalmış + altyazı okunurluk denemesi
+window.show3 = async () => {
+  reset(); world({ x: 540, y: 1000, z: 1.12 }, 1); Post.apply(ctx);
+  ctx.save(); ctx.font = '600 64px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 3; ctx.fillText('sonsuzluğa', 540, 1405); ctx.restore();
+};
 // sayfa 2: dal (dinlenme / alçalmış), kadeh ve ibrik büyük, tepsi büyük
 window.show2 = async () => {
   reset('#2F4A48');
@@ -33,8 +42,9 @@ window.show2 = async () => {
   ctx.fillStyle = '#21423B'; ctx.fillRect(0, 0, 1080, 760);
   const Z = ZIYAFET;
   if (SPRITE_DEFS['z-sarkan-dal']) {
-    drawSpr(ctx, bake('z-sarkan-dal'), 30, 40, 0.9, Z.branch.restRot);
-    drawSpr(ctx, bake('z-sarkan-dal'), 560, 40, 0.9, Z.branch.lowerRot);
+    drawSpr(ctx, bake('z-sarkan-dal'), 40, 50, 1.2, Z.branch.restRot);
+    drawSpr(ctx, bake('z-sarkan-dal'), 590, 50, 1.2, Z.branch.lowerRot);
+    ctx.fillStyle = '#F1CB60'; for (const x of [40, 590]) { ctx.beginPath(); ctx.arc(x, 50, 6, 0, 7); ctx.fill(); }
   }
   ctx.fillStyle = '#5B4A6E'; ctx.fillRect(0, 760, 1080, 560);
   drawSpr(ctx, bake('z-akvab'), 200, 1250, 3.4);
@@ -43,6 +53,14 @@ window.show2 = async () => {
   ctx.fillStyle = '#7A2034'; ctx.fillRect(0, 1320, 1080, 600);
   drawSpr(ctx, bake('z-tepsi'), 540, 1640, 1.95);
   Post.apply(ctx);
+};
+// sayfa 4: meta veri denetimi — ırmak yolu, akış yönü, kadeh noktaları, dal ekseni
+window.show4 = async () => {
+  reset(); world({ x: 540, y: 960, z: 1 }); Post.apply(ctx);
+  const Z = ZIYAFET; ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#FF00CC'; ctx.fill(Z.streamPath()); ctx.restore();
+  ctx.save(); ctx.strokeStyle = '#FFFF00'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(400, 1860); ctx.lineTo(400 + Z.streamDir[0] * 200, 1860 + Z.streamDir[1] * 200); ctx.stroke();
+  ctx.fillStyle = '#FFFF00'; for (const [x, y] of Z.cups) { ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill(); }
+  ctx.beginPath(); ctx.arc(Z.branch.x, Z.branch.y, 9, 0, 7); ctx.fill(); ctx.restore();
 };
 window.READY = true;
 </script></body></html>

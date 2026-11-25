@@ -71,9 +71,11 @@ const Subs = (() => {
         ctx.save();
         ctx.globalAlpha = a;
         // yumuşak, kutusuz okunurluk gölgesi
-        ctx.shadowColor = 'rgba(12,8,24,0.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 2;
         if (blur > 0.3) ctx.filter = `blur(${blur.toFixed(2)}px)`;
         ctx.fillStyle = '#FFF7EA';
+        ctx.shadowColor = 'rgba(10,6,20,0.62)'; ctx.shadowBlur = 28; ctx.shadowOffsetY = 2;
+        ctx.fillText(p.text, x, y + rise); // geniş, yumuşak koyu hale
+        ctx.shadowColor = 'rgba(10,6,20,0.5)'; ctx.shadowBlur = 12;
         ctx.fillText(p.text, x, y + rise);
         ctx.shadowColor = 'rgba(12,8,24,0.35)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1;
         ctx.fillText(p.text, x, y + rise);

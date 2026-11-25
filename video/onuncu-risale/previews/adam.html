@@ -84,11 +84,25 @@ window.show5 = async () => {
   ctx.drawImage(BG1, 0, 0);
   // yakın yüz ayrıntısı (2x)
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, 960); ctx.clip();
-  ADAM.draw(ctx, 'yakin', 540 - 260, 1150 + 1100, 2, { arm: 0 });
+  ADAM.draw(ctx, 'yakin', 540 - 2 * (640 - 450), 480 - 2 * (380 - 1100), 2, { arm: 0 });
   ctx.restore();
   ctx.save(); ctx.beginPath(); ctx.rect(0, 960, W, 960); ctx.clip();
-  ADAM.draw(ctx, 'ayakta', 300 - 300, 1880 + 1180 + 960 - 120, 4);
+  ADAM.draw(ctx, 'ayakta', 540 - (300 - 290) * 4, 1440 - (140 - 1200) * 4, 4);
   ctx.restore();
+  Post.apply(ctx);
+};
+window.show6 = async () => {
+  if (!BG1) BG1 = paintedBg('#EADFC6', '#D9C9A5');
+  ctx.drawImage(BG1, 0, 0);
+  // dönüş sınırları: ayakta baş ±0.25, kol -0.6/+0.3; oturan baş ±0.25; yakın baş ±0.25, kol -0.1/+0.6
+  ADAM.draw(ctx, 'ayakta', 200, 700, 0.5, { head: 0.25, arm: -0.6 });
+  ADAM.draw(ctx, 'ayakta', 470, 700, 0.5, { head: -0.25, arm: 0.3 });
+  ADAM.draw(ctx, 'oturan', 760, 700, 0.55, { head: 0.25 });
+  ADAM.draw(ctx, 'oturan', 760, 1100, 0.55, { head: -0.25 });
+  ADAM.draw(ctx, 'yakin', 300, 1900, 0.5, { head: 0.25, arm: 0.6 });
+  ADAM.draw(ctx, 'yakin', 800, 1900, 0.5, { head: -0.25, arm: -0.1 });
+  label('ayakta h+.25 a-.6', 40, 60); label('ayakta h-.25 a+.3', 330, 60); label('oturan h±.25', 640, 60);
+  label('yakin h+.25 a+.6', 60, 1330); label('yakin h-.25 a-.1', 600, 1330);
   Post.apply(ctx);
 };
 window.READY = true;

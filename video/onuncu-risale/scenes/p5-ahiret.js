@@ -2,7 +2,11 @@
 // ebediyete lâyık cismanî ziyafetler olacaktır."
 // Güneş yok, ışık yumuşak ve kaynaksız; ırmaklar oyuksuz yüzeyde, köşklerin ve tahtların altından akar.
 'use strict';
-const RISE = { t0: 27.42, t1: 29.5, dist: 3200 };
+// bulut kuşağı sprite'ı 1480x900: üst 0-100 kabarık kenar, 100-700 tam örtücü gövde, 700-850 seyrek.
+// A (düz) kabarık kenarıyla manzaraya bakar; B (ters) gövdesi A'nın gövdesine biner, kabarık kenarı önceki sahneye bakar.
+const BAND = { sc: 1.2, topA: 1920 - 150 };
+BAND.topB = BAND.topA + 480 * BAND.sc;
+const RISE = { t0: 27.38, t1: 29.6, dist: BAND.topB + 900 * BAND.sc }; // B'nin alt kenarı = önceki sahnenin üst kenarı
 const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
 (() => {
   const T0 = RISE.t0, T1 = 36.62;
@@ -15,7 +19,6 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
       [tFeast + 0.25, { x: 330, y: 1150, z: 2.3 }, E.in3],
     ], t);
     const b = breathe(t, 0.5); c.x += b.x; c.y += b.y; c.r = b.r;
-    if (t < tVista) c.y += RISE.dist - riseY(t); // yükseliş: dünya yukarıdan iner
     return c;
   }
   function feastCam(t) {
@@ -47,8 +50,18 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
   // yükseliş sırasında geçilen bulut kuşağı (dünyanın altında, yukarıdan iner)
   function drawCloudBand(ctx, t) {
     if (!hasSpr('bulut-kusagi')) return;
-    const c = vistaCam(t);
-    withCam(ctx, camPar(c, 1), () => { drawSpr(ctx, spr('bulut-kusagi'), 540, 2480, 1.55); });
+    const b = spr('bulut-kusagi'); const k = b.k || 1, sc = BAND.sc;
+    const cw = b.canvas.width / k, ch = b.canvas.height / k; const bw = cw * sc, bh = ch * sc;
+    const px = (b.px ?? cw * k / 2) / k, py = (b.py ?? ch * k / 2) / k;
+    const L = W / 2 - bw / 2;
+    const a = 1 - E.io2(inv(0.86, 1, riseY(t) / RISE.dist)); // varışta kuşak çözülür
+    const at = (top, flip) => {
+      ctx.save(); ctx.globalAlpha *= a;
+      if (flip) { ctx.translate(0, top + bh); ctx.scale(1, -1); top = 0; }
+      drawSpr(ctx, b, L + px * sc, top + py * sc, sc); ctx.restore();
+    };
+    at(BAND.topA, false);  // kabarık üst kenar manzaraya bakar
+    at(BAND.topB, true);   // ters kat: kabarık kenarı aşağıya, önceki sahneye bakar
   }
 
   function drawFeast(ctx, t) {
@@ -80,8 +93,12 @@ const riseY = (t) => RISE.dist * E.io3(inv(RISE.t0, RISE.t1, t));
     draw(ctx, t) {
       const feastA = E.io2(inv(tFeast - 0.15, tFeast + 0.2, t));
       if (feastA < 1) {
+        // yükseliş: bütün manzara (katmanları bozulmadan) yukarıdan iner; altında bulut kuşağı
+        const off = -(RISE.dist - riseY(t));
+        ctx.save(); ctx.translate(0, off);
         drawVista(ctx, t);
         if (t < tVista + 0.1) drawCloudBand(ctx, t);
+        ctx.restore();
       }
       if (feastA > 0) { ctx.save(); ctx.globalAlpha = feastA; drawFeast(ctx, t); ctx.restore(); }
     },
