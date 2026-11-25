@@ -20,6 +20,8 @@
    saturation outside), so no elbow/knee can bend backwards and no joint can reach an impossible angle.
    Every body part is one clean silhouette (union of convex pieces, wound the same way), so no inner seams;
    the coat skirt is the convex hull of the waist and the thighs, so the hem can never tear or self-intersect.
+   A seated figure's hem rests on the ground instead of passing through it. A raised arm's shading keeps the
+   shoulder end lit, so the sleeve's round root never shows as a disc on the coat (side and front views).
    A figure drawn with alpha < 1 is rendered as one group (offscreen) so overlapping parts never show through
    each other. Skeleton geometry and grounding are unchanged (scenes replicate them for IK / contact points). */
 (function () {
@@ -186,6 +188,15 @@
     ctx.restore();
   }
 
+  /** centre for a limb's shading glaze: the limb's middle, moved along the light direction just enough that the
+      limb's root (shoulder) stays on the lit side. A raised arm otherwise got its dark end at the shoulder, and the
+      sleeve's round root showed as a dark disc on the coat (a "ball joint"). No change for arms that hang or reach. */
+  function limbGlazeCentre(mid, root, facing, h, lx = 0.62, ly = 0.78) {
+    const d = [lx * facing, ly];
+    const k = (root[0] - mid[0]) * d[0] + (root[1] - mid[1]) * d[1] + 0.045 * h;
+    return k > 0 ? [mid[0] + d[0] * k, mid[1] + d[1] * k] : mid;
+  }
+
   function tintCol(c, o) {
     let col = c;
     if (o.desat) col = E.desat(col, o.desat);
@@ -312,10 +323,11 @@
     const lean = P.lean || 0;
     const T = (x, y) => { const q = rot([x * h, -y * h], lean); return [S.hip[0] + q[0], S.hip[1] + q[1]]; };
 
-    // upper torso (shoulders to just below the hip), in the torso frame
+    // upper torso (shoulders to just below the hip), in the torso frame. The bottom edge has inner points so the
+    // spline does not overshoot at its corners (it used to bulge out of the back of the coat below the belt).
     const torsoUp = smoothCW([
-      T(-0.048, 0.296), T(-0.062, 0.25), T(-0.058, 0.17), T(-0.05, 0.1), T(-0.058, 0.02), T(-0.061, -0.03),
-      T(0.054, -0.03), T(0.054, 0.02), T(0.058, 0.12), T(0.07, 0.2), T(0.06, 0.265), T(0.03, 0.302), T(-0.02, 0.31),
+      T(-0.048, 0.296), T(-0.062, 0.25), T(-0.058, 0.17), T(-0.05, 0.1), T(-0.058, 0.02), T(-0.0585, -0.03),
+      T(-0.045, -0.032), T(0.04, -0.032), T(0.054, -0.03), T(0.054, 0.02), T(0.058, 0.12), T(0.07, 0.2), T(0.06, 0.265), T(0.03, 0.302), T(-0.02, 0.31),
     ], 0.5);
 
     // ---- arms
@@ -327,7 +339,7 @@
         capsulePts(el, add(wr, fd, -0.004 * h), 0.0246 * h, 0.0205 * h),
       ]);
       const col = near ? C.coat : darker(C.coat);
-      const cx = (sh[0] + wr[0]) / 2, cy = (sh[1] + wr[1]) / 2;
+      const [cx, cy] = limbGlazeCentre([(sh[0] + wr[0]) / 2, (sh[1] + wr[1]) / 2], sh, o.facingScreen, h);
       let seam = null;
       if (seamInside) { const cut = new Path2D(); cut.arc(sh[0], sh[1], 0.05 * h, 0, TAU); seam = { inside: seamInside, cut }; }
       part(L, sleeve, col, o, [cx, cy, h * 0.18], 0.4, seam);
@@ -376,6 +388,9 @@
       skirtPts.push(pf, pb, add(add(S.hip, d, 0.06 * h), n, 0.056 * h), add(add(S.hip, d, 0.06 * h), n, -0.056 * h));
       if ((pf[0] - S.hip[0]) * fwd[0] + (pf[1] - S.hip[1]) * fwd[1] > (frontHem[0] - S.hip[0]) * fwd[0] + (frontHem[1] - S.hip[1]) * fwd[1]) frontHem = pf;
     }
+    // sitting on the ground: the hem would hang below the seat, through the floor — it rests on the ground instead
+    // (clamping keeps the hull convex and changes continuously; no effect unless the hem reaches the ground)
+    if (!P.float) for (const q of skirtPts) if (q[1] > -dy - 0.002 * h) q[1] = -dy - 0.002 * h;
     const skirt = roundHull(skirtPts, 0.016 * h);
     const coat = new Path2D();
     coat.addPath(torsoUp);
@@ -476,14 +491,21 @@
       part(L, path, C.trousers, o, [lg.j[0], lg.j[1], h * 0.25], 0.32);
     };
 
-    const drawArm = (a, s, behind) => {
+    const drawArm = (a, s, behind, bodyPath) => {
       const fd = dirOf(a.a2);
       // the sleeve head sits a touch below the joint so the shoulder line rounds into the arm (no pad)
       const sleeve = polyPath([
         capsulePts(add(s, dirOf(a.a1), 0.01 * h), a.j, 0.0295 * h, 0.0252 * h),
         capsulePts(a.j, add(a.e, fd, -0.004 * h), 0.0245 * h, 0.0195 * h),
       ]);
-      part(L, sleeve, behind ? E.shade(C.coat, -0.22) : C.coat, o, [a.j[0], a.j[1], h * 0.2], 0.36);
+      // a raised arm: the round sleeve head would show its outline on the coat below the shoulder (a knob).
+      // Its ink is erased inside the coat near the joint; the erased disc grows smoothly with the abduction
+      // (none for hanging / opened arms, so those are unchanged and nothing pops).
+      let seam = null;
+      const kr = sstep(0.75, 1.25, a.ab);
+      if (!behind && bodyPath && kr > 0.01) { const cut = new Path2D(); cut.arc(s[0], s[1], 0.048 * h * kr, 0, TAU); seam = { inside: bodyPath, cut }; }
+      const gc = limbGlazeCentre(a.j, s, o.facingScreen, h);
+      part(L, sleeve, behind ? E.shade(C.coat, -0.22) : C.coat, o, [gc[0], gc[1], h * 0.2], 0.36, seam);
       // hand: hanging → seen edge-on, thumb toward the body; arms opened → palm to the viewer, thumb out/up;
       // forearm across the body → back of the hand, thumb up. Blended continuously (no pops).
       const kOpen = sstep(0.3, 0.75, a.ab), kCross = sstep(0.9, 1.6, a.el);
@@ -564,8 +586,8 @@
       part(L, nape, E.shade(C.skin, -0.05), { ...o, outline: false }, null, 0);
     }
     // arms in front of the body (all of them in front view; the hanging ones in back view)
-    if (!(back && P.lFront)) drawArm(la, lSh, false);
-    if (!(back && P.rFront)) drawArm(ra, rSh, false);
+    if (!(back && P.lFront)) drawArm(la, lSh, false, torso);
+    if (!(back && P.rFront)) drawArm(ra, rSh, false, torso);
     E.restore(L);
     return { hc, nb, la, ra, ll, rl, lSh, rSh, dy };
   }
