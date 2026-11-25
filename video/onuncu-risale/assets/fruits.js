@@ -124,21 +124,19 @@ const YIY = (() => {
     const tr = ([u, v]) => [x + u * c - v * s, y + u * s + v * c];
     return { pts: loc.map(tr), mid: mid.map(tr), top: top.map(tr) };
   }
-  // iki tonlu yaprak: damarın ışığa bakan yarısı açık, öbürü koyu; ince damar
+  // iki tonlu yaprak: damarın ışığa bakan yarısı açık, öbürü koyu; ince damar. pal: 5-6 renk (koyu→açık)
   function leaf(S, x, y, ang, len, wid, pal, o = {}) {
     const L = leafPts(x, y, ang, len, wid, o); const sh = shape(L.pts, 0.4);
     const k = S.k; const ls = len / k;
-    // hangi yarı ışığa bakıyor
-    const nx = -Math.sin(ang), ny = Math.cos(ang); const lightTop = nx * LT[0] + ny * LT[1] < 0; // üst (-n) yarı
-    const half = poly([...L.mid, ...(lightTop ? L.top.slice().reverse() : L.top.slice().reverse())]);
+    const nx = -Math.sin(ang), ny = Math.cos(ang); const lightTop = nx * LT[0] + ny * LT[1] < 0; // üst (-n) yarı ışıkta mı
     const topHalf = poly([...L.mid, ...L.top.slice().reverse()]);
+    const outTop = (() => { const p = new Path2D(); p.rect(sh.bb[0] - 60, sh.bb[1] - 60, sh.bb[2] - sh.bb[0] + 120, sh.bb[3] - sh.bb[1] + 120); p.addPath(topHalf); return [p, 'evenodd']; })();
     const pd = o.dark ? 1 : 0;
-    layer(S, { clip: sh.path, bb: sh.bb, cols: [pal[1 + pd], pal[2 + pd]], base: pal[1 + pd], dir: (px, py) => ang + 0.55 * (S.r() < 0.5 ? 1 : -1) * 0.6, len: [ls * 0.22, ls * 0.42], wid: [clamp(ls * 0.07, 3, 11), clamp(ls * 0.12, 4, 15)], cover: 1.8, rim: o.rim ?? { w: 1.5, alpha: 0.85 }, lJit: 0.025 });
-    const lightClip = lightTop ? [sh.path, topHalf] : [sh.path, [(() => { const p = new Path2D(); p.addPath(new Path2D()); return poly([...L.mid, ...L.pts.slice(L.top.length - 1), L.pts[0]]); })(), 'nonzero']];
-    layer(S, { clip: lightTop ? [sh.path, topHalf] : [sh.path, outside(sh.bb, -1e5, -1e5, 1, 1)[0], topHalf].slice(0, 1).concat([[(() => { const p = new Path2D(); p.rect(sh.bb[0] - 50, sh.bb[1] - 50, sh.bb[2] - sh.bb[0] + 100, sh.bb[3] - sh.bb[1] + 100); p.addPath(topHalf); return p; })(), 'evenodd']]),
-      bb: sh.bb, cols: [pal[3 + pd], pal[4 + pd]], base: pal[3 + pd], dir: (px, py) => ang + (lightTop ? -0.5 : 0.5), dirJit: 0.15, len: [ls * 0.2, ls * 0.38], wid: [clamp(ls * 0.06, 3, 10), clamp(ls * 0.1, 4, 14)], cover: 1.8, lJit: 0.025 });
-    if (o.vein !== false) line(S, L.mid.slice(0, Math.round(L.mid.length * 0.92)), clamp(ls * 0.025, 1.2, 3.2), o.vein ?? shade(pal[4 + pd], 0.1, 0.7), { w1: 0.6, taper: false });
-    return { sh, mid: L.mid };
+    const sw = [clamp(ls * 0.07, 2.5, 11), clamp(ls * 0.12, 3.5, 15)];
+    layer(S, { clip: sh.path, bb: sh.bb, cols: [pal[1 + pd], pal[2 + pd]], base: pal[1 + pd], dir: () => ang + (S.r() - 0.5) * 0.9, len: [ls * 0.2, ls * 0.4], wid: sw, cover: 1.8, rim: o.rim ?? { w: 1.5, alpha: 0.85 }, lJit: 0.025 });
+    layer(S, { clip: [sh.path, lightTop ? [topHalf, 'nonzero'] : outTop], bb: sh.bb, cols: [pal[3 + pd], pal[Math.min(pal.length - 1, 4 + pd)]], base: pal[3 + pd], dir: ang + (lightTop ? -0.45 : 0.45), dirJit: 0.15, len: [ls * 0.18, ls * 0.36], wid: sw, cover: 1.8, lJit: 0.025 });
+    if (o.vein !== false) line(S, L.mid.slice(1, Math.round(L.mid.length * 0.9)), clamp(ls * 0.022, 1.1, 3), o.vein ?? shade(pal[Math.min(pal.length - 1, 4 + pd)], 0.08, 0.7), { w1: 0.5 });
+    return { sh, mid: L.mid, lightTop };
   }
   return { TAU, LT, poly, bboxOf, circ, ellPts, shape, polyShape, ellShape, outside, crPts, withClip, fill, dab, field, layer, line, softLine, leafPts, leaf, normClips, makeTest };
 })();
@@ -186,14 +184,14 @@ function pomegranateOn(S, cx, cy, R, o = {}) {
     const [l3x, l3y] = at(0.6);
     layer(S, { clip: [body.path, ellipsePath(l3x, l3y, R * 0.26, R * 0.19, -0.75)], bb, cols: [P[6], P[7]], base: P[6], alpha: 1 - wi * 1.4, baseAlpha: (1 - wi * 1.4) * 0.9, dir: merid, len: [sL[0] * 0.6, sL[1] * 0.6], wid: [sW[0] * 0.7, sW[1] * 0.7], cover: 1.6, shade: (x, y) => clamp(0.9 - Math.hypot(x - l3x, y - l3y) / (R * 0.3)) });
   }
-  // 4) belirsiz yüz sırtları (meridyen): ince açık/koyu çizgiler
+  // 4) belirsiz yüz sırtları (meridyen): küre üzerinde taçtan inen ince çizgiler
   withClip(S, body.path, () => {
+    const vx = -ay, vy = ax; // taç eksenine dik
     for (let i = 0; i < 5; i++) {
-      const a0 = ca + Math.PI + (i - 2) * 0.62 + (rr() - 0.5) * 0.12;
-      const q = []; for (let j = 0; j <= 14; j++) { const t = j / 14; const ang = ca + (a0 - ca) * 1 ; const rad = R * (0.12 + t * 1.0); const sw = Math.sin(t * Math.PI) * (i - 2) * 0.32; const aa = ca + Math.PI + (a0 - ca - Math.PI) * Math.sin(t * Math.PI * 0.5) ; q.push([tipX + Math.cos(ca + Math.PI + (aa - ca - Math.PI) * 1.0 + sw * 0) * rad * 0.0 + (Math.cos(aa) * rad), tipY + Math.sin(aa) * rad * 0.97]); }
-      const lit = Math.cos(a0 - Math.atan2(L[1], L[0])) > -0.2;
-      const pts2 = q.filter(([x, y]) => S.x.isPointInPath(body.path, x, y));
-      if (pts2.length > 3) line(S, pts2, clamp(Rs * 0.012, 1.2, 2.6), lit ? shade(P[5], 0.05) : P[2], { w1: 0.8, taper: true });
+      const phi = (i - 2) * 0.62 + (rr() - 0.5) * 0.14;
+      const q = []; for (let j = 0; j <= 16; j++) { const t = 0.1 + (j / 16) * 0.8; const u = Math.cos(Math.PI * t) * R * 0.95, v = Math.sin(Math.PI * t) * Math.sin(phi) * R; q.push([cx + ax * u + vx * v, cy + ay * u + vy * v]); }
+      const mx = q[8][0] - cx, my = q[8][1] - cy; const lit = mx * L[0] + my * L[1] > -R * 0.15;
+      line(S, q, clamp(Rs * 0.011, 1.1, 2.4), lit ? shade(P[5], 0.06, 0.9) : P[2], { w1: 0.7, taper: true });
     }
   });
   // 5) kuruma: kırışıklar (koyu oluk + ışık tarafında ince sırt)

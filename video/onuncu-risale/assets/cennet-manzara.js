@@ -284,45 +284,60 @@ const CENNET_M = (() => {
   function paintBand() {
     const { w, h } = BAND;
     const S = Paint.sprite(w, h, { seed: 5202, k: 1 }); const r = S.r;
-    // pufta: [cx, cy, rx, ry, sıra]; sıralar arkadan öne; alttaki sıra üsttekinin tabanını örter
-    const puffs = [];
-    const row = (y0, rA, rB, gapA, gapB, ri, yJ = 40) => { for (let x = -90 + r() * 80; x < w + 110;) { const R = rA + r() * (rB - rA); puffs.push([x, y0 + (r() - 0.5) * yJ, R * (1.15 + r() * 0.3), R * (0.78 + r() * 0.16), ri]); x += R * (gapA + r() * (gapB - gapA)); } };
-    row(150, 60, 120, 1.2, 1.9, 0, 60); // üst tepe (kırık)
-    for (let i = 0; i < 7; i++) { const R = 30 + r() * 34; puffs.push([r() * w, 96 + r() * 40, R * 1.3, R * 0.85, 0]); }
-    row(258, 80, 130, 1.1, 1.5, 1);
-    row(360, 90, 140, 1.05, 1.45, 2);
-    row(462, 90, 140, 1.05, 1.45, 3);
-    row(562, 85, 130, 1.1, 1.5, 4);
-    row(668, 70, 115, 1.35, 2.2, 5, 50); // alt sarkan pufçuklar (kırık)
-    for (let i = 0; i < 9; i++) { const R = 20 + r() * 26; puffs.push([r() * w, 770 + r() * 50, R * 1.35, R * 0.8, 6]); }
-    const sil = new Path2D(); sil.addPath(rectPath(-30, 250, w + 60, 420));
-    for (const [cx, cy, rx, ry] of puffs) sil.addPath(ellipsePath(cx, cy, rx, ry));
-    S.rim(sil, { w: 2.2, alpha: 0.55 });
-    fill(S, rectPath(-30, 250, w + 60, 420), '#D9CEE7', { h: 140 });
-    puffs.sort((a, b) => a[4] - b[4] || a[1] - b[1]);
-    for (const [cx, cy, rx, ry, ri] of puffs) {
-      const t = ri / 6;
-      const warm = NOISE(cx * 0.004 + 3, ri * 0.7) ; // bölgesel sıcaklık: şeftali ↔ nane ↔ lavanta
-      const tint = warm < 0.42 ? '#F6D9CB' : warm < 0.58 ? '#F4E4EA' : '#DCEFE6';
-      const shC = mix('#BEB4DD', '#A9A0D2', t), loC = mix('#D3C9E7', '#C0B7DF', t);
-      const midC = mix(mix('#F1E3E4', tint, 0.6), '#DED4EC', t * 0.8), topC = mix(mix('#FCF6F1', tint, 0.25), '#F2ECF6', t * 0.7);
-      const pz = smoothPath(blobPts(cx, cy, rx, ry, 30, 0.035, 900 + Math.round(cx * 7 + cy)));
-      fill(S, pz, shC, { h: 135 });
-      S.x.save(); S.hx.save(); S.x.clip(pz); S.hx.clip(pz);
-      // alt gölge katmanı: düz yatay darbeler
-      field(S, { bbox: [cx - rx, cy + ry * 0.1, cx + rx, cy + ry], ramp: [shade(shC, -0.025), shC, loC], shade: Paint.grad(0, cy + ry, 0, cy + ry * 0.1, 0.1, 0.9), dir: 0, dirJit: 0.08, len: [rx * 0.4, rx * 0.8], wid: [9, 14], count: Math.round(rx / 11), noise: 0.2 });
-      // orta (şeftali/sedef) ve üst (inci) katlar: yukarı kaymış elipsler → altta lavanta hilal
-      const m1 = ellipsePath(cx, cy - ry * 0.16, rx * 0.93, ry * 0.86);
-      fill(S, m1, midC, { h: 145 });
-      field(S, { bbox: [cx - rx, cy - ry, cx + rx, cy + ry * 0.6], clip: m1, ramp: [shade(midC, -0.02), midC, shade(midC, 0.02)], shade: Paint.cst(0.5), dir: (x, y) => Math.atan2(y - (cy + ry * 0.8), x - cx) + Math.PI / 2 + (r() - 0.5) * 0.2, len: [rx * 0.35, rx * 0.6], wid: [8, 13], count: Math.round(rx / 12), noise: 0.6 });
-      const m2 = ellipsePath(cx - rx * 0.06, cy - ry * 0.32, rx * 0.72, ry * 0.62);
-      fill(S, m2, topC, { h: 160 });
-      // tek, ince kemer (üst kenarda) + yumuşak ışık
-      arc(S, cx - rx * 0.04, cy + ry * 0.35, Math.min(rx, ry * 1.3) * 0.98, Math.PI + 0.42, TAU - 0.5, ry * 0.13, mix(topC, '#FFFFFF', 0.7), { alpha: 0.95 });
-      if (r() < 0.5) arc(S, cx + rx * 0.1, cy + ry * 0.2, Math.min(rx, ry * 1.3) * 0.62, Math.PI + 0.55, TAU - 0.7, ry * 0.08, mix(midC, shC, 0.25), { alpha: 0.8 });
+    // üst üste binen bulut setleri: her set düz lavanta tabanlı, üstü karnabahar gibi kabarık; arkadan öne
+    const ROWS = [
+      { yb: 214, rA: 30, rB: 72, g: [1.0, 1.5], gapP: 0.3, t: 0.0 },
+      { yb: 292, rA: 46, rB: 96, g: [0.85, 1.25], gapP: 0.06, t: 0.12 },
+      { yb: 374, rA: 54, rB: 106, g: [0.8, 1.2], gapP: 0, t: 0.27 },
+      { yb: 456, rA: 56, rB: 112, g: [0.8, 1.2], gapP: 0, t: 0.42 },
+      { yb: 538, rA: 56, rB: 112, g: [0.8, 1.2], gapP: 0, t: 0.57 },
+      { yb: 620, rA: 54, rB: 106, g: [0.85, 1.25], gapP: 0, t: 0.72 },
+      { yb: 700, rA: 48, rB: 96, g: [0.95, 1.4], gapP: 0.1, t: 0.86 },
+    ];
+    const sets = [];
+    for (const R0 of ROWS) {
+      const bumps = []; let x = -110 + r() * 60; let seg = [];
+      while (x < w + 120) {
+        const R = R0.rA + Math.pow(r(), 0.8) * (R0.rB - R0.rA);
+        if (R0.gapP && r() < R0.gapP && seg.length > 1) { bumps.push(seg); seg = []; x += R * (1.2 + r()); continue; }
+        seg.push([x, R0.yb - R * (0.45 + r() * 0.25), R]); x += R * (R0.g[0] + r() * (R0.g[1] - R0.g[0]));
+      }
+      if (seg.length) bumps.push(seg);
+      for (const sg of bumps) sets.push({ sg, yb: R0.yb, t: R0.t });
+    }
+    // alttaki kopuk bulutçuklar ve üstteki küçük bulutçuklar (kırık kenarlar)
+    const mini = (cx, yb, n, rA, rB, t) => { const sg = []; let x = cx - (n - 1) * rB * 0.5; for (let i = 0; i < n; i++) { const R = rA + r() * (rB - rA) * (1 - Math.abs(i - (n - 1) / 2) / n); sg.push([x, yb - R * 0.55, R]); x += R * 1.05; } sets.push({ sg, yb, t }); };
+    for (let i = 0; i < 9; i++) mini(r() * w, 780 + r() * 70, 2 + Math.floor(r() * 3), 16, 34, 1);
+    for (let i = 0; i < 6; i++) mini(r() * w, 126 + r() * 40, 2 + Math.floor(r() * 2), 14, 28, 0);
+    const setPath = (st, grow = 0, dy = 0, kR = 1) => { const p = new Path2D(); const xs = st.sg.map((b) => b[0]); const x0 = Math.min(...xs), x1 = Math.max(...xs); for (const [cx, cy, R] of st.sg) p.addPath(ellipsePath(cx, cy + dy, R * kR * 1.12 + grow, R * kR + grow)); p.addPath(rectPath(x0 - grow, st.yb - 34 + dy, x1 - x0 + 2 * grow, 34 + 16 + grow)); return p; };
+    const sil = new Path2D(); for (const st of sets) sil.addPath(setPath(st, 0));
+    S.rim(sil, { w: 2, alpha: 0.5 });
+    fill(S, rectPath(-30, 250, w + 60, 450), '#D5CAE6', { h: 140 });
+    for (const st of sets) {
+      const t = st.t; const xs = st.sg.map((b) => b[0]); const x0 = Math.min(...xs) - 120, x1 = Math.max(...xs) + 120;
+      const warm = NOISE(xs[0] * 0.003 + 5, t * 3);
+      const tint = warm < 0.42 ? '#F7DACB' : warm < 0.6 ? '#F5E3EC' : '#D9EFE6';
+      const shC = mix('#C3B9DF', '#A99FD1', t), loC = mix('#D5CBE8', '#BFB5DE', t);
+      const midC = mix(mix('#F3E6E6', tint, 0.6), '#E2D8EE', t * 0.7), topC = mix(mix('#FDF7F2', tint, 0.22), '#F4EEF7', t * 0.6);
+      const all = setPath(st, 0);
+      fill(S, all, shC, { h: 135 });
+      S.x.save(); S.hx.save(); S.x.clip(all); S.hx.clip(all);
+      // düz lavanta taban: yatay darbeler (referanstaki gibi)
+      field(S, { bbox: [x0, st.yb - 40, x1, st.yb + 18], ramp: [shade(shC, -0.025), shC, loC], shade: Paint.grad(0, st.yb + 16, 0, st.yb - 40, 0.1, 0.9), dir: 0, dirJit: 0.05, len: [50, 110], wid: [9, 14], count: Math.round((x1 - x0) / 26), noise: 0.2 });
+      // orta kat (şeftali/sedef) ve üst kat (inci): yukarı kaymış küçülmüş elipsler → altta lavanta hilal
+      const mid = new Path2D(); for (const [cx, cy, R] of st.sg) mid.addPath(ellipsePath(cx - R * 0.03, cy - R * 0.12, R * 1.0, R * 0.86));
+      fill(S, mid, midC, { h: 145 });
+      field(S, { bbox: [x0, st.yb - 230, x1, st.yb], clip: mid, ramp: [shade(midC, -0.02), midC, shade(midC, 0.02)], shade: Paint.cst(0.5), dir: (x, y) => (r() - 0.5) * 0.5, len: [26, 60], wid: [8, 12], count: Math.round((x1 - x0) / 9), noise: 0.6 });
+      const top = new Path2D(); for (const [cx, cy, R] of st.sg) top.addPath(ellipsePath(cx - R * 0.1, cy - R * 0.26, R * 0.74, R * 0.6));
+      fill(S, top, topC, { h: 160 });
+      // her kabarcıkta tek ince ışık kemeri (tarak) ve bazen ikinci iç kemer
+      for (const [cx, cy, R] of st.sg) {
+        arc(S, cx - R * 0.06, cy + R * 0.3, R * 0.92, Math.PI + 0.48, TAU - 0.56, Math.max(3, R * 0.1), mix(topC, '#FFFFFF', 0.75), { alpha: 0.95 });
+        if (R > 60 && r() < 0.5) arc(S, cx, cy + R * 0.34, R * 0.6, Math.PI + 0.6, TAU - 0.75, Math.max(2.5, R * 0.06), mix(midC, shC, 0.3), { alpha: 0.75 });
+      }
       S.x.restore(); S.hx.restore();
     }
-    return { canvas: S.finish({ emboss: 0.45 }), px: 0, py: 0, k: 1 };
+    return { canvas: S.finish({ emboss: 0.42 }), px: 0, py: 0, k: 1 };
   }
   defSprite('bulut-kusagi', paintBand);
 
