@@ -146,7 +146,7 @@
       if (dimP > 0) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.42 * dimP; ctx.fillStyle = '#4A4F86'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
       drawIndex(ctx, t, c);
       // dalış sonunda krem madalyon rengine geçiş (sonraki perdeye köprü)
-      const fadeTo = E.in2(inv(10.82, T1, t));
+      const fadeTo = E.io2(inv(10.66, 10.97, t));
       if (fadeTo > 0) { ctx.save(); ctx.globalAlpha = fadeTo; ctx.fillStyle = '#F3DDB8'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
     },
   });

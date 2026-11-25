@@ -53,7 +53,7 @@
   Engine.add({
     name: 'p2', t0: T0, t1: T1, z: 2,
     draw(ctx, t) {
-      const inA = E.out2(inv(T0, 11.18, t));
+      const inA = E.out2(inv(10.97, 11.14, t));
       ctx.globalAlpha = inA;
       const c = cam(t);
       ctx.save(); camApply(ctx, camPar(c, 0.35)); drawSpr(ctx, spr('p2-duvar'), -60, -40, 1.12); ctx.restore();
