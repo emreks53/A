@@ -53,12 +53,29 @@ teslim etmeden önce okuyun. "Bu dediğimin dışına kesinlikle çıkma."
 
 ## 8. Kapanış (en son çıkan kitaplar)
 - Kaynak ve sayfa ekranda yazar (ör. "Risale-i Nur / Mektubat / Yirminci Mektup / 243. Sayfa").
-- Sahne Shutterstock'un yapay zekâ çizimiyle ultra gerçekçi üretilir: kamera çekiminden ayırt edilmesi kesinlikle
-  imkânsız olacak kadar gerçekçi; tam bir okuma ortamı, ultra huzurlu ve hoş bir yer (ör. cam kenarında gün batımı;
-  manzarada şehir, göl ya da doğa). Her videoda sahne farklı olur; önceki videolarla dizilişi aynı olmaz.
-- Birkaç Risale-i Nur kitabı güzel bir yerde güzel biçimde durur; kalınlıkları, desenleri ve üstündeki yazılar RNK
-  Neşriyat'ınkine benzer ama tıpatıp aynı değildir. Risalelerin rengi: **#D68661**.
-- Bir kitap açık durur, sanki biz okuyormuşuz gibi.
-- Kur'an-ı Kerim en güzel yerde, en güzel şekilde durur; bir aparatın (sehpa, rahle, tutucu) üstünde değil, doğal ama
-  düzgün. Üstünde çok güzel biçimde Kur'an yazar. Rengi: **#144173** (hoş ve elit bir okyanus mavisi); üstündeki yazı
-  ve işlemeler beyaz. Kur'an hiçbir kitabın altında ya da arkasında, örtülü kalmaz.
+- Görsel yapay zekâ ile üretilen ultra gerçekçi bir fotoğraftır (kullanıcı kendisi üretir; hazır istemler:
+  `kapanis-senaryolari.md`). Kamera çekiminden ayırt edilmesi kesinlikle imkânsız olmalı. Videoda fotoğraf, kamera gibi
+  çok yavaş yaklaşır; kaynak yazısı belirir.
+
+Her fotoğrafta SABİT kalanlar:
+- Risale-i Nur kitapları **#D68661** (açık, soluk terrakota-gül, açık kahve deriye çalan; koyu kahve ya da parlak kırmızı
+  değil); gerçekçi kalınlıklar (24 × 17 cm, sırtlar 3–5 cm, birbirinden farklı); RNK Neşriyat'ınkine benzer ama tıpatıp
+  aynı olmayan yaldız şeritler, tezhip süsleri, çerçeveli başlıklar.
+- Kur'an-ı Kerim **her fotoğrafta** vardır ve en şerefli, en yüksek yerdedir: yerde değil; hiçbir şeyin altında, arkasında
+  ya da örtülü değil; sehpa/rahle/tutucu gibi bir aparat üstünde değil; doğal ama düzgün. Gerçek bir Türk mushafı:
+  dikdörtgen ~17 × 24 cm, ~3,5 cm, yuvarlak sırt, deri **#144173** (okyanus mavisi); kapakta beyaz badem biçimli şemse
+  içinde doğru yazılmış "القرآن الكريم" (sülüs), beyaz köşebentler ve ince beyaz çerçeve.
+- Dersin yapıldığı kitap önde, **kapalı**, açılmaya hazır bekler; kapağında adı (ör. MEKTUBAT) yaldızla okunur. Açık
+  kitap yoktur.
+- İnsan ya da el hiç yoktur. Vecize, alıntı, logo, filigran ya da kitap adları ve Kur'an hattı dışında okunur yazı yoktur.
+- Kitaplar ve mekân kadrajda dengelidir.
+
+Fotoğraftan fotoğrafa DEĞİŞENLER (çeşitlilik çok olsun; ardışık videolarda tekrar etmesin):
+- Mekân ve manzara: sınır yok (ev, pencere kenarı, medrese, kütüphane, kafe, bahçe, kıyı, dağ, cami avlusu; Mekke'de
+  Kâbe'nin karşısı, Medine'de Mescid-i Nebevî; şehir, deniz, göl, dağ, kar, yağmur, sis...).
+- Saat ve ışık: sabah, gündüz, gün batımı, akşam/gece lamba ışığı.
+- Eşyalar: çay/kahve, tesbih, seccade, defter, kalem, gözlük, çiçek/bitki vb. (yasaklı eşya listesi yok; ama mistik,
+  İslamiyet'i temsil etmeyen öğeler yine yok).
+- Risale sayısı (az ya da bütün Külliyat), Kur'an'ın duruşu (dik ya da yatık; her zaman en şerefli yerde), ders kitabının
+  yanındaki eşyalar, genel hava (sinematik ya da doğal), kamera açısı.
+- Senaryo videonun konusuna bağlı değildir; bağımsız ve çeşitli seçilir.
