@@ -183,8 +183,8 @@ def meydan_kamera(V):
     ax, ay, _, _ = meydan_adam(min(V, 3.5))
     K = Kamera
     kareler = [
-        (0.0, K(540, 1040, 0.62)), (T_DAR, K(540, 1040, 0.62)),
-        (1.95, K(560, 1060, 1.10)),
+        (0.0, K(560, 1000, 0.84)), (T_DAR, K(562, 1010, 0.90)),
+        (1.95, K(570, 1060, 1.12)),
         (2.75, K(ax + 30, ay - 210, 1.52)),
         (3.60, K(ax + 90, ay - 230, 1.62)),
     ]
@@ -239,15 +239,11 @@ def ciz_meydan(t: Tuval, V, cam: Kamera):
 
 
 def ciz_kapi_sahnesi(V):
+    """Açılış: boş kâğıtta dünyanın kendisi (meydan) boyanarak açılır (mecazi 'yurt' kapı gibi cismanileştirilmez)."""
     t = Tuval()
-    kc = kapi_kamera(V)
-    Mk = kc.M() @ M_yerlestir(540, 1430, 1.0)
-    ac = ilerle(V, 0.07, 0.80, e_io)
-    if kc.zum < KAPI_ZUM_SON * 0.98 and ac > 0:
-        mimari.ciz_kemerli_kapi(t, Mk, acilma=ac, isik=(-0.6, -0.8), tohum=1)
-    dunya_ac = ilerle(V, 0.40, 1.00, e_out)
+    dunya_ac = ilerle(V, 0.06, 0.95, e_out)
     if dunya_ac > 0:
-        with t.gorunurluk(1.0, acilma_radyal(dunya_ac, 540, 1450, 1500, dalga=0.22, on=0.12, tohum=3),
+        with t.gorunurluk(1.0, acilma_radyal(dunya_ac, 560, 1150, 1700, dalga=0.22, on=0.14, tohum=3),
                           M=np.eye(3)):
             ciz_meydan(t, V, meydan_kamera(V))
     return t
@@ -380,11 +376,13 @@ def durum(V, evre=None):
     # kubbe ve sıcak ışık (kulluk yeri)
     s['kubbe'] = 0.0 if evre_k == 'sulama' else ilerle(V, 10.05, 10.85, e_out)
     s['sicak'] = ilerle(V, 10.05, 10.95, e_out) if evre_k == 'secde' else 0.0
-    s['dalga_nur'] = ilerle(V, T_UBUDIYET, T_UBUDIYET + 0.9, lambda x: x) if evre_k == 'secde' else 0.0
+    s['dalga_nur'] = 0.0
     # kalp nuru
     s['nur'] = 0.0 if once else anahtar(V, [(T_DINI - 0.05, 0.0), (T_DINI + 0.45, 1.0), (T_KUVVET + 0.05, 1.0),
                                             (T_KUVVET + 0.45, 0.0)])
-    s['nur_isin'] = 0.0 if once else ilerle(V, 17.78, 18.78, lambda x: x)
+    s['nur_isin'] = 0.0
+    # "o ubudiyete": kalpteki iman nuru (göğe yönelmeden) yerinde güçlenir
+    s['nur_guc'] = 0.0 if once else ilerle(V, 17.80, 18.60, e_io) * (1.0 - ilerle(V, T_KUVVET, T_KUVVET + 0.4, e_io))
     s['nur_kuyruk'] = 0.0 if once else ilerle(V, T_KUVVET - 0.35, T_KUVVET + 0.25, lambda x: x)
     # güneş ve saat
     s['gunes'] = 1.0 if V > 20.9 else 0.0
@@ -497,10 +495,6 @@ def ciz_bahce(V, cam: Kamera, evre=None):
     if s['sukur'] > 0:
         _k(doga.ciz_ucusan_yapraklar, t, M, V, int(26 * s['sukur']), (0, 500, 1080, 1750), 0.35, 9, tur='tac',
            boyut=2.0, kaynak=[(c[0], c[1] - c[2] * 0.8) for c in CICEKLER])
-    zerre = max(anahtar(V, [(23.9, 0.0), (24.5, 1.0), (25.1, 1.0), (25.5, 0.25)]), s['sukur'])
-    if zerre > 0.02:
-        esyalar.ciz_isik_zerreleri(t, M, V, int(40 * zerre), (SECDE_X - 220, 900, SECDE_X + 380, 1420), tohum=6,
-                                   guc=0.85 * zerre, boyut=1.7)
     if T_MUVAFIK - 0.6 < V < T_MUVAFIK + 1.4:
         ciz_damlalar(t, V, s, M)
     if s['sikayet'] > 0 and s['sikayet_kaldir'] < 1:
@@ -587,11 +581,7 @@ def ciz_bahce(V, cam: Kamera, evre=None):
     if s['kubbe'] > 0.01:
         Mk = mt.ufuk_M(cam, 0.45, UFUK) @ M_yerlestir(KUBBE[0], UFUK + 4, KUBBE[1])
         with t.gorunurluk(1.0, acilma_radyal(s['kubbe'], 0, -300, 900, dalga=0.2, tohum=11), M=Mk):
-            mimari.ciz_kubbe_cami(t, Mk, nur=min(1.0, 0.45 * s['kubbe'] + 0.6 * s['sicak'] + 0.5 * s['koyuluk']),
-                                  tohum=2)
-        if s['koyuluk'] > 0.05:
-            # fırtınada kubbenin pencerelerinde sıcak bir ışık: din korunur
-            t.isik(yol_elips(70, -300, 300, 200), Mk, '#FFE2A6', guc=0.22 * s['koyuluk'], yumusak=40 * Mk[0, 0])
+            mimari.ciz_kubbe_cami(t, Mk, nur=0.0, tohum=2)
     if s['koyuluk'] > 0.02:
         t.lavi(yol_dikdortgen(-3000, -6000, 4000, UFUK + 8), Mu, '#8E8AA6', yog=0.32 * s['koyuluk'], kenar=6,
                dalga=0.0, islak=0.0, gran=0.0, akis=0.15, yumusak=10, tohum=77)
@@ -675,30 +665,13 @@ def ciz_adam(t, V, s, M):
                battaniye_alfa=s.get('battaniye_alfa', 1.0), elde=elde, nefes=(V * 0.25) % 1.0,
                ayakkabi=s.get('ayakkabi', True))
     bilgi['ibrik_uc'] = ibrik_bilgi.get('uc')
-    if s['sicak'] > 0.01:
-        bx, by = bilgi['bas']
-        t.isik(yol_daire(bx, by + 60 * M[0, 0], 210 * M[0, 0]), np.eye(3), '#FFE6B8', guc=0.18 * s['sicak'],
-               yumusak=70 * M[0, 0])
-    if s['dalga_nur'] > 0 and s['dalga_nur'] < 1:
-        # "ubudiyettir": alın secdeye değdiği yerden bahçeye yayılan yumuşak altın ışık halkası
-        ax, ay = bilgi['bas']
-        r = (80 + 900 * s['dalga_nur']) * M[0, 0]
-        g = 0.30 * (1.0 - s['dalga_nur']) ** 1.5
-        cember = yol_op_cember(ax, ay + 20 * M[0, 0], r, 0.18 * r)
-        t.isik(cember, np.eye(3), '#FFE2A8', guc=g, yumusak=0.12 * r)
     if s['nur'] > 0.01:
         kx, ky = bilgi['kalp']
         Mn = M_bilesik(M_oteleme(kx, ky), M_olcek(M[0, 0] * ADAM_OLCEK))
-        _k(esyalar.ciz_kalp_nuru, t, Mn, 26, parlaklik=s['nur'], isin=s['nur_isin'], zaman=V,
+        _k(esyalar.ciz_kalp_nuru, t, Mn, 26 * (1.0 + 0.25 * s['nur_guc']), parlaklik=s['nur'] * (1.0 + 0.45 * s['nur_guc']),
+           isin=0.0, zaman=V,
            kalkan=(40.0 / ADAM_OLCEK) * s['nur'] * min(1.0, s['yagmur'] * 3.0), isin_kuyruk=s['nur_kuyruk'],
            bas_ust=bilgi['bas_ust'][1])
-    if s['sukur'] > 0.05:
-        # şükür: avuçlardan güneşe süzülen ışık zerreleri
-        ex, ey = bilgi['el_on']
-        gx, gy = nokta_donustur(M, GUNES[0], GUNES[1])
-        esyalar.ciz_isik_zerreleri(t, np.eye(3), V, int(18 * s['sukur']),
-                                   (min(ex, gx) - 60, gy, max(ex, gx) + 60, ey), tohum=12, guc=0.7 * s['sukur'],
-                                   boyut=1.5, hiz=1.6)
     return bilgi
 
 
@@ -720,19 +693,18 @@ def ciz_gok_bahce(t, V, s, cam):
             _k(doga.ciz_firtina_bulutu, t, Mg, cx + kay, cy, gw, gh, koyuluk=max(0.0, k), gelis=min(1.0, g * 1.4),
                tohum=20 + i)
     # güneş ve saat
-    if s['gunes'] > 0.01:
+    saat_ac = ilerle(V, 21.55, 22.20, e_out)
+    saat_alfa = 1.0 - ilerle(V, 23.95, 24.55, e_io)
+    if saat_ac > 0 and saat_alfa > 0:
         Ms = cam.M(1.0) @ M_yerlestir(GUNES[0], GUNES[1], 1.0)
+        baglam = t.gorunurluk(saat_alfa, acilma_radyal(saat_ac, 0, 0, 230, dalga=0.18, on=0.12, tohum=31), M=Ms)
+        baglam.__enter__()
         akrep = 30.0 * s['dilim'] + 330.0 * s['gun']
         yelkovan = 360.0 * s['dilim']
         yelkovan_onceki = 360.0 * ilerle(V - 1.0 / FPS, T_SAATI - 0.02, T_SAATI + 0.55, e_io)
         _k(esyalar.ciz_saat, t, Ms, 175, dilim=s['dilim'], gun=s['gun'], gorunurluk=s['saat'], tohum=1,
-           akrep=akrep, yelkovan=yelkovan, yelkovan_onceki=yelkovan_onceki, kadran=s['kadran'], tamam=s['tamam'])
-        parla = math.sin(math.pi * s['tamam'])
-        if parla > 0.01:
-            t.isik(yol_daire(0, 0, 175 * 2.0), Ms, '#FFE2B0', guc=0.32 * parla, yumusak=70 * Ms[0, 0])
-        if s['sukur'] > 0.05:
-            t.isik(yol_op_cember(0, 0, 175 * (1.05 + 0.5 * s['sukur']), 40), Ms, '#FFE6B4',
-                   guc=0.28 * (1 - s['sukur']) + 0.05, yumusak=30 * Ms[0, 0])
+           akrep=akrep, yelkovan=yelkovan, yelkovan_onceki=yelkovan_onceki, kadran=1.0, tamam=s['tamam'], hale=0.0)
+        baglam.__exit__(None, None, None)
     ust = el.karistir('#6E98C8', '#6F6C8C', k)
     orta = el.karistir('#9BBCDB', '#8A87A2', k)
     alt = el.karistir('#EDDACD', '#B4AEBE', k)
@@ -799,21 +771,9 @@ def son_kapi_zum(V):
 
 
 def ciz_son(V):
-    zk = son_kapi_zum(V)
     cam = bahce_kamera(V)
     tb, _ = ciz_bahce(V, cam)
-    if zk >= SON_ZUM_BAS * 0.995:
-        return tb
-    t = Tuval()
-    kc = Kamera(540.0, 1050.0, zk)
-    Mk = kc.M() @ M_yerlestir(540, 1430, 1.0)
-    mimari.ciz_kemerli_kapi(t, Mk, acilma=1.0, isik=(-0.6, -0.8), tohum=1)
-    sak = t.saklama if t.saklama is not None else np.zeros((H, W), np.float32)
-    maske = (1.0 - sak)[..., None]
-    out = Tuval()
-    out.R = t.R * (1 - maske) + tb.R * maske
-    out.saklama = sak
-    return out
+    return tb
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -853,13 +813,9 @@ def _kamera_hareketi(V):
     pts = np.array([[0, 0, 1], [W, 0, 1], [0, H, 1], [W, H, 1], [W / 2, H / 2, 1]], np.float64).T
     kameralar = []
     if V < G1[1] + 0.05:
-        if kapi_kamera(V).zum < KAPI_ZUM_SON * 0.98:
-            kameralar.append(lambda v: kapi_kamera(v).M())
         kameralar.append(lambda v: meydan_kamera(v).M())
     if V > G1[0] - 0.05:
         kameralar.append(lambda v: bahce_kamera(v).M())
-    if V > SON_CEKILIS[0] - 0.05:
-        kameralar.append(lambda v: Kamera(540.0, 1050.0, son_kapi_zum(v)).M())
     en = 0.0
     for f in kameralar:
         A = f(V)
@@ -899,16 +855,12 @@ KAGIT_SON = None
 
 
 def _kapi_isigi(R, V):
-    """Kapı açıklığından yayılan sıcak ışık (gerçeğe geçişten önce)."""
-    u = ilerle(V, 26.95, GERCEGE_GECIS[0] + 0.25, e_io)
+    """Geçişten önce resim kâğıt rengine doğru hafifçe açılır (ışık efekti yok)."""
+    u = ilerle(V, 26.95, GERCEGE_GECIS[0] + 0.3, e_io)
     if u <= 0:
         return R
-    X, Y = mt._ekran_izgara()
-    d = np.sqrt(((X - 540) / 300.0) ** 2 + ((Y - 1010) / 460.0) ** 2)
-    g = np.exp(-d * d * (1.6 - 1.2 * u)) * (0.25 + 0.75 * u)
-    sicak = np.array([1.0, 0.975, 0.93], np.float32)
-    a = np.clip(g * u, 0, 1)[..., None]
-    return 1.0 - (1.0 - R) * (1.0 - a * sicak)
+    kagit = np.array([0.972, 0.957, 0.930], np.float32)
+    return R * (1 - 0.35 * u) + kagit * (0.35 * u)
 
 
 def kare_son(V):

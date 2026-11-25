@@ -129,10 +129,9 @@ for i, m in enumerate(_Z['manalar']):
     sonraki = _Z['manalar'][i + 1]['an'] if i + 1 < len(_Z['manalar']) else 1e9
     MANALAR.append(dict(metin=m['mana'], giris=m['an'] + SES_GECIKME, cikis=_CIKIS[i] + SES_GECIKME,
                         cikis_sure=_CIKIS_SURE[i], ard_arda=(sonraki - _CIKIS[i] < 0.5)))
-# güvence: iki mana aynı anda görünmesin
+# ardışık manalarda eski mana, yeni mana ekrana gelirken (aynı karede başlayarak) çekilir
 for _a, _b in zip(MANALAR, MANALAR[1:]):
-    _bitis = (_a['cikis'] - 0.05 if _a['ard_arda'] else _a['cikis'] + _a['cikis_sure'])
-    assert _bitis <= _b['giris'] - 1.0 / 30 + 1e-6, (_a['metin'], _b['metin'])
+    _a['sonraki_giris'] = _b['giris'] if _a['ard_arda'] else None
 
 
 def _zemin_parlakligi(R):
@@ -150,8 +149,9 @@ def manalari_ciz(R, V):
         if V < g0 or V > m['cikis'] + 0.45:
             continue
         gir = e_out((V - g0) / 0.30)
-        if m['ard_arda']:
-            cik = min(1.0, max(0.0, (V - (m['cikis'] - 0.18)) / 0.13))
+        if m['ard_arda'] and m.get('sonraki_giris'):
+            g_yeni = m['sonraki_giris'] - 1.0 / 30
+            cik = min(1.0, max(0.0, (V - g_yeni) / 0.10))
         else:
             cik = e_in((V - m['cikis']) / m['cikis_sure'])
         if cik >= 1:
