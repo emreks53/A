@@ -37,3 +37,10 @@ Pixel figures are on-screen pixels.
 14. **s04 13.35–13.8 and 14.38–14.82 (low priority): the man enters and leaves vertically about 3× faster than the ground band**, so he appears to glide over the meadow. Fix: move a foreground grass strip with him, or tie his height to the ground band's movement.
 15. **s07, s08, s09 and s17 copy the rig's skeleton maths.** They still match, because I did not change the skeleton or grounding.
 
+
+### Status (scene audit A/B/C, independently verified)
+All items above are fixed in the scene files. 30 fps scans: planted-foot slide ≤ 0.19 px/frame in every shot, no pose
+jumps, no view switches. s06 prostration is a dedicated anatomically correct figure (`sujood()` in s06.js); s16 no
+longer turns (no doubled-body dissolve); s19 never shows a hand above the water; s09 offering gesture slowed (no jump).
+Remaining, harmless: a walking foot moves ~2 px in its touchdown frame (engine `footState`), s08 standing far foot
+0.4 px above ground (rig `stand()`).
