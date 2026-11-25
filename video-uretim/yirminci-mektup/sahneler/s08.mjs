@@ -2,8 +2,9 @@
 // bir surette; âciz, miskin bir insan, bütün dünyanın sultanı da olsa kaç para eder."
 // s07'nin sonundaki gri, diz çökmüş adamla açılır; kamera geri çekilip rüzgârda savrulan kâğıtlar ve yapraklar,
 // eğri evler, kırık çitler, çatlak yolla perişan dünyayı açar. Kamera yükselir: yüksekten görülen meydanda rastgele
-// yönlere yürüyen, dönüp duran küçük adamlar (âvâre nev-i beşer); kuru çeşme. Kuru toprakta meyvesiz, çıplak ağaç; son
-// yaprak düşer (semeresiz). Kamera geri çekilir: uçsuz bucaksız boş ovada küçücük yalnız adam (sahipsiz); soldan
+// yönlere yürüyen, dönüp duran küçük adamlar (âvâre nev-i beşer); kuru çeşme. "semeresiz bir hayatta": mecaz gerçek
+// gibi gösterilmez (meyvesiz ağaç YOK); adam çorak ovada yürür, ayak izleri arkasında hemen silinir (iz bırakmayan,
+// sonuçsuz bir hayat). Kamera geri çekilir: uçsuz bucaksız boş ovada küçücük yalnız adam (sahipsiz); soldan
 // fırtına gelir, kolunu yüzüne siper eder (hâmisiz). Kamera yaklaşır: yere büzülüp oturmuş (âciz, miskin). Birden
 // başında taç; altından altın yığını ve taht fışkırır, kamera dramatik biçimde yükselir (sultanı da olsa). "Kaç para
 // eder": altın griye döner, toz olup rüzgârda savrulur; adam yine yerde, yalnız oturur. Palet gri-lila; altın yalnız
@@ -18,6 +19,7 @@ import * as M from '../motor/motifler.mjs';
 import * as D from './s08-dunya.mjs';
 import * as SV from './s08-servet.mjs';
 import { yereOturt, pozKaristir, DIZ_COK, BUZUL, SIPER, TAHT, AYAKTA, kalabalikKur, yerdeOturus, OTUR_TEMAS, cokusPlani } from './s08-insan.mjs';
+import { yurumePlani } from './s10-yardim.mjs';
 
 const T = {
   bas: 67.2,
@@ -172,10 +174,9 @@ const kamB = kameraYolu([
 // ================================================================ PLAKA C/D: ağaç ve ova
 const OVA = { ufuk: 985, adamX: 430, adamY: 1235, agacX: 875, agacY: 1120, agacBoy: 470, S: 0.36 };
 const kamD = kameraYolu([
-  { t: GD.t - 0.05, x: 877, y: 932, z: 2.16 },
-  { t: GD.t + 0.6, x: 875, y: 935, z: 2.03, e: ease.outCubic },
-  // geçişten sonra kısa duruş; son yaprak düşerken kamera tek bir yumuşak eğriyle aşağı süzülür
-  { t: T.sahip - 0.04, x: 905, y: 985, z: 2.0, e: ease.inOutSine },
+  // "semeresiz bir hayatta": çorak ovada yürüyen adamı izler (izleri arkasında silinir)
+  { t: GD.t - 0.05, x: 700, y: 1112, z: 1.9 },
+  { t: T.sahip - 0.04, x: 500, y: 1108, z: 1.85, e: ease.inOutSine },
   { t: T.hami + 0.36, x: 600, y: 1000, z: 0.95, e: ease.inOutCubic },
   { t: T.aciz - 0.15, x: 520, y: 1060, z: 1.3, e: ease.inOutSine },
   { t: T.aciz + 0.85, x: 431, y: 1130, z: 2.8, e: ease.inOutCubic },
@@ -551,8 +552,43 @@ function plakaB(ctx, t) {
 // oturağına (OVA.adamX) taşınır.
 const COK = { t0: T.aciz - 0.2, gecis: 77.3, gecisSure: 0.2 };
 const COKUS = cokusPlani(COK.t0, SIPER);
+const YURU_D = { t0: GD.t + 0.02, t1: T.sahip - 0.08, n: 5 };
+let yuruD = null, izlerD = null;
+function yuruDHazirla() {
+  if (yuruD) return;
+  const den = yurumePlani({ t0: YURU_D.t0, t1: YURU_D.t1, n: YURU_D.n, s: OVA.S, yon: -1, x0: 0, duruB: AYAKTA, kol: 0.3, egim: 0.04 });
+  yuruD = yurumePlani({ t0: YURU_D.t0, t1: YURU_D.t1, n: YURU_D.n, s: OVA.S, yon: -1, x0: OVA.adamX - den.x1, duruB: AYAKTA, kol: 0.3, egim: 0.04 });
+  // ayak izleri: her basışta (yaklaşık eşit aralık) bir iz; belirir ve ~0,6 sn'de silinir
+  izlerD = [];
+  const L = yuruD.x0 - yuruD.x1;
+  for (let k = 0; k < YURU_D.n; k++) {
+    const u = (k + 0.62) / YURU_D.n;
+    izlerD.push({ x: yuruD.x0 - L * (k + 0.55) / YURU_D.n, y: OVA.adamY + (k % 2 ? 3 : -2), t: lerp(YURU_D.t0, YURU_D.t1, u) });
+  }
+}
+function izlerCiz(g, t) {
+  yuruDHazirla();
+  if (t > YURU_D.t1 + 1) return;
+  for (const z of izlerD) {
+    const a = an(t, z.t - 0.04, 0.08) * (1 - an(t, z.t + 0.4, 0.55, ease.inOutSine));
+    if (a <= 0.01) continue;
+    // ayakkabı tabanı izi: ön taban + topuk (sola bakan adam: burun solda)
+    g.save();
+    g.globalAlpha = 0.6 * a;
+    g.fillStyle = '#5A5368';
+    const k = OVA.S * 2.2;
+    g.beginPath(); g.ellipse(z.x - 9 * k, z.y, 6.2 * k, 2.6 * k, 0, 0, TAU); g.fill();
+    g.beginPath(); g.ellipse(z.x + 3 * k, z.y, 3.8 * k, 2.3 * k, 0, 0, TAU); g.fill();
+    g.restore();
+  }
+}
 function adamPozu(t) {
-  // ayakta → başını kaldırır → siper → çöker, yere büzülür → (taç) → tahtta → iner, yerde oturur
+  // yürür (izleri silinir) → ayakta → başını kaldırır → siper → çöker, yere büzülür → (taç) → tahtta → iner, yerde oturur
+  yuruDHazirla();
+  if (t < YURU_D.t1) {
+    const r = yuruD(Math.max(t, YURU_D.t0));
+    return { poz: r.poz, kay: (OVA.adamX - r.x) / OVA.S };
+  }
   let p = AYAKTA;
   const bak = an(t, T.sahip + 0.5, 0.6);
   p = { ...AYAKTA, bas: lerp(AYAKTA.bas, -0.12, bak) };
@@ -660,14 +696,8 @@ function plakaD(ctx, t) {
     const yama = smooth(1.25, 1.7, cam.z);
     if (yama > 0) ogeCiz(g, R.yamaD, 0, 0, { alfa: yama });
     for (const ts of R.taslar) ogeCiz(g, ts.o, ts.x, ts.y, { s: ts.s });
-    // ağaç: rüzgârda hafifçe salınır
-    const sal = (Math.sin(t * 1.3) * 0.004 + Math.sin(t * 3.1) * 0.0025) * (1 + firtina * 2.5);
-    g.save();
-    g.translate(OVA.agacX, OVA.agacY);
-    g.rotate(sal);
-    M.agacCiz(g, R.agac, 0, 0, { buyume: 1, yaprak: 0, meyveA: 0, t });
-    g.restore();
-    sonYaprak(g, t, sal);
+    // (meyvesiz ağaç ve son yaprak çizilmez: "semeresiz" mecazı gerçek bir ağaçla gösterilmez)
+    izlerCiz(g, t);
   }, 1);
   // fırtına gölgesi: soldan gelen bulutların zemine düşen gölgesi
   const golge = firtina * (1 - 0.55 * an(t, T.butun - 0.3, 0.6));

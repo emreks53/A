@@ -117,6 +117,9 @@ export function desenCiz(ctx, x, y, R, t, { r = 0, alfa = 1, dolgu = 1, acilma =
 const ALEV_RENK = {
   lila: { arka: '#CFC6F0', tara: [[0, '#E2DCF7'], [0.6, '#B6ADE3'], [1, '#8A80C8']], kontur: '#948BD0', ic: '#F6F3FF' },
   mavi: { arka: '#C4D6F4', tara: [[0, '#DCE6F8'], [0.6, '#A9BEE8'], [1, '#7C95D0']], kontur: '#8AA1D6', ic: '#F2F7FF' },
+  // cin: dumansız ateş alevi ("mâricin min nâr", Rahman 15): saydam, dumansız, alevin ucu gibi sıcak tonlar
+  ates: { arka: '#FBEEDD', tara: [[0, '#FFF6EA'], [0.6, '#F8DCBC'], [1, '#EDB58A']], kontur: '#E9B48C', ic: '#FFFBF4' },
+  ates2: { arka: '#FBE9DA', tara: [[0, '#FFF4E8'], [0.6, '#F7D2B4'], [1, '#EAA986']], kontur: '#E6AA88', ic: '#FFFAF4' },
 };
 /**
  * Alev dili: yuvarlak, şişkin taban; uca doğru incelen, S kıvrımlı ve ucu hafifçe bir yana kıvrılan sivri dil.

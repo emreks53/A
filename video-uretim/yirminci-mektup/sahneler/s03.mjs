@@ -1,10 +1,10 @@
 // 3. cümle: "Cin ve insin en parlak saadeti ve en tatlı nimeti, o marifetullah içindeki muhabbetullahtır."
-// s02'nin marifet deseninden (540, 900, R 400) kamera geri çekilir: desen gökte parlayan bir madalyon olur. Uzak
-// sırtların ardında soluk lila-mavi, saydam alev dilleri (cin) yükselir; önde tepelerde madalyona dönük erkekler
-// kümeler hâlinde belirir (insin). Madalyon parlar, ışık dalgası kalabalığı yıkar, figürlerde kenar ışığı ve göğüslerde
-// yumuşak ışık (en parlak saadeti). Madalyondan altından güle çalan ışıklı taç yaprakları ve altın çiçekler saçılıp
-// kalabalığın üstüne süzülür; kimi iki kolunu, kimi tek kolunu kaldırır, kimi avuçlarını açar, kimi elini göğsüne koyar
-// (en tatlı nimeti). Kamera hızla madalyona dalar, ışığın içine girilir (o marifetullah); iç rozet aralanır, merkezden
+// s02'nin marifet deseninden (540, 900, R 400) kamera geri çekilir: desen (marifetullah kavramının simgesi) gökte bir
+// madalyon olur. Uzak sırtların ardında saydam, dumansız ateş alevleri (cin: "mâricin min nâr", Rahman 15) yükselir;
+// önde tepelerde erkekler kümeler hâlinde belirir (insin). KURAL: kimse gökteki simgeye dönüp kol kaldırmaz, ona doğru
+// el açmaz (ibadet imgesi olmasın): figürler önden/yandan, sakin durur, kimi elini göğsüne koyar; saadet göğüslerindeki
+// yumuşak ışıkla anlatılır (en parlak saadeti). Esintiyle yandan savrulan ışıklı taç yaprakları ve altın çiçekler
+// kalabalığın arasından süzülür (en tatlı nimeti; gökten yağmaz). Kamera hızla madalyona dalar, ışığın içine girilir (o marifetullah); iç rozet aralanır, merkezden
 // ışık taşar (içindeki); ışıktan bir gonca doğar ve gül açar, desen geri çekilip solar (muhabbetullahtır).
 // Bitiş: gül (540, 900), R 300, tam açık, soluk pembe-krem buğu.
 import { W, H, clamp, lerp, ease, an, pop, rng, TAU, tuval } from '../motor/temel.mjs';
@@ -62,16 +62,14 @@ const KUME = {
 
 // pozlar: önden/arkadan (insanOn) ve yandan (insanYan) hedef pozlar
 function onHedef(tip, fg) {
+  // önden görünüş; kol göğe kalkmaz: rahat duruş, tek el göğüste ya da eller önde birleşik
   const r = fg.kol;
-  if (tip === 'V') return { kol: [2.45 + 0.15 * r, 2.4 + 0.15 * (1 - r)], dirsek: [0.14, 0.12] };
-  if (tip === 'tek') return fg.el < 0.5 ? { kol: [2.5 + 0.1 * r, 0.12], dirsek: [0.1, 0.2] } : { kol: [0.12, 2.5 + 0.1 * r], dirsek: [0.2, 0.1] };
-  if (tip === 'avuc') return { kol: [0.48 + 0.1 * r, 0.5 + 0.1 * r], dirsek: [-0.95, -0.9] };
-  return { kol: [0.09, 0.09], dirsek: [0.12, 0.12] };
+  if (tip === 'tek') return fg.el < 0.5 ? { kol: [0.2, 0.09], dirsek: [2.25 + 0.1 * r, 0.12] } : { kol: [0.09, 0.2], dirsek: [0.12, 2.25 + 0.1 * r] };
+  if (tip === 'avuc') return { kol: [0.16, 0.16], dirsek: [1.05 + 0.1 * r, 1.05 + 0.1 * r] };
+  return { kol: [0.1 + 0.03 * r, 0.1 + 0.03 * (1 - r)], dirsek: [0.14, 0.14] };
 }
 function yanHedef(tip) {
-  if (tip === 'uzan') return { omuz: [0.25, 2.55], dirsek: [0.3, 0.18], bas: -0.12 };
-  if (tip === 'gogus') return { omuz: [0.05, 0.12], dirsek: [0.15, 2.45], bas: 0.02 };
-  if (tip === 'iki') return { omuz: [2.55, 2.4], dirsek: [0.12, 0.1], bas: -0.1 };
+  if (tip === 'gogus' || tip === 'uzan') return { omuz: [0.05, 0.12], dirsek: [0.15, 2.45], bas: 0.02 };
   return { omuz: [-0.05, 0.06], dirsek: [0.12, 0.16], bas: 0 };
 }
 
@@ -111,9 +109,9 @@ export default {
     const cr = rng(303);
     const R_ = (v) => Math.round(v);
     cinler = [
-      { x: 150, h: 372, w: 232, renk: 'lila', Y: 1, tip: 'a', alfa: 0.62, gec: 0.0 },
-      { x: 478, h: 236, w: 150, renk: 'mavi', Y: -1, tip: 'b', alfa: 0.5, gec: -0.05 },
-      { x: 912, h: 342, w: 214, renk: 'lila', Y: -1, tip: 'b', alfa: 0.6, gec: 0.06 },
+      { x: 150, h: 300, w: 196, renk: 'ates', Y: 1, tip: 'a', alfa: 0.36, gec: 0.0 },
+      { x: 478, h: 200, w: 130, renk: 'ates2', Y: -1, tip: 'b', alfa: 0.3, gec: -0.05 },
+      { x: 912, h: 280, w: 184, renk: 'ates', Y: -1, tip: 'b', alfa: 0.34, gec: 0.06 },
     ].map((c0) => {
       const c = { ...c0, y: Math.max(tUzak.ust(c0.x - 70), tUzak.ust(c0.x), tUzak.ust(c0.x + 70)) + 48 };
       const diller = KUME[c.tip].map(([dx, hh, ww, s1, kv, faz, yy, tb]) => {
@@ -436,10 +434,10 @@ function satirCiz(ctx, cam, t, satir, f, saadet) {
           dirsek: [lerp(0.12, h.dirsek[0], k) - (h.kol[0] > 1.5 ? buk : 0), lerp(0.12, h.dirsek[1], k) - (h.kol[1] > 1.5 ? buk : 0)],
           bacak: 0.055, bas: 0.035 * Math.sin(t * 0.8 + fg.faz) - 0.02,
         };
-        insanOn(g, fg.x, fg.y, poz, { s, olcek, alfa, arka: true });
+        insanOn(g, fg.x, fg.y, poz, { s, olcek, alfa, arka: false });
       } else {
         const h = yanHedef(fg.poz);
-        const bak = -0.28 - 0.08 * saadet;
+        const bak = -0.02;
         const poz = {
           ...DURUS,
           govde: -0.03 + 0.01 * Math.sin(t * 1.1 + fg.faz) - 0.02 * saadet,
@@ -469,6 +467,11 @@ function satirCiz(ctx, cam, t, satir, f, saadet) {
     lc.fillStyle = `rgba(255,236,180,${0.16 * kenar})`;
     lc.fillRect(0, 0, W, H);
     lc.restore();
+    ctx.drawImage(L, 0, 0);
+  } else {
+    ctx.drawImage(L, 0, 0);
+  }
+  if (false) {
     const bl = [4, 6, 9][satir] * cam.z;
     // geniş, yumuşak altın hale: figür silüetinin altın kopyası bulanıklaştırılıp 'screen' ile
     const A = auraTuval[satir], ac = A.getContext('2d');
@@ -557,11 +560,10 @@ function yaprakCiz(ctx, cam, p, t, solma) {
   if (u <= 0) return;
   const s = pop(t, p.te, 0.38);
   let alfa = an(t, p.te, 0.14, ease.lin) * solma;
-  // madalyon kenarından dışa: hız sürtünmeyle söner, sonra salınarak aşağı süzülür
-  const yol = MR * 1.02 + (p.v0 * (1 - Math.exp(-p.k * u))) / p.k;
-  const sal = Math.sin(u * p.frek + p.faz) * p.genlik * clamp(u / 0.6);
-  const x = MX + Math.cos(p.a) * yol + sal;
-  const y = MY + Math.sin(p.a) * yol + p.vy * u + 16 * u * u + 8 * Math.sin(u * p.frek * 2 + p.faz) * clamp(u / 0.6);
+  // yandan esintiyle: soldan ya da sağdan girip kalabalığın üstünden salınarak geçer (gökten/madalyondan yağmaz)
+  const yan = Math.cos(p.a) >= 0 ? 1 : -1;
+  const x = MX - yan * 700 + yan * (p.v0 * 0.62) * u + Math.sin(u * p.frek + p.faz) * p.genlik;
+  const y = 780 + ((p.r0 * 997) % 520) + 0.25 * p.vy * u + 22 * Math.sin(u * p.frek * 1.3 + p.faz);
   const [sx, sy, z] = ekranda(cam, x, y, p.f);
   if (sy < -90 || sy > H + 90 || sx < -90 || sx > W + 90) return;
   const kz = z * s;

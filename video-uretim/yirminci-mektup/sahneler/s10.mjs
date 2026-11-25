@@ -1,6 +1,6 @@
 // 10. cümle: "Eğer sahibini bulsa mâlikini tanısa o vakit rahmetine iltica eder, kudretine istinad eder.
 // O vahşetgâh dünya, bir tenezzühgâha döner ve bir ticaretgâh olur."
-import { W, H, clamp, lerp, ease, an, smooth, pop } from '../motor/temel.mjs';
+import { W, H, clamp, lerp, ease, an, smooth, pop, tuval } from '../motor/temel.mjs';
 import { ogeCiz } from '../motor/kalem.mjs';
 import { ki } from '../motor/zaman.mjs';
 import { kameraYolu, kameraUygula, ekranda, salinim } from '../motor/sahne.mjs';
@@ -31,6 +31,13 @@ const POZ = {
   yagmur: { ...DURUS, govde: -0.06, bas: -0.5, omuz: [-0.3, 0.62], dirsek: [0.3, 0.75], el: [0, -0.5] },
   sayvan: { ...DURUS, govde: -0.03, bas: -0.46, omuz: [-0.08, 0.1], dirsek: [0.15, 0.2] },
   duz: { ...DURUS, govde: 0.0, bas: -0.05 },
+  // 'tanısa': dikleşir, başı ufka bakar (göğe bakmaz: Allah'a dair yön/ışık imgesi yok)
+  dik: { ...DURUS, govde: -0.02, bas: -0.05, omuz: [-0.05, 0.05], dirsek: [0.14, 0.18] },
+  // 'rahmetine iltica eder': iltica gerçek bir eylemle, duayla gösterilir (ağaca sığınma ya da gökten inen bir şey yok):
+  // iki el göğüs hizasında açık, avuçlar yukarı, baş hafifçe eğik
+  dua: { ...DURUS, govde: 0.04, bas: 0.22, omuz: [0.04, 0.12], dirsek: [2.18, 2.3], el: [-0.85, -0.9] },
+  // 'kudretine istinad eder': kayaya yaslanma yok; eller iner, rüzgâra rağmen sarsılmadan dik ve sakin durur (tevekkül)
+  sabit: { ...DURUS, govde: -0.03, bas: -0.06, kalca: [-0.07, 0.08], diz: [0, -0.02], bilek: [0.05, -0.04], omuz: [-0.04, 0.04], dirsek: [0.12, 0.15] },
   // kayaya yaslanma: gövde geriye (-0,24); sırt (kürek kemikleri) ve kalça kayanın sağ yüzüne değer, ayaklar kayadan
   // ~yarım adım önde, düz basar. Kollar gövdenin yanında rahatça iner, dirsekler hafif bükük, eller uyluğun yanında.
   // (insanYan'da kolun mutlak açısı = govde + omuz; geriye eğik gövdede kolu sarkık tutmak için omuz ≈ -govde + 0,1.)
@@ -42,39 +49,13 @@ const KAYA_REF = { kalca: [0.24, 0.34], diz: [-0.04, -0.16] };
 let yuru1, yuru2;
 
 function adamDurumu(t) {
-  if (t < T.ilt + 0.02) {
-    // çökük → başını kaldırır (≈0,7 sn, aşmasız: yavaş başlar, yumuşakça yerleşir; önce göğüs dikleşir, baş
-    // hemen ardından kalkar) → yağmura yüzünü verir
-    let p = pozKaristir(POZ.cokuk, POZ.bakis, an(t, T.tan - 0.06, 0.66, basKalkis));
-    p.bas = lerp(POZ.cokuk.bas, POZ.bakis.bas, an(t, T.tan - 0.02, 0.72, basKalkis));
-    p = pozKaristir(p, POZ.yagmur, an(t, T.rah + 0.1, 0.6, ease.inOutCubic));
-    return { x: X0_ADAM, poz: p, yon: -1, s: S_ADAM };
-  }
-  if (t < yuru2.t0) {
-    const r = yuru1(t);
-    return { x: r.x, poz: r.poz, yon: -1, s: S_ADAM };
-  }
-  if (t < T.ist + 0.02) {
-    const r = yuru2(t);
-    return { x: r.x, poz: r.poz, yon: -1, s: S_ADAM, dy: onDy(t) };
-  }
-  // dönüş ve kayaya yaslanma. Dönüş, klasik dönüş çizimleri gibi üç görünüşle: profil (sola) → önden → profil
-  // (sağa). Figür görünüş değişirken yalnız hafifçe daralır (en dar %80); kâğıt inceliğine inmez.
-  const x0 = yuru2.x1;
-  const d = an(t, T.ist + 0.02, DONUS.sure, ease.inOutSine);
-  const w = an(t, T.ist + 0.22, 0.55, ease.inOutCubic);
-  const p = pozKaristir(POZ.duz, POZ.yaslan, w);
-  // arka ayak yerinde kalsın: kalça geriye (kayaya) kayar (figür ON_DY derinliğinde çizildiği ölçekle)
-  const dx = (bilekX(p, 0) - bilekX(POZ.duz, 0)) * S_ADAM * (1 + onDy(t) / 360);
-  const nefes = Math.sin(t * 2.2) * 0.012 * w;
-  const r = { x: x0 - dx, poz: { ...p, govde: p.govde + nefes }, yon: d < 0.5 ? -1 : 1, s: S_ADAM, k: 1, dy: onDy(t) };
-  if (d > 0 && d < 1) {
-    const { a, b, dar } = DONUS;
-    if (d < a) r.k = lerp(1, dar, ease.inSine(d / a));
-    else if (d > b) r.k = lerp(dar, 1, ease.outSine((d - b) / (1 - b)));
-    else { r.k = dar + (1 - dar) * Math.sin(Math.PI * (d - a) / (b - a)); r.poz.on = ON_POZ; }
-  }
-  return r;
+  // çökük → 'tanısa'da dikleşir (aşmasız, yumuşak) → 'rahmetine' ellerini açıp dua eder → 'kudretine' elleri iner,
+  // dik ve sakin durur; rüzgâr eser, o sarsılmaz (yalnız hafif nefes)
+  let p = pozKaristir(POZ.cokuk, POZ.dik, an(t, T.tan - 0.06, 0.72, basKalkis));
+  p = pozKaristir(p, POZ.dua, an(t, T.rah - 0.22, 0.62, ease.inOutCubic));
+  p = pozKaristir(p, POZ.sabit, an(t, T.kud - 0.12, 0.62, ease.inOutCubic));
+  const nefes = Math.sin(t * 2.0) * 0.008;
+  return { x: X0_ADAM, poz: { ...p, govde: p.govde + nefes }, yon: -1, s: S_ADAM };
 }
 // dönüş: süre (sn), önden görünüşün dönüş ilerlemesindeki aralığı [a, b] (≈4 kare) ve en dar genişlik çarpanı
 const DONUS = { sure: 0.32, a: 0.21, b: 0.79, dar: 0.8 };
@@ -100,34 +81,35 @@ function kameraKur() {
     { t: T.tan + 0.2, x: 760, y: 945, z: 1.16, e: ease.outSine },
     { t: T.o + 0.1, x: 735, y: 930, z: 1.1, e: ease.inOutSine },
     { t: T.ilt, x: 700, y: 860, z: 0.98, e: ease.inOutCubic },
-    { t: T.kud - 0.05, x: 680, y: 880, z: 1.0, e: ease.inOutSine },
-    // "kudretine istinad eder": tek yönlü, yavaş (1,3 sn) geri çekiliş ve yükseliş; adam kayaya yürüyüp yaslanırken
-    // heybetli dağ bütünüyle açılır (zemin altyazı bandının üstünde kalır). Dağ planında kalınır (yavaş süzülme),
-    // geri yaklaşılmaz; "O vahşetgâh"ta kamera tek bir kayışla sağa, ormana gider.
-    { t: T.kud + 1.25, x: GENIS.x, y: GENIS.y, z: GENIS.z, e: ease.inOutSine },
-    { t: T.o2 - 0.42, x: GENIS.x - 4, y: GENIS.y - 5, z: GENIS.z * 0.988, e: ease.lin },
+    { t: T.kud - 0.05, x: 690, y: 880, z: 1.02, e: ease.inOutSine },
+    // "kudretine istinad eder": dağ ya da kaya simgesi yok; kamera dik duran adama yavaşça yaklaşır (rüzgâr eser, o
+    // sarsılmaz). Orman bölgesinin sınırı (dünya x≈1150) bu planda kadraj dışında kalır; "O vahşetgâh"ta kamera tek bir
+    // kayışla sağa, ormana gider.
+    { t: T.o2 - 0.42, x: 700, y: 900, z: 1.26, e: ease.inOutSine },
     { t: T.vah + 0.55, x: CV.x, y: CV.y, z: 0.96, e: ease.inOutSine },
     { t: T.ten, x: CV.x + 10, y: CV.y + 12, z: 1.05, e: ease.inOutSine },
-    { t: T.ve, x: CV.x + 40, y: CV.y + 4, z: 1.02, e: ease.inOutSine },
-    { t: T.olur + 0.5, x: 2060, y: 890, z: 0.95, e: ease.inOutCubic },
-    { t: 110.9, x: 2090, y: 884, z: 0.93, e: ease.outSine },
+    { t: T.ve, x: CV.x + 10, y: CV.y + 14, z: 1.04, e: ease.inOutSine },
+    // ikram: kamera iki adama yavaşça yaklaşır (çarşıya kayış yok)
+    { t: T.olur + 0.5, x: 1640, y: 968, z: 1.2, e: ease.inOutCubic },
+    { t: 110.9, x: 1632, y: 972, z: 1.24, e: ease.outSine },
   ]);
 }
 
 // ---------------------------------------------------------------- yan dünya durumu
 function yanDurum(t) {
-  const yTam = T.rah + 0.15; // yeşerme başı
+  // dünya, adamın bakışı değişince ('tanısa' → 'o vakit') canlanır: gökten inen yağmur/ışık yok
+  const yTam = T.o + 0.1; // yeşerme başı
   return {
     yesil: t > yTam ? t - yTam : -1,
-    yaprak: an(t, T.rah + 0.3, 1.3, ease.inOutSine),
-    cicek: an(t, T.ilt + 0.4, 1.0),
-    ortaYesil: an(t, T.rah + 0.4, 1.4),
-    bulut: an(t, T.o - 0.05, 0.9, ease.outCubic) * (1 - an(t, T.kud + 0.1, 0.9)),
-    gokKoyu: an(t, T.o + 0.1, 0.7) * (1 - an(t, T.kud + 0.05, 0.8)),
-    dagIsik: an(t, T.kud, 0.9),
-    sayvan: an(t, T.ilt + 0.3, 0.8) * (1 - 0.6 * an(t, T.ist, 0.8)),
+    yaprak: an(t, T.o + 0.25, 1.4, ease.inOutSine),
+    cicek: an(t, T.rah + 0.4, 1.0),
+    ortaYesil: an(t, T.o + 0.35, 1.5),
+    bulut: 0,
+    gokKoyu: 0,
+    dagIsik: 0,
+    sayvan: 0,
     adam: adamDurumu(t),
-    adamIsik: an(t, T.ist + 0.3, 0.8),
+    adamIsik: 0,
     yakin: t < T.vah + 0.55,
   };
 }
@@ -173,44 +155,37 @@ function yanSahne(ctx, t) {
       ekle(R3 - yum, 1); ekle(R3, 0.82); ekle(R2 - yum, 0.82); ekle(R2, 0.5); ekle(R1 - yum, 0.5); ekle(R1, 0);
       radyalMaske(g, adamEk[0], adamEk[1], st, 'destination-in');
       ctx.drawImage(K, 0, 0);
-      dalgalar.forEach((d, i) => dalgaHalkasi(ctx, adamEk[0], adamEk[1], d.R, Math.sin(Math.PI * d.u) * (1 - i * 0.2), { kal: 3.2 - i * 0.6, tohum: 60 + i }));
     }
   }
   if (t > T.vah + 0.6) return { cam };
-  // nur (gökte) ve adamın üzerine inen huzme: her zaman sıcak ışık
+  // gökte sade bir güneş (sabit; hiçbir kelimeye tepki vermez, adama ışık indirmez)
   const [nx, ny, nz] = ekranda(cam, NUR.x, NUR.y, F.nur);
-  const nurA = 1 - 0.55 * an(t, T.o, 0.8) + 0.4 * an(t, T.kud, 0.8);
-  const nurSon = 1 - an(t, T.o2 - 0.3, 0.45);
-  // rahmet bulutları gelince disk bulutların ardında kalır (bulutların önünde parlamaz), bulutlar dağılınca yeniden açılır
-  M.nurKuresi(ctx, nx, ny, NUR.r * nz, t, { guc: clamp(nurA), olcek: 1, alfa: nurSon * (1 - 0.94 * S.bulut) });
-  const huzmeA = (1 - an(t, T.rah + 0.2, 0.9)) + 0.6 * an(t, T.ist + 0.15, 0.7) * (1 - an(t, T.o2 - 0.4, 0.4));
-  if (huzmeA > 0.01) {
-    const [hx, hy] = ekranda(cam, S.adam.x, G - 20);
-    huzme(ctx, nx, ny + NUR.r * nz, 30 * nz, hx, hy, 90 * cam.z, huzmeA * 0.9, {});
-    M.hale(ctx, hx, hy - 120 * cam.z, 230 * cam.z, '#FFF4D0', 0.3 * huzmeA);
+  const gunesA = 1 - an(t, T.o2 - 0.3, 0.45);
+  if (gunesA > 0.003) {
+    if (!GUNES) GUNES = M.gunesOge(56, 1.3);
+    M.hale(ctx, nx, ny, 230 * nz, '#FFF4D2', 0.42 * gunesA);
+    ogeCiz(ctx, GUNES, nx, ny, { s: nz, alfa: gunesA });
   }
-  // rahmet yağmuru
-  const yag = an(t, T.rah - 0.02, 0.4) * (1 - an(t, T.kud + 0.15, 0.6));
-  if (yag > 0) {
-    const [zx, zy] = ekranda(cam, 0, G);
-    // ağacın tacı altı yağmursuz
-    const [cx, cy, cz] = ekranda(cam, AGAC.x + 20, AGAC.y - 600);
-    const siper = D.agac ? { x: cx, y: cy + 80 * cz, rx: 420 * cz * an(t, T.rah + 0.3, 1.1), ry: 260 * cz } : null;
-    // ıslanan toprak: yağmur altında zemin hafifçe koyulaşır (ışıklı damla ve halkalar seçilir)
-    if (zy < H) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'multiply';
-      const gr = ctx.createLinearGradient(0, zy - 30, 0, H);
-      gr.addColorStop(0, 'rgba(255,255,255,1)');
-      gr.addColorStop(0.08, `rgba(${255 - 32 * yag},${255 - 34 * yag},${255 - 20 * yag},1)`);
-      gr.addColorStop(1, `rgba(${255 - 44 * yag},${255 - 46 * yag},${255 - 28 * yag},1)`);
-      ctx.fillStyle = gr;
-      ctx.fillRect(0, zy - 30, W, H - zy + 30);
-      ctx.restore();
-    }
-    yagmurCiz(ctx, t, yag, { zeminY: zy, siper, z: cam.z });
-  }
+  // 'kudretine istinad eder': soldan bir rüzgâr eser, yapraklar savrulur; adam sarsılmadan durur
+  ruzgarYapraklari(ctx, t);
   return { cam };
+}
+
+let GUNES = null, YAPRAKLAR = null;
+const RUZGAR = { t0: () => T.kud + 0.05, sure: 1.5 };
+function ruzgarYapraklari(ctx, t) {
+  const t0 = RUZGAR.t0();
+  if (t < t0 || t > t0 + RUZGAR.sure + 1.2) return;
+  if (!YAPRAKLAR) {
+    const o = [M.yaprakOge(30, 13, 1.2), M.yaprakOge(26, 11, 1.2, 'koyu')];
+    YAPRAKLAR = Array.from({ length: 11 }, (_, i) => ({ o: o[i % 2], gec: (i * 0.37) % 1 * 0.9, y: 560 + ((i * 211) % 700), dy: ((i * 97) % 120) - 60, s: 0.8 + ((i * 53) % 40) / 100, don: 3 + (i % 4), faz: i * 1.3 }));
+  }
+  for (const l of YAPRAKLAR) {
+    const u = (t - t0 - l.gec) / 1.25;
+    if (u <= 0 || u >= 1) continue;
+    const x = lerp(-80, W + 80, u), y = l.y + l.dy * u + Math.sin(u * 9 + l.faz) * 26;
+    ogeCiz(ctx, l.o, x, y, { s: l.s, r: l.faz + u * l.don * 2.4, alfa: Math.min(1, 6 * u, 6 * (1 - u)) * 0.9 });
+  }
 }
 
 // ---------------------------------------------------------------- vahşetgâh → tenezzühgâh → ticaretgâh
@@ -243,7 +218,9 @@ function bahceDurum(t) {
   const tc = T.tic - 0.12;
   const tt = Math.max(0, t - (tc + 0.75));
   return {
-    varis, carsi: clamp((t - tc) / 1.6), tCarsi: tc, fener: an(t, T.olur - 0.05, 0.5),
+    // 'ticaretgâh' mecazdır (dünyanın âhiret için kazanç yeri olması): gerçek bir çarşı çizilmez (carsi = 0); onun yerine
+    // bahçede gerçek bir iyilik (ikram) gösterilir
+    varis, carsi: 0, tCarsi: tc, fener: 0,
     terazi: 0.2 * Math.exp(-tt * 1.6) * Math.cos(tt * 5.5) + 0.02 * Math.sin(t * 1.3),
   };
 }
@@ -265,21 +242,13 @@ function vBolumu(ctx, cam, t, S) {
     const KB = tampon('s10-v-bahce');
     const k = KB.getContext('2d');
     bahceCizV(k, cam, t, B);
-    alisverisciler(k, cam, t, B);
-    adamSepetli(k, cam, t);
+    iyilik(k, cam, t);
     bahceOnPlan(k, cam, t, B);
     kuslar(k, cam, t);
     if (bolgeMaske(k, cam, t)) g.drawImage(KB, 0, 0);
   };
   if (dalgaU <= 0) {
     karanlik(ctx);
-    // 'bir': ortada bir ışık tanesi belirir
-    const tn = an(t, T.bir1, 0.3);
-    if (tn > 0) {
-      M.hale(ctx, dx, dy, 160 * tn, '#FFF2C6', 0.7 * tn);
-      M.hale(ctx, dx, dy, 40 * tn, '#FFFFFF', 0.8 * tn);
-      M.isinlar(ctx, dx, dy, 14, 70 * tn, t, { sayi: 14, alfa: 0.5 * tn, kal: 2, tohum: 3 });
-    }
   } else if (dalgaU < 1) {
     karanlik(ctx);
     const K2 = tampon('s10-v-isik');
@@ -287,25 +256,61 @@ function vBolumu(ctx, cam, t, S) {
     aydinlik(g2);
     radyalMaske(g2, dx, dy, [[0, 1], [Math.max(1, R - 120), 1], [R, 0]], 'destination-in');
     ctx.drawImage(K2, 0, 0);
-    dalgaHalkasi(ctx, dx, dy, R, Math.sin(Math.PI * dalgaU) * 1.1, { kal: 3.4, tohum: 71 });
-    dalgaHalkasi(ctx, dx, dy, R * 0.82, Math.sin(Math.PI * dalgaU) * 0.6, { kal: 2.2, tohum: 72 });
-    M.hale(ctx, dx, dy, 220, '#FFF4D2', 0.6 * (1 - dalgaU));
   } else {
     aydinlik(ctx);
   }
-  // çarşı fenerleri yanınca sıcak bir ışık; sonda kapanışa doğru ışık artar
-  isikBas(ctx, 0.08 * B.fener + 0.12 * an(t, 109.6, 1.3, ease.inQuad), '#FFF1D6');
 }
-function adamSepetli(g, cam, t) {
-  if (t < yuru3.t0) return;
-  const r = yuru3(t);
+// 've bir ticaretgâh olur': sepetli adam bahçede yürür, çeşmenin önünde duran birine varır; sepetinden bir nar çıkarıp
+// ona ikram eder; öteki elini uzatıp alır ve narı göğsüne götürür. (Dünya, iyiliklerle âhiret kazancının yeri olur.)
+const IKRAM = { t0: () => yuru3.t1 + 0.05, uzat: 0.36, al: () => yuru3.t1 + 0.85 };
+const POZ_B = { bekle: { ...DURUS, bas: -0.04, omuz: [-0.04, 0.05], dirsek: [0.12, 0.16] } };
+let XB = 0;
+function adamA(t) {
+  if (t < yuru3.t1) return yuru3(t).poz;
+  const son = yuru3(yuru3.t1).poz;
+  const t0 = IKRAM.t0();
+  // 1) ön el sepete iner (sepet arka elde, kalça hizasında) 2) narı alıp karşıdakine uzatır 3) nar verilince el iner
+  const sep = { ...son, omuz: [son.omuz[0], -0.22], dirsek: [son.dirsek[0], 0.55], el: [0, 0] };
+  const uz = { ...son, bas: -0.02, omuz: [son.omuz[0], 1.18], dirsek: [son.dirsek[0], 0.16], el: [0, -0.32] };
+  const dinlen = { ...son, bas: -0.02, omuz: [son.omuz[0], 0.06], dirsek: [son.dirsek[0], 0.2] };
+  let p = pozKaristir(son, sep, an(t, t0, 0.24, ease.inOutSine));
+  p = pozKaristir(p, uz, an(t, t0 + 0.26, IKRAM.uzat, ease.inOutCubic));
+  p = pozKaristir(p, dinlen, an(t, IKRAM.al() + 0.1, 0.45, ease.inOutSine));
+  return p;
+}
+function adamB(t) {
+  const al = IKRAM.al();
+  const uz = { ...POZ_B.bekle, omuz: [-0.04, 1.14], dirsek: [0.12, 0.2], el: [0, -0.3] };
+  const gogus = { ...POZ_B.bekle, bas: 0.08, omuz: [-0.04, 0.42], dirsek: [0.12, 1.62], el: [0, -0.2] };
+  let p = pozKaristir(POZ_B.bekle, uz, an(t, al - 0.42, 0.38, ease.inOutCubic));
+  p = pozKaristir(p, gogus, an(t, al + 0.06, 0.5, ease.inOutSine));
+  return { ...p, govde: p.govde + Math.sin(t * 1.9) * 0.006 };
+}
+function iyilik(g, cam, t) {
+  if (!V.nar) return;
   g.save(); katman(g, cam, 1);
   const s = 0.7;
-  yerGolgesi(g, r.x + 6, YOL + 2, 66);
-  const p = insanYan(g, r.x, YOL, r.poz, { s, yon: 1, olcek: 1.1 });
-  // sepet ön elde (dünya = katman koordinatı)
-  const sal = Math.sin(r.faz * 2) * 0.05;
-  ogeCiz(g, V.sepet, p.el[0] + 2, p.el[1] - 6, { s: s * 1.35, r: sal });
+  // karşıdaki adam (sola bakar): bahçe dalgasıyla birlikte belirir, çeşmenin önünde bekler
+  yerGolgesi(g, XB + 6, YOL + 2, 66);
+  const pb = insanYan(g, XB, YOL, adamB(t), { s, yon: -1, olcek: 1.1 });
+  let pa = null;
+  if (t >= yuru3.t0) {
+    const xa = t < yuru3.t1 ? yuru3(t).x : yuru3.x1;
+    yerGolgesi(g, xa + 6, YOL + 2, 66);
+    pa = insanYan(g, xa, YOL, adamA(t), { s, yon: 1, olcek: 1.1 });
+    const faz = t < yuru3.t1 ? yuru3(t).faz : 0;
+    ogeCiz(g, V.sepet, pa.arkaEl[0] + 2, pa.arkaEl[1] - 6, { s: s * 1.35, r: Math.sin(faz * 2) * 0.05 });
+  }
+  // nar: sepetten A'nın eline, oradan B'nin eline
+  if (pa) {
+    const t0 = IKRAM.t0(), al = IKRAM.al();
+    const cik = an(t, t0 + 0.18, 0.12);
+    if (cik > 0) {
+      const ver = an(t, al - 0.04, 0.14, ease.inOutSine);
+      const x = lerp(pa.el[0] + 6, pb.el[0] - 6, ver), y = lerp(pa.el[1] - 4, pb.el[1] - 4, ver);
+      ogeCiz(g, V.nar, x, y, { s: s * 1.5 * lerp(0.75, 1, cik) });
+    }
+  }
   g.restore();
 }
 // kuşlar: kalemle açık 'V' kuşlar, gökten bir ton koyu lila-gri; birbirinden en az bir boy aralıklı.
@@ -350,39 +355,15 @@ function gecisCiz(ctx, t) {
   yanSahne(g, t);
   radyalMaske(g, mx, my, [[0, 1], [Math.max(0.5, Rr), 1], [Math.max(1, Rr) + yum, 0]], 'destination-in');
   ctx.drawImage(K, 0, 0);
-  // kenarda sıcak altın ışık kuşağı (screen), içte yumuşak, dışta erime cephesine karışır. Kuşak ve halkalar, açıklık
-  // adamın çevresinde küçük bir hale gibi durmayacak kadar büyüyünce belirir (ilk anlarda adamı ortalayan halka olmaz).
-  const hk = ease.inOutSine(clamp((Rr - 60) / 240));
-  const k0 = Math.max(0, Rr - 60), k1 = Math.max(k0 + 1, Rr + yum + 120);
-  if (hk > 0.002) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    const gr = ctx.createRadialGradient(mx, my, k0, mx, my, k1);
-    gr.addColorStop(0, 'rgba(255,214,140,0)');
-    gr.addColorStop(0.45, `rgba(255,212,128,${0.42 * hk})`);
-    gr.addColorStop(0.7, `rgba(255,226,160,${0.3 * hk})`);
-    gr.addColorStop(1, 'rgba(255,226,160,0)');
-    ctx.fillStyle = gr;
-    ctx.fillRect(0, 0, W, H);
-    ctx.restore();
-  }
-  const guc = hk * clamp((Rr + yum) / 300) * (1 - an(t, GECIS.son - 0.16, 0.16));
-  dalgaHalkasi(ctx, mx, my, Math.max(3, Rr + yum * 0.42), 0.8 * guc, { renk: '#E2AE4E', kal: 2.8, tohum: 91 });
-  dalgaHalkasi(ctx, mx, my, Math.max(3, Rr + yum * 0.9), 0.4 * guc, { renk: '#EBC36E', kal: 1.8, tohum: 92 });
 }
 
 export default {
   sesler: [
-    { t: T.egr, tur: 'nur', guc: 0.45, sure: 2.0 },
-    { t: T.bul + 0.05, tur: 'parilti', guc: 0.38 },
-    { t: T.gecis - 0.2, tur: 'whoosh', guc: 0.3, sure: 0.8 },
-    { t: T.rah, tur: 'yagmur', guc: 0.3, sure: 1.9 },
-    { t: T.kud, tur: 'whoosh', guc: 0.28, sure: 1.0 },
-    { t: T.vah, tur: 'ruzgar', guc: 0.25, sure: 1.6 },
-    { t: T.ten, tur: 'nur', guc: 0.4, sure: 1.8 },
-    { t: T.ten + 0.6, tur: 'kus', guc: 0.2 },
-    { t: T.tic, tur: 'pop', guc: 0.24, tekrar: 4, ara: 0.32 },
-    { t: T.olur, tur: 'parilti', guc: 0.3 },
+    { t: T.bul + 0.05, tur: 'firca', guc: 0.16, sure: 0.7 },
+    { t: T.gecis - 0.2, tur: 'whoosh', guc: 0.16, sure: 0.9 },
+    { t: T.kud + 0.05, tur: 'ruzgar', guc: 0.2, sure: 1.6 },
+    { t: T.vah, tur: 'ruzgar', guc: 0.16, sure: 1.6 },
+    { t: T.ten, tur: 'whoosh', guc: 0.14, sure: 1.2 },
   ],
   hazirla() {
     // ağacın altına tek adım: gövdenin sağında durur (eli ve ayağı gövdeye girmez)
@@ -391,9 +372,19 @@ export default {
     yuru2 = yurumePlani({ t0: T.kud - 0.34, t1: T.ist + 0.02, n: 3, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
     // kaya, adamın yaslanacağı yere: kalça hizasında sırtı kayanın sağ yüzüne değsin
     D.kayaDx = yuru2.x1 - (bilekX(KAYA_REF, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
-    // bahçede keyifle yürüyüş (sepetli): soldan girer, çarşıya doğru
-    yuru3 = yurumePlani({ t0: T.ten + 0.3, t1: 111.6, n: 12, s: 0.7, yon: 1, x0: -10, sabitHiz: true, kol: 0.3, egim: 0.03,
-      pozF: (p) => ({ ...p, bas: -0.1, omuz: [p.omuz[0], 0.06 + 0.05 * p.omuz[0]], dirsek: [p.dirsek[0], 0.22] }) });
+    // bahçede keyifle yürüyüş (sepet arka elde): soldan girer, çeşmenin önünde duran adama varır ('ticaretgâh')
+    yuru3 = yurumePlani({ t0: T.ten + 0.3, t1: T.tic + 0.2, n: 4, s: 0.7, yon: 1, x0: -10, kol: 0.3, egim: 0.03,
+      pozF: (p) => ({ ...p, bas: -0.08, omuz: [0.05, p.omuz[1]], dirsek: [0.24, p.dirsek[1]] }) });
+    {
+      // uzanan iki elin buluşacağı yer: A'nın elinin ve B'nin elinin gövdeye göre yatay uzaklığı (s = 0,7)
+      const c = tuval(8, 8).getContext('2d');
+      const xa = yuru3.x1;
+      const ua = { ...yuru3(yuru3.t1).poz, omuz: [0.05, 1.18], dirsek: [0.24, 0.16] };
+      const ub = { ...POZ_B.bekle, omuz: [-0.04, 1.14], dirsek: [0.12, 0.2] };
+      const ha = insanYan(c, 0, 0, ua, { s: 0.7, yon: 1, olcek: 1.1 }).el[0];
+      const hb = insanYan(c, 0, 0, ub, { s: 0.7, yon: -1, olcek: 1.1 }).el[0];
+      XB = xa + ha - hb + 14;
+    }
     kameraKur();
   },
   ciz(ctx, t) {
@@ -402,8 +393,5 @@ export default {
     if (t < GECIS.bas) labirentCiz(ctx, t, T);
     else if (t < GECIS.son) gecisCiz(ctx, t);
     else yanSahne(ctx, t);
-    // ölçülü, sıcak altın ışık dalgası (doruğu tepe anında; ekranı örtmez)
-    const dalga = an(t, T.gecis - 0.4, 0.4, ease.inOutSine) * (1 - an(t, T.gecis, 0.42, ease.inOutSine));
-    isikBas(ctx, 0.13 * dalga, '#FFD993');
   },
 };

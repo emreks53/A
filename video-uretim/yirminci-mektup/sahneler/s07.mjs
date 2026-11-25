@@ -2,8 +2,9 @@
 // s06'nın dünyasında başlar: devir teslimde (57,0–57,4) s06'nın karesini birebir sürdürür (aynı kamera, aynı çizim);
 // 57,4'ten sonra kendi dünyasına çapraz geçer: adam, ağaç, yol, çiçekler, nur ve nur sütunu s06'daki yerlerinde ve
 // ölçeklerinde kalır (s06 dünyasından benzerlik dönüşümüyle taşınır), yalnız uzak katmanlar karışır.
-// Adam (yan, sağa bakar, eli göğsünde) yolun kıyısında, solunda meyveli ağaç, sağda nur,
-// yukarıdan inen ışığın altında, aydınlık yeşil manzara. "Onu hakiki tanımayan": ışığa sırtını döner, sola yürür; yürüdükçe renk ışığa doğru çekilir, dünya gri-lila
+// Adam (yan, sağa bakar, eli göğsünde) yolun kıyısında, solunda meyveli ağaç, gökte sade güneş, aydınlık yeşil manzara
+// (KURAL: Allah'a dair ışık imgesi yok; güneş yalnız güneştir). "Onu hakiki tanımayan": bu aydınlık dünyaya sırtını
+// döner, sola yürür; yürüdükçe renk çekilir, dünya gri-lila
 // olur, tarama koyulaşır, ağır bulutlar toplanır. "sevmeyen": göğsündeki sıcak ışık titreyip söner. "nihayetsiz
 // şakavete": kamera geri çekilir; önünde ufka uzanan sisli, çorak ova, kuru ağaç, ağır bulutlar. "âlâma": ayaklarının
 // dibinden dikenli çalılar fışkırır, bacaklarına dolanır, adam durur. "ve evhama": çevresinde dönen koyu sis
@@ -675,10 +676,9 @@ function dunya(g, t, durum, gri) {
   if (!gri) {
     // nur (s06'daki gibi çizilir: aynı yarıçap ve çözünürlük, yalnız F.isik katmanına ölçekle oturtulur) ve beyaz bulutlar
     kameraIle(g, cam, (c) => {
-      const guc = nur6.guc * (1 - 0.75 * solma);
       c.translate(ISIK.x, ISIK.y);
       c.scale(ISIK.k, ISIK.k);
-      M.nurKuresi(c, 0, 0, nur6.r, t, { guc, olcek: 2.4 });
+      S6.gunes06Ciz(c, 0, 0, 1, 1 - 0.6 * solma);
     }, F.isik);
     kameraIle(g, cam, (c) => {
       for (const [b, x, y] of bulutlarR) ogeCiz(c, b, x + (t - 57) * 5, y);
@@ -732,7 +732,6 @@ function dunya(g, t, durum, gri) {
     c.restore();
     const sallan = smooth(KOPRU.t2, KOPRU.t2 + 0.8, t); // s06 karesinden çıkarken ağaç sabit, sonra hafif salınım
     ogeCiz(c, gri ? agacG : agacR, AGAC.x, AGAC.y, { r: Math.sin(t * 0.9) * 0.004 * sallan, alfa: 1 - 0.82 * agacSis });
-    if (!gri && solma < 0.99) { c.save(); s06Uzayi(c); S6.nurSutunu06(c, t, 1, 1 - solma); c.restore(); }
     // s06'nın sırttaki çiçekleri (aynı yerde); gri dünyada boyun büker, çorak ovada kalmaz
     if (!gri) { c.save(); s06Uzayi(c); S6.cicekCiz06(c, t); c.restore(); }
     else for (const cc of cicek6) {
@@ -790,18 +789,9 @@ function dunya(g, t, durum, gri) {
     const guc = 1 - solma;
     if (guc > 0.01) {
       kameraIle(g, cam, (c) => {
-        let ek = null;
-        if (durum.bas) {
-          const [bx, by] = durum.bas;
-          ek = { bas: [(bx - PHI.ax) / PHI.s, (by - PHI.ay) / PHI.s], basAlfa: clamp(1 - Math.abs(d.X - X0) / 140) };
-        }
-        s06Uzayi(c);
-        S6.nurIsik06(c, t, 1, ek, guc);
-      }, F.on);
-      kameraIle(g, cam, (c) => {
         c.translate(ISIK.x, ISIK.y);
         c.scale(ISIK.k, ISIK.k);
-        M.hale(c, 0, 0, 560, '#FFE7BC', 0.26 * nur6.guc * guc);
+        M.hale(c, 0, 0, 560, '#FFE7BC', 0.1 * guc);
       }, F.isik);
     }
     onPlanCiz(g, cam, false);

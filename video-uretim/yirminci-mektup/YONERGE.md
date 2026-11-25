@@ -9,6 +9,11 @@ Hedef: Kurzgesagt'ın kalitesine yetişmek ve geçmek. Her kare özenli, kompozi
 
 ## 1. Kesin kurallar (kullanıcının istekleri)
 
+**Önce `../KURALLAR.md` dosyasını okuyun** (bütün videolar için kalıcı kurallar: Allah'a dair hiçbir şey
+görselleştirilmez; mecaz gerçek nesne/eylem gibi gösterilmez; mistik öğe yok; İslami olgular kaynaklara uygun; ses;
+kapanış). Aşağıdakiler bu videoya özgü ayrıntılardır.
+
+
 1. **Dinamiklik ölçüsü Kurzgesagt kadar**: her kelimeye ayrı görsel YOK. Görsel fikir cümlenin ana parçalarında
    (yan cümle / öbek) değişir: kabaca 1,5–3 sn'de bir yeni fikir; arada sürekli, sakin hareket (kamera kayması,
    salınım, nefes alma, yaprak sallanması). Bir saniyede ikiden fazla yeni öğe girmesin. İzleyici yetişebilmeli.
@@ -19,8 +24,9 @@ Hedef: Kurzgesagt'ın kalitesine yetişmek ve geçmek. Her kare özenli, kompozi
    soru işareti, ok üstünde yazı vb. koymayın.
 4. İnsan çizilecekse **erkek**, sade, ayrıntısız, ölçüleri normal: yalnız `motor/insan.mjs` (`insanYan`,
    `insanOn`). Yüz çizgisi yok. Kadın figür yok. Kalabalıklar da erkek figürlerden oluşur.
-5. Allah, peygamber, melek tasviri **yok**. İlahi manalar ışık, nur, düzen, simge ile anlatılır. Cin: yüzsüz,
-   saydam, dumansız ateş gibi soluk lila-mavi kıvrımlar (korkutucu değil).
+5. Allah, peygamber, melek tasviri **yok**; Allah'a dair hiçbir şey (adı okunurken ışık, yukarıdan inen nur, huzme,
+   süslü dairesel simge) görselleştirilmez. Yalnız marifetullah, muhabbetullah, iman-ı billah gibi kavramlar simgeyle
+   temsil edilebilir. Cin: yüzsüz, saydam, dumansız ateş alevleri (Rahman 15), soluk ve korkutucu olmayan.
 6. Arka planda müzik yok; ses efektleri kısık (sahne dosyasında `sesler` listesi, bkz. §6).
 7. Sözlük altyazısı motor tarafından alt bantta çizilir (taban y = 1548, iki satırda 1468 ve 1548, metin
    ortalı, x ≈ 200–880). **y 1380–1640 bandını sakin tutun**: metnin tam arkasına çok parlak ışık merkezi, yoğun
@@ -168,7 +174,8 @@ yüce neticesi) → altın meyve nura döner (iman-ı billahtır).
   dolgu gelir, yavaşça döner, bütün çizgiler merkezde parlayan noktaya çıkar.
 - Bitiş: marifet deseni (540, 900), R≈400, soluk altın-krem ışık zemininde.
 
-### s03 (16,2–24,8) — "Cin ve insin en parlak saadeti ve en tatlı nimeti, o marifetullah içindeki muhabbetullahtır."
+### s03 (16,2–24,8) — GÜNCEL: figürler simgeye dönüp kol kaldırmaz; önden/yandan sakin durur; yapraklar yandan esintiyle; cin soluk dumansız ateş.
+### s03 (eski plan) — "Cin ve insin en parlak saadeti ve en tatlı nimeti, o marifetullah içindeki muhabbetullahtır."
 - Başlangıç: marifet deseni (540, 900, R≈400). Kamera geri çekilir: desen gökte, tepede parlayan bir madalyon olur.
 - 17,02 "Cin": tepelerin ardında, uzakta soluk lila-mavi, saydam, dumansız ateş kıvrımları (cin) belirir.
 - 17,42 "insin": önde tepelerde pek çok erkek figür (farklı ölçek/derinlik; yan ve önden; ayakta), hepsi madalyona
@@ -193,7 +200,8 @@ yüce neticesi) → altın meyve nura döner (iman-ı billahtır).
 - 32,62 "lezzet-i ruhaniyedir": damla parlar ve düşer; **altın halkalar** yayılarak ekranı doldurur.
 - Bitiş: altın halkalar (540, 900) merkezli, açık krem zeminde soluyor.
 
-### s05 (34,4–46,8) — "Evet, bütün hakiki saadet ve hâlis sürur ve şirin nimet ve safi lezzet, elbette marifetullah ve muhabbetullahtadır. Onlar, onsuz olamaz."
+### s05 (34,4–46,8) — GÜNCEL: kandil (Alaaddin lambasını andırdığı için) yerine lale demeti.
+### s05 (eski plan) — "Evet, bütün hakiki saadet ve hâlis sürur ve şirin nimet ve safi lezzet, elbette marifetullah ve muhabbetullahtadır. Onlar, onsuz olamaz."
 - Temiz, infografik bir düzen (yazısız). Üstte ortada kaynak: **marifet deseni madalyonu, merkezinde gül** (küçük,
   başta loş). Halkalar söner.
 - Dört simge, kelimelerinde birer birer (taşmalı pop) alt yarıda bir yay üzerinde belirir (altyazı bandının
@@ -206,7 +214,8 @@ yüce neticesi) → altın meyve nura döner (iman-ı billahtır).
   (kandil söner, kuş susar, nar kurur, bal donuklaşır). Loş ve sessiz bir an.
 - Bitiş: loş, gri simgeler.
 
-### s06 (46,4–57,4) — "Cenab-ı Hakk'ı tanıyan ve seven, nihayetsiz saadete, nimete, envara, esrara ya bi'l-kuvve veya bilfiil mazhardır."
+### s06 (46,4–57,4) — GÜNCEL: gökte yalnız sade güneş; ufka bağlanan ışık iplikleri, uçan fenerler, kapılardan ışık, kıvılcım, yukarıdan inen nur YOK; 'tanıyan'da adam çiçeklere bakar; 'envara'da yol kandilleri parlar.
+### s06 (eski plan) — "Cenab-ı Hakk'ı tanıyan ve seven, nihayetsiz saadete, nimete, envara, esrara ya bi'l-kuvve veya bilfiil mazhardır."
 - Başlangıç: loşluktan şafak açılır: geniş manzara; adam (yan, sağa bakar) bir tepede, ufuktan ışık doğuyor.
 - 47,80 "tanıyan": başını kaldırır; çevresindeki her şeyde (çiçek, ağaç, kuş) küçük ışık izleri belirir ve ince
   ışık çizgileriyle ufuktaki nura bağlanır (her şey Sahibini gösterir).
@@ -221,7 +230,8 @@ yüce neticesi) → altın meyve nura döner (iman-ı billahtır).
 - 55,46 "veya bilfiil": tohum filizlenir, hayalin çizgilerini doldurarak gerçek ağaç olur, meyve verir (fiilen).
 - 56,02 "mazhardır": yukarıdan adamın üzerine nur iner; adam ağacın yanında ışıkla yıkanır.
 
-### s07 (57,0–67,6) — "Onu hakiki tanımayan, sevmeyen nihayetsiz şakavete, âlâma ve evhama manen ve maddeten müptela olur."
+### s07 (57,0–67,6) — GÜNCEL: adam aydınlık dünyaya (ışığa değil) sırtını döner; nur sütunu yok.
+### s07 (eski plan) — "Onu hakiki tanımayan, sevmeyen nihayetsiz şakavete, âlâma ve evhama manen ve maddeten müptela olur."
 - 57,76 "Onu hakiki tanımayan": aynı dünyada bir adam ışığa sırtını döner, ters yöne (sola) yürür; yürüdükçe renk
   çekilir, gök gri-lilaya döner, tarama koyulaşır.
 - 59,38 "sevmeyen": göğsündeki sıcak ışık titreyip söner.
@@ -231,7 +241,8 @@ yüce neticesi) → altın meyve nura döner (iman-ı billahtır).
 - 64,24 "manen": göğsünde koyu bir bulut; 64,90 "ve maddeten": dışarıdan üzerine ağır yağmur/yük; omuzları çöker.
 - 65,62 "müptela olur": dizlerinin üstüne çöker; kamera yavaşça yaklaşır. Bitiş: gri, ıssız, loş.
 
-### s08 (67,2–82,9) — "Evet, şu perişan dünyada, âvâre nev-i beşer içinde, semeresiz bir hayatta; sahipsiz, hâmisiz bir surette; âciz, miskin bir insan, bütün dünyanın sultanı da olsa kaç para eder."
+### s08 (67,2–82,9) — GÜNCEL: 'semeresiz bir hayatta' meyvesiz ağaç YOK; adam çorak ovada yürür, ayak izleri arkasında silinir.
+### s08 (eski plan) — "Evet, şu perişan dünyada, âvâre nev-i beşer içinde, semeresiz bir hayatta; sahipsiz, hâmisiz bir surette; âciz, miskin bir insan, bütün dünyanın sultanı da olsa kaç para eder."
 - Palet gri-lila, soluk; altın yalnız servette.
 - 67,97 "şu perişan dünyada": dağınık bir dünya: rüzgârda savrulan yapraklar ve kâğıtlar, eğri evler, kırık
   çitler, çatlak yol, rüzgâr çizgileri.
@@ -258,7 +269,8 @@ yüce neticesi) → altın meyve nura döner (iman-ı billahtır).
 - 94,93 "herkes anlar": kamera labirentten çok yükseğe çekilir: labirentin uçsuz bucaksızlığı ve adamın küçüklüğü
   apaçık görünür. Bitiş: kuşbakışı devasa gri labirent.
 
-### s10 (96,1–110,9) — "Eğer sahibini bulsa mâlikini tanısa o vakit rahmetine iltica eder, kudretine istinad eder. O vahşetgâh dünya, bir tenezzühgâha döner ve bir ticaretgâh olur."
+### s10 (96,1–110,9) — GÜNCEL: huzme/ışık yolu yok (duvarlar sade biçimde silinir); 'tanısa'da göğe bakmaz; 'rahmetine iltica eder' = dua; 'kudretine istinad eder' = rüzgâra rağmen sakin, dik duruş (kaya/dağ yok); 'ticaretgâh' = bahçede gerçek bir ikram (çarşı yok).
+### s10 (eski plan) — "Eğer sahibini bulsa mâlikini tanısa o vakit rahmetine iltica eder, kudretine istinad eder. O vahşetgâh dünya, bir tenezzühgâha döner ve bir ticaretgâh olur."
 - Başlangıç: s09'un labirenti (gri). 96,75 "Eğer sahibini bulsa": bulutları yaran bir ışık huzmesi labirentteki
   adamın üzerine iner; labirent duvarları ışığa dönüşerek erir, ışığa giden düz bir yol açılır.
 - 98,53 "mâlikini tanısa": yan görünüşe geçilir: adam başını kaldırır; çevresine renk dalga dalga geri gelir.

@@ -32,12 +32,11 @@ def norm(x):
 
 def kalem(sure=0.6, **k):
     n = int(SR * sure)
-    x = bant(rng.standard_normal(n), 1800, 6500)
+    x = alcak(bant(rng.standard_normal(n), 1100, 4200), 3500)
     t = np.arange(n) / SR
-    darbe = 0.55 + 0.45 * np.abs(np.sin(2 * np.pi * rng.uniform(7, 10) * t + rng.uniform(0, 6)))
-    tane = alcak(np.abs(rng.standard_normal(n)), 60)
-    env = np.minimum(1, t / 0.05) * np.minimum(1, (sure - t) / 0.12)
-    return norm(x * darbe * (0.6 + tane) * env) * 0.8
+    darbe = 0.75 + 0.25 * np.abs(np.sin(2 * np.pi * rng.uniform(5, 7) * t + rng.uniform(0, 6)))
+    env = np.minimum(1, t / 0.08) * np.minimum(1, (sure - t) / 0.18)
+    return norm(x * darbe * env) * 0.55
 
 def firca(sure=0.45, **k):
     n = int(SR * sure)
@@ -64,10 +63,10 @@ def whoosh(sure=1.0, **k):
     blok = 1024
     for i in range(0, n, blok):
         u = i / n
-        fc = 250 + 1300 * np.sin(np.pi * u) ** 1.5
+        fc = 180 + 800 * np.sin(np.pi * u) ** 1.5
         seg = x[i:i + blok]
         out[i:i + blok] = bant(seg, fc * 0.6, fc * 1.6)
-    out = alcak(out, 4000)
+    out = alcak(out, 2400)
     env = np.sin(np.pi * np.clip(t / sure, 0, 1)) ** 2
     return norm(out * env) * 0.7
 
@@ -88,14 +87,13 @@ def nur(sure=2.2, **k):
     return norm(hava * env * 0.55 + parilti * env) * 0.6
 
 def parilti(**k):
+    # yumuşak, perdesiz hava pırıltısı (rastgele perdeli çınlamalar kulağı rahatsız etmesin diye yok)
     n = int(SR * 0.9)
-    x = np.zeros(n)
-    for j in range(7):
-        s0 = int(SR * rng.uniform(0, 0.55))
-        m = int(SR * 0.3)
-        tt = np.arange(m) / SR
-        x[s0:s0 + m] += np.sin(2 * np.pi * rng.uniform(2200, 5200) * tt) * np.exp(-tt / 0.05) * rng.uniform(0.4, 1)
-    return norm(x) * 0.6
+    t = np.arange(n) / SR
+    x = alcak(bant(rng.standard_normal(n), 3500, 9000), 8000)
+    am = 0.7 + 0.3 * np.sin(2 * np.pi * 9 * t + rng.uniform(0, 6))
+    env = np.clip(t / 0.15, 0, 1) * np.exp(-np.clip(t - 0.15, 0, None) / 0.22)
+    return norm(x * am * env) * 0.35
 
 def kanat(sure=0.5, **k):
     n = int(SR * sure)
@@ -108,9 +106,9 @@ def kanat(sure=0.5, **k):
 def damla(**k):
     n = int(SR * 0.35)
     t = np.arange(n) / SR
-    f = 900 + 1700 * (1 - np.exp(-t / 0.02))
-    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * zarf(n, 0.001, 0.07)
-    return norm(x) * 0.7
+    f = 700 + 900 * (1 - np.exp(-t / 0.025))
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * zarf(n, 0.004, 0.06)
+    return norm(alcak(x, 3000)) * 0.45
 
 def ruzgar(sure=2.5, **k):
     n = int(SR * sure)
@@ -143,8 +141,8 @@ def kalp(**k):
     for s0, a in ((0.0, 1.0), (0.22, 0.7)):
         tt = t - s0
         m = tt >= 0
-        x[m] += a * np.sin(2 * np.pi * 52 * tt[m]) * np.exp(-tt[m] / 0.07)
-    return norm(x) * 0.9
+        x[m] += a * np.sin(2 * np.pi * 48 * tt[m]) * np.exp(-tt[m] / 0.06) * np.clip(tt[m] / 0.01, 0, 1)
+    return norm(x) * 0.6
 
 def zincir(**k):
     n = int(SR * 0.6)
@@ -211,8 +209,13 @@ def main():
     N = int(SR * toplam)
     kon = np.zeros((N, 2)); kon[:min(N, len(konusma))] = konusma[:N]
     efekt = np.zeros((N, 2))
+    # kulağa kaba/çizgi film gibi gelen ya da sözü gerçek gibi canlandıran efektler çalınmaz: pop, gök gürültüsü, zincir,
+    # kapı gıcırtısı, yapay kuş cıvıltısı, para şıngırtısı
+    ATLA = {'pop', 'gok', 'zincir', 'kapi', 'kus', 'para'}
     for ip in ipuclari:
         tur = ip.get('tur')
+        if tur in ATLA:
+            continue
         f = TURLER.get(tur)
         if not f:
             print('bilinmeyen ses türü:', tur); continue
@@ -233,11 +236,11 @@ def main():
     ir = alcak(ir, 5000); ir /= np.sqrt(np.sum(ir ** 2))
     for c in range(2):
         efekt[:, c] = efekt[:, c] * 0.82 + signal.fftconvolve(efekt[:, c], ir)[:N] * 0.18
-    # efekt seviyesi: tepe -26 dBFS civarı; konuşma varken 4 dB daha kısık (yan zincir)
-    efekt *= 10 ** (-22 / 20) / (np.max(np.abs(efekt)) + 1e-9) * 1.0
+    # efekt seviyesi: tepe -27 dBFS; konuşma varken 7 dB daha kısık (yan zincir). Efektler kısık, konuşma baskın.
+    efekt *= 10 ** (-27 / 20) / (np.max(np.abs(efekt)) + 1e-9) * 1.0
     kenv = alcak(np.abs(kon).mean(axis=1), 6)
     kenv = kenv / (np.max(kenv) + 1e-9)
-    kis = 10 ** (-5 * np.clip(kenv * 6, 0, 1) / 20)
+    kis = 10 ** (-7 * np.clip(kenv * 6, 0, 1) / 20)
     efekt *= kis[:, None]
     # konuşma: hafif seviye düzeltme (tepe -1 dBFS)
     kon *= 10 ** (-1 / 20) / (np.max(np.abs(kon)) + 1e-9)

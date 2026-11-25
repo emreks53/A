@@ -2,12 +2,11 @@
 // s09'un labirent modülü, kamerası, adamı ve son kare çizicisi içe aktarılır: 96,1–96,5 arasında s09'un kamerası ve
 // adamı aynen izlenir, böylece çapraz geçişte çift görüntü olmaz. Kamera s09'un yükselişinin bittiği yükseklikte durur
 // (geri dalış yok); yalnız "bulsa"dan sonra ışığa doğru çok yavaş bir itme başlar.
-// Sonra: bulutlar kenarlardan sızar, yukarıdan yumuşak bir ışık huzmesi onları yararak adamın üzerine iner ("Eğer");
-// ışık zemine yayılır, adamın arkasına uzun yumuşak gölgesi düşer (adamın çevresinde ışın halesi yok); adam ışığa döner.
-// "bulsa"da adamın önündeki duvarlar sırayla altın ışığa dönüşüp erir: ışığa giden, üç hücre eninde, kenarları yumuşak,
-// taranmış ışık zeminli düz bir yol açılır; adam o yolda ışığa doğru yürümeye başlar.
-// Ardından erime yoldan iki yana genişleyen yumuşak bir şerit olarak yayılır (adamı ortalayan bir ışık diski oluşmaz);
-// s10.mjs'teki iris geçişi bunun içinden açılır.
+// Kural: Allah'a dair hiçbir şey görselleştirilmez (yukarıdan inen ışık, huzme, nur, parıltı YOK). "Eğer sahibini
+// bulsa": adam yönünü bulur (yolun açılacağı yöne döner); "bulsa"da önündeki duvarlar sade biçimde silinip yok olur
+// (ışık değil: duvarlar solar, yerinde çıplak film kalır) ve üç hücre eninde düz, sakin bir yol açılır; adam o yolda
+// yürümeye başlar. Ardından silinme yoldan iki yana genişleyen yumuşak bir şerit olarak labirenti çözer;
+// s10.mjs'teki geçiş bunun içinden açılır.
 import { W, H, clamp, lerp, ease, an, rng, TAU, rgba } from '../motor/temel.mjs';
 import { oge, ogeCiz, TON } from '../motor/kalem.mjs';
 import { dikdortgen } from '../motor/sekil.mjs';
@@ -15,6 +14,8 @@ import * as LB from './s09-labirent.mjs';
 import { SON_KAMERA, Z_SON, labirentKamerasi, labirentAdamDurum, labirentAdamCiz, sonKareCiz, sonKareHazirla } from './s09.mjs';
 import { tampon, huzme, zerreler } from './s10-yardim.mjs';
 
+// açılan yolun ve çözülen labirentin zemini
+const YOL_ZEMIN = '#D4D2D6'; // labirent koridorunun kendi zemin tonu (parlak bir ışık şeridi gibi okunmasın)
 const SON = { ...SON_KAMERA }; // s09'un son kamerası (adam ekranın ortasında, labirent 90° dönük)
 const C = LB.HUCRE;
 const DUV = (C * LB.DUVAR) / 2; // duvarın yarı kalınlığı
@@ -285,17 +286,6 @@ export function labirentCiz(ctx, t, Z) {
   const yedek = { ...SON_KAMERA };
   Object.assign(SON_KAMERA, cam);
   try { sonKareCiz(g, t, { adam: false }); } finally { Object.assign(SON_KAMERA, yedek); }
-  // ışık geldikçe kenar kararması açılır
-  if (isik > 0) {
-    g.save();
-    g.globalCompositeOperation = 'screen';
-    const gr = g.createRadialGradient(ax, ay, 100, ax, ay, 1200);
-    gr.addColorStop(0, `rgba(255,246,222,${0.2 * isik})`);
-    gr.addColorStop(1, `rgba(222,214,232,${0.16 * isik})`);
-    g.fillStyle = gr;
-    g.fillRect(0, 0, W, H);
-    g.restore();
-  }
   // 1b) ışık yolu tabana işlenir: koridorun içi sıcak taranmış ışık zemini olur, yolu kesen duvarlar bu zeminin altında
   // kalır (eriyip gider); yan duvarlar yerinde kalır
   if (yolU > 0) {
@@ -315,38 +305,23 @@ export function labirentCiz(ctx, t, Z) {
     gd.globalAlpha = 1;
     if (duvarVar) {
       gd.globalCompositeOperation = 'source-in';
-      gd.filter = 'sepia(0.75) saturate(1.7) brightness(1.22)';
       gd.drawImage(tb, 0, 0);
-      gd.filter = 'none';
     }
     const tm = tampon('lab-yol-maske');
     yolMaskesi(tm.getContext('2d'), cam, yOn);
     const ty = tampon('lab-yol');
     const gy = ty.getContext('2d');
-    sicakZeminCiz(gy, cam);
+    gy.fillStyle = YOL_ZEMIN;
+    gy.fillRect(0, 0, W, H);
     gy.globalCompositeOperation = 'destination-in';
     gy.drawImage(tm, 0, 0);
     g.drawImage(ty, 0, 0);
-    // yolun yumuşak ışıması (kenarlara ve açıklıklara sızar)
-    const tp = tampon('lab-yol-isil');
-    const gp = tp.getContext('2d');
-    gp.filter = `blur(${(14 * az).toFixed(1)}px)`;
-    gp.drawImage(tm, 0, 0);
-    gp.filter = 'none';
-    gp.globalCompositeOperation = 'source-in';
-    gp.fillStyle = '#FFE7A8';
-    gp.fillRect(0, 0, W, H);
-    g.save();
-    g.globalCompositeOperation = 'screen';
-    g.globalAlpha = 0.5;
-    g.drawImage(tp, 0, 0);
-    g.restore();
     if (duvarVar) g.drawImage(tdv, 0, 0);
   }
 
   // 2) altın kopya (merkezden yayılan erime cephesi için), tabandan türetilir
   let tAltin = null;
-  if (Rs > 4) {
+  if (false) {
     tAltin = tampon('lab-altin');
     const ga = tAltin.getContext('2d');
     ga.filter = 'sepia(0.7) saturate(1.6) brightness(1.16)';
@@ -368,41 +343,10 @@ export function labirentCiz(ctx, t, Z) {
 
   // 4) çizim: sıcak ışık zemini (silinen yerlerde görünür), taban, altın cephe
   if (Rs > 1) {
-    sicakZeminCiz(ctx, cam);
-    // yumuşak ışıma da şerit biçiminde (adamı ortalayan disk değil); erime büyüdükçe belirir
-    const Rh = Math.max(140, Rs * 0.9), gh = 0.4 * clamp(Rs / 260);
-    seritIsik(ctx, 'lab-serit-hale', ax, ay, [[0, gh], [Rh * 0.35, gh * 0.45], [Rh, 0]], '#FFE7AE');
+    ctx.fillStyle = YOL_ZEMIN;
+    ctx.fillRect(0, 0, W, H);
   }
   ctx.drawImage(tb, 0, 0);
-  if (tAltin) {
-    ctx.drawImage(tAltin, 0, 0);
-    const r0 = Math.max(0, Rs - 150);
-    seritIsik(ctx, 'lab-serit-cephe', ax, ay, [[0, 0], [r0, 0], [r0 + 0.7 * (Rs + 30 - r0), 0.3], [Rs + 30, 0]], '#FFECB4');
-  }
-  // 4b) caddedeki duvarlar ışığa dönüşür: ön gelince duvar altın ışıkla parlar, eridikçe ışık söner
-  if (yolU > 0) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    for (const d of yolDuvarlari(cam)) {
-      const tv = onVaris(d.y, cam);
-      const k = Math.sin(Math.PI * clamp((t - tv + 0.04) / (YOL.erime + 0.12)));
-      if (k <= 0.01) continue;
-      const cx = (d.x0 + d.x1) / 2, rx = (d.x1 - d.x0) / 2 + 14 * az, ry = (d.y1 - d.y0) / 2 + 14 * az;
-      const R = Math.max(rx, ry);
-      const gr = ctx.createRadialGradient(cx, d.y, 0, cx, d.y, R);
-      gr.addColorStop(0, `rgba(255,236,170,${0.55 * k})`);
-      gr.addColorStop(0.55, `rgba(255,226,150,${0.25 * k})`);
-      gr.addColorStop(1, 'rgba(255,226,150,0)');
-      ctx.fillStyle = gr;
-      ctx.save();
-      ctx.translate(cx, d.y);
-      ctx.scale(rx / R, ry / R);
-      ctx.fillRect(-R, -R, 2 * R, 2 * R);
-      ctx.restore();
-    }
-    ctx.restore();
-  }
-
   // 5) adamın çevresi: s09 bittikten sonra ışık gelmeden önce göz onu bulsun (çevre hafifçe kararır)
   const odak = an(t, 96.5, 0.35, ease.inOutSine) * (1 - an(t, Z.bul, 0.5));
   if (odak > 0.003) {
@@ -417,103 +361,10 @@ export function labirentCiz(ctx, t, Z) {
     ctx.restore();
   }
 
-  // 6) yukarıdan inen yumuşak huzme; ışık zemine düşer (adamın ayaklarının çevresinde uzunca, yumuşak bir ışık
-  // birikintisi ve dağınık lekeler). Işın halesi yok: adam ışığın içinde, ışık onun üstünü beyazlatmaz.
-  if (isik > 0) {
-    huzme(ctx, W / 2 + 24, -260, lerp(30, 230, isik), ax, ay - 6 * az, (20 + 8 * sicaklik) * az + 10, isik * 0.9, {});
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    ctx.translate(ax, ay - 26 * az);
-    ctx.scale(1, 1.45);
-    const R = 95 * az;
-    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
-    gr.addColorStop(0, rgba('#FFEDB8', 0.42 * isik));
-    gr.addColorStop(0.55, rgba('#FFE6A6', 0.2 * isik));
-    gr.addColorStop(1, rgba('#FFE6A6', 0));
-    ctx.fillStyle = gr;
-    ctx.fillRect(-R, -R, 2 * R, 2 * R);
-    ctx.restore();
-    // dağınık lekeler (yavaşça kayar, sıcaklıkla belirginleşir)
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    for (const l of lekeler) {
-      const a = l.a * isik * (0.5 + 0.5 * sicaklik) * an(t, Z.egr + 0.2 + l.gec, 0.6) * (1 - an(t, Z.bul + 0.3, 0.5));
-      if (a <= 0.004) continue;
-      const lx = ax + (l.x + 6 * Math.sin(t * 0.7 + l.faz)) * az, ly = ay + (l.y + 4 * Math.cos(t * 0.5 + l.faz)) * az;
-      ctx.save();
-      ctx.translate(lx, ly);
-      ctx.rotate(l.don);
-      ctx.scale(1, l.ry / l.rx);
-      const R2 = l.rx * az;
-      const g2 = ctx.createRadialGradient(0, 0, 0, 0, 0, R2);
-      g2.addColorStop(0, rgba('#FFEBB4', a));
-      g2.addColorStop(1, rgba('#FFEBB4', 0));
-      ctx.fillStyle = g2;
-      ctx.fillRect(-R2, -R2, 2 * R2, 2 * R2);
-      ctx.restore();
-    }
-    ctx.restore();
-  }
   // adam: 96,1'den beri s10 çizer (s09'un adamıyla aynı; tabanda adam yok). Huzme inince ayaklarından geriye
   // (ekranda aşağı, ışığın tersine) uzun, yumuşak bir insan gölgesi düşer: ayakta duran bir insan olduğu uzaktan da
   // okunur (ışık onun çevresinde hale değil, zeminde gölge ve aydınlık olarak görünür)
   const adam = adamDurumu(t, Z);
-  if (isik > 0) uzunGolge(ctx, cam, adam, isik * (1 - an(t, Z.bul + 0.3, 0.5)));
   labirentAdamCiz(ctx, cam, adam);
-  if (isik > 0) zerreler(ctx, ax - 110, ay - 900, 220, 860, t, { sayi: 20, alfa: 0.6 * isik, hiz: 60, tohum: 8, boy: 2.4 });
-  // 7) erime zerreleri: yolu kesen duvarlardan ve merkezden yayılan cepheden yükselen ışık
-  if (yolU > 0 && t < YOL.t0 + YOL.sure + YOL.erime + 0.3) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    for (const d of yolDuvarlari(cam)) {
-      const omur = clamp((t - onVaris(d.y, cam)) / (YOL.erime + 0.25));
-      if (omur <= 0 || omur >= 1) continue;
-      const r = rng(500 + d.id);
-      for (let k = 0; k < 3; k++) {
-        const px = lerp(d.x0, d.x1, r()), py = lerp(d.y0, d.y1, r()) - 70 * omur * r.ara(0.5, 1.2) * az;
-        const b = (2 + r() * 2.4) * Math.sqrt(az);
-        const al = 0.8 * Math.sin(Math.PI * omur);
-        const gr = ctx.createRadialGradient(px, py, 0, px, py, b * 3);
-        gr.addColorStop(0, `rgba(255,244,205,${al})`);
-        gr.addColorStop(1, 'rgba(255,244,205,0)');
-        ctx.fillStyle = gr;
-        ctx.fillRect(px - b * 3, py - b * 3, b * 6, b * 6);
-      }
-    }
-    ctx.restore();
-  }
-  if (Rs > 10 && Rs < 2400) {
-    const r = rng(77);
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    for (let i = 0; i < 80; i++) {
-      const a = r() * TAU, gecik = r() * 0.5, rd = r(), ry = r(), rb = r(), rf = r();
-      const d = Rs - rd * Math.min(160, Rs * 0.55);
-      if (d < 70 * az) continue; // adamın üstüne birikip onu beyazlatmasın
-      const omur = clamp(t - (Z.bul + 0.12) - gecik, 0, 1);
-      // şerit cephesinde: üst yarıda yolun iki yanındaki dikey cephelerde, altta yarım daire üzerinde
-      const ust = Math.sin(a) < 0;
-      const px = ust ? ax + Math.sign(Math.cos(a)) * d : ax + Math.cos(a) * d;
-      const py = (ust ? lerp(ay, -60, -Math.sin(a)) : ay + Math.sin(a) * d) - 50 * (ry + 0.5) * omur;
-      const b = 2.4 + rb * 3.2;
-      const al = 0.75 * Math.sin(Math.PI * clamp((t * 1.7 + rf) % 1)) * clamp((Rs - 60) / 160);
-      const gr = ctx.createRadialGradient(px, py, 0, px, py, b * 3);
-      gr.addColorStop(0, `rgba(255,244,205,${al})`);
-      gr.addColorStop(1, 'rgba(255,244,205,0)');
-      ctx.fillStyle = gr;
-      ctx.fillRect(px - b * 3, py - b * 3, b * 6, b * 6);
-    }
-    ctx.restore();
-  }
-  // 8) bulutlar: s09 bittikten sonra kenarlardan sızar, huzmeyle yarılıp uzaklaşır
-  const gir = an(t, 96.42, 0.4, ease.outCubic);
-  const yaril = an(t, Z.egr - 0.05, 1.2, ease.inOutCubic);
-  const bulutA = gir * (1 - an(t, Z.bul - 0.2, 0.7));
-  if (bulutA > 0.005) {
-    bulutlar.forEach((b, i) => {
-      const k = (1 - gir) * 260 + yaril * 640;
-      bulutPuf(ctx, b.x + b.dx * k + Math.sin(t * 0.4 + b.x) * 6, b.y + b.dy * k, b.w * (1 + 0.25 * yaril), 0.8 * bulutA, 40 + i);
-    });
-  }
   return { cam, ax, ay };
 }

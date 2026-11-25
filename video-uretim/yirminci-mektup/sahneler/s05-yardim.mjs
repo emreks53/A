@@ -226,6 +226,38 @@ export function kandilOge() {
     },
   });
 }
+// ---------------------------------------------------------------- lale demeti (saadet)
+// Kandil (Alaaddin lambasını andırdığı için) yerine: üç lale, İslam sanatının klasik motifi. Sap (0,0)'dan yukarı;
+// baş, sapın ucunda (yerel (0,0) başın dibi).
+export function laleBasOge(renk = 'kirmizi') {
+  const P = {
+    kirmizi: { arka: '#F1A6A2', tara: [[0, '#F6BDB6'], [0.55, '#D9545A'], [1, '#93283A']], kontur: '#7E2232' },
+    pembe: { arka: '#F6C4CC', tara: [[0, '#FAD6DC'], [0.55, '#E58AA0'], [1, '#A84866']], kontur: '#8E3A56' },
+    beyaz: { arka: '#F7F2E8', tara: [[0, '#FFFFFF'], [0.6, '#E6DDCC'], [1, '#B9AC94']], kontur: '#8C7E66' },
+  }[renk];
+  const sekil = svg('M-17 -2C-21 -18 -18 -35 -9 -44C-6 -36 -3 -32 0 -31C3 -32 6 -36 9 -44C18 -35 21 -18 17 -2C11 5 -11 5 -17 -2Z');
+  return oge({
+    ad: 's05-lale-bas-' + renk, olcek: OL, sekil, arka: P.arka, arkaAlfa: 0.85,
+    tarama: { ton: TON.gurultulu(TON.kure(-6, -26, 26, { lx: -0.5, ly: -0.6, lz: 0.6, ortam: 0.15 }), 0.05, 0.05, 5), renkler: P.tara, yonF: (x) => -Math.PI / 2 + x * 0.03, aralik: 2.6, boy: [10, 26], kal: 1.1, alfa: 0.55, esikler: [0.25, 0.55, 0.8] },
+    kontur: P.kontur, konturKal: 1.9,
+    detay: (c, api) => {
+      // orta taç yaprağının kenarları
+      api.cizgi([[-9, -42], [-6, -22], [-4, -3]], { renk: P.kontur, kal: 1.2, alfa: 0.7 });
+      api.cizgi([[9, -42], [6, -22], [4, -3]], { renk: P.kontur, kal: 1.2, alfa: 0.7 });
+    },
+  });
+}
+export function laleSapOge(L = 100, yaprakYon = 1) {
+  const sap = svg(`M-2.6 0C-3 ${-L * 0.5} -2.2 ${-L * 0.8} -1.8 ${-L}L1.8 ${-L}C2.2 ${-L * 0.8} 3 ${-L * 0.5} 2.6 0Z`);
+  const k = yaprakYon;
+  const yaprak = svg(`M0 -6C${-18 * k} -24 ${-26 * k} -50 ${-17 * k} ${-L * 0.72}C${-13 * k} ${-L * 0.52} ${-7 * k} -34 ${2 * k} -18Z`);
+  return oge({
+    ad: `s05-lale-sap-${L}-${k}`, olcek: OL, sekil: [...yaprak, ...sap], arka: '#A9CF96', arkaAlfa: 0.85,
+    tarama: { ton: () => 0.45, renkler: [[0, '#B8DCA4'], [0.6, '#5E9A5A'], [1, '#2F6234']], yon: -1.3 * k, aralik: 2.6, boy: [10, 24], kal: 1.1, alfa: 0.55, esikler: [0.3, 0.6] },
+    kontur: '#2C5A30', konturKal: 1.7,
+  });
+}
+
 /** Alev (önbellekli): yerel (0,0) alevin dibi */
 export function alevOge() {
   const s = svg('M2 -66C8 -46 17 -32 15 -15C14 -4 8 2 0 2C-8 2 -14 -4 -15 -15C-16 -31 -5 -44 2 -66Z');

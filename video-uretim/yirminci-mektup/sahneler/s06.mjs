@@ -1,15 +1,15 @@
 // 6. cümle: "Cenab-ı Hakk'ı tanıyan ve seven, nihayetsiz saadete, nimete, envara, esrara ya bi'l-kuvve veya bilfiil
 // mazhardır."
-// s05'in loş, gri dünyasından şafak açılır: ufuktaki vadiden nur doğar, renk ışıkla birlikte ufuktan yayılır; adam
-// (yan, sağa bakar) bir sırtta durur (Cenab-ı Hakk'ı). Başını kaldırır; çiçekte, ağaçta, kuşta küçük ışık izleri belirir,
-// ince ışık iplikleri ufuktaki nura bağlanır (tanıyan). Elini göğsüne koyar, göğsünde sıcak bir ışık (ve seven).
+// KURAL: Allah'a dair hiçbir şey görselleştirilmez: adı okunurken doğan/parlayan ışık, ufuktaki nura bağlanan iplikler,
+// yukarıdan inen nur, nurdan kopan kıvılcım YOK. Gökteki yalnız sade bir güneştir (baştan beri gökte, kelimelere tepki
+// vermez); s05'in loş dünyası bütün kare birlikte renklenerek aydınlanır. Adam (yan, sağa bakar) bir sırtta durur; önündeki
+// çiçeklere bakar (tanıyan: tefekkür). Elini göğsüne koyar, göğsünde sıcak bir ışık (ve seven: muhabbetullah kavramı).
 // Kamera geri çekilir: adamın ayağından başlayıp ufka, sonsuza uzanan yol; kandiller yakından uzağa, sonsuza doğru
-// birer birer yanar (nihayetsiz saadete). Yol boyunca ağaçlar meyveye durur (nimete). Işık zerreleri ve fenerler
-// göğe yükselir, kamera onları izler (envara). Kamera ufka dalar: zarif kemerli küçük kapılar aralanır, içlerinden
-// ışık sızar (esrara). Nurdan kopan bir kıvılcım sırta, adamın yanındaki toprağa iner; toprak kesiti açılır: tohum ve
-// üstünde tam bir ağacın kesik çizgili hayali (bi'l-kuvve). Tohum filizlenir, ağaç hayalin çizgilerini doldurarak
-// büyür, meyve verir (bilfiil). Yukarıdan adamın üzerine nur iner; adam ağacın yanında ışıkla yıkanır (mazhardır).
-// Bitiş: adam (yan) nur altında, meyveli ağacın yanında, aydınlık yeşil manzara.
+// birer birer yanar (nihayetsiz saadete). Yol boyunca ağaçlar meyveye durur (nimete). Yol boyunca bütün kandiller
+// birlikte sıcakça parlar (envara; gökte uçan fener ya da yükselen ışık zerresi gibi mistik öğe yok). Kamera ufka kayar:
+// zarif kemerli küçük kapılar aralanır (esrara; içlerinden ışık sızmaz). Toprak kesiti açılır: tohum ve üstünde tam bir
+// ağacın kesik çizgili hayali (bi'l-kuvve). Tohum filizlenir, ağaç hayalin çizgilerini doldurarak büyür, meyve verir
+// (bilfiil). Adam eli göğsünde, ağacın yanında sakin durur (mazhardır). Bitiş: aydınlık yeşil manzara.
 import { W, H, clamp, lerp, ease, an, pop, rng, TAU, rgba } from '../motor/temel.mjs';
 import { ogeCiz, gokTuvali, konturCiz, darbe, PALET } from '../motor/kalem.mjs';
 import { kameraIle, ekranda, salinim } from '../motor/sahne.mjs';
@@ -94,14 +94,15 @@ export const kamera06Ham = (t) => KAM(t);
 export const salinim06 = SALINIM;
 
 let hazir = false;
+let GUNES06 = null;
 let gok, bulutlar, dagUzak, dagYakin, seritler, yol, yolYakin, yolUzak, kandilS, kandilY, agacTur, nesneler, kapi, toprak, tohum,
   hayal, A, meyveK, meyveY, cicekler, fener, kokler, zerreler, fenerler, kus0, AGM, kumeT, meyveT, agacBitis;
 
 const POZ_EGIK = { ...DURUS, bas: 0.2, govde: 0.02 };
-const POZ_BAKIS = { ...DURUS, bas: -0.17, govde: -0.015 };
+const POZ_BAKIS = { ...DURUS, bas: 0.07, govde: 0.0 }; // önündeki çiçeklere bakar (göğe değil)
 // el göğüste: dirsek gövdenin yanında (siluetin içinde), ön kol çapraz yukarı, el göğsün üstünde (parmaklar karşı omza)
-const POZ_GOGUS = { ...DURUS, bas: -0.17, govde: -0.015, omuz: [-0.05, -0.12], dirsek: [0.12, 2.84], el: [0, 1.05] };
-const POZ_NUR = { ...POZ_GOGUS, bas: -0.3, govde: -0.03 };
+const POZ_GOGUS = { ...DURUS, bas: -0.02, govde: -0.015, omuz: [-0.05, -0.12], dirsek: [0.12, 2.84], el: [0, 1.05] };
+const POZ_NUR = { ...POZ_GOGUS }; // 'mazhardır': başını göğe kaldırmaz
 // göğüs ışığının göğüs noktasına göre yeri (dünya px): göğüs ile elin son yeri arasında (elin altında)
 const GOGUS_ISIK = (() => {
   const [bx, by] = bilekYeri(POZ_GOGUS.omuz[1], POZ_GOGUS.dirsek[1]);
@@ -151,16 +152,10 @@ function adamPoz(t) {
 // ---------------------------------------------------------------- hazırlık
 export default {
   sesler: [
-    { t: T.cenab, tur: 'nur', guc: 0.4, sure: 2.4 },
-    { t: T.taniyan + 0.05, tur: 'parilti', guc: 0.3, tekrar: 4, ara: 0.11 },
-    { t: T.saadet + 0.05, tur: 'pop', guc: 0.2, tekrar: 8, ara: 0.09 },
-    { t: T.nimet + 0.04, tur: 'pop', guc: 0.24, tekrar: 6, ara: 0.07 },
-    { t: T.envar, tur: 'parilti', guc: 0.28, sure: 1.0 },
-    { t: T.esrar + 0.06, tur: 'nur', guc: 0.24, sure: 1.2 },
-    { t: 53.4, tur: 'whoosh', guc: 0.2, sure: 1.1 },
-    { t: T.kuvve, tur: 'kalem', guc: 0.4, sure: 0.9 },
-    { t: T.fiil + 0.05, tur: 'firca', guc: 0.35, sure: 0.8 },
-    { t: T.mazhar, tur: 'nur', guc: 0.55, sure: 2.4 },
+    { t: T.saadet + 0.1, tur: 'parilti', guc: 0.12 },
+    { t: 53.4, tur: 'whoosh', guc: 0.14, sure: 1.1 },
+    { t: T.kuvve, tur: 'kalem', guc: 0.22, sure: 0.9 },
+    { t: T.fiil + 0.05, tur: 'firca', guc: 0.2, sure: 0.8 },
   ],
   hazirla() {
     if (hazir) return; // s07 de çağırır (devir teslim karesi): bir kez hazırlanır
@@ -377,24 +372,25 @@ export default {
   ciz(ctx, t, ops = {}) {
     const cam = kamera06(t);
     const z = cam.z;
-    const nurA = an(t, 46.5, 2.0, ease.outCubic);
-    const nurY = lerp(NUR.y0, NUR.y1, nurA);
-    const nurG = 0.55 + 0.45 * an(t, 46.6, 1.6, ease.inOutSine);
+    const nurY = NUR.y1; // güneş baştan beri gökte (kelimeye tepki olarak doğmaz)
+    const nurG = 0.6;
 
     // 1) gök ve bulutlar
     kameraIle(ctx, cam, (g) => {
       ogeCiz(g, gok, -500, -620);
       for (const [b, x, y] of bulutlar) ogeCiz(g, b, x + (t - 46.4) * 5, y, { alfa: 0.92 });
     }, F.gok);
-    // 2) nur (dağların ardından doğar)
+    // 2) sade güneş
+    if (!GUNES06) GUNES06 = M.gunesOge(64, 1.5);
     kameraIle(ctx, cam, (g) => {
-      M.nurKuresi(g, NUR.x, nurY, NUR.r, t, { guc: nurG, olcek: 2.4 });
+      M.hale(g, NUR.x, nurY, 260, '#FFF1CF', 0.4);
+      ogeCiz(g, GUNES06, NUR.x, nurY);
     }, 1);
     // 3) dağlar
     kameraIle(ctx, cam, (g) => ogeCiz(g, dagUzak, 0, 0), F.dag);
     kameraIle(ctx, cam, (g) => {
       ogeCiz(g, dagYakin, 0, 0);
-      M.hale(g, NUR.x, PERS.hy - 10, 330, '#FFF0CC', 0.32 * nurG); // vadide ışık
+      M.hale(g, NUR.x, PERS.hy - 10, 330, '#FFF0CC', 0.18); // vadide güneş ışığı
     }, F.tepe);
 
     // 4) ova, sırt, yol, nesneler, adam
@@ -408,7 +404,7 @@ export default {
       if (kc > 0) KAPILAR.forEach(([x, s], i) => {
         g.save();
         g.globalAlpha *= clamp(1 - an(t, 54.05, 0.6, ease.inOutSine));
-        Y.kapiCiz(g, kapi, x, KAPI_Y, s, { cizim: an(t, T.esrar - 0.02 + i * 0.06, 0.34, ease.outCubic), acik: an(t, T.esrar + 0.2 + i * 0.09, 0.6, ease.inOutCubic), isik: an(t, T.esrar + 0.26 + i * 0.09, 0.7, ease.outCubic), t, tohum: 30 + i });
+        Y.kapiCiz(g, kapi, x, KAPI_Y, s, { cizim: an(t, T.esrar - 0.02 + i * 0.06, 0.34, ease.outCubic), acik: an(t, T.esrar + 0.2 + i * 0.09, 0.6, ease.inOutCubic), isik: 0, t, tohum: 30 + i });
         g.restore();
       });
       // yol boyu nesneler
@@ -425,7 +421,8 @@ export default {
           }
           if (L > 0) {
             const parla = t > n.tYan ? Math.exp(-(t - n.tYan) * 5) : 0;
-            Y.isikNokta(g, n.x, ly, Math.max(2.4 / z, 125 * n.sc * (1 + 1.1 * parla)), L * (0.85 + 0.15 * parla));
+            const env = an(t, T.envar - 0.02, 0.45, ease.outCubic) * (1 - 0.6 * an(t, T.esrar + 0.3, 0.9));
+            Y.isikNokta(g, n.x, ly, Math.max(2.4 / z, 125 * n.sc * (1 + 1.1 * parla + 0.55 * env)), L * (0.85 + 0.15 * parla));
             if (n.sc > 0.25) { g.save(); g.translate(n.x, n.y); g.scale(1, 0.25); Y.isikNokta(g, 0, 0, 150 * n.sc, 0.45 * L); g.restore(); }
           }
         } else {
@@ -480,9 +477,6 @@ export default {
         // tohum ve içindeki saklı ışık
         const ta = an(t, 54.15, 0.35, ease.outCubic) * acil;
         if (ta > 0) {
-          const parla = 0.78 + 0.18 * Math.sin(t * 3.2) + 0.9 * Math.exp(-Math.max(0, t - T.fiil) * 3) * (t > T.fiil ? 1 : 0);
-          tohumHale(g, TOH.x, TOH.y - 2, 92 * (0.9 + 0.1 * parla), 0.8 * ta * Math.min(1.25, parla));
-          Y.isikNokta(g, TOH.x, TOH.y - 2, 95, 0.6 * ta * parla);
           ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.9, r: -0.12, alfa: ta });
         }
       }
@@ -505,9 +499,6 @@ export default {
           t, salinim: 0.8, meyveOge: meyveK,
           kumeS: (i) => kumeOlcek(clamp((t - kumeT[i]) / KUME_SURE)), meyveU: (i) => an(t, meyveT[i], MEYVE_SURE, ease.lin) });
       }
-      // mazhardır: yukarıdan inen nur (adamın arkasında; adam ışıkta okunur kalır)
-      const ni = an(t, T.mazhar, 0.6, ease.outCubic);
-      if (ni > 0) nurSutunu(g, t, ni);
       // çiçekler (kesit açıkken penceresine düşenler toprağa çekilir: toprağın içinde çiçek durmaz)
       cicekCiz(g, t, acil);
       // adam
@@ -518,7 +509,7 @@ export default {
       if (gl > 0) {
         const gx = adamEk.gogus[0] + GOGUS_ISIK[0], gy = adamEk.gogus[1] + GOGUS_ISIK[1] - 4;
         const nab = 1 + 0.12 * Math.sin(t * 4.2);
-        const guc = gl * (0.75 + 0.5 * an(t, T.mazhar + 0.2, 0.8));
+        const guc = gl * 0.8;
         M.hale(g, gx, gy, 70 * nab, '#FFD9A0', 0.55 * guc);
         Y.yildizcik(g, gx, gy, 9 * nab, 0.9 * guc, '#FFF1D0');
       }
@@ -529,42 +520,21 @@ export default {
       for (const cc of cicekler) if (cc.on) ogeCiz(g, cc.oge, cc.x, cc.y, { s: cc.s, r: Math.sin(t * 1.1 + cc.x) * 0.05 });
     }, F.on);
 
-    // 6) mazhardır: adamın çevresinde ışık, inen zerreler
-    const ni = an(t, T.mazhar, 0.6, ease.outCubic);
-    if (ni > 0) kameraIle(ctx, cam, (g) => nurIsik(g, t, ni, adamEk), F.ova);
-
-    // 7) ışık esintisi: nurun ovaya taşan parıltısı
-    kameraIle(ctx, cam, (g) => M.hale(g, NUR.x, nurY, 560, '#FFE7BC', 0.26 * nurG), 1);
-
-    // 8) envar: yükselen zerreler ve fenerler
-    if (t > T.envar - 0.1) kameraIle(ctx, cam, (g) => envarCiz(g, t), F.ova);
+    // güneşin ovaya taşan yumuşak sıcaklığı
+    kameraIle(ctx, cam, (g) => M.hale(g, NUR.x, nurY, 560, '#FFE7BC', 0.1), 1);
 
     // 9) şafak: loş, renksiz dünya ufuktan yayılan ışıkla renklenir (ekran uzayı)
-    const [nsx, nsy] = ekranda(cam, NUR.x, nurY, 1);
-    const R = 3200 * an(t, 46.45, 2.3, ease.inOutSine);
-    if (R < 3150) {
+    const loss = 1 - an(t, 46.45, 2.3, ease.inOutSine); // bir ışık kaynağından değil, bütün kare birlikte renklenir
+    if (loss > 0.003) {
       ctx.save();
-      const g1 = ctx.createRadialGradient(nsx, nsy, Math.max(0, R - 1000), nsx, nsy, R + 1);
-      g1.addColorStop(0, 'rgba(126,122,138,0)');
-      g1.addColorStop(1, 'rgba(126,122,138,0.94)');
       ctx.globalCompositeOperation = 'saturation';
-      ctx.fillStyle = g1;
+      ctx.fillStyle = `rgba(126,122,138,${0.94 * loss})`;
       ctx.fillRect(0, 0, W, H);
-      const g2 = ctx.createRadialGradient(nsx, nsy, Math.max(0, R - 1100), nsx, nsy, R + 1);
-      g2.addColorStop(0, 'rgba(214,210,222,0)');
-      g2.addColorStop(1, 'rgba(206,201,216,0.75)');
       ctx.globalCompositeOperation = 'multiply';
-      ctx.fillStyle = g2;
+      ctx.fillStyle = `rgba(206,201,216,${0.75 * loss})`;
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }
-
-    // 10) tanıyan: her şeyde küçük ışık izi, nura bağlanan ince ışık iplikleri
-    const ip = an(t, T.taniyan - 0.02, 0.2) * (1 - an(t, T.nihayet + 0.15, 0.7, ease.inOutSine));
-    if (ip > 0) baglantilar(ctx, cam, t, ip, [nsx, nsy]);
-
-    // 11) sırra geçiş: nurdan kopan kıvılcım tohumun yerine iner
-    kivilcim(ctx, cam, t);
   },
 };
 
@@ -797,6 +767,12 @@ export const yolKenar06 = (Zmax = 12.6) => Y.yolCokgen(yol, 0, Zmax);
 export const yolOge06 = () => yolYakin;
 /** Nur küresinin t'deki yeri, yarıçapı ve gücü (s06 dünyası, paralaks 1) */
 export function nur06(t) {
-  return { x: NUR.x, y: lerp(NUR.y0, NUR.y1, an(t, 46.5, 2.0, ease.outCubic)), r: NUR.r, guc: 0.55 + 0.45 * an(t, 46.6, 1.6, ease.inOutSine) };
+  return { x: NUR.x, y: NUR.y1, r: NUR.r, guc: 0.6 };
+}
+/** s06'nın güneşi (s07 devir teslimde aynı güneşi çizer) */
+export function gunes06Ciz(g, x, y, s = 1, alfa = 1) {
+  if (!GUNES06) GUNES06 = M.gunesOge(64, 1.5);
+  M.hale(g, x, y, 260 * s, '#FFF1CF', 0.4 * alfa);
+  ogeCiz(g, GUNES06, x, y, { s, alfa });
 }
 export const _f5Debug = () => ({ agacBitis, kumeT, meyveT, Ltop: AGM.Ltop }); // GECICI

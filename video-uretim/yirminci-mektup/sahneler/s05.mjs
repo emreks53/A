@@ -6,14 +6,14 @@
 // Kamera: simgeler girerken yavaşça itilir ve her yeni simgeye hafifçe yönelir; "elbette"de geri çekilip kaynağı
 // ve dört simgeyi birlikte çerçeveler.
 // "bütün": dört levhanın oturacağı noktalı yay alttan iki yana çizilir. Levhalar kelimelerinde taşmalı pop ile
-// belirir: turkuaz kandil (saadet, alev tutuşur ve titrer), çiçekli dalda öten kuş (sürur, başını kesik kesik oynatır,
+// belirir: açan laleler (saadet; Alaaddin lambasını andıran kandil kullanılmaz), çiçekli dalda öten kuş (sürur, başını kesik kesik oynatır,
 // gagasından ses yayları), yarılan nar (nimet, tanelerde parıltı), bal peteği ve damlası (lezzet, damla düşer).
 // "elbette": kaynak büyür ve aydınlanır; "marifetullah": madalyonun halkası parlar, dalga vurur, halkadan dört simgeye
 // altın ışık iplikleri akar (parlak, kuyruklu bir uç önde gider; iplik boyunca ışık kesikleri ve kuyruklu ışık
 // darbeleri akar); "muhabbetullahtadır": gül parlar, pembe dalga, ipliklere örülerek ikinci bir gül ipliği akar;
 // varışta levhalarda halka dalgası ve parıltı, simgeler tam renge gelip parlar. "Onlar": levhalar birlikte nefes alır.
-// "onsuz olamaz": kaynağın ışığı çekilir, madalyon solar ve örtülür; karanlık ipliklerden aşağı iner; kandil söner
-// (duman), kuş susar (başı düşer), nar kurur, bal donuklaşır; zemin loşlaşır. Bitiş: loş, soluk zemin, gri simgeler.
+// "onsuz olamaz": kaynağın ışığı çekilir, madalyon solar ve örtülür; karanlık ipliklerden aşağı iner; laleler boyun
+// büker, kuş susar (başı düşer), nar kurur, bal donuklaşır; zemin loşlaşır. Bitiş: loş, soluk zemin, gri simgeler.
 import { W, H, clamp, lerp, ease, an, pop, TAU, rgba, tuval, smooth } from '../motor/temel.mjs';
 import { ogeCiz, ogeAcarak, konturCiz } from '../motor/kalem.mjs';
 import { kameraYolu, kameraIle, salinim } from '../motor/sahne.mjs';
@@ -283,6 +283,7 @@ export default {
     pervaz = Y.pervazOge(); pervazG = Y.griSurum(pervaz, { doyum: 0.1, kontrast: 0.85 });
     levha = Y.levhaOge(); levhaG = Y.griSurum(levha);
     kandil = Y.kandilOge(); kandilG = Y.griSurum(kandil);
+    LALE.forEach((l) => { l.bas = Y.laleBasOge(l.renk); l.basG = Y.griSurum(l.bas); l.sap = Y.laleSapOge(l.L, l.yy); l.sapG = Y.griSurum(l.sap); });
     alev = Y.alevOge();
     kus = Y.kusOgeleri();
     kusG = Object.fromEntries(Object.entries(kus).map(([k, o]) => [k, Y.griSurum(o)]));
@@ -665,11 +666,33 @@ function simgeCiz(g, i, p, t) {
   g.scale(s * SIMGE_OLCEK, s * SIMGE_OLCEK);
   // bağlanmadan önce hafif soluk; iplik ulaşınca tam renk (canlanma)
   const gri = Math.max(ol, 0.2 * (1 - clamp(bg / 0.55)));
-  [kandilCiz, kusCiz, narCiz, balCiz][i](g, t, { t0, bg, ol, gri, i });
+  [laleCiz, kusCiz, narCiz, balCiz][i](g, t, { t0, bg, ol, gri, i });
   g.restore();
 }
 
-// --- kandil
+// --- laleler (saadet): girişte açar, canlanınca hafifçe salınır; "onsuz olamaz"da başlarını eğer, grileşir
+const LALE = [
+  { x: -30, y: 70, L: 92, r: -0.2, renk: 'kirmizi', yy: 1, faz: 0.4 },
+  { x: 2, y: 74, L: 112, r: 0.02, renk: 'beyaz', yy: -1, faz: 1.9 },
+  { x: 32, y: 70, L: 86, r: 0.24, renk: 'kirmizi', yy: -1, faz: 3.1 },
+];
+function laleCiz(g, t, { t0, bg, ol, gri }) {
+  const ac = ease.outBack(an(t, t0 + 0.18, 0.5, ease.lin), 1.6);
+  const son = an(t, karaVaris(0) - 0.08, 0.6, ease.inOutSine);
+  LALE.forEach((l, k) => {
+    const sal = (0.03 + 0.03 * bg) * Math.sin(t * 1.5 + l.faz) * (1 - son);
+    const a = l.r + sal + son * 0.12 * Math.sign(l.r || 1);
+    g.save();
+    g.translate(l.x, l.y);
+    g.rotate(a);
+    cift(g, l.sap, l.sapG, 0, 0, gri);
+    // baş: sapın ucunda; açılırken büyür, "onsuz"da öne eğilir
+    g.translate(0, -l.L);
+    g.rotate(son * (0.9 + 0.15 * k) * (l.r >= 0 ? 1 : -1));
+    cift(g, l.bas, l.basG, 0, 2, gri, { sx: lerp(0.6, 1, ac) * (1 - 0.08 * son), sy: lerp(0.5, 1, ac) * (1 - 0.12 * son) });
+    g.restore();
+  });
+}
 function kandilCiz(g, t, { t0, bg, ol, gri }) {
   const lx = 0, ly = 26;
   cift(g, kandil, kandilG, lx, ly, gri);
