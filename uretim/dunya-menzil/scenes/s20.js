@@ -5,8 +5,11 @@
    "onun için" 91.79–92.3: it hangs there, beating weakly.
    "hadsiz" 92.43: dark washes start to swirl round it and spread past the frame without end (a turning spiral reads
      as an endless outward flow); thorny vines climb out of the dark water and wind round the heart.
-   "bela" 92.93 / "azaptır" 93.39: thunderous dark blooms burst (one swallows the far world) and cracks of cold light
-     split the night; the vines cinch, the heart is at its darkest. Holds, still turning, into the photoreal ending
+   "bela" 92.93 / "azaptır" 93.39: dark blooms burst in the spiral round the heart and cracks of cold light run out
+     of the heart's own dark through the swirl — all at the heart's level, sideways and downward: nothing strikes
+     from the sky or comes down from the top of the frame (no bolts, no flash of the whole sky: it must never read
+     as wrath from above — rule 3; the torment is his own love turned dark). The vines cinch, the heart is at its
+     darkest; the far world is lost under the spreading swirl. Holds, still turning, into the photoreal ending
      (fade 94.1–95.1). */
 (function () {
   const E = window.E;
@@ -81,8 +84,10 @@
     pnt.setTransform(1, 0, 0, 1, 0, 0);
     pnt.globalCompositeOperation = 'multiply';
     const gr = pnt.createRadialGradient(sx, sy - R * 0.2, 0, sx, sy - R * 0.2, R * 6);
-    gr.addColorStop(0, '#C2CAE6'); gr.addColorStop(1.05 / 6, '#B4BEDF'); gr.addColorStop(1.5 / 6, '#8692C2');
-    gr.addColorStop(2.4 / 6, '#525F94'); gr.addColorStop(1, '#2C3866');
+    // as the far world is lost in the storm its moonlit halo goes too (no pale disc of light left in the sky)
+    const lost = E.clamp((1 - o.world) / 0.9), hc = (c) => E.mix(c, '#3A4677', 0.8 * lost);
+    gr.addColorStop(0, hc('#C2CAE6')); gr.addColorStop(1.05 / 6, hc('#B4BEDF')); gr.addColorStop(1.5 / 6, hc('#8692C2'));
+    gr.addColorStop(2.4 / 6, hc('#525F94')); gr.addColorStop(1, '#2C3866');
     pnt.fillStyle = gr; pnt.fillRect(0, 0, E.W, E.H);
     const gt = pnt.createLinearGradient(0, 0, 0, 240);
     gt.addColorStop(0, '#6070A0'); gt.addColorStop(1, '#FFFFFF');
@@ -175,7 +180,7 @@
       const i0 = Math.floor(main.length * (0.25 + 0.5 * r()));
       const p = main[i0], q = main[Math.min(main.length - 1, i0 + 4)];
       const ang = Math.atan2(q[1] - p[1], q[0] - p[0]) + (r() < 0.5 ? -1 : 1) * (0.5 + 0.5 * r());
-      const Ln = 90 + r() * 150;
+      const Ln = Math.hypot(b[0] - a[0], b[1] - a[1]) * (0.22 + 0.3 * r());
       const br = [p];
       let x = p[0], y = p[1];
       for (let j = 1; j <= 7; j++) {
@@ -208,8 +213,8 @@
     P.globalCompositeOperation = 'source-over';
     P.lineCap = 'round'; P.lineJoin = 'round';
     P.strokeStyle = '#DCE6FA';
-    P.globalAlpha *= 0.55 * fade;
-    P.lineWidth = 2.2; P.stroke(mp);
+    P.globalAlpha *= 0.45 * fade;
+    P.lineWidth = 2.0; P.stroke(mp);
     P.lineWidth = 1.2; for (const bp of bps) P.stroke(bp);
     P.restore();
     E.pencil(L.ink, mp, { w: 1.2, a: 0.25 * fade, double: false });
@@ -217,7 +222,7 @@
     G.save();
     G.globalCompositeOperation = 'lighter';
     G.lineCap = 'round'; G.lineJoin = 'round';
-    for (const [w, a, col] of [[56, 0.05, COLD], [26, 0.11, COLD], [9, 0.28, '#C8DAFF'], [2.4, 0.85, '#F4F8FF']]) {
+    for (const [w, a, col] of [[40, 0.04, COLD], [18, 0.08, COLD], [6, 0.2, '#C8DAFF'], [1.8, 0.6, '#F4F8FF']]) {
       G.strokeStyle = E.rgba(col, Math.min(1, a * (flash + 0.1 * fade)));
       G.lineWidth = w; G.stroke(mp);
       G.lineWidth = w * 0.55; for (const bp of bps) G.stroke(bp);
@@ -301,7 +306,7 @@
     const u = lt - t0;
     if (u <= 0) return;
     const g = E.ease.outExpo(E.clamp(u / 0.8));
-    const a = ang + vRot(lt, rev) * 0.35;
+    const a = ang + vRot(lt, rev) * 0.15;
     const x = cx + Math.cos(a) * dist, y = cy + Math.sin(a) * dist * VSQ;
     const pnt = L.paint;
     const rr = R * (0.25 + 0.75 * g);
@@ -436,14 +441,15 @@
     const pnt = L.paint;
 
     // ---- night sky (= s19's last frame); the far world is swallowed by a dark bloom at "bela" ----
-    const sky = drawSky(L, T, sc, { gate: 1 - rev, aura: 1 - 0.6 * rev, world: 1 - 0.8 * E.ep(lt, K.bela, K.azap + 0.4), stars: 1 - 0.75 * rev, cloud: 1 - 0.5 * rev });
+    const sky = drawSky(L, T, sc, { gate: 1 - rev, aura: 1 - 0.6 * rev, world: 1 - 0.94 * E.ep(lt, K.bela - 0.1, K.azap + 0.4), stars: 1 - 0.75 * rev, cloud: 1 - 0.5 * rev });
 
     E.camera(L, cam);
-    // ---- thunderous dark blooms (behind the heart; the first one over the far world) ----
-    const wx = cam.x + (sky.sx - 540) / cam.zoom, wy = cam.y + (sky.sy - 960) / cam.zoom;
-    const bang = Math.atan2((wy - HY - 20) / VSQ, wx - HX), bdist = Math.hypot(wx - HX, (wy - HY - 20) / VSQ);
-    for (const [t0, ang, dist, R, col, seed] of [[K.bela, bang - vRot(K.bela + 0.3, 1) * 0.35, bdist, 300, '#151424', 5], [K.bela + 0.1, 2.6, 640, 330, '#22101E', 8], [K.azap, -2.3, 640, 360, '#131528', 11], [K.azap + 0.09, 0.5, 660, 340, '#1F0F1C', 14], [K.azap + 0.2, 1.75, 600, 300, '#171222', 17]]) {
-      inkBurst(L, lt, t0, ang, dist, R, col, seed, HX, HY + 20, rev);
+    // ---- dark blooms bursting in the spiral, beside and below the heart (never above it, never from the sky) ----
+    const wx = cam.x + (sky.sx - 540) / cam.zoom;
+    // (each is placed where it should be while it blooms: the spiral drags it round a little)
+    const drag = (t0) => vRot(t0 + 0.5, E.ep(t0 + 0.5, K.vort0, K.vort1, 'inOutSine')) * 0.15;
+    for (const [t0, ang, dist, R, col, seed] of [[K.bela, 0.22, 600, 300, '#151424', 5], [K.bela + 0.1, 2.92, 620, 320, '#22101E', 8], [K.azap, 2.45, 620, 340, '#131528', 11], [K.azap + 0.09, 0.7, 640, 330, '#1F0F1C', 14], [K.azap + 0.2, 1.95, 600, 300, '#171222', 17]]) {
+      inkBurst(L, lt, t0, ang - drag(t0), dist, R, col, seed, HX, HY + 20, rev);
     }
 
     // ---- the endless spiral of dark washes ----
@@ -479,7 +485,7 @@
     }
     // the far world mirrored in the water (= s19's), fading as the bloom swallows it
     const rx = wx;
-    const wA = 1 - 0.8 * E.ep(lt, K.bela, K.azap + 0.4);
+    const wA = 1 - 0.94 * E.ep(lt, K.bela - 0.1, K.azap + 0.4);
     wash(pnt, E.blob(rx, SURF + 60, 50, { seed: 61, irr: 0.3, rx: 58, ry: 90 }), '#8FA39A', { mode: 'over', alpha: 0.16 * wA, soft: 30 });
     const rr = E.rng(61);
     for (let i = 0; i < 6; i++) {
@@ -544,15 +550,14 @@
       wash(pnt, E.blob(x0, y, sz, { rx: sz * 0.8, ry: sz * 1.3, seed: i, n: 10 }), '#5A2A3C', { mode: 'over' });
     }
 
-    // ---- cracks of cold light (bela, azaptır) ----
-    const f1 = drawCrack(L, lt, K.bela, 3, [1000, 0], [HX + 140, HY - 170]);
-    const f2 = drawCrack(L, lt, K.azap, 7, [0, 520], [HX - 160, HY + 10]);
-    const f3 = drawCrack(L, lt, K.azap + 0.18, 12, [760, 0], [HX + 40, HY - 210]);
-    const fl = Math.max(f1, f2 * 1.1, f3 * 0.7);
-    if (fl > 0.02) {
-      L.light.save(); L.light.setTransform(1, 0, 0, 1, 0, 0); L.light.globalCompositeOperation = 'lighter';
-      L.light.fillStyle = E.rgba('#8FA8E0', 0.12 * fl); L.light.fillRect(0, 0, E.W, E.H); L.light.restore();
-    }
+    // ---- cracks of cold light (bela, azaptır): they start at the thorny dark round the heart and run outward
+    //      through the swirl, sideways and down toward the water (none comes from above); only a soft local glow ----
+    const f1 = drawCrack(L, lt, K.bela, 3, [HX + HR * 1.12, HY + 4], [HX + HR * 1.12 + 330, HY + 96]);
+    const f2 = drawCrack(L, lt, K.azap, 7, [HX - HR * 1.12, HY + 26], [HX - HR * 1.12 - 320, HY + 14]);
+    const f3 = drawCrack(L, lt, K.azap + 0.18, 12, [HX + HR * 0.62, HY + HR * 0.95], [HX + 300, SURF - 34]);
+    const f4 = drawCrack(L, lt, K.azap + 0.3, 15, [HX - HR * 0.62, HY + HR * 0.95], [HX - 270, SURF - 40]);
+    const fl = Math.max(f1, f2 * 1.1, f3 * 0.7, f4 * 0.6);
+    if (fl > 0.02) E.glow(L.light, HX, HY + 20, 620, '#8FA8E0', 0.16 * fl);
 
     // ---- the heart: risen, darkened, caught in the thorny vines ----
     if (lt > K.rise0 + 0.1) {
@@ -609,10 +614,11 @@
   }
 
   // Into the ending: the darkness washes out to bare paper before the photograph of the Külliyat and the
-  // Kur'an fades in, so none of the torment imagery is ever superimposed on them.
+  // Kur'an fades in (the fade starts at shot.dur), so none of the torment imagery is ever superimposed on them:
+  // the wash is complete exactly when the fade begins.
   function drawWithTail(L, lt, t, shot) {
     draw(L, lt, t, shot);
-    const k = E.ep(lt, shot.dur - 0.22, shot.dur + 0.26, 'inOutSine');
+    const k = E.ep(lt, shot.dur - 0.48, shot.dur, 'inOutSine');
     if (k <= 0) return;
     for (const c of [L.paint, L.ink, L.light]) {
       c.save();
@@ -637,8 +643,8 @@
         ...beats,
         { t: T0 + K.vort0, type: 'drone', gain: 0.3, dur: 3.6 },
         { t: T0 + K.thorn0 + 0.1, type: 'thorn', gain: 0.32 },
-        { t: T0 + K.bela, type: 'rumble', gain: 0.5, dur: 1.6 },
-        { t: T0 + K.azap, type: 'rumble', gain: 0.45, dur: 1.8 },
+        { t: T0 + K.bela, type: 'rumble', gain: 0.32, dur: 1.6 },
+        { t: T0 + K.azap, type: 'rumble', gain: 0.3, dur: 1.8 },
       ];
     },
   });

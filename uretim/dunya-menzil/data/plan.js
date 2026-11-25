@@ -25,7 +25,7 @@
     { id: 's14', start: 63.75, trans: { type: 'bleed', dur: 0.8, cx: 540, cy: 1100 } },
     { id: 's15', start: 67.7,  trans: { type: 'fade', dur: 0.45 } },
     { id: 's16', start: 72.65, trans: { type: 'bleed', dur: 0.8, cx: 540, cy: 900 } },
-    { id: 's17', start: 77.45, trans: { type: 'bleed', dur: 0.7, cx: 540, cy: 760 } },
+    { id: 's17', start: 77.45, trans: { type: 'bleed', dur: 0.7, cx: 790, cy: 700 } },
     { id: 's18', start: 82.45, trans: { type: 'cut' } },
     { id: 's19', start: 86.4,  trans: { type: 'cut' } },
     { id: 's20', start: 90.55, trans: { type: 'bleed', dur: 0.8, cx: 540, cy: 760 } },

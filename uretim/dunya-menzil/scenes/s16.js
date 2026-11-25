@@ -1,13 +1,15 @@
 /* s16 · 72.65–77.45 · "sırrına mazhar olup nefsini unutup hayatın zevalini düşünmeyerek"
    The han courtyard of s02 again — now at night, under the moon: the same ablaq arcade, merlons, domes and
    hanging lanterns (unlit), cypresses over the wall. The man stands before the tall endam mirror.
-   - mazhar olup (73.09): a night cloud slides over the crescent moon — the whole courtyard dims.
-   - nefsini unutup (74.23–75.1): a cold gleam sweeps across the glass and wipes his reflection away; behind the
-     gleam the glass is left dark and empty; his own colours drain a little.
-   - hayatın (75.55): the moon comes out again; behind him an hourglass, nearly empty, emerges from the dark,
-     sand running; the camera eases back to show it. His head lifts as if he hears it, he turns to look ...
+   - mazhar olup (73.09): a cold low mist creeps in along the floor round his feet and the night closes in at
+     the sides of the frame (the chill is at his level: the moon and the sky never change — rule 3).
+   - nefsini unutup (74.23–75.1): a soft front of dark mist sweeps across the glass and wipes his reflection away
+     (no bright gleam — KURALLAR rule 3); behind it the glass is left dark and empty; his own colours drain a little.
+   - hayatın (75.55): behind him an hourglass, nearly empty, emerges from the dark, sand running; the camera
+     eases back to show it. He stills as if he hears it (chin dips, weight eases back) ...
    - zevalini (76.07): the last grains glint at the neck.
-   - düşünmeyerek (76.57): ... and turns away again, chin up, back to the empty mirror.
+   - düşünmeyerek (76.57): ... but he does not look round: chin up, he settles toward the empty mirror, his back
+     to the hourglass (one side view all through: no turn, no view change).
    Incoming: bleed from s15 (540, 900). Outgoing: bleed into s17 (540, 760). */
 (function () {
   const E = window.E, PR = E.props;
@@ -69,11 +71,10 @@
     refl0: w(140) - 0.12,        // nefsini: the gleam starts its sweep
     refl1: w(141) + 0.3,         // unutup: the reflection is gone
     hg: w(142) - 0.12,           // hayatın: hourglass emerges
-    turn1: w(142) + 0.12,        // he turns to look
+    turn1: w(142) + 0.04,        // he stills, listening
     zeval: w(143),               // zevalini
-    turn2: w(144) - 0.1,         // düşünmeyerek: turns away
+    turn2: w(144) - 0.12,        // düşünmeyerek: chin up, he does not look round
   };
-  const TURN = 0.24;             // one limited-animation turn (s)
 
   // camera: [cx, cy, zoom]
   const CAM = [
@@ -88,10 +89,13 @@
     E.camera(L, { x: 540 + (c[0] + hx - 540) * d, y: 960 + (c[1] + hy - 960) * d, zoom: 1 + (c[2] - 1) * d });
   }
 
-  // moon cover by the drifting cloud (0..1) and the resulting moonlight level
-  const cloudX = (lt) => MOON.x + 282 - 148 * lt;
-  const cover = (lt) => 1 - E.smooth(E.seg(Math.abs(cloudX(lt) - 37 - MOON.x), 120, 200)); // body sits left of its anchor
-  const moonLv = (lt) => 1 - 0.62 * cover(lt);
+  // The moon stays clear all through the shot (nothing in the sky reacts to the words — rule 3); the big night
+  // cloud drifts slowly in the upper right, well away from it. The chill of "mazhar olup" comes at his level:
+  // a low mist on the floor and the night closing in from the sides of the frame.
+  const cloudX = (lt) => 600 + 9 * lt;
+  const cover = () => 0;
+  const moonLv = () => 1;
+  const chill = (lt) => E.ep(lt, B.cloud, B.cloud + 1.5, 'inOutSine');
 
   // ---------- helpers ----------
   function crescentClip(ctx, x, y, r) {
@@ -160,9 +164,9 @@
     }
     E.glow(L.light, MOON.x - 8, MOON.y, 190, '#BFD0FF', 0.3 * mv);
     E.glow(L.light, MOON.x - 8, MOON.y, 70, '#E8EEFF', 0.35 * mv);
-    // drifting night clouds (the big one covers the moon at "mazhar" and uncovers it at "hayatın")
+    // drifting night clouds (slow, ambient; they never pass over the moon)
     PR.cloud(L, 930 - 14 * lt, 470, 260, { tone: 'night', seed: 3, t: lt + 3, alpha: 0.8 });
-    PR.cloud(L, cloudX(lt), MOON.y + 96, 440, { tone: 'night', seed: 6, t: lt });
+    PR.cloud(L, cloudX(lt), 205, 400, { tone: 'night', seed: 6, t: lt, alpha: 0.85 });
     if (cv > 0.01) {
       E.glow(L.light, MOON.x - 6, MOON.y + 4, 230, '#AFC0EE', 0.16 * cv);
       E.glow(L.light, MOON.x - 6, MOON.y + 4, 90, '#D5DEF8', 0.1 * cv);
@@ -299,6 +303,21 @@
     bloom(p, 560, 1900, 400, '#1C233E', { seed: 6, alpha: 0.32, soft: 80 });
   }
 
+  // "mazhar olup": a cold low mist creeps in along the floor from the left and settles round the man and the
+  // mirror (pale lifted paper + a cool glaze, drifting slowly; it stays low, above the subtitle band)
+  function mist(L, lt, ch) {
+    if (ch <= 0.01) return;
+    const p = L.paint;
+    const reach = -760 + 760 * E.ease.outCubic(ch);
+    for (let i = 0; i < 6; i++) {
+      const x = 80 + i * 190 + reach + 14 * lt + 10 * Math.sin(lt * 0.6 + i * 1.7);
+      const y = GY - 6 + (i % 3) * 22 + 4 * Math.sin(lt * 0.8 + i);
+      const b = E.blob(x, y, 150, { rx: 210 + (i % 2) * 60, ry: 30 + (i % 3) * 8, seed: 70 + i, irr: 0.3 });
+      lift(p, b, 0.24 * ch, 30);
+      wash(p, b, '#8392C2', { alpha: 0.16 * ch, soft: 30 });
+    }
+  }
+
   // long moon shadow cast toward the lower right (tapered, softening with distance)
   function castShadow(L, x, y, len, wd, a, head = 0) {
     if (a <= 0.005) return;
@@ -314,30 +333,22 @@
   }
 
   // ---------- the man ----------
-  const frontPose = () => { const p = E.man.pose.fStand(); p.lS = 0.1; p.rS = 0.1; p.lE = 0.12; p.rE = 0.12; return p; };
-  /** a quick limited-animation turn: the side view narrows, a front frame or two, the other side widens */
-  function turnState(u, from, to, p0, p1) {
-    const dip = 4 * Math.sin(Math.PI * E.clamp(u));
-    if (u < 0.34) return { view: 'side', facing: from, pose: p0, sx: 1 - 0.4 * E.ease.inQuad(u / 0.34), dy: dip };
-    if (u < 0.66) return { view: 'front', facing: 1, pose: frontPose(), sx: 0.78 + 0.06 * Math.sin(Math.PI * (u - 0.34) / 0.32), dy: dip };
-    return { view: 'side', facing: to, pose: p1, sx: 0.6 + 0.4 * E.ease.outQuad((u - 0.66) / 0.34), dy: dip };
-  }
+  // He keeps his back to the hourglass the whole shot: one side view, facing the mirror, never a view change (the
+  // rig has no three-quarter view; a cross-dissolved turn showed a doubled body — extra arms, half-haired face — and
+  // a popped turn jumps). The beat is carried by his head and weight alone, feet planted (stand legs, unchanged):
+  // "hayatın": he stills, chin dips, weight eases back toward the sound behind him (he hears the sand);
+  // "düşünmeyerek": he lifts his chin and settles toward the empty mirror — he does not look round.
   function manState(lt) {
-    const P0 = E.man.pose;
     const breath = Math.sin(lt * 2.1) * 0.008;
-    const st = (head = 0, lean = 0) => { const p = P0.stand(); p.head = head; p.lean = lean + breath; return p; };
-    // facing the mirror; at "hayatın" the head lifts (he hears the sand)
-    const hear = (t) => st(0.06 - 0.12 * E.ep(t, B.hg - 0.05, B.turn1, 'outCubic'), -0.01 * E.ep(t, B.hg - 0.05, B.turn1));
-    const look = (t) => { const k = E.ep(t, B.turn1 + TURN, B.turn1 + TURN + 0.4, 'outCubic'); return st(-0.06 + 0.16 * k, 0.02 * k); };
-    const away = (t) => { const k = E.ep(t, B.turn2 + TURN, B.turn2 + TURN + 0.6, 'outCubic'); return st(0.1 - 0.26 * k, -0.035 * k); };
-    if (lt < B.turn1) return { view: 'side', facing: 1, pose: hear(lt), sx: 1, dy: 0 };
-    if (lt < B.turn1 + TURN) return turnState((lt - B.turn1) / TURN, 1, -1, hear(B.turn1), look(B.turn1 + TURN));
-    if (lt < B.turn2) return { view: 'side', facing: -1, pose: look(lt), sx: 1, dy: 0 };
-    if (lt < B.turn2 + TURN) return turnState((lt - B.turn2) / TURN, -1, 1, look(B.turn2), away(B.turn2 + TURN));
-    return { view: 'side', facing: 1, pose: away(lt), sx: 1, dy: 0 };
+    const kH = E.ep(lt, B.hg - 0.05, B.turn1 + 0.45, 'inOutSine');
+    const kA = E.ep(lt, B.turn2, B.turn2 + 0.75, 'inOutCubic');
+    const p = E.man.pose.stand();
+    p.head = E.lerp(E.lerp(0.06, 0.19, kH), -0.15, kA);
+    p.lean = E.lerp(E.lerp(0, -0.03, kH), -0.035, kA) + breath;
+    return [{ view: 'side', facing: 1, pose: p, alpha: 1 }];
   }
-  // once he has forgotten himself his colours drain a little
-  const manLook = (cv, lost) => ({ tint: '#34477A', tintAmt: 0.32 + 0.14 * cv + 0.08 * lost, desat: 0.2 + 0.22 * lost });
+  // once he has forgotten himself his colours drain a little (and cool with the chill)
+  const manLook = (ch, lost) => ({ tint: '#34477A', tintAmt: 0.32 + 0.12 * ch + 0.08 * lost, desat: 0.2 + 0.22 * lost });
 
   // the half-plane of the glass the gleam has not reached yet (ahead = true) or has already passed
   const GN = [0.8415, 0.5403], GD = [0.5403, -0.8415];
@@ -356,7 +367,7 @@
   E.scene('s16', {
     wc: [1.05, 1.15, 3, 0.6],
     draw(L, lt) {
-      const cv = cover(lt), mlv = moonLv(lt);
+      const cv = cover(lt), mlv = moonLv(lt), ch = chill(lt);
 
       // ---------- far: sky, moon, clouds ----------
       sky(L, lt, mlv, cv);
@@ -364,6 +375,7 @@
       arcade(L, lt, mlv);
       // ---------- near: floor ----------
       floor(L, lt, mlv);
+      mist(L, lt, ch);
 
       // ---------- objects ----------
       cam(L, lt, 1);
@@ -387,13 +399,13 @@
         E.glow(L.light, HG.x, HG.y - HG.h * 0.5, 120, '#C9D6FF', 0.22 * zg);
       }
 
-      // mirror with the reflection: on "nefsini unutup" a cold gleam sweeps across the glass and wipes him away
+      // mirror with the reflection: on "nefsini unutup" a dark mist sweeps across the glass and wipes him away
       const ms = manState(lt);
       const wipe = E.seg(lt, B.refl0, B.refl1);
       const reflA = 1 - E.ep(lt, B.refl1 - 0.15, B.refl1 + 0.1, 'inOutSine');
-      const look = manLook(cv, E.ep(lt, B.refl0 + 0.3, B.refl1 + 0.4, 'inOutSine'));
+      const look = manLook(ch, E.ep(lt, B.refl0 + 0.3, B.refl1 + 0.4, 'inOutSine'));
       PR.mirror(L, MIR.x, GY, MIR.h, {
-        t: lt, night: 0.9, shine: wipe, reflectAlpha: reflA,
+        t: lt, night: 0.9, shine: 0, reflectAlpha: reflA,   // no bright gleam (KURALLAR rule 3): a dark mist wipes him away
         reflect: reflA > 0.001 ? (L2, r) => {
           if (wipe > 0) E.each(L2, (c) => c.clip(gleamHalf(r, wipe, true)));
           const pp = E.man.pose.stand(); pp.head = 0.06; pp.lean = Math.sin(lt * 2.1) * 0.008;
@@ -416,29 +428,46 @@
         bloom(L.paint, g.cx + g.w * 0.15, g.y + g.h * 0.7, g.w * 0.4, '#2B2550', { seed: 61, alpha: 0.3 * settle, soft: 20 });
         lift(L.paint, E.blob(g.cx - g.w * 0.25, g.y + g.h * 0.22, g.w * 0.22, { rx: g.w * 0.12, ry: g.h * 0.2, rot: 0.6, seed: 62, irr: 0.2 }), 0.06 * settle, 14);
         L.paint.restore();
+        // the wipe's front is a soft band of dark mist (never a light): it feathers the edge on both sides
+        if (wipe < 1) {
+          const s = MIR.h / 1000, w = 70 * s, env = Math.pow(Math.sin(Math.PI * wipe), 0.6);
+          const off = E.lerp(-330, 330, E.ease.inOutSine(wipe)) * s;
+          const ex = g.cx + GN[0] * off, ey = g.y + g.h / 2 + GN[1] * off;
+          const p = L.paint;
+          p.save();
+          p.clip(PR.mirrorGlassPath(MIR.x, GY, MIR.h));
+          const lg = p.createLinearGradient(ex - GN[0] * w, ey - GN[1] * w, ex + GN[0] * w, ey + GN[1] * w);
+          lg.addColorStop(0, 'rgba(26,34,66,0)');
+          lg.addColorStop(0.45, `rgba(30,38,72,${0.62 * env})`);
+          lg.addColorStop(0.6, `rgba(40,48,84,${0.45 * env})`);
+          lg.addColorStop(1, 'rgba(40,48,84,0)');
+          p.fillStyle = lg;
+          p.fillRect(g.x - 20, g.y - 20, g.w + 40, g.h + 40);
+          p.restore();
+        }
       }
 
       // the man: a faint cool moonlight halo behind him keeps his silhouette clear of the dark arcade
       E.glow(L.light, MAN.x - 6, GY - MAN.h * 0.62, MAN.h * 0.42, '#9FB2E8', 0.1 * (0.4 + 0.6 * mlv));
       manShadow(L, MAN.x, GY, MAN.h, 0.42);
-      E.save(L);
-      E.translate(L, MAN.x, GY + (ms.dy || 0) * 0.25);
-      if (ms.sx !== 1) E.scale(L, ms.sx, 1);
-      E.man.draw(L, { x: 0, y: 0, h: MAN.h, view: ms.view, facing: ms.facing, pose: ms.pose, ...look });
-      E.restore(L);
+      for (const m of ms) E.man.draw(L, { x: MAN.x, y: GY, h: MAN.h, view: m.view, facing: m.facing, pose: m.pose, alpha: m.alpha, ...look });
 
       // moonlit dust motes in the air
       E.resetCamera(L);
       E.motes(L.light, { x: 200, y: 600, w: 760, h: 600, n: 14, t: lt, seed: 77, color: '#C9D6FF', size: 2.2, a: 0.3 * (0.5 + 0.5 * mlv), rise: 9 });
-      // global dimming while the moon is covered
-      if (cv > 0.01) {
-        L.paint.save();
-        L.paint.setTransform(1, 0, 0, 1, 0, 0);
-        L.paint.globalCompositeOperation = 'multiply';
-        L.paint.globalAlpha = 0.28 * cv;
-        L.paint.fillStyle = '#5F6E9E';
-        L.paint.fillRect(0, 0, E.W, E.H);
-        L.paint.restore();
+      // "mazhar olup": the night closes in from the sides of the frame (a cool glaze toward the edges, at his level)
+      if (ch > 0.01) {
+        const p = L.paint;
+        p.save();
+        p.setTransform(1, 0, 0, 1, 0, 0);
+        const g = p.createRadialGradient(560, 900, 260, 560, 960, 1050);
+        g.addColorStop(0, 'rgba(95,110,158,0)');
+        g.addColorStop(0.55, `rgba(80,94,140,${0.22 * ch})`);
+        g.addColorStop(1, `rgba(52,62,104,${0.5 * ch})`);
+        p.globalCompositeOperation = 'multiply';
+        p.fillStyle = g;
+        p.fillRect(0, 0, E.W, E.H);
+        p.restore();
       }
     },
     sfx() {

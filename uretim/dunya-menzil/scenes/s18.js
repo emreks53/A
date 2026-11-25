@@ -2,7 +2,7 @@
    Night. The man stands on the top of his (inflated, false) little world — a curved moonlit horizon with his
    little house and tree on its shoulder; the real (big) world floats far away in the sky.
    "kendini" 82.69: a stone pedestal pushes up out of the ground and lifts him; he takes a proud monument stance
-   (chest out, chin up, fists on his hips).
+   (chest out, chin up, arms straight down at his sides).
    "lâyemut farz ederek" 83.13–84.2: he petrifies from the feet up into a grey stone monument (assumes himself
    immortal); a cold glint runs over the polished stone.
    "dünyaya" 84.77: the ground (the world) turns to dark glossy clay: a wet stain with lobed tongues runs down the
@@ -61,7 +61,7 @@
   const MX = 500;           // monument x
   const MH = 560;           // man height
   const PW = 270, PH = 235; // pedestal
-  const KNEE = MH * 0.26;
+  const KNEE = MH * 0.2;    // "saplansa": sunk lightly — the clay reaches no higher than his knees
   const arcY = (x) => GY + R - Math.sqrt(Math.max(0, R * R - (x - 540) * (x - 540)));
 
   // ---- beats (local seconds) ----
@@ -347,16 +347,33 @@
   }
 
   // ---------------------------------------------------------------- the monument
-  // proud monument stance: chest out, chin up, fists planted on the hips (elbows back), weight on the back leg
+  // Planted feet: the stance s17 ends in (nH 0.05 / fH −0.06, soft knees) is kept through the whole shot — both
+  // ankles at fixed points level with each other, legs solved by two-bone IK from the (unmoving) hip, so the
+  // monument pose (leaning back, chin up) never slides a foot on the plinth.
+  const MR = E.man.R;
+  const STANCE = (() => {
+    const ay = -0.0412, at = (H, K) => Math.sin(H) * MR.thigh + Math.sin(H - K) * MR.shin;
+    const ik = (ax) => {
+      const T = MR.thigh, S = MR.shin, dx = ax, dy = ay + MR.hipY;
+      const D = E.clamp(Math.hypot(dx, dy), Math.abs(T - S) + 1e-4, (T + S) * 0.99995);
+      const al = Math.acos(E.clamp((T * T + D * D - S * S) / (2 * T * D), -1, 1));
+      const kn = Math.acos(E.clamp((T * T + S * S - D * D) / (2 * T * S), -1, 1));
+      return { H: Math.atan2(dx, dy) + al, K: Math.PI - kn };
+    };
+    const n = ik(at(0.05, 0.03)), f = ik(at(-0.06, 0.03));
+    return { nH: n.H, nK: n.K, fH: f.H, fK: f.K, nF: 0, fF: 0, hipX: 0, hipDrop: 0 };
+  })();
+  // proud monument stance: chest out, chin up, the arms held straight down at his sides (as in s17's last pose).
+  // Fists on the hips put the hand out past the front of the coat, where the stone's shadow edge turned it into a
+  // dark lump with a pale notch at the wrist (a stain); hanging arms keep both hands inside the body's silhouette.
+  // The far arm lies exactly behind the near one (no second hand peeking out).
   function proudPose(k) {
     const p = E.man.lerp(E.man.pose.stand(), E.man.pose.proud(1), k);
     p.lean = -0.1 * k;
     p.head = -0.2 * k;
-    p.nS = 0.06 * (1 - k) - 0.5 * k; p.nE = 0.12 * (1 - k) + 1.25 * k; p.nW = -1.1 * k;
-    p.fS = -0.04 * (1 - k) - 0.56 * k; p.fE = 0.14 * (1 - k) + 1.3 * k; p.fW = -1.1 * k;
-    p.nH = 0.03 * (1 - k) + 0.11 * k; p.nK = 0.03 * (1 - k) + 0.01 * k;
-    p.fH = -0.03 * (1 - k) - 0.09 * k; p.fK = 0.03;
-    return p;
+    p.nS = 0.05 * (1 - k) - 0.06 * k; p.nE = 0.15 * (1 - k) + 0.18 * k; p.nW = 0;
+    p.fS = -0.05 * (1 - k) - 0.06 * k; p.fE = 0.15 * (1 - k) + 0.18 * k; p.fW = 0;
+    return Object.assign(p, STANCE);
   }
 
   function drawMonument(L, lt, baseY, tilt, stoneG, pivotY) {
@@ -366,7 +383,7 @@
     E.translate(L, -MX, -pivotY);
     const topY = baseY - PH;
     PR.pedestal(L, MX, topY, PW, PH, { night: 1, seed: 6, shadow: false, cracks: 3 });
-    const k = E.ep(lt, K.pose0, K.pose1, 'inOutCubic');
+    const k = E.ep(lt, K.pose0, K.pose1, 'inOutSine');
     const pose = proudPose(k);
     pose.lean += 0.012 * Math.sin(lt * 2.3) * (1 - stoneG); // breathing, until the stone stills it
     const man = { x: MX, y: topY + 2, h: MH, view: 'side', facing: 1, pose, ...NIGHT_TINT };
@@ -509,12 +526,13 @@
       pnt.fillRect(0, 0, E.W, E.H);
       pnt.restore();
     }
-    // cold glint running up the polished stone ("ederek")
-    const head = [MX + 10, mon.topY - MH * 0.9];
+    // cold glint running up the polished stone ("ederek"), ending on the round of his shoulder (a sparkle on the
+    // head read like a halo or an eye; on the shoulder it is plainly polished stone)
+    const shoulder = [MX - 26, mon.topY - MH * 0.775];
     const gl = E.ep(lt, K.glint, K.glint + 0.16, 'outCubic') * (1 - E.ep(lt, K.glint + 0.22, K.glint + 0.85, 'inOutSine'));
-    sparkle(L.light, head[0] - 26, head[1] - 4, 54, 0.95 * gl, 0.2);
+    sparkle(L.light, shoulder[0], shoulder[1], 40, 0.85 * gl, 0.2);
     const su = E.seg(lt, K.glint - 0.32, K.glint + 0.05);
-    if (su > 0 && su < 1) sparkle(L.light, MX - 18 + su * 20, mon.topY - MH * (0.1 + 0.72 * E.ease.inOutSine(su)), 24, 0.55 * Math.sin(Math.PI * su), 0.6);
+    if (su > 0 && su < 1) sparkle(L.light, MX - 24 + su * 8, mon.topY - MH * (0.1 + 0.7 * E.ease.inOutSine(su)), 24, 0.55 * Math.sin(Math.PI * su), 0.6);
   }
 
   E.scene('s18', {

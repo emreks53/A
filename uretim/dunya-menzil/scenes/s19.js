@@ -3,12 +3,12 @@
    alive again, stuck thigh-deep in the same mud — hugs his little glass world (the inflated, false world).
    "şedit" 86.57 / "hissiyat" 86.93: dark crimson ribbons (his intense feelings, now dark) burst from his chest one
      after another and wind round him and the globe, hugging their contour like a binding (behind and in front).
-   "sarılsa" 87.91: he clutches it tight — the coils cinch, the last one crosses his eyes, the glass is squeezed.
+   "sarılsa" 87.91: he clutches it tight — the coils cinch round his chest and the globe, the glass is squeezed.
    "onda" 88.89: dark water fills the glass from below and drowns the little house; the clay round its foot turns to
      dark water (a soaking front spreading from the globe) and the level rises.
-   "boğulur" 89.23: the heavy water-world sinks and, bound to it by the coils, he is dragged straight down with it,
-     one hand reaching up; a splash, a swell running out, air escaping from the glass in big bubbles.
-   "gider" 89.73: the hand slips under, rings spread, the surface closes; his shape fades in the depth.
+   "boğulur" 89.23: the heavy water-world sinks and, still clinging to it, bound by the coils, he goes down with it
+     — quietly, head bowed, no struggle; a splash, a swell running out, air escaping from the glass in big bubbles.
+   "gider" 89.73: his head slips under, rings spread, the surface closes; his shape fades in the depth.
    Ends on a calm dark water surface at screen y ≈ 900 with the far world mirrored in it: s20 bleeds in from there
    (the sky continues exactly: same far world, stars, cloud, sky parallax). */
 (function () {
@@ -70,7 +70,7 @@
     hug0: lw(164) - 0.15, hug1: lw(164) + 0.45,             // sarılsa: clutch, coils cinch
     fill0: lw(165) - 0.2, fill1: lw(165) + 0.16,            // onda: dark water fills the glass
     sink0: lw(165) + 0.16, sink1: lw(167) + 0.12,           // boğulur: the world sinks and drags him down
-    gone: lw(167) + 0.02,                                   // gider: the hand slips under
+    gone: lw(167) + 0.02,                                   // gider: his head slips under
   };
   K.liq0 = lw(165) + 0.02; K.liq1 = lw(165) + 0.4;         // the mud turns to dark water (front from the globe)
   K.rise0 = lw(165) + 0.12; K.rise1 = K.sink1 + 0.3;       // the water level rises
@@ -118,7 +118,7 @@
   const RIB = [
     { col: '#8C2C40', W: 32, yA: 866, yB: 1030, turns: 1.55, th0: 2.5, seed: 3 },
     { col: '#6A2244', W: 29, yA: 884, yB: 1118, turns: 1.7, th0: 0.6, seed: 5 },
-    { col: '#8A3A2E', W: 25, yA: 852, yB: 722, turns: 1.85, th0: 4.1, seed: 8 },
+    { col: '#8A3A2E', W: 25, yA: 900, yB: 802, turns: 1.6, th0: 4.1, seed: 8 }, // stays below his chin
   ];
   const BACK_X = () => MX - 0.062 * MH; // his back (roughly vertical in the hug)
   function globeHalf(y, squeeze) {
@@ -279,6 +279,19 @@
     ctx.stroke();
     ctx.restore();
   }
+  /** an air bubble in the dark water: a pale translucent body (lighter than the water, never a dark disc), a thin
+      rim and a small crescent of light on its upper left (a dark disc with a dot highlight read as an eye) */
+  function bubble(ctx, x, y, rx, ry, a) {
+    const b = new Path2D(); b.ellipse(x, y, rx, ry, 0, 0, E.TAU);
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha *= a;
+    ctx.fillStyle = 'rgba(176,188,222,0.22)'; ctx.fill(b);
+    ctx.strokeStyle = 'rgba(200,210,236,0.55)'; ctx.lineWidth = Math.max(1.1, rx * 0.12); ctx.stroke(b);
+    ctx.strokeStyle = 'rgba(236,240,250,0.7)'; ctx.lineWidth = Math.max(1, rx * 0.16); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.ellipse(x, y, rx * 0.62, ry * 0.62, 0, 3.6, 4.6); ctx.stroke();
+    ctx.restore();
+  }
   function eraseUnder(L, path, a = 1) {
     for (const c of [L.ink, L.light]) { c.save(); c.globalCompositeOperation = 'destination-out'; c.globalAlpha = a; c.fillStyle = '#000'; c.fill(path); c.restore(); }
   }
@@ -315,17 +328,69 @@
 
   // ---------------------------------------------------------------- draw
   const sinkShape = (x) => (x < 0.25 ? 0.6 * x * x / 0.25 : 0.15 + 0.85 * E.ease.outCubic((x - 0.25) / 0.75));
-  // sink depth chosen so that the raised hand's tip (≈1.2·MH above the feet) goes under just after "gider"
+  // sink depth chosen so that the top of his (bowed) head (≈0.97·MH above the feet) goes under just after "gider"
   const SINK_A = (() => {
     const tg = K.gone + 0.05;
     const lv = E.lerp(GY - 3, WL, E.ep(tg, K.rise0, K.rise1, 'inOutSine'));
-    return (lv - 34 - FEET + 1.2 * MH) / sinkShape(E.seg(tg, K.sink0, K.sink1));
+    return (lv - 14 - FEET + 0.97 * MH) / sinkShape(E.seg(tg, K.sink0, K.sink1));
   })();
+  const sinkAt = (t) => E.ep(t, K.sink0, K.sink1, sinkShape) * SINK_A + Math.max(0, t - K.sink1) * 90;
+
+  // ---------------------------------------------------------------- the embrace (hands on the glass, by IK)
+  // the globe's squeeze and tilt (shared by the globe and the hands resting on it)
+  function globeState(lt, tight) {
+    const sq = 0.05 * tight + 0.016 * Math.sin(lt * 26) * E.ep(lt, K.hug0, K.hug0 + 0.15) * (1 - E.ep(lt, K.hug0 + 0.15, K.hug1));
+    const tilt = 0.05 * E.ep(lt, K.sink0, K.sink1, 'inOutSine');
+    return { sq, tilt };
+  }
+  /** a point on the glass given relative to its centre (units of GR, unsqueezed) → world, through the globe's own
+      transform (pivot at its foot: squeeze, tilt, sink) */
+  function onGlobe(u, v, g, sinkY) {
+    const px = u * GR, py = v * GR - GR;
+    const x1 = (1 - g.sq) * px, y1 = (1 + 0.7 * g.sq) * py;
+    const c = Math.cos(g.tilt), s = Math.sin(g.tilt);
+    return [GX + x1 * c - y1 * s, GCY + GR + sinkY + x1 * s + y1 * c];
+  }
+  // shoulder of a side-view pose relative to the ground point — mirrors E.man's skeleton & grounding
+  const MR = E.man.R;
+  function shoulderOf(P, h) {
+    const dirOf = (a) => [Math.sin(a), Math.cos(a)];
+    const hip = [(P.hipX || 0) * h, -MR.hipY * h + (P.hipDrop || 0) * h];
+    const lean = P.lean || 0;
+    const td = dirOf(Math.PI - lean);
+    const nb = [hip[0] + td[0] * MR.torso * h, hip[1] + td[1] * MR.torso * h];
+    const ox = -0.012 * h, oy = 0.03 * h;
+    const sh = [nb[0] + ox * Math.cos(lean) - oy * Math.sin(lean), nb[1] + ox * Math.sin(lean) + oy * Math.cos(lean)];
+    const legLow = (hp, k) => hip[1] + Math.cos(hp) * MR.thigh * h + Math.cos(hp - k) * MR.shin * h + 0.035 * h;
+    const low = Math.max(legLow(P.nH ?? 0.02, P.nK ?? 0.04), legLow(P.fH ?? -0.02, P.fK ?? 0.04));
+    return [sh[0], sh[1] - low];
+  }
+  // two-bone IK: shoulder angle + elbow bend so the wrist reaches T (the elbow hangs below the line: never reversed)
+  function armIK(S, T, h) {
+    const L1 = MR.upper * h, L2 = MR.fore * h;
+    const dx = T[0] - S[0], dy = T[1] - S[1];
+    const d = E.clamp(Math.hypot(dx, dy), 1, (L1 + L2) * 0.985);
+    const bend = Math.acos(E.clamp((d * d - L1 * L1 - L2 * L2) / (2 * L1 * L2), -1, 1));
+    const al = Math.atan2(L2 * Math.sin(bend), L1 + L2 * Math.cos(bend));
+    const s = Math.atan2(dx, dy) - al;
+    return { s, e: bend, a2: s + bend };
+  }
+  /** both arms round the face of the glass at chest height (the far one a little higher), palms flat on it; as he
+      clutches, the hands draw in (the elbows bend: he squeezes it) */
+  function embraceArms(P, lt, tight, sinkY, manDX) {
+    const g = globeState(lt, tight);
+    const S = shoulderOf(P, MH);
+    const Sw = [MX + manDX + S[0], FEET + sinkY + S[1]];
+    const nT = onGlobe(E.lerp(-0.33, -0.4, tight), E.lerp(-0.2, -0.17, tight), g, sinkY);
+    const fT = onGlobe(E.lerp(-0.3, -0.37, tight), E.lerp(-0.48, -0.45, tight), g, sinkY);
+    const nA = armIK(Sw, nT, MH), fA = armIK(Sw, fT, MH);
+    const wr = (x) => 0.9 * Math.tanh(x / 0.9); // soft wrist limit
+    return { nS: nA.s, nE: nA.e, nW: wr(1.38 - nA.a2), fS: fA.s, fE: fA.e, fW: wr(1.45 - fA.a2) };
+  }
   function draw(L, lt) {
     const T = lt + TS;
     const tight = E.ep(lt, K.hug0, K.hug1, 'inOutCubic');
-    const sinkU = E.ep(lt, K.sink0, K.sink1, sinkShape);
-    const sinkY = sinkU * SINK_A + Math.max(0, lt - K.sink1) * 90;
+    const sinkY = sinkAt(lt);
 
     // camera: a slow push toward the hug, then it follows him down and settles on the closed surface (y 900)
     const push = E.ep(lt, 0, 2.4, 'inOutSine');
@@ -352,27 +417,32 @@
     // ---- the false world: squeezed by the hug, filled with dark water; then it sinks, dragging him down ----
     const fill = E.ep(lt, K.fill0, K.fill1, 'inOutSine');
     {
-      const sq = 0.05 * tight + 0.016 * Math.sin(lt * 26) * E.ep(lt, K.hug0, K.hug0 + 0.15) * (1 - E.ep(lt, K.hug0 + 0.15, K.hug1));
-      const tilt = 0.05 * E.ep(lt, K.sink0, K.sink1, 'inOutSine');
+      const { sq, tilt } = globeState(lt, tight);
       E.save(L);
       E.translate(L, GX, GCY + GR + sinkY); E.rotate(L, tilt); E.scale(L, 1 - sq, 1 + sq * 0.7); E.translate(L, -GX, -(GCY + GR));
       PR.personalWorld(L, GX, GCY, GR, { kind: 'home', night: 1, glow: 0.35 * (1 - fill), life: 0.6 * (1 - fill), t: T, dissolve: Math.min(1, fill * 0.95) });
       // tame the big paper-white highlight window of the glass on the night (a cool glaze over it)
       const gc = new Path2D(); gc.arc(GX, GCY, GR * 0.99, 0, E.TAU);
       pnt.save(); pnt.clip(gc);
-      const hg = pnt.createRadialGradient(GX - GR * 0.42, GCY - GR * 0.55, 0, GX - GR * 0.42, GCY - GR * 0.55, GR * 0.62);
-      hg.addColorStop(0, 'rgba(118,130,176,0.62)'); hg.addColorStop(0.6, 'rgba(118,130,176,0.42)'); hg.addColorStop(1, 'rgba(118,130,176,0)');
+      // (it sits right by his hands: a bright paper-white patch there read as a sheet held in the hand)
+      const hg = pnt.createRadialGradient(GX - GR * 0.42, GCY - GR * 0.55, 0, GX - GR * 0.42, GCY - GR * 0.55, GR * 0.7);
+      hg.addColorStop(0, 'rgba(104,116,166,0.9)'); hg.addColorStop(0.6, 'rgba(110,122,170,0.6)'); hg.addColorStop(1, 'rgba(118,130,176,0)');
       pnt.globalCompositeOperation = 'multiply'; pnt.fillStyle = hg; pnt.fillRect(GX - GR, GCY - GR, GR * 2, GR * 2);
+      const hk = pnt.createRadialGradient(GX - GR * 0.42, GCY - GR * 0.55, 0, GX - GR * 0.42, GCY - GR * 0.55, GR * 0.6);
+      hk.addColorStop(0, 'rgba(58,66,108,0.7)'); hk.addColorStop(0.7, 'rgba(58,66,108,0.45)'); hk.addColorStop(1, 'rgba(58,66,108,0)');
+      pnt.globalCompositeOperation = 'source-over'; pnt.fillStyle = hk; pnt.fillRect(GX - GR, GCY - GR, GR * 2, GR * 2);
       const hg2 = pnt.createRadialGradient(GX + GR * 0.62, GCY + GR * 0.42, 0, GX + GR * 0.62, GCY + GR * 0.42, GR * 0.42);
       hg2.addColorStop(0, 'rgba(118,130,176,0.5)'); hg2.addColorStop(1, 'rgba(118,130,176,0)');
       pnt.fillStyle = hg2; pnt.fillRect(GX - GR, GCY - GR, GR * 2, GR * 2);
       pnt.restore();
-      // the squeeze cracks the glass (a thin bright fracture on the moonlit shoulder)
+      // the squeeze cracks the glass: a thin bright fracture running in sideways from its right flank (kept clear of
+      // the little moon inside it — a ring over a branching line read as a stick figure — and never top-down, where
+      // it read as a lightning bolt striking the little world)
       const ck = E.ep(lt, K.hug0 + 0.28, K.hug0 + 0.42, 'outCubic');
       if (ck > 0) {
-        const C0 = [[0.52, -0.6], [0.44, -0.47], [0.47, -0.36], [0.36, -0.22], [0.39, -0.1], [0.3, 0.04]];
-        const C1 = [[0.44, -0.47], [0.32, -0.44], [0.24, -0.48]];
-        const C2 = [[0.36, -0.22], [0.46, -0.16], [0.5, -0.06]];
+        const C0 = [[0.95, -0.2], [0.84, -0.25], [0.78, -0.17], [0.68, -0.21], [0.62, -0.12], [0.52, -0.14]];
+        const C1 = [[0.84, -0.25], [0.8, -0.34], [0.84, -0.41]];
+        const C2 = [[0.68, -0.21], [0.63, -0.29], [0.57, -0.3]];
         const P = (arr, k) => { const m = Math.max(2, Math.ceil(arr.length * k)); const path = new Path2D(); arr.slice(0, m).forEach(([x, y], i) => (i ? path.lineTo(GX + x * GR, GCY + y * GR) : path.moveTo(GX + x * GR, GCY + y * GR))); return path; };
         pnt.save(); pnt.globalCompositeOperation = 'source-over'; pnt.lineJoin = 'round'; pnt.lineCap = 'round';
         pnt.strokeStyle = 'rgba(226,232,248,0.62)'; pnt.lineWidth = 2;
@@ -380,7 +450,7 @@
         pnt.restore();
         E.pencil(L.ink, P(C0, ck), { w: 1, a: 0.3, double: false });
         const fl = Math.exp(-Math.max(0, lt - K.hug0 - 0.3) * 6) * ck;
-        if (fl > 0.02) E.glow(L.light, GX + 0.45 * GR, GCY - 0.45 * GR, 60, '#DDE6FF', 0.5 * fl);
+        if (fl > 0.02) E.glow(L.light, GX + 0.8 * GR, GCY - 0.22 * GR, 60, '#DDE6FF', 0.5 * fl);
       }
       if (fill > 0) {
         // dark water rising inside the glass, drowning the little house
@@ -400,17 +470,18 @@
       E.restore(L);
     }
 
-    // ---- the man: hugs, clutches, then is dragged down with one hand reaching up ----
-    const hug = { lean: 0.18, head: 0.35, nS: 1.15, nE: 0.95, nW: 0.3, fS: 1.6, fE: 0.8, fW: 0.3, nH: 0.08, nK: 0.12, fH: -0.1, fK: 0.08 };
-    const clutch = { lean: 0.24, head: 0.46, nS: 1.0, nE: 1.25, nW: 0.45, fS: 1.45, fE: 1.1, fW: 0.4, nH: 0.1, nK: 0.16, fH: -0.12, fK: 0.12 };
+    // ---- the man: hugs, clutches, then goes down with the world, still holding it ----
+    // an embrace of the huge glass: both arms reach round its face at chest height (the far arm a little higher,
+    // behind), palms flat on the glass, head bowed toward it. The hands stay well below the top of his head, so
+    // nothing of him (no hand) is left above the water once his head has gone under.
+    const hug = { lean: 0.18, head: 0.35, nH: 0.08, nK: 0.12, fH: -0.1, fK: 0.08 };
+    const clutch = { lean: 0.24, head: 0.46, nH: 0.1, nK: 0.16, fH: -0.12, fK: 0.12 };
     let pose = E.man.lerp(hug, clutch, tight);
-    const lose = E.ep(lt, K.liq0, K.sink0 + 0.3, 'inOutCubic');
-    if (lose > 0) {
-      const up = { lean: -0.04, head: -0.42, nS: 2.95, nE: 0.12, nW: 0.15, fS: 1.3, fE: 1.05, nH: 0.08, nK: 0.2, fH: -0.03, fK: 0.3 };
-      pose = E.man.lerp(pose, up, lose);
-    }
-    pose.lean += 0.012 * Math.sin(lt * 2.4) * (1 - lose) + 0.02 * Math.sin(lt * 9) * E.ep(lt, K.sink0, K.sink0 + 0.2) * (1 - E.ep(lt, K.gone - 0.2, K.gone));
-    pose.nS += 0.08 * Math.sin(lt * 7.5) * lose * (1 - E.ep(lt, K.gone - 0.1, K.gone + 0.1)); // the reaching hand flails
+    // going under: he does not let go — head bows a little further toward the glass, no struggle (rule: tasteful)
+    const lose = E.ep(lt, K.liq0, K.sink0 + 0.5, 'inOutSine');
+    pose.head += 0.08 * lose;
+    pose.lean += 0.012 * Math.sin(lt * 2.4) * (1 - lose);
+    Object.assign(pose, embraceArms(pose, lt, tight, sinkY, manDX));
     const manA = 1 - E.ep(lt, K.gone + 0.1, K.gone + 0.75);
     if (manA > 0.01) E.man.draw(L, { x: MX + manDX, y: FEET + sinkY, h: MH, view: 'side', facing: 1, pose, alpha: manA, ...NIGHT });
 
@@ -520,14 +591,12 @@
         const t0 = K.sink0 + 0.3 + br() * 1.75, size = 3.5 + br() * 8, sp = 230 + br() * 220, ph = br() * 6;
         const tau = lt - t0;
         if (tau <= 0) continue;
-        const x0 = MX + 40 + (br() - 0.5) * 70;
-        const y0 = FEET - MH * 0.8 + sinkY + 30;
+        // they start just above his head and rise from there: never drawn over his face or hands
+        const x0 = MX + 34 + (br() - 0.5) * 60;
+        const y0 = FEET - MH * 1.02 + sinkAt(t0);
         const y = y0 - sp * tau, x = x0 + Math.sin(tau * 7 + ph) * 6, sy = surfY(x, lt);
-        if (y > sy + 6) {
-          const bub = new Path2D(); bub.arc(x, y, size, 0, E.TAU);
-          pnt.save(); pnt.globalCompositeOperation = 'source-over'; pnt.globalAlpha *= 0.45; pnt.strokeStyle = '#C3CBE4'; pnt.lineWidth = 1.6; pnt.stroke(bub); pnt.restore();
-          lift(pnt, E.blob(x - size * 0.35, y - size * 0.35, size * 0.3, { seed: i, n: 10 }), 0.75);
-        } else {
+        if (y > sy + 6) bubble(pnt, x, y, size, size, 0.85);
+        else {
           const v = (sy + 6 - y) / (sp * 0.5);
           if (v < 1) ring(pnt, x, sy + 2, size * (1.2 + v * 3), size * 0.32 * (1 + v * 2), '#C3CBE4', 1.6, (1 - v) * 0.6);
         }
@@ -538,18 +607,15 @@
         const t0 = K.sink0 + 0.45 + gb() * 1.4, size = 8 + gb() * 9, sp = 200 + gb() * 140, ph = gb() * 6;
         const tau = lt - t0;
         if (tau <= 0) continue;
-        const x0 = GX + (gb() - 0.5) * 160, y0 = GCY + sinkY - GR * 0.3;
+        const x0 = GX + 40 + gb() * 130, y0 = GCY + sinkY - GR * 0.3; // the right half of the glass, away from his hands
         const y = y0 - sp * tau, x = x0 + Math.sin(tau * 5 + ph) * 8, sy = surfY(x, lt);
-        if (y > sy + 8) {
-          const bub = new Path2D(); bub.ellipse(x, y, size, size * 0.86, 0, 0, E.TAU);
-          pnt.save(); pnt.globalCompositeOperation = 'source-over'; pnt.globalAlpha *= 0.4; pnt.strokeStyle = '#C3CBE4'; pnt.lineWidth = 1.8; pnt.stroke(bub); pnt.restore();
-          lift(pnt, E.blob(x - size * 0.35, y - size * 0.35, size * 0.28, { seed: i + 40, n: 10 }), 0.7);
-        } else {
+        if (y > sy + 8) bubble(pnt, x, y, size, size * 0.86, 0.8);
+        else {
           const v = (sy + 8 - y) / (sp * 0.45);
           if (v < 1) ring(pnt, x, sy + 2, size * (1.2 + v * 3.4), size * 0.3 * (1 + v * 2), '#C3CBE4', 1.8, (1 - v) * 0.6);
         }
       }
-      // the last ripples where the hand slipped under, spreading as the surface closes
+      // the last ripples where his head slipped under, spreading as the surface closes
       for (const [t0, s] of [[K.gone, 1], [K.gone + 0.4, 0.75], [K.gone + 0.85, 0.55]]) {
         const u = (lt - t0) / 1.7;
         if (u <= 0 || u >= 1) continue;

@@ -65,7 +65,7 @@
   const R0 = 80, R1 = 142;                      // personal world: true size → illusion size (≈ the big world)
   const ANCH = [330, 800];                      // it rests on his hands: grows up and to the right from here
   const DIR = [0.75, -0.66];
-  const C2 = [442, GY - R1];                    // planted on the ground (centre)
+  const C2 = [440, GY - R1];                    // planted on the ground (centre), at the reach of his palms
   const TINT = { tint: '#2E3B68', tintAmt: 0.26, desat: 0.2 };
 
   const B = {
@@ -76,7 +76,7 @@
     umumi: w(149) - 0.08,        // umumî: the big world glows
     grow1: w(150) + 0.25,        // dünya
     dash: w(150) - 0.05,         // the true outline draws in
-    drop: w(152) - 0.12,         // sabit
+    drop: w(152) - 0.42,         // sabit: he brings it down (a firm, controlled descent)
     imp: w(152) + 0.1,           // impact
     proud: w(153) - 0.02,        // bilip
   };
@@ -117,10 +117,12 @@
   function pw(lt) {
     const g = E.ep(lt, B.grow0, B.grow1, 'inOutCubic');
     const gs = E.spring(lt, B.grow0, 7, 0.62);                 // soft organic overshoot on the swell
-    const drop = E.ep(lt, B.drop, B.imp, 'inQuad');
+    const drop = E.ep(lt, B.drop, B.imp, (x) => 0.8 * E.ease.inOutSine(x) + 0.2 * x * x); // lands with a firm thud
     const r = E.lerp(R0, R1, E.clamp(gs, 0, 1.06));
-    let x = ANCH[0] + DIR[0] * r, y = ANCH[1] + DIR[1] * r;
-    x = E.lerp(x, C2[0], drop); y = E.lerp(y, C2[1], drop);
+    // it swells up and to the right, drifting a little away from him (so it never crowds his face)
+    let x = ANCH[0] + DIR[0] * r + 46 * E.clamp((r - R0) / (R1 - R0), 0, 1.1), y = ANCH[1] + DIR[1] * r;
+    // brought straight down first, then in to where he can press it (his arms stay extended all the way)
+    x = E.lerp(x, C2[0], E.smooth(E.seg(drop, 0.4, 1))); y = E.lerp(y, C2[1], drop);
     // bob while floating (stops once planted)
     if (lt < B.imp) { const f = 1 - drop; y += Math.sin(lt * 2.2) * 4 * f; x += Math.sin(lt * 1.4 + 1) * 2 * f; }
     // a small lift before it is brought down (anticipation)
@@ -128,7 +130,7 @@
     // squash on impact (the bottom stays on the ground)
     const u = lt - B.imp;
     let sx = 1, sy = 1;
-    if (u > 0) { const k = Math.exp(-u * 8) * Math.cos(u * 26); sy = 1 - 0.09 * k; sx = 1 + 0.06 * k; }
+    if (u > 0) { const k = Math.exp(-u * 8) * Math.cos(u * 26); sy = 1 - 0.06 * k; sx = 1 + 0.04 * k; }
     // flicker: rises on "kararsız", calms as it swells (looks solid), gone once planted
     const fl = E.ep(lt, B.flick, B.flick + 0.3, 'outCubic') * (1 - E.ep(lt, B.grow0, B.grow1)) * (lt < B.imp ? 1 : 0);
     const solid = E.ep(lt, B.grow0 + 0.2, B.grow1 + 0.2, 'inOutSine');
@@ -140,7 +142,7 @@
   const MR = E.man.R;
   function shoulderOf(P, h) {
     const dirOf = (a) => [Math.sin(a), Math.cos(a)];
-    const hip = [0, -MR.hipY * h + (P.hipDrop || 0) * h];
+    const hip = [(P.hipX || 0) * h, -MR.hipY * h + (P.hipDrop || 0) * h];
     const lean = P.lean || 0;
     const td = dirOf(Math.PI - lean);
     const nb = [hip[0] + td[0] * MR.torso * h, hip[1] + td[1] * MR.torso * h];
@@ -161,6 +163,62 @@
     return { s: phi - al, e: bend, a2: phi - al + bend };
   }
 
+  // Planted feet: one stance for the whole shot. Both ankles stay at fixed points (units of h, skeleton frame,
+  // y down; the stance of nH 0.05 / fH −0.06 with soft knees), the legs are solved by two-bone IK from the hip,
+  // so leaning, bending the knees (hipDrop) or shifting the hips back (hipX) never moves a foot.
+  const ANK_Y = -0.0412;
+  const ANK = (() => {
+    const at = (H, K) => Math.sin(H) * MR.thigh + Math.sin(H - K) * MR.shin;
+    return { n: at(0.05, 0.03), f: at(-0.06, 0.03) };
+  })();
+  function legIK(ax, hx, hy) {
+    const T = MR.thigh, S = MR.shin, dx = ax - hx, dy = ANK_Y - hy;
+    const D = E.clamp(Math.hypot(dx, dy), Math.abs(T - S) + 1e-4, (T + S) * 0.99995);
+    const al = Math.acos(E.clamp((T * T + D * D - S * S) / (2 * T * D), -1, 1));
+    const kn = Math.acos(E.clamp((T * T + S * S - D * D) / (2 * T * S), -1, 1));
+    return { H: Math.atan2(dx, dy) + al, K: Math.PI - kn };
+  }
+  function plantLegs(p, drop, hx) {
+    p.hipDrop = drop; p.hipX = hx; p.nF = 0; p.fF = 0;
+    const hy = -MR.hipY + drop, n = legIK(ANK.n, hx, hy), f = legIK(ANK.f, hx, hy);
+    p.nH = n.H; p.nK = n.K; p.fH = f.H; p.fK = f.K;
+    return p;
+  }
+  /** the point where a palm rests on the globe (its left flank … upper-left shoulder): as near the crown as the
+      arm reaches comfortably (|shoulder → palm| ≤ frac of the arm's length) and never much higher than his
+      shoulder (a hand raised higher would cross his face in profile). Continuous in time: golden section for the
+      nearest point, bisection for the reach, a soft minimum of the two limits. */
+  function palmOn(Sw, gx, gy, gr, off, frac, h) {
+    const reach = (MR.upper + MR.fore) * h * frac, R2 = gr + off;
+    const P = (th) => [gx + Math.cos(th) * R2, gy + Math.sin(th) * R2];
+    const dist = (th) => { const q = P(th); return Math.hypot(q[0] - Sw[0], q[1] - Sw[1]); };
+    const thTop = -1.75, thLow = -3.6;
+    // height limit: the palm never higher than half a comfortable arm's length above the shoulder (≈30° at full
+    // reach). Along this arc the height falls monotonically toward the crown, so the limit is a single angle.
+    const thCap = -Math.PI - Math.asin(E.clamp((Sw[1] - 0.5 * reach - gy) / R2, -1, 1));
+    // nearest point of the arc (golden-section search; the distance has one minimum on this arc)
+    let a = thLow, b = thTop;
+    for (let i = 0; i < 40; i++) {
+      const m1 = b - (b - a) * 0.618, m2 = a + (b - a) * 0.618;
+      if (dist(m1) < dist(m2)) b = m2; else a = m1;
+    }
+    const thN = (a + b) / 2;
+    let th = thN;
+    if (dist(thN) < reach) {
+      // within reach: slide up toward the crown until the arm is at its comfortable length
+      if (dist(thTop) <= reach) th = thTop;
+      else {
+        let lo = thN, hi = thTop;
+        for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (dist(m) <= reach) lo = m; else hi = m; }
+        th = (lo + hi) / 2;
+      }
+    }
+    // soft minimum of the two limits (a hard switch from one to the other straightened the elbow in two frames)
+    const k = 0.22, hh = E.clamp(0.5 + (0.5 * (thCap - th)) / k, 0, 1);
+    th = E.clamp(E.lerp(thCap, th, hh) - k * hh * (1 - hh), thLow, thTop);
+    return { p: P(th), th };
+  }
+
   function manPose(lt, s) {
     const M = E.man.pose;
     const hold = M.hold(1);
@@ -169,34 +227,38 @@
     const tr = E.ep(lt, B.flick, B.flick + 0.3) * (1 - E.ep(lt, B.grow0, B.grow0 + 0.4));
     hold.nS += Math.sin(lt * 31) * 0.018 * tr; hold.fS += Math.sin(lt * 27 + 1) * 0.018 * tr;
     hold.nE += Math.sin(lt * 23 + 2) * 0.02 * tr;
-    // awe: arms open toward the swelling world, head lifts, leans back a touch
-    const awe = M.reach(0.75); awe.head = -0.14; awe.lean = -0.04; awe.nE = 0.5; awe.fE = 0.55; awe.nS = 1.15; awe.fS = 0.95;
-    // pressing it down: torso leans in, knees give, palms ride on the top of the globe (IK)
-    // (upright while the globe is still high, bending in as it goes down)
-    const dk = E.ep(lt, B.drop, B.imp, 'inQuad');
-    const press = M.reach(0.8);
-    press.lean = E.lerp(0.1, 0.3, dk); press.head = E.lerp(0.15, 0.3, dk);
-    press.nK = E.lerp(0.04, 0.16, dk); press.fK = E.lerp(0.04, 0.1, dk); press.nH = E.lerp(0.04, 0.12, dk); press.fH = -0.06;
-    const S = shoulderOf(press, MAN.h);
+    // body: awe as it swells (head lifts, leans back a touch); "sabit": he leans in and takes it down (knees give,
+    // hips back, a little follow-through after the thud); "bilip": he straightens up, proud
+    const wA = E.ep(lt, B.grow0, B.grow1 - 0.1, 'inOutCubic');
+    const wB = E.ep(lt, B.drop - 0.4, B.drop, 'inOutSine');
+    const dk = E.ep(lt, B.drop, B.imp, 'inOutSine');
+    const wP = E.ep(lt, B.proud - 0.05, B.proud + 0.55, 'inOutCubic');
+    const thud = lt > B.imp && lt < B.imp + 0.6 ? Math.sin(Math.PI * (lt - B.imp) / 0.6) : 0;
+    const breath = Math.sin(lt * 2.1) * 0.006;
+    const lean = E.lerp(E.lerp(-0.02, -0.04, wA), E.lerp(0.06, 0.36, dk) + 0.025 * thud, wB) + breath;
+    const head = E.lerp(E.lerp(0.2, -0.14, wA), E.lerp(0.12, 0.3, dk) + 0.04 * thud, wB);
+    const drop = 0.01 * dk * (1 - wP), hx = -0.012 * dk * (1 - wP);
+    // arms: from the moment it starts to swell his palms stay on the glass — on its flank at chest height while it
+    // floats, riding over its upper-left shoulder as he brings it down (IK every frame, through the squash too)
+    const body = plantLegs({ lean, head }, drop, hx);
+    const S = shoulderOf(body, MAN.h);
     const Sw = [MAN.x + S[0], GY + S[1]];
-    const rr = s.r * s.sy;
-    const cy = s.y + s.r * (1 - s.sy);
-    const onTop = (ang, off) => [s.x + Math.cos(ang) * (rr + off), cy + Math.sin(ang) * (rr + off)];
-    const nA = armIK(Sw, onTop(-2.18, 0.03 * MAN.h), MAN.h), fA = armIK(Sw, onTop(-1.98, 0.035 * MAN.h), MAN.h);
-    press.nS = nA.s; press.nE = nA.e; press.fS = fA.s; press.fE = fA.e;
-    press.nW = 0.65 * (2.2 - nA.a2); press.fW = 0.65 * (2.3 - fA.a2);
-    // anticipation on "gibi": both arms go up over his head, ready to bring it down
-    const raise = M.reach(1); raise.nS = 2.45; raise.fS = 2.25; raise.nE = 0.3; raise.fE = 0.36; raise.nW = 0.25; raise.fW = 0.25;
-    raise.lean = -0.06; raise.head = -0.12;
+    const syH = 1 - (1 - s.sy) * 0.3, rr = s.r * syH, gcy = s.y + s.r * (1 - syH); // the palms ride a third of the bounce
+    const nP = palmOn(Sw, s.x, gcy, rr, 0.016 * MAN.h, 0.9, MAN.h), fP = palmOn(Sw, s.x, gcy, rr, 0.016 * MAN.h, 0.86, MAN.h);
+    const nA = armIK(Sw, nP.p, MAN.h), fA = armIK(Sw, fP.p, MAN.h);
+    // palms flat on the glass: the hand lies along the globe's tangent (soft wrist limit)
+    const tang = (th) => Math.atan2(-Math.sin(th), Math.cos(th));
+    const wrap = (x) => Math.atan2(Math.sin(x), Math.cos(x));
+    const wr = (x) => 0.95 * Math.tanh((0.85 * wrap(x)) / 0.95);
+    const ik = { nS: nA.s, nE: nA.e, fS: fA.s, fE: fA.e, nW: wr(tang(nP.th) - nA.a2), fW: wr(tang(fP.th) - fA.a2) };
+    const wC = E.ep(lt, B.grow0, B.grow0 + 0.6, 'inOutSine');
+    let p = Object.assign({}, hold, { lean, head });
+    p = E.man.lerp(p, Object.assign({}, p, ik), wC);
     // proud: chin up, chest out (leads into s18's monument)
     const proud = M.proud(0.85);
-    let p = hold;
-    p = E.man.lerp(p, awe, E.ep(lt, B.grow0, B.grow1 - 0.1, 'inOutCubic'));
-    p = E.man.lerp(p, raise, E.ep(lt, B.drop - 0.32, B.drop, 'inOutCubic'));
-    p = E.man.lerp(p, press, E.ep(lt, B.drop, B.drop + 0.12, 'inCubic'));
-    p = E.man.lerp(p, proud, E.ep(lt, B.proud - 0.05, B.proud + 0.5, 'inOutCubic'));
-    p.lean = (p.lean || 0) + Math.sin(lt * 2.1) * 0.006;
-    return p;
+    proud.lean += breath;
+    p = E.man.lerp(p, proud, wP);
+    return plantLegs(p, drop, hx);
   }
 
   function sky(L, c, lt) {
