@@ -7,13 +7,688 @@
      37.61 muhabbetimiz   he raises it up and out toward the world and lets it go; it floats in an arc to the world
                           and settles at its upper left; a ring of warmth spreads over the glass where the love lands
      38.73 o hususi dünyamız   the camera pushes in to the world (he leaves frame); dusk deepens into blue hour
-     39.87 âyine          a silver mirror sweeps over the faded world: a convex mirror reflecting the twilight (sky,
-                          warm horizon band, dusk land) with the rose heart reflected in it
-     40.91 temsil ettiği  an illuminator's pencil construction is laid out on the mirror...
-     42.21 güzel nukuş-u esma-i İlahiyeye  ...and gold tezhip (nakış) blooms outward from the centre
-     44.03 döner          the heart turns from the world and flows INTO the golden pattern: down the diagonal tulip
-                          stem, past the hatayi blossom, to the central ring (s10 continues it round the ring).
+     39.87 âyine          a silver mirror sweeps over the faded world: a convex mirror reflecting the twilight
+     40.91 temsil ettiği güzel nukuş   the mirror pales like a sketchbook page and, one after another, the fine works
+                          of art in creation appear in it as delicate naturalist watercolour studies, freely arranged:
+                          a rose opening petal by petal (40.9), a leaf whose veins emerge (41.3), a jay's barred
+                          feather (41.7), a swallowtail butterfly (42.2), a cut pomegranate with its ordered seeds
+                          (42.35, done by 42.95). During "esma-i İlahiyeye" (43.0–43.97) NOTHING new appears and
+                          nothing brightens — no glow, no ornament, no light from above; the finished page holds.
+     44.03 döner          the heart-light leaves the globe (the warmth it gave the world fades) and goes to the works
+                          themselves: it settles by the rose and the butterfly (the butterfly stirs its wings).
+                          s10 match-cuts on that trio (E.natArt.s09cut() gives their screen placement).
+   The studies (E.natArt) are defined in the first block of this file and shared with s10.
 */
+/* ---------------------------------------------------------------------------------------------------------------
+   NATURALIST STUDIES (E.natArt) — delicate watercolour studies of the fine works of art in creation, as on the pages
+   of a naturalist's sketchbook: a rose opening petal by petal, a leaf with its veins, a swallowtail butterfly, a
+   jay's barred feather, a cut pomegranate with its ordered seeds. Shared by s09 (they appear in the mirror-world)
+   and s10 (the living rose, butterflies). Pure functions of their arguments, drawn under the current transform.
+     roseHead(L, x, y, s, {open, p, rot, seed, alpha})      s = head radius when open; (x, y) = centre of the bloom
+     roseStudy(L, x, y, s, {open, p, rot, t, alpha})        head + stem + two compound leaves (stem goes down-left)
+     leafStudy(L, x, y, s, {p, rot, t, alpha})              s = length; (x, y) = centre; points along +x
+     butterfly(L, x, y, s, {p, rot, flap, t, alpha})        s = wingspan; head toward −y (before rot)
+     feather(L, x, y, s, {p, rot, t, alpha})                s = length; (x, y) = centre; quill → tip along +x
+     pomegranate(L, x, y, s, {p, rot, t, alpha})            s = fruit radius; cut face toward the viewer
+     bird(L, x, y, s, {rot, flap, fly, facing, alpha})      small songbird (s = body length), perched or flying
+   p 0..1 = reveal (pencil underdrawing → washes → details), so a study can be "painted" in.
+   --------------------------------------------------------------------------------------------------------------- */
+(function () {
+  const E = window.E;
+  const PI = Math.PI, TAU = PI * 2;
+  const lerp = E.lerp, clamp = E.clamp, seg = E.seg;
+  const ART = (E.natArt = E.natArt || {});
+  const sst = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
+  const polyP = (pts, closed = true) => {
+    const p = new Path2D();
+    for (let i = 0; i < pts.length; i++) (i ? p.lineTo(pts[i][0], pts[i][1]) : p.moveTo(pts[i][0], pts[i][1]));
+    if (closed) p.closePath();
+    return p;
+  };
+  const smoothP = (pts, closed = true, ten = 0.5) => E.smoothPath(pts, closed, ten);
+  /** the first fraction f of a polyline (pencil draw-on) */
+  const partPts = (pts, f) => {
+    f = clamp(f);
+    if (f >= 1) return pts;
+    const n = (pts.length - 1) * f, i = Math.floor(n), fr = n - i;
+    const out = pts.slice(0, i + 1);
+    if (i + 1 < pts.length) out.push([lerp(pts[i][0], pts[i + 1][0], fr), lerp(pts[i][1], pts[i + 1][1], fr)]);
+    return out;
+  };
+  /** local frame on all three layers; s = units → caller px */
+  const inFrame = (L, x, y, s, rot, fn) => {
+    E.save(L);
+    E.translate(L, x, y);
+    if (rot) E.rotate(L, rot);
+    E.scale(L, s);
+    try { fn(devS(L.paint)); } finally { E.restore(L); }
+  };
+  const devS = (c) => { const m = c.getTransform(); return Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) || 1; };
+  /** pencil line in local units (w in screen px) */
+  const pen = (L, S, path, a, w = 1, seed = 11) => {
+    if (!(a > 0.004) || !path) return;
+    if (Array.isArray(path)) { if (path.length < 2) return; path = smoothP(path, false); }
+    E.pencil(L.ink, path, { a, w: w / S, seed, jitter: 0.9 / S });
+  };
+  /** glaze (multiply) with alpha */
+  const glaze = (L, path, col, a, o = {}) => { if (a > 0.003) E.wash(L.paint, path, col, Object.assign({ alpha: a }, o)); };
+  /** paper (opaque white) base — hides what is behind and erases ink/light there (occlusion) */
+  const paperBase = (L, path, a) => {
+    if (!(a > 0.003)) return;
+    E.wash(L.paint, path, '#FFFFFF', { mode: 'over', alpha: a });
+    for (const c of [L.ink, L.light]) { c.save(); c.globalCompositeOperation = 'destination-out'; c.globalAlpha = Math.min(1, a); c.fill(path); c.restore(); }
+  };
+  /** stroke on the paint layer (multiply) */
+  const pstroke = (L, path, col, w, a, cap = 'round') => {
+    if (!(a > 0.003)) return;
+    const c = L.paint;
+    c.save();
+    c.globalCompositeOperation = 'multiply';
+    c.globalAlpha *= a;
+    c.strokeStyle = col; c.lineWidth = w; c.lineCap = cap; c.lineJoin = 'round';
+    c.stroke(path);
+    c.restore();
+  };
+  /** paper-white stroke (lifted highlight) */
+  const lstroke = (L, path, w, a) => {
+    if (!(a > 0.003)) return;
+    const c = L.paint;
+    c.save();
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha *= a;
+    c.strokeStyle = '#FFFFFF'; c.lineWidth = w; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.stroke(path);
+    c.restore();
+  };
+  const clipDo = (L, path, fn) => { E.save(L); E.each(L, (c) => c.clip(path)); try { fn(); } finally { E.restore(L); } };
+  const lineP = (a, b) => { const p = new Path2D(); p.moveTo(a[0], a[1]); p.lineTo(b[0], b[1]); return p; };
+  const ell = (x, y, rx, ry, rot = 0) => { const p = new Path2D(); p.ellipse(x, y, Math.max(1e-4, rx), Math.max(1e-4, ry), rot, 0, TAU); return p; };
+  const fadeA = (L, a, fn) => { if (a <= 0.003) return; E.save(L); E.alpha(L, a); try { fn(); } finally { E.restore(L); } };
+
+  // ================================================================================================ leaves (generic)
+  /** leaf outline from base (0,0) to tip (1,0): upper margin then lower margin. Ovate, acuminate; optional teeth. */
+  function leafOutline({ W = 0.4, teeth = 0, tooth = 0.018, n = 48, bend = 0.03, base = 0.6, tipP = 1.05, skew = 0 } = {}) {
+    const up = [], lo = [];
+    for (let i = 0; i <= n; i++) {
+      const s = i / n;
+      let w = W * 2.6 * Math.pow(s, base) * Math.pow(1 - s, tipP);
+      let tw = 0;
+      if (teeth && s > 0.06 && s < 0.97) { const ph = (s * teeth) % 1; tw = tooth * Math.pow(ph, 1.6) * sst(s * 8) * (1 - 0.6 * s); }
+      const yc = bend * Math.sin(PI * s);
+      up.push([s, yc - (w + tw) * (1 - skew)]);
+      lo.push([s, yc + (w + tw * 0.9) * (1 + skew)]);
+    }
+    return up.concat(lo.reverse().slice(1, -1));
+  }
+  const midY = (bend, s) => bend * Math.sin(PI * s);
+
+  // ================================================================================================ the rose
+  const GA = 2.39996323;
+  const RN = 15;
+  /** petals of a rose bloom in 3-D (cup on a cone), projected with elevation BETA, sorted back to front */
+  function rosePetals(open, phi0) {
+    const BETA = 0.62, cb = Math.cos(BETA), sb = Math.sin(BETA);
+    const out = [];
+    for (let k = 0; k < RN; k++) {
+      const f = k / (RN - 1);
+      const st = (1 - f) * 0.7;                                   // outer petals open first, one after another
+      const o = sst(seg(open, st, st + 0.3));
+      const phi = phi0 + k * GA;
+      const jr = E.hash(k, 7, Math.round(phi0 * 100));
+      const len = (0.32 + 0.7 * Math.pow(f, 0.8)) * (0.92 + 0.16 * jr);
+      const hw = 1.28 - 0.48 * f;
+      const r0 = 0.03 + 0.1 * f, z0 = -0.12 * f;
+      const a0 = lerp(0.06 + 0.2 * f, 0.12 + 0.84 * Math.pow(f, 1.3), o);
+      const refl = (0.05 + 0.42 * Math.pow(f, 1.5)) * o, curl = 1.5 * Math.pow(f, 1.2) * o, mid = 0.55 * Math.pow(f, 1.5) * o;
+      const P = (u, v) => {
+        const n = 7, du = u / n;
+        let r = r0, z = z0;
+        for (let i = 0; i < n; i++) {
+          const s = (i + 0.5) * du;
+          const a = a0 + refl * s * s + curl * v * v * s * s * s + mid * Math.exp(-v * v * 6) * s * s * s * s;
+          r += len * Math.sin(a) * du; z += len * Math.cos(a) * du;
+        }
+        const W = Math.pow(Math.sin((PI / 2) * Math.min(1, u / 0.78)), 0.75);
+        const ang = phi + v * hw * W;
+        const X = r * Math.cos(ang), Y = r * Math.sin(ang);
+        return [X, -z * cb + Y * sb, Y * cb + z * sb];
+      };
+      const pt0 = 0.07 * f * o;
+      const ut = (v) => 1 + pt0 * Math.exp(-v * v * 9) - (0.1 + 0.04 * f * o) * v * v - 0.035 * (1 - f * o) * Math.exp(-(v / 0.18) * (v / 0.18));
+      const pts = [];
+      for (let i = 0; i <= 7; i++) pts.push(P((i / 7) * ut(-1), -1));
+      for (let j = 1; j < 12; j++) { const v = -1 + (2 * j) / 12; pts.push(P(ut(v), v)); }
+      for (let i = 7; i >= 0; i--) pts.push(P((i / 7) * ut(1), 1));
+      const rim = pts.slice(7, 7 + 13);
+      const am = a0 + refl * 0.36;
+      const inner = -Math.cos(am) * Math.sin(phi) * cb + Math.sin(am) * sb > 0;
+      const c = P(0.55, 0);
+      const veins = f > 0.45 ? [-0.45, 0, 0.45].map((v) => [0.15, 0.35, 0.55, 0.75, 0.9].map((u) => P(u, v))) : null;
+      out.push({ k, f, o, pts, rim, depth: c[2], inner, base: P(0.04, 0), tip: P(0.96, 0), phi, veins });
+    }
+    out.sort((a, b) => a.depth - b.depth);
+    return out;
+  }
+  const ROSE_IN = ['#9E3A52', '#C46A7C', '#EDB8BB'];
+  const ROSE_OUT = ['#A9475F', '#C87A88', '#E2A2AA'];
+  /** the bloom (head radius 1 in local units when open) */
+  ART.roseHead = (L, x, y, s, o = {}) => {
+    const open = clamp(o.open ?? 1), p = clamp(o.p ?? 1), alpha = clamp(o.alpha ?? 1), seed = o.seed ?? 1;
+    if (alpha <= 0.003 || p <= 0) return;
+    inFrame(L, x, y, s, o.rot || 0, (S) => {
+      const petals = rosePetals(open, 0.55 + seed * 1.3);
+      const pa = sst(seg(p, 0, 0.45)) * alpha;        // pencil
+      const wa = sst(seg(p, 0.2, 0.85)) * alpha;      // washes
+      const rr = E.rng(seed * 17 + 3);
+      // sepals peeking from under the bloom (more visible while it is a bud)
+      const sep = 0.35 + 0.65 * (1 - open);
+      for (let i = 0; i < 5; i++) {
+        const a = 0.9 + i * 1.257 + seed;
+        const dirx = Math.cos(a), diry = Math.sin(a) * 0.55 + 0.35;
+        const bx = dirx * 0.12, by = 0.16;
+        const tx = bx + dirx * 0.55 * sep, ty = by + diry * 0.5 * sep;
+        const nx = -diry * 0.06, ny = dirx * 0.06;
+        const pts = [[bx - nx, by - ny], [lerp(bx, tx, 0.5) - nx * 1.1, lerp(by, ty, 0.5) - ny * 1.1], [tx, ty], [lerp(bx, tx, 0.5) + nx * 0.8, lerp(by, ty, 0.5) + ny * 0.8], [bx + nx, by + ny]];
+        const path = smoothP(pts, true, 0.4);
+        glaze(L, path, '#7E9F5C', 0.8 * wa);
+        glaze(L, path, '#5E7F4B', 0.3 * wa);
+      }
+      // the cup body under the petals (no holes between the heart and the front petals)
+      {
+        const cup = ell(0, 0.02, 0.1 + 0.36 * open, 0.07 + 0.2 * open);
+        paperBase(L, cup, 0.92 * Math.max(wa, 0.15 * pa));   // paper follows the paint (no white blob under the pencil)
+        const g = L.paint.createLinearGradient(0, -0.3, 0, 0.35);
+        g.addColorStop(0, '#8E3048'); g.addColorStop(1, '#C27484');
+        glaze(L, cup, g, 0.9 * wa);
+      }
+      for (const pt of petals) {
+        const path = smoothP(pt.pts, true, 0.42);
+        paperBase(L, path, 0.92 * Math.max(wa, 0.15 * pa));
+        const C = pt.inner ? ROSE_IN : ROSE_OUT;
+        const g = L.paint.createLinearGradient(pt.base[0], pt.base[1], pt.tip[0], pt.tip[1]);
+        const deep = Math.pow(1 - pt.f, 1.4);
+        g.addColorStop(0, E.mix(C[0], '#80283F', 0.5 * deep));
+        g.addColorStop(0.5, E.mix(C[1], '#93344C', 0.55 * deep));
+        g.addColorStop(1, E.mix(C[2], C[0], 0.7 * deep));
+        glaze(L, path, g, wa * (0.86 + 0.1 * rr()));
+        // a second glaze toward the base where the petal sits in the shadow of the ones in front
+        if (pt.inner) {
+          const g2 = L.paint.createLinearGradient(pt.base[0], pt.base[1], pt.tip[0], pt.tip[1]);
+          g2.addColorStop(0, 'rgba(150,52,78,0.55)'); g2.addColorStop(0.45, 'rgba(150,52,78,0.12)'); g2.addColorStop(1, 'rgba(150,52,78,0)');
+          glaze(L, path, g2, wa * 0.8);
+        }
+        // fine veins on the larger petals
+        if (pt.veins) for (const v of pt.veins) pstroke(L, smoothP(v, false), '#8E3A52', 0.007, 0.1 * wa);
+        // light catching the rim (bare paper)
+        if (pt.f > 0.25) lstroke(L, smoothP(pt.rim, false, 0.4), 0.03 * (0.4 + 0.6 * pt.f), 0.4 * wa * (pt.inner ? 1 : 0.55));
+        pen(L, S, smoothP(pt.rim, false, 0.4), (0.26 + 0.12 * pt.f) * pa, 0.9, 30 + pt.k);
+        if (pt.f > 0.35) pen(L, S, smoothP(pt.pts.slice(0, 8), false), 0.13 * pa, 0.8, 50 + pt.k);
+      }
+      // the tight heart of the bloom: a soft deep shadow and a few curled petal edges
+      const sw = wa * (0.6 + 0.4 * open);
+      const cy0 = -0.36 * (1 - 0.25 * open);
+      E.wash(L.paint, ell(0, cy0 + 0.02, 0.09, 0.05), '#7A2A40', { alpha: 0.45 * sw, soft: 0.03 });
+      for (let i = 0; i < 3; i++) {
+        const a0 = seed * 2 + i * 2.2, r = 0.035 + i * 0.03 * (0.6 + 0.4 * open);
+        const pts = [];
+        for (let j = 0; j <= 8; j++) { const a = a0 + j * 0.28; pts.push([Math.cos(a) * r, cy0 + Math.sin(a) * r * 0.55]); }
+        pstroke(L, smoothP(pts, false), '#86304A', 0.012, 0.4 * sw);
+      }
+    });
+  };
+
+  /** rose study: stem curving down-left with two compound leaves, then the bloom (local units: bloom radius 1) */
+  const ROSE_STEM = [[0.02, 0.22], [-0.04, 0.8], [-0.2, 1.45], [-0.42, 2.05], [-0.62, 2.5]];
+  ART.roseStudy = (L, x, y, s, o = {}) => {
+    const p = clamp(o.p ?? 1), alpha = clamp(o.alpha ?? 1), t = o.t || 0;
+    if (alpha <= 0.003 || p <= 0) return;
+    inFrame(L, x, y, s, o.rot || 0, (S) => {
+      const pa = sst(seg(p, 0, 0.5)) * alpha, wa = sst(seg(p, 0.25, 0.9)) * alpha;
+      // stem (tapered stroke) with two small thorns
+      const st = partPts(ROSE_STEM, sst(seg(p, 0, 0.55)));
+      const sp = smoothP(st, false);
+      pstroke(L, sp, '#6E8E4E', 0.075, 0.85 * wa);
+      pstroke(L, sp, '#4E6E3E', 0.03, 0.5 * wa);
+      pen(L, S, sp, 0.3 * pa, 1, 71);
+      [[0.62, 1], [0.35, -1]].forEach(([u, sd]) => {
+        const q = ROSE_STEM[Math.round(u * 4)];
+        const th = smoothP([[q[0] + 0.03 * sd, q[1] - 0.04], [q[0] + 0.1 * sd, q[1] - 0.1], [q[0] + 0.035 * sd, q[1] + 0.02]], true, 0.2);
+        glaze(L, th, '#9A5A48', 0.7 * wa);
+      });
+      // compound leaves: three serrated leaflets on a rachis
+      const LEAVES = [[0.44, 1, 0.55, 1.0], [0.72, -1, -0.15, 0.85]];
+      LEAVES.forEach(([u, side, ang, sz], li) => {
+        const lp = sst(seg(p, 0.15 + 0.15 * li, 0.75 + 0.1 * li));
+        if (lp <= 0) return;
+        const i0 = Math.floor(u * 4), fr = u * 4 - i0;
+        const q = [lerp(ROSE_STEM[i0][0], ROSE_STEM[i0 + 1][0], fr), lerp(ROSE_STEM[i0][1], ROSE_STEM[i0 + 1][1], fr)];
+        const a = side > 0 ? -0.35 + ang : PI + 0.35 + ang;
+        const dir = [Math.cos(a), Math.sin(a)];
+        const rach = [q, [q[0] + dir[0] * 0.55 * sz, q[1] + dir[1] * 0.55 * sz]];
+        pstroke(L, lineP(rach[0], rach[1]), '#6E8E4E', 0.022, 0.8 * wa * lp);
+        const leaflets = [[1.0, 0, 0.62], [0.55, 1, 0.5], [0.55, -1, 0.5]];
+        leaflets.forEach(([d, sd2, ls], j) => {
+          const bx = q[0] + dir[0] * 0.55 * sz * d, by = q[1] + dir[1] * 0.55 * sz * d;
+          const la = a + sd2 * 0.95 + 0.06 * Math.sin(t * 1.1 + j + li);
+          const L1 = ls * sz * sst(seg(lp, j * 0.15, 0.6 + j * 0.15));
+          if (L1 <= 0.01) return;
+          E.save(L);
+          E.translate(L, bx, by); E.rotate(L, la); E.scale(L, L1);
+          const out = leafOutline({ W: 0.3, teeth: 11, tooth: 0.035, n: 66, bend: 0.04 * sd2 });
+          const path = polyP(out);
+          paperBase(L, path, 0.85 * wa);
+          glaze(L, path, '#8DAE62', 0.9 * wa);
+          const half = polyP(out.slice(0, 67).concat([[1, midY(0.04 * sd2, 1)], [0, 0]]));
+          glaze(L, half, '#5F8A4A', 0.42 * wa);
+          const mid = []; for (let i = 0; i <= 10; i++) mid.push([i / 10 * 0.96, midY(0.04 * sd2, i / 10)]);
+          lstroke(L, smoothP(mid, false), 0.03, 0.4 * wa);
+          for (let i = 1; i <= 4; i++) {
+            const s0 = i * 0.18;
+            for (const sd3 of [-1, 1]) lstroke(L, lineP([s0, midY(0.04 * sd2, s0)], [s0 + 0.13, midY(0.04 * sd2, s0) + sd3 * 0.16]), 0.016, 0.3 * wa);
+          }
+          pen(L, S * L1, path, 0.3 * pa, 0.9, 80 + j + li * 3);
+          E.restore(L);
+        });
+      });
+      ART.roseHead(L, 0, 0, 1, { open: o.open ?? 1, p, seed: o.seed ?? 1, alpha });
+    });
+  };
+
+  // ================================================================================================ leaf study
+  const LEAF = (() => {
+    const bend = 0.035;
+    const out = leafOutline({ W: 0.36, teeth: 22, tooth: 0.016, n: 132, bend, base: 0.5, tipP: 1.12 });
+    const mid = []; for (let i = 0; i <= 24; i++) mid.push([(i / 24) * 0.985, midY(bend, i / 24)]);
+    const halfW = (s) => 0.36 * 2.6 * Math.pow(s, 0.5) * Math.pow(1 - s, 1.12);
+    const veins = [];
+    const r = E.rng(77);
+    for (let i = 0; i < 9; i++) {
+      for (const sd of [-1, 1]) {
+        const s0 = 0.07 + i * 0.094 + (sd > 0 ? 0.03 : 0) + 0.01 * (r() - 0.5);
+        if (s0 > 0.9) continue;
+        const pts = [];
+        const reach = 0.86 - 0.05 * (i / 9);
+        for (let j = 0; j <= 8; j++) {
+          const u = j / 8;
+          const s = s0 + (0.13 + 0.05 * (1 - s0)) * Math.pow(u, 0.85);
+          const w = halfW(Math.min(0.995, s)) * reach * Math.pow(u, 0.75);
+          pts.push([s, midY(bend, s) + sd * w]);
+        }
+        const twigs = [];
+        for (const tu of [0.45, 0.72]) {
+          const k = Math.round(tu * 8), q = pts[k];
+          twigs.push([q, [q[0] + 0.045, q[1] - sd * 0.035 * (r() > 0.5 ? 1 : -0.6)]]);
+        }
+        veins.push({ pts, s0, sd, twigs });
+      }
+    }
+    return { out, mid, veins, bend };
+  })();
+  ART.leafStudy = (L, x, y, s, o = {}) => {
+    const p = clamp(o.p ?? 1), alpha = clamp(o.alpha ?? 1);
+    if (alpha <= 0.003 || p <= 0) return;
+    inFrame(L, x, y, s, o.rot || 0, (S) => {
+      E.translate(L, -0.5, 0);
+      const pa = sst(seg(p, 0, 0.4)) * alpha, wa = sst(seg(p, 0.15, 0.7)) * alpha, va = seg(p, 0.42, 1);
+      const path = polyP(LEAF.out);
+      // the wash spreads from the base of the leaf like wet pigment
+      const grow = sst(seg(p, 0.12, 0.72));
+      if (wa > 0) {
+        const gp = E.blob(0.02, 0, 0.05 + grow * 1.1, { seed: 5, irr: 0.18 });
+        clipDo(L, gp, () => {
+          paperBase(L, path, 0.85 * wa);
+          glaze(L, path, '#AFC27A', 0.95 * wa);
+          // fold: the far half in shadow
+          const half = polyP(LEAF.out.slice(0, 133).concat([[1, 0], [0, 0]]));
+          glaze(L, half, '#6F9A55', 0.5 * wa);
+          // wet blooms: a warm ochre blush toward the tip, a cooler green toward the base
+          E.bloom(L.paint, 0.74, 0.03, 0.13, '#D7B45E', { alpha: 0.35 * wa, soft: 0.04, seed: 9 });
+          E.bloom(L.paint, 0.2, 0.06, 0.12, '#4F7F4A', { alpha: 0.22 * wa, soft: 0.04, seed: 4 });
+          glaze(L, path, '#3E6B45', 0.12 * wa, { grad: { from: [0.0, 0], to: [1, 0], stops: [[0, 'rgba(62,107,69,1)'], [0.5, 'rgba(62,107,69,0.2)'], [1, 'rgba(62,107,69,0)']] } });
+        });
+      }
+      // petiole
+      const pet = smoothP([[0.005, 0], [-0.07, 0.01], [-0.15, 0.03]], false);
+      pstroke(L, pet, '#6E8A4A', 0.018, 0.85 * wa);
+      pen(L, S, pet, 0.32 * pa, 1, 3);
+      // pencil outline draws on, both margins from the base
+      const n2 = Math.floor(LEAF.out.length / 2);
+      pen(L, S, polyP(partPts(LEAF.out.slice(0, n2 + 1), sst(seg(p, 0, 0.42))), false), 0.34 * pa, 0.95, 5);
+      pen(L, S, polyP(partPts(LEAF.out.slice(n2).reverse(), sst(seg(p, 0.04, 0.46))), false), 0.3 * pa, 0.95, 6);
+      // veins emerge from the base outward: lifted pale lines + fine pencil
+      if (va > 0) {
+        const mp = smoothP(partPts(LEAF.mid, sst(seg(va, 0, 0.45))), false);
+        lstroke(L, mp, 0.012, 0.5 * wa);
+        pen(L, S, mp, 0.3 * alpha, 0.85, 7);
+        LEAF.veins.forEach((v, i) => {
+          const k = sst(seg(va, 0.08 + v.s0 * 0.5, 0.45 + v.s0 * 0.55));
+          if (k <= 0) return;
+          const vp = smoothP(partPts(v.pts, k), false);
+          lstroke(L, vp, 0.0058, 0.45 * wa);
+          pen(L, S, vp, 0.22 * alpha, 0.7, 20 + i);
+          if (k > 0.8) v.twigs.forEach((tw, j) => pen(L, S, tw, 0.13 * alpha * sst((k - 0.8) / 0.2), 0.6, 60 + i * 2 + j));
+        });
+      }
+    });
+  };
+
+  // ================================================================================================ butterfly
+  // right half (wingspan 1: x 0..0.5), head toward −y
+  const BF = (() => {
+    const fore = [[0.025, -0.05], [0.09, -0.16], [0.2, -0.27], [0.34, -0.345], [0.455, -0.37], [0.5, -0.335], [0.475, -0.24], [0.42, -0.135], [0.335, -0.035], [0.21, 0.015], [0.08, 0.02], [0.03, -0.005]];
+    const hind = [[0.03, 0.0], [0.15, -0.005], [0.27, 0.03], [0.325, 0.085], [0.33, 0.14], [0.3, 0.2], [0.265, 0.25], [0.225, 0.295], [0.205, 0.37], [0.183, 0.45], [0.16, 0.455], [0.152, 0.37], [0.13, 0.31], [0.085, 0.255], [0.045, 0.17], [0.02, 0.07]];
+    const foreP = smoothP(fore, true, 0.45), hindP = smoothP(hind, true, 0.45);
+    // outer margins (for the dark bands and the lunules)
+    const foreM = [[0.455, -0.37], [0.5, -0.335], [0.475, -0.24], [0.42, -0.135], [0.335, -0.035]];
+    const hindM = [[0.27, 0.03], [0.325, 0.085], [0.33, 0.14], [0.3, 0.2], [0.265, 0.25], [0.225, 0.295]];
+    const fVeins = [[0.48, -0.33], [0.47, -0.27], [0.44, -0.19], [0.39, -0.11], [0.32, -0.04], [0.2, 0.0], [0.38, -0.36], [0.3, -0.33]];
+    const hVeins = [[0.3, 0.07], [0.325, 0.13], [0.3, 0.19], [0.255, 0.25], [0.21, 0.33], [0.17, 0.42], [0.11, 0.28]];
+    return { foreP, hindP, foreM, hindM, fVeins, hVeins };
+  })();
+  ART.butterfly = (L, x, y, s, o = {}) => {
+    const p = clamp(o.p ?? 1), alpha = clamp(o.alpha ?? 1), flap = clamp(o.flap ?? 1, 0.06, 1);
+    if (alpha <= 0.003 || p <= 0) return;
+    inFrame(L, x, y, s, o.rot || 0, (S) => {
+      const pa = sst(seg(p, 0, 0.4)) * alpha, wa = sst(seg(p, 0.2, 0.7)) * alpha, da = sst(seg(p, 0.45, 1)) * alpha;
+      const wingSide = (sd, fn) => { E.save(L); E.scale(L, sd * flap, 1); try { fn(); } finally { E.restore(L); } };
+      const SX = S * flap;
+      for (const sd of [-1, 1]) {
+        wingSide(sd, () => {
+          for (const [wp, M, veins, root, hindW] of [[BF.hindP, BF.hindM, BF.hVeins, [0.04, 0.03], true], [BF.foreP, BF.foreM, BF.fVeins, [0.05, -0.02], false]]) {
+            paperBase(L, wp, 0.9 * Math.max(wa, pa * 0.15));
+            glaze(L, wp, '#F2D97E', 0.92 * wa);
+            glaze(L, wp, '#E9C25E', 0.35 * wa, { grad: { from: [0.05, 0], to: [0.45, 0], stops: [[0, 'rgba(233,194,94,0)'], [1, 'rgba(233,194,94,1)']] } });
+            clipDo(L, wp, () => {
+              // dark wing base by the body
+              E.wash(L.paint, ell(root[0] - 0.02, root[1] + (hindW ? 0.06 : -0.04), 0.09, hindW ? 0.12 : 0.1, 0.3), '#3B3240', { alpha: 0.82 * da, soft: 0.012 });
+              // dark marginal band with pale lunules
+              const mp = smoothP(M, false);
+              pstroke(L, mp, '#2F2A36', hindW ? 0.12 : 0.1, 0.88 * da);
+              if (hindW) {
+                // blue scales inside the band, an orange spot at the inner angle
+                for (let i = 0; i < 5; i++) {
+                  const q = M[Math.min(M.length - 1, i + 1)], c = [q[0] - 0.045, q[1] - 0.01 * i];
+                  E.wash(L.paint, ell(c[0], c[1], 0.022, 0.012, 0.6), '#6F95C6', { mode: 'over', alpha: 0.75 * da });
+                }
+                E.wash(L.paint, ell(0.075, 0.25, 0.03, 0.026), '#2F2A36', { mode: 'over', alpha: 0.9 * da });
+                E.wash(L.paint, ell(0.077, 0.247, 0.019, 0.016), '#D9603F', { mode: 'over', alpha: 0.9 * da });
+              } else {
+                // costal bars
+                [[0.12, -0.195], [0.2, -0.26], [0.29, -0.315]].forEach(([bx, by], i) => {
+                  const bp = smoothP([[bx - 0.02, by - 0.04], [bx + 0.025, by - 0.05], [bx + 0.03, by + 0.05 - i * 0.005], [bx - 0.01, by + 0.06]], true, 0.3);
+                  glaze(L, bp, '#302A36', 0.85 * da);
+                });
+              }
+              // lunules along the margin
+              for (let i = 0; i < M.length - 1; i++) {
+                const a = M[i], b = M[i + 1], c = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+                const nx = -(b[1] - a[1]), ny = b[0] - a[0], nl = Math.hypot(nx, ny) || 1;
+                const q = [c[0] - (nx / nl) * 0.022, c[1] - (ny / nl) * 0.022];
+                E.wash(L.paint, ell(q[0], q[1], 0.018, 0.01, Math.atan2(b[1] - a[1], b[0] - a[0])), '#F4DE90', { mode: 'over', alpha: 0.85 * da });
+              }
+              // veins
+              for (const v of veins) pstroke(L, lineP(root, v), '#3A3340', 0.008, 0.75 * da);
+            });
+            pen(L, SX, wp, 0.32 * pa, 0.9, hindW ? 91 : 92);
+          }
+        });
+      }
+      // body: abdomen, thorax, head, antennae
+      const ba = Math.max(wa, pa * 0.3);
+      E.wash(L.paint, ell(0, 0.12, 0.02, 0.12), '#3A3240', { mode: 'over', alpha: 0.95 * ba });
+      E.wash(L.paint, ell(0, 0.12, 0.009, 0.1), '#E8CF7A', { alpha: 0.5 * ba });
+      E.wash(L.paint, ell(0, -0.025, 0.028, 0.06), '#2F2A36', { mode: 'over', alpha: 0.95 * ba });
+      E.wash(L.paint, ell(0, -0.1, 0.022, 0.02), '#2F2A36', { mode: 'over', alpha: 0.95 * ba });
+      for (const sd of [-1, 1]) {
+        const an = smoothP([[sd * 0.008, -0.115], [sd * 0.04, -0.2], [sd * 0.085, -0.29]], false);
+        pstroke(L, an, '#2F2A36', 0.007, 0.9 * ba);
+        E.wash(L.paint, ell(sd * 0.087, -0.295, 0.009, 0.014, sd * 0.5), '#2F2A36', { mode: 'over', alpha: 0.9 * ba });
+      }
+    });
+  };
+
+  // ================================================================================================ feather
+  const FEA = (() => {
+    const bendY = (s) => -0.045 * Math.sin(PI * s * 0.95);
+    const prof = (s) => {
+      if (s < 0.12) return 0;
+      const q = (s - 0.12) / 0.88;
+      return Math.pow(Math.sin((PI / 2) * Math.min(1, q / 0.2)), 0.8) * (q < 0.78 ? 1 : Math.sqrt(Math.max(0, 1 - Math.pow((q - 0.78) / 0.22, 2))));
+    };
+    const BARB = 0.075;                                   // barbs sweep toward the tip by this much
+    const wU = (s) => 0.05 * prof(s), wL = (s) => 0.118 * prof(s) * (1 - 0.12 * s);
+    const N = 70;
+    const rach = [], up = [], lo = [];
+    for (let i = 0; i <= N; i++) {
+      const s = i / N;
+      rach.push([s, bendY(s)]);
+    }
+    const sweep = (s) => BARB * (1 - sst((s - 0.78) / 0.22));
+    for (let i = 0; i <= N; i++) {
+      const s = 0.12 + (0.88 * i) / N;
+      const notch = (s0, d) => Math.exp(-Math.pow((s - s0) / 0.008, 2)) * d;
+      up.push([s + sweep(s) * 0.5, bendY(s) - wU(s) * (1 - notch(0.66, 0.16))]);
+      lo.push([s + sweep(s), bendY(s) + wL(s) * (1 - notch(0.52, 0.14) - notch(0.71, 0.12))]);
+    }
+    const outline = [[0.12, bendY(0.12)]].concat(up, lo.slice().reverse());
+    return { bendY, wU, wL, BARB, sweep, rach, up, lo, outline };
+  })();
+  ART.feather = (L, x, y, s, o = {}) => {
+    const p = clamp(o.p ?? 1), alpha = clamp(o.alpha ?? 1), t = o.t || 0;
+    if (alpha <= 0.003 || p <= 0) return;
+    inFrame(L, x, y, s, o.rot || 0, (S) => {
+      E.translate(L, -0.5, 0.02);
+      const pa = sst(seg(p, 0, 0.45)) * alpha, wa = sst(seg(p, 0.18, 0.72)) * alpha, da = sst(seg(p, 0.4, 1)) * alpha;
+      const { bendY, wU, wL, BARB, sweep } = FEA;
+      const vane = polyP(FEA.outline);
+      // the paint runs out along the feather from the quill
+      const reach = 0.1 + 1.0 * sst(seg(p, 0.15, 0.8));
+      const rp = new Path2D(); rp.rect(-0.1, -0.5, reach + 0.1, 1);
+      clipDo(L, rp, () => {
+        paperBase(L, vane, 0.9 * wa);
+        // grey-blue at the base deepening into bright cerulean toward the tip
+        glaze(L, vane, '#9FB6D6', 0.85 * wa, { grad: { from: [0.12, 0], to: [1, 0], stops: [[0, '#C9D0DA'], [0.3, '#A9BEDB'], [0.6, '#7FA7D6'], [1, '#6E9BD3']] } });
+        // black bars (sloped like the barbs), white between the last ones, dark tip
+        clipDo(L, vane, () => {
+          const bars = [0.38, 0.47, 0.555, 0.635, 0.71, 0.785, 0.855];
+          bars.forEach((b, i) => {
+            const w = 0.016 + 0.004 * (i % 2);
+            const q = [[b - w, -0.3], [b + w, -0.3], [b + w + BARB * 2.4, 0.3], [b - w + BARB * 2.4, 0.3]];
+            const k = sst(seg(da, i * 0.08, 0.35 + i * 0.08));
+            glaze(L, polyP(q), '#273047', 0.88 * k);
+          });
+          // brighter ultramarine between the bars toward the tip
+          glaze(L, vane, '#5C7CB7', 0.35 * da, { grad: { from: [0.4, 0], to: [1, 0], stops: [[0, 'rgba(92,124,183,0)'], [0.5, 'rgba(92,124,183,1)'], [1, 'rgba(92,124,183,0.6)']] } });
+          // a soft darker tip
+          glaze(L, vane, '#2B3348', 0.5 * da, { grad: { from: [0.86, 0], to: [1.02, 0], stops: [[0, 'rgba(43,51,72,0)'], [1, 'rgba(43,51,72,1)']] } });
+          // barbs: fine lines from the shaft sweeping toward the tip
+          const c = L.paint;
+          c.save();
+          c.globalCompositeOperation = 'multiply';
+          c.globalAlpha *= 0.22 * da;
+          c.strokeStyle = '#2B3348';
+          c.lineWidth = 1.0 / S;
+          c.beginPath();
+          for (let i = 0; i < 90; i++) {
+            const s0 = 0.13 + (0.86 * i) / 90;
+            const y0 = bendY(s0);
+            const b = sweep(s0);
+            c.moveTo(s0, y0); c.quadraticCurveTo(s0 + b * 0.3, y0 - wU(s0) * 0.6, s0 + b * 0.5, y0 - wU(s0) - 0.01);
+            c.moveTo(s0, y0); c.quadraticCurveTo(s0 + b * 0.45, y0 + wL(s0) * 0.6, s0 + b, y0 + wL(s0) + 0.01);
+          }
+          c.stroke();
+          c.restore();
+          // two splits in the vane (paper shows through)
+          for (const [s0, side] of [[0.52, 1], [0.71, 1], [0.66, -1]]) {
+            const y0 = bendY(s0);
+            const w0 = side > 0 ? wL(s0) : wU(s0), b = side > 0 ? sweep(s0) : sweep(s0) * 0.5;
+            lstroke(L, smoothP([[s0 + b * 0.35, y0 + side * w0 * 0.45], [s0 + b * 0.7, y0 + side * w0 * 0.75], [s0 + b + 0.004, y0 + side * (w0 + 0.01)]], false), 0.0045, 0.85 * da);
+          }
+        });
+        // downy afterfeather at the base: fine soft wisps
+        const r = E.rng(41);
+        const c2 = L.paint;
+        c2.save();
+        c2.globalCompositeOperation = 'multiply';
+        c2.globalAlpha *= 0.4 * wa;
+        c2.strokeStyle = '#A3A9B6';
+        c2.lineWidth = 1.1 / S;
+        c2.lineCap = 'round';
+        c2.beginPath();
+        for (let i = 0; i < 34; i++) {
+          const s0 = 0.1 + r() * 0.1, sd = r() > 0.35 ? 1 : -1;
+          const y0 = bendY(s0), L1 = 0.035 + r() * 0.045;
+          const sway = 0.006 * Math.sin(t * 1.3 + i);
+          c2.moveTo(s0, y0);
+          c2.quadraticCurveTo(s0 + L1 * 0.5, y0 + sd * L1 * 0.7 + sway, s0 + L1 * (0.8 + 0.3 * r()), y0 + sd * L1 * (0.55 + 0.4 * r()) + sway * 2);
+        }
+        c2.stroke();
+        c2.restore();
+      });
+      // the shaft: pale quill with a darker edge
+      const rp2 = smoothP(partPts(FEA.rach, sst(seg(p, 0, 0.5))), false);
+      pstroke(L, rp2, '#B9AE98', 0.014, 0.75 * Math.max(pa, wa));
+      lstroke(L, rp2, 0.005, 0.8 * wa);
+      pen(L, S, rp2, 0.28 * pa, 0.9, 101);
+      pen(L, S, polyP(partPts(FEA.up, sst(seg(p, 0.05, 0.5))), false), 0.24 * pa, 0.8, 102);
+      pen(L, S, polyP(partPts(FEA.lo, sst(seg(p, 0.08, 0.55))), false), 0.24 * pa, 0.8, 103);
+    });
+  };
+
+  // ================================================================================================ pomegranate
+  const POM = (() => {
+    const r = E.rng(311);
+    // membranes on the cut face (curves, local units, face radius ≈ 0.86)
+    const mem = [
+      [[0.0, -0.78], [0.03, -0.45], [-0.02, -0.1], [0.02, 0.25], [0.0, 0.8]],
+      [[0.02, -0.1], [-0.3, -0.25], [-0.62, -0.42]],
+      [[0.0, -0.08], [0.32, -0.22], [0.64, -0.38]],
+      [[0.02, 0.25], [-0.32, 0.38], [-0.66, 0.36]],
+      [[0.02, 0.27], [0.34, 0.42], [0.66, 0.32]],
+    ];
+    const memPts = mem.map((m) => { const out = []; const sp = m; for (let i = 0; i < sp.length - 1; i++) for (let j = 0; j < 8; j++) { const u = j / 8; out.push([lerp(sp[i][0], sp[i + 1][0], u), lerp(sp[i][1], sp[i + 1][1], u)]); } out.push(sp[sp.length - 1]); return out; });
+    const dMem = (x, y) => { let d = 9; for (const m of memPts) for (const q of m) d = Math.min(d, Math.hypot(x - q[0], y - q[1])); return d; };
+    // arils: jittered hexagonal packing inside the face, away from the membranes and the rind
+    const arils = [];
+    const sp = 0.105;
+    for (let row = -9; row <= 9; row++) {
+      for (let col = -9; col <= 9; col++) {
+        const x = col * sp + (row % 2 ? sp / 2 : 0) + (r() - 0.5) * 0.018, y = row * sp * 0.87 + (r() - 0.5) * 0.018;
+        const e = Math.hypot(x / 0.8, y / 0.76);
+        if (e > 0.94) continue;
+        if (dMem(x, y) < 0.06) continue;
+        arils.push({ x, y, a: Math.atan2(y, x) + (r() - 0.5) * 0.6, w: 0.047 + r() * 0.008, h: 0.058 + r() * 0.01, k: r(), order: Math.atan2(x, -y) });
+      }
+    }
+    arils.sort((a, b) => a.order - b.order);
+    return { mem, arils };
+  })();
+  ART.pomegranate = (L, x, y, s, o = {}) => {
+    const p = clamp(o.p ?? 1), alpha = clamp(o.alpha ?? 1);
+    if (alpha <= 0.003 || p <= 0) return;
+    inFrame(L, x, y, s, o.rot || 0, (S) => {
+      const pa = sst(seg(p, 0, 0.4)) * alpha, wa = sst(seg(p, 0.15, 0.6)) * alpha;
+      // the rind seen beyond the cut (lower right), the cut face, the crown on top
+      const back = E.blob(0.07, 0.06, 1.0, { seed: 12, irr: 0.04, rx: 1.0, ry: 0.96 });
+      const face = E.blob(0, 0, 0.9, { seed: 13, irr: 0.035, rx: 0.9, ry: 0.86 });
+      const crown = smoothP([[-0.15, -0.8], [-0.16, -0.95], [-0.24, -1.05], [-0.3, -1.08], [-0.2, -1.07], [-0.11, -1.01], [-0.08, -1.13], [-0.03, -1.03], [0.03, -1.04], [0.1, -1.14], [0.12, -1.0], [0.2, -1.03], [0.29, -1.0], [0.2, -0.95], [0.16, -0.8]], true, 0.45);
+      paperBase(L, back, 0.9 * Math.max(wa, pa * 0.15));
+      paperBase(L, crown, 0.9 * Math.max(wa, pa * 0.15));
+      glaze(L, crown, '#C47A52', 0.9 * wa);
+      glaze(L, crown, '#8E4A3E', 0.4 * wa, { grad: { from: [0, -0.8], to: [0, -1.2], stops: [[0, 'rgba(142,74,62,1)'], [1, 'rgba(142,74,62,0)']] } });
+      glaze(L, back, '#C2464A', 0.9 * wa);
+      glaze(L, back, '#D9A060', 0.45 * wa, { grad: { from: [-0.6, -0.7], r: 1.1, r0: 0.1, stops: [[0, 'rgba(217,160,96,1)'], [1, 'rgba(217,160,96,0)']] } });
+      glaze(L, back, '#7E2A3A', 0.5 * wa, { grad: { from: [0.9, 0.8], r: 1.2, r0: 0.2, stops: [[0, 'rgba(126,42,58,1)'], [1, 'rgba(126,42,58,0)']] } });
+      // highlight on the rind
+      E.lift(L.paint, ell(0.78, 0.55, 0.08, 0.035, -0.8), 0.5 * wa, 0.02);
+      pen(L, S, back, 0.3 * pa, 1, 121);
+      pen(L, S, crown, 0.28 * pa, 0.9, 122);
+      // cut face: creamy pith, a thin rind edge
+      paperBase(L, face, 0.95 * Math.max(wa, pa * 0.15));
+      glaze(L, face, '#F3E2C2', 0.9 * wa);
+      glaze(L, face, '#E9C7A0', 0.5 * wa, { grad: { from: [0, 0], r: 0.95, r0: 0.6, stops: [[0, 'rgba(233,199,160,0)'], [1, 'rgba(233,199,160,1)']] } });
+      pen(L, S, face, 0.26 * pa, 0.9, 123);
+      // membranes (paler, pencilled)
+      POM.mem.forEach((m, i) => {
+        const mp = smoothP(partPts(m, sst(seg(p, 0.2 + i * 0.04, 0.5 + i * 0.04))), false);
+        lstroke(L, mp, 0.02, 0.6 * wa);
+        pen(L, S, mp, 0.16 * pa, 0.7, 130 + i);
+      });
+      // the seeds appear in order, chamber by chamber (clockwise from the crown)
+      const sp = seg(p, 0.35, 0.95);
+      const n = POM.arils.length;
+      const c = L.paint;
+      POM.arils.forEach((ar, i) => {
+        const k = sst(seg(sp * 1.25 - (i / n) * 1.0, 0, 0.25));
+        if (k <= 0) return;
+        const sc = 0.6 + 0.4 * k;
+        const path = ell(ar.x, ar.y, ar.w * sc, ar.h * sc, ar.a + PI / 2);
+        c.save(); c.globalAlpha *= k * alpha;
+        glaze(L, path, ar.k > 0.5 ? '#C23A4C' : '#B23246', 0.85);
+        glaze(L, ell(ar.x + Math.cos(ar.a) * 0.012, ar.y + Math.sin(ar.a) * 0.012, ar.w * sc * 0.7, ar.h * sc * 0.6, ar.a + PI / 2), '#7E1E34', 0.45);
+        c.restore();
+        E.lift(L.paint, ell(ar.x - 0.012, ar.y - 0.016, ar.w * 0.28, ar.h * 0.22, -0.6), 0.75 * k * alpha);
+      });
+    });
+  };
+
+  // ================================================================================================ songbird
+  /** a small songbird (robin-like) — body length 1 local unit, facing +x (facing:-1 flips). perched (fly 0) or flying */
+  ART.bird = (L, x, y, s, o = {}) => {
+    const alpha = clamp(o.alpha ?? 1), fly = clamp(o.fly ?? 0), flap = o.flap ?? 0, facing = o.facing === -1 ? -1 : 1;
+    if (alpha <= 0.003) return;
+    E.save(L);
+    E.translate(L, x, y);
+    if (o.rot) E.rotate(L, o.rot);
+    E.scale(L, s * facing, s);
+    const S = devS(L.paint);
+    const a = alpha;
+    // wing (far) when flying
+    const wingUp = Math.sin(flap);
+    const wing = (sd, al) => {
+      const tipY = -0.75 * wingUp * fly - 0.05, tipX = -0.05 + 0.25 * (1 - Math.abs(wingUp)) * fly;
+      const pts = [[0.12, -0.12], [lerp(-0.05, tipX + 0.15, fly), lerp(-0.16, tipY * 0.6, fly)], [lerp(-0.35, tipX - 0.15, fly), lerp(-0.08, tipY, fly)], [lerp(-0.3, -0.25, fly), lerp(0.0, tipY * 0.5 + 0.05, fly)], [-0.05, 0.02]];
+      const wp = smoothP(pts, true, 0.4);
+      paperBase(L, wp, 0.9 * al);
+      glaze(L, wp, sd > 0 ? '#8A7660' : '#7A6550', 0.9 * al);
+      glaze(L, wp, '#5A4636', 0.35 * al, { grad: { from: [0, 0], to: [tipX - 0.2, tipY], stops: [[0, 'rgba(90,70,54,0)'], [1, 'rgba(90,70,54,1)']] } });
+      pen(L, S, wp, 0.28 * al, 0.8, 140 + sd);
+    };
+    if (fly > 0.01) wing(-1, a * fly);
+    // tail
+    const tail = smoothP([[-0.3, -0.02], [-0.62, 0.02 + 0.08 * (1 - fly)], [-0.6, 0.12 + 0.04 * (1 - fly)], [-0.28, 0.1]], true, 0.3);
+    paperBase(L, tail, 0.9 * a);
+    glaze(L, tail, '#6E5A48', 0.9 * a);
+    // body + head
+    const body = smoothP([[0.42, -0.18], [0.2, -0.28], [-0.1, -0.22], [-0.34, -0.02], [-0.25, 0.14], [0.05, 0.2], [0.32, 0.1], [0.44, -0.04]], true, 0.5);
+    const head = ell(0.4, -0.2, 0.17, 0.15);
+    paperBase(L, body, 0.95 * a); paperBase(L, head, 0.95 * a);
+    glaze(L, body, '#9C8670', 0.9 * a);
+    glaze(L, head, '#9C8670', 0.9 * a);
+    // warm breast and face
+    const breast = smoothP([[0.5, -0.16], [0.42, 0.0], [0.26, 0.12], [0.06, 0.16], [0.12, 0.02], [0.3, -0.12]], true, 0.5);
+    glaze(L, breast, '#E0844E', 0.85 * a);
+    glaze(L, E.blob(0.0, 0.12, 0.16, { seed: 3, irr: 0.1, ry: 0.07 }), '#F3E6D6', 0.5 * a, { mode: 'over' });
+    // eye, beak
+    E.wash(L.paint, ell(0.45, -0.24, 0.026, 0.026), '#2B2A33', { mode: 'over', alpha: 0.95 * a });
+    E.lift(L.paint, ell(0.457, -0.248, 0.008, 0.008), 0.9 * a);
+    const beak = polyP([[0.55, -0.22], [0.66, -0.19], [0.55, -0.16]]);
+    glaze(L, beak, '#4A3A30', 0.95 * a);
+    pen(L, S, body, 0.3 * a, 0.8, 150);
+    pen(L, S, head, 0.26 * a, 0.8, 151);
+    // near wing
+    if (fly > 0.01) wing(1, a);
+    else {
+      const wp = smoothP([[0.22, -0.14], [-0.05, -0.17], [-0.36, -0.04], [-0.12, 0.06], [0.14, 0.02]], true, 0.4);
+      glaze(L, wp, '#6E5A48', 0.8 * a);
+      pen(L, S, wp, 0.24 * a, 0.7, 152);
+      // legs
+      pstroke(L, lineP([0.05, 0.18], [0.02, 0.36]), '#5A4636', 0.025, 0.9 * a);
+      pstroke(L, lineP([0.15, 0.17], [0.16, 0.36]), '#5A4636', 0.025, 0.9 * a);
+    }
+    E.restore(L);
+  };
+})();
 (function () {
   const E = window.E;
   const P = E.P;
@@ -43,9 +718,7 @@
   // ---------------------------------------------------------------- layout / constants
   const ZC = 1.88;                                 // close-up zoom (world radius ≈ 400 px on screen)
   const GD = 0.7, SD = 0.18;                       // parallax depths: land, sky
-  const NK = 1.12;                                 // nakış radius / world radius
   const HOVER_A = E.rad(-128), HOVER_D = 1.24;     // heart hover position (angle, distance in world radii)
-  const DIAG = E.rad(-135);                        // the diagonal (tulip stem) the heart flows down
 
   const mixc = (a, b, k) => E.mix(a, b, clamp(k));
   const bez3 = (p0, p1, p2, p3, u) => {
@@ -72,7 +745,7 @@
 
   function times(shot) {
     const w = (i) => E.T(i) - shot.start;
-    const T = { ona: w(64), muh: w(66), o: w(67), hus: w(68), ay: w(70), tem: w(73), guz: w(75), nuk: w(76), ila: w(80), don: w(81) };
+    const T = { ona: w(64), muh: w(66), o: w(67), hus: w(68), ay: w(70), tem: w(73), ett: w(74), guz: w(75), nuk: w(76), esm: w(78), ila: w(80), don: w(81) };
     T.raise0 = T.muh - 0.12; T.raise1 = T.muh + 0.42;   // he lifts the heart up and out
     T.rel = T.muh + 0.33;                               // ...and lets it go
     T.arr = T.rel + 1.0;                                // it settles by the world
@@ -407,6 +1080,48 @@
     }
   }
 
+
+  // ---------------------------------------------------------------- the studies in the mirror
+  // placement in mirror units (world centre = 0, world radius = 1); s = the study's own size unit (see E.natArt)
+  const ST = {
+    feather: { x: -0.52, y: 0.5, s: 0.75, rot: -2.15 },
+    leaf: { x: 0.5, y: 0.13, s: 0.6, rot: 0.98 },
+    pom: { x: 0.2, y: 0.57, s: 0.2, rot: 0.08 },
+    rose: { x: -0.15, y: -0.3, s: 0.27, rot: 0.1 },
+    fly: { x: 0.38, y: -0.47, s: 0.46, rot: -0.25 },
+  };
+  const SETTLE = [0.0, -0.74];                       // where the heart settles (by the rose and the butterfly)
+  function studyTimes(T) {
+    return {
+      rose: [T.tem - 0.15, T.tem + 0.55], open: [T.tem + 0.05, T.nuk + 0.3],
+      leaf: [T.ett - 0.1, T.ett + 0.85],
+      feather: [T.ett + 0.38, T.ett + 1.12],
+      fly: [T.guz - 0.1, T.guz + 0.55],
+      // every study is complete before "esma-i İlahiyeye" (43.0): nothing new appears, nothing brightens while the
+      // Divine Names are spoken — the finished page simply holds until "döner"
+      pom: [T.nuk - 0.22, T.nuk + 0.4],
+    };
+  }
+  function flyFlap(lt, T) {
+    const beat = seg(lt, T.don + 0.35, T.don + 1.1);
+    return 0.86 + 0.14 * Math.cos(lt * 2.3) - 0.62 * Math.pow(Math.sin(beat * PI * 2), 2);
+  }
+  function drawStudies(L, lt, T, wx, wy) {
+    const A = E.natArt, Q = studyTimes(T);
+    const at = (q) => [wx + q.x * WR, wy + q.y * WR];
+    const sP = (r) => seg(lt, r[0], r[1]);
+    let q = ST.feather, c = at(q);
+    A.feather(L, c[0], c[1], q.s * WR, { p: sP(Q.feather), rot: q.rot, t: lt });
+    q = ST.leaf; c = at(q);
+    A.leafStudy(L, c[0], c[1], q.s * WR, { p: sP(Q.leaf), rot: q.rot, t: lt });
+    q = ST.pom; c = at(q);
+    A.pomegranate(L, c[0], c[1], q.s * WR, { p: sP(Q.pom), rot: q.rot });
+    q = ST.rose; c = at(q);
+    A.roseStudy(L, c[0], c[1], q.s * WR, { p: sP(Q.rose), open: ep(lt, Q.open[0], Q.open[1], 'inOutSine'), rot: q.rot, t: lt });
+    q = ST.fly; c = at(q);
+    A.butterfly(L, c[0], c[1], q.s * WR, { p: sP(Q.fly), rot: q.rot + 0.03 * Math.sin(lt * 0.8), flap: flyFlap(lt, T), t: lt });
+  }
+
   // ---------------------------------------------------------------- heart path
   const hoverPos = (lt) => {
     const [wx, wy] = worldC(lt);
@@ -414,73 +1129,7 @@
     const d = HOVER_D * WR + 6 * Math.sin(lt * 1.7);
     return [wx + Math.cos(a) * d, wy + Math.sin(a) * d];
   };
-  const FLOW_DUR = 0.85;
-  /** the flow path (relative to the world centre): a swoop from the hover point onto the diagonal just outside the
-      tulip, then straight down the tulip stem, past the hatayi blossom, to the central ring. Arc-length sampled. */
-  function flowGeom(shot) {
-    const d0 = E.T(81) - shot.start - 0.1;
-    const H = hoverPos(d0), c = worldC(d0);
-    const p0 = [H[0] - c[0], H[1] - c[1]];
-    const u = [Math.cos(DIAG), Math.sin(DIAG)];
-    const at = (k) => [u[0] * k * WR, u[1] * k * WR];
-    const p1 = at(0.84 * NK), p3 = at(0.177 * NK);
-    const cq = at(1.0 * NK), ctl = [(cq[0] + p0[0]) / 2, (cq[1] + p0[1]) / 2];
-    const pts = [];
-    for (let i = 0; i <= 24; i++) {
-      const v = i / 24, w = 1 - v;
-      pts.push([w * w * p0[0] + 2 * w * v * ctl[0] + v * v * p1[0], w * w * p0[1] + 2 * w * v * ctl[1] + v * v * p1[1]]);
-    }
-    for (let i = 1; i <= 30; i++) { const v = i / 30; pts.push([p1[0] + (p3[0] - p1[0]) * v, p1[1] + (p3[1] - p1[1]) * v]); }
-    const cum = [0];
-    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-    return { pts, cum, tot: cum[cum.length - 1], s1: cum[24], marks: [0.79 * NK, 0.43 * NK].map((k) => { const q = at(k); return { q, s: cum[24] + Math.hypot(q[0] - p1[0], q[1] - p1[1]) }; }) };
-  }
-  function flowAt(F, sLen) {
-    const { pts, cum } = F;
-    if (sLen <= 0) return pts[0];
-    for (let i = 1; i < pts.length; i++) if (cum[i] >= sLen) {
-      const f = (sLen - cum[i - 1]) / Math.max(1e-6, cum[i] - cum[i - 1]);
-      return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f];
-    }
-    return pts[pts.length - 1];
-  }
-  /** luminous gold thread along the flow path up to the heart (the pattern it passes is lit and stays lit) */
-  function flowThread(L, lt, shot, cx, cy) {
-    const d0 = E.T(81) - shot.start - 0.1;
-    if (lt <= d0) return;
-    const F = flowGeom(shot);
-    const head = E.ease.inOutCubic(seg(lt, d0, d0 + FLOW_DUR)) * F.tot;
-    if (head <= F.s1) return;
-    const pts = [];
-    for (let i = 24; i < F.pts.length && F.cum[i] <= head; i++) pts.push([cx + F.pts[i][0], cy + F.pts[i][1]]);
-    const hp = flowAt(F, head);
-    pts.push([cx + hp[0], cy + hp[1]]);
-    const c = L.light;
-    for (const m of F.marks) {
-      const k = clamp((head - m.s) / 30);
-      if (k > 0) E.glow(c, cx + m.q[0], cy + m.q[1], 46 + 20 * k, '#FFDDA0', 0.42 * k);
-    }
-    if (pts.length < 2) return;
-    const n = pts.length;
-    const CH = Math.min(6, n - 1);
-    c.save();
-    c.globalCompositeOperation = 'lighter';
-    c.lineCap = 'round';
-    c.lineJoin = 'round';
-    for (let k = 0; k < CH; k++) {
-      const i0 = Math.floor((k * (n - 1)) / CH), i1 = Math.floor(((k + 1) * (n - 1)) / CH);
-      if (i1 <= i0) continue;
-      const f = Math.pow((k + 1) / CH, 1.4);
-      const p = new Path2D();
-      p.moveTo(pts[i0][0], pts[i0][1]);
-      for (let i = i0 + 1; i <= i1; i++) p.lineTo(pts[i][0], pts[i][1]);
-      c.strokeStyle = E.rgba('#FFC27A', 0.06 + 0.16 * f); c.lineWidth = 11; c.stroke(p);
-      c.strokeStyle = E.rgba('#FFDDA6', 0.16 + 0.32 * f); c.lineWidth = 3.6; c.stroke(p);
-      c.strokeStyle = E.rgba('#FFF4DC', 0.2 + 0.46 * f); c.lineWidth = 1.5; c.stroke(p);
-    }
-    c.restore();
-  }
-
+  const TURN = 0.74;                                   // duration of the turn to the works
   /** heart state at lt: position, size, rotation (world coordinates) */
   function heartAt(lt, t, shot, T) {
     const t0 = t - lt;
@@ -499,18 +1148,21 @@
       r = lerp(r0 + 3, 34, E.ease.outCubic(u));
       if (u >= 1) { pos = [H[0] + 2 * Math.sin(lt * 2.1), H[1] + 3 * Math.sin(lt * 1.6)]; r = 34; }
     }
-    // döner: turn and flow down the diagonal into the patterns
-    const d0 = T.don - 0.1;
+    // döner: it turns away from the globe and goes to the works (settles by the rose and the butterfly)
+    const d0 = T.don - 0.15;
+    let turn = 0;
     if (lt > d0) {
       const [wx, wy] = worldC(lt);
-      const F = flowGeom(shot);
-      const u = seg(lt, d0, d0 + FLOW_DUR);
-      const q = flowAt(F, E.ease.inOutCubic(u) * F.tot);
-      pos = [wx + q[0], wy + q[1]];
-      r = lerp(34, 19, E.ease.inOutSine(u));
+      const u = seg(lt, d0, d0 + TURN);
+      turn = u;
+      const e = E.ease.inOutSine(u);
+      const H0 = hoverPos(lt);
+      const P3 = [wx + SETTLE[0] * WR + 2 * Math.sin(lt * 1.9), wy + SETTLE[1] * WR + 2.5 * Math.sin(lt * 1.5)];
+      pos = bez3(H0, [H0[0] + 20, H0[1] - 60], [P3[0] - 110, P3[1] - 55], P3, e);
+      r = lerp(34, 22, E.ease.inOutSine(u));
     }
     const fu = seg(lt, T.rel, T.arr);
-    const rotv = -0.2 * Math.sin(fu * PI) + (lt > d0 ? 0.35 * Math.sin(seg(lt, d0, d0 + 0.85) * PI) : 0) + 0.04 * Math.sin(lt * 1.3);
+    const rotv = -0.2 * Math.sin(fu * PI) + 0.3 * Math.sin(turn * PI) + 0.04 * Math.sin(lt * 1.3);
     return { pos, r, rot: rotv };
   }
 
@@ -548,35 +1200,74 @@
     E.glow(ctx, x, y, s * 0.5, '#F4F8FF', a * 0.45);
   }
 
-  // ---------------------------------------------------------------- pencil construction geometry on the mirror
-  function construction(L, cx, cy, p, fade) {
-    if (p <= 0 || fade <= 0) return;
-    const RR = WR * NK;
-    const a = 0.3 * fade;
-    const ink = L.ink;
-    ink.save();
-    ink.beginPath(); ink.arc(cx, cy, WR * 0.985, 0, TAU); ink.clip();
-    for (let i = 0; i < 4; i++) {
-      const ang = (i * PI) / 4;
-      const q = clamp(p * 1.6 - i * 0.12);
-      if (q <= 0) continue;
-      const L1 = RR * 1.05 * E.ease.outCubic(q);
-      E.pencil(ink, [[cx - Math.cos(ang) * L1, cy - Math.sin(ang) * L1], [cx + Math.cos(ang) * L1, cy + Math.sin(ang) * L1]], { a, w: 1.0, seed: 40 + i, jitter: 0.8 });
-    }
-    [[0.177, 0.15], [0.36, 0.35], [0.43, 0.5], [0.88, 0.62]].forEach(([k, d], i) => {
-      const q = clamp((p - d) / 0.35);
-      if (q <= 0) return;
-      const pth = new Path2D();
-      const a0 = -PI / 2 + i;
-      pth.arc(cx, cy, RR * k, a0, a0 + TAU * E.ease.outCubic(q));
-      E.pencil(ink, pth, { a: a * 0.9, w: 0.9, seed: 50 + i, jitter: 0.7 });
-    });
-    ink.restore();
+  /** the mirror pales like a sketchbook page so the studies read (the fresnel rim keeps it a mirror) */
+  function pageVeil(L, x, y, R, k) {
+    if (k <= 0.003) return;
+    const p = L.paint;
+    p.save();
+    p.clip(circlePath(x, y, R * 0.99));
+    p.globalCompositeOperation = 'source-over';
+    const g = p.createRadialGradient(x - 0.08 * R, y - 0.1 * R, 0, x, y, R);
+    g.addColorStop(0, `rgba(253,252,249,${0.66 * k})`);
+    g.addColorStop(0.6, `rgba(250,250,248,${0.58 * k})`);
+    g.addColorStop(0.86, `rgba(244,245,248,${0.3 * k})`);
+    g.addColorStop(1, `rgba(236,238,244,${0.06 * k})`);
+    p.fillStyle = g;
+    p.fillRect(x - R, y - R, 2 * R, 2 * R);
+    // a whisper of cool silver so it stays glass, not paper
+    p.globalCompositeOperation = 'multiply';
+    p.globalAlpha *= 0.5 * k;
+    const g2 = p.createLinearGradient(x - R, y - R, x + R, y + R);
+    g2.addColorStop(0, '#F3F4F8'); g2.addColorStop(1, '#DCE1EB');
+    p.fillStyle = g2;
+    p.fillRect(x - R, y - R, 2 * R, 2 * R);
+    p.restore();
   }
+
+  // ---------------------------------------------------------------- development sheet (DM_HASH=solo=s09&natsheet)
+  const DEV = typeof location !== 'undefined' && /natsheet/.test(location.hash);
+  function devSheet(L, lt) {
+    const A = E.natArt, u = lt % 5;
+    E.skyWash(L.paint, '#F3F1EA', '#EEEAE0', { mottle: 0.1 });
+    const k = clamp(u / 3);
+    A.roseStudy(L, 300, 420, 150, { p: clamp(u / 1.2), open: k, t: u });
+    A.roseHead(L, 160, 860, 70, { open: 1 });
+    A.roseHead(L, 330, 860, 70, { open: 0.5 });
+    A.roseHead(L, 480, 860, 70, { open: 0 });
+    A.leafStudy(L, 790, 380, 440, { p: clamp(u / 1.5), rot: 0.5 });
+    A.butterfly(L, 790, 800, 420, { p: clamp(u / 1.2), flap: 0.86 + 0.14 * Math.cos(u * 2.3), rot: -0.2 });
+    A.feather(L, 330, 1250, 620, { p: clamp(u / 1.5), rot: -0.5, t: u });
+    A.pomegranate(L, 790, 1260, 180, { p: clamp(u / 1.8) });
+    A.bird(L, 160, 1700, 110, {});
+    A.bird(L, 420, 1700, 110, { fly: 1, flap: u * 9 });
+    A.bird(L, 680, 1700, 110, { fly: 1, flap: u * 9 + 1.5 });
+    A.butterfly(L, 900, 1680, 160, { flap: 0.25 + 0.75 * Math.abs(Math.cos(u * 9)), rot: 0.4 });
+  }
+
+  /** where the rose, the heart and the butterfly are on screen at the cut (for s10's match cut) */
+  E.natArt.s09cut = () => {
+    const shot = E.SHOTS.find((s) => s.id === 's09');
+    const lt = shot.dur, t = shot.start + lt;
+    const T = times(shot);
+    const cam = camAt(lt, t, T, shot);
+    const scr = (x, y) => {
+      const dx = (x - cam.x) * cam.z, dy = (y - cam.y) * cam.z, c = Math.cos(cam.rot), s = Math.sin(cam.rot);
+      return [540 + dx * c - dy * s, 960 + dx * s + dy * c];
+    };
+    const [wx, wy] = worldC(lt);
+    const H = heartAt(lt, t, shot, T);
+    const rp = scr(wx + ST.rose.x * WR, wy + ST.rose.y * WR), fp = scr(wx + ST.fly.x * WR, wy + ST.fly.y * WR);
+    return {
+      rose: { x: rp[0], y: rp[1], s: ST.rose.s * WR * cam.z, rot: ST.rose.rot + cam.rot },
+      fly: { x: fp[0], y: fp[1], s: ST.fly.s * WR * cam.z, rot: ST.fly.rot + 0.03 * Math.sin(lt * 0.8) + cam.rot, flap: flyFlap(lt, T) },
+      heart: { x: scr(H.pos[0], H.pos[1])[0], y: scr(H.pos[0], H.pos[1])[1], r: H.r * cam.z, rot: H.rot + cam.rot, clock: t - S08.start + HCLK },
+    };
+  };
 
   // ---------------------------------------------------------------- the shot
   E.scene('s09', {
     draw(L, lt, t, shot) {
+      if (DEV) { devSheet(L, lt); return; }
       const T = times(shot);
       const T7 = (t - S08.start) + LT7;
       const cam = camAt(lt, t, T, shot);
@@ -611,7 +1302,8 @@
       const H = heartAt(lt, t, shot, T);
       const warm = ep(lt, T.arr - 0.15, T.arr + 0.8, 'inOutSine');
       const mir = ep(lt, T.ay - 0.12, T.ay + 0.9, 'inOutSine');
-      const tilt = ep(lt, T.don - 0.1, T.don + 0.5);
+      const veil = ep(lt, T.tem - 0.4, T.tem + 0.75, 'inOutSine');
+      const away = ep(lt, T.don - 0.15, T.don + 0.5, 'inOutSine');     // the love leaves the globe as such
       // soft shadow of the floating world on the meadow
       E.wash(L.paint, E.blob(wx + 26, MAN.y - 2, 110, { rx: 118, ry: 13, seed: 4, irr: 0.05 }), '#6F6A86', { alpha: 0.13 * (1 - dusk), soft: 14 });
       const th = th08(t) * (1 - ep(lt, 0.2, 1.1, 'inOutSine'));
@@ -621,12 +1313,12 @@
       PR().personalWorld(L, wx, wy, WR, {
         t: T7, kind: 'home', life: 1 - 0.7 * diss, dissolve: diss,
         flicker: 0.38 * (1 - ep(lt, 0.45, 1.6, 'inOutSine')),
-        glow: 0.07 + 0.45 * warm * (1 - 0.6 * mir) + 0.12 * mir, mirror: mir,
+        glow: 0.07 + (0.45 * warm * (1 - 0.6 * mir) + 0.1 * mir) * (1 - 0.75 * away), mirror: mir,
       });
       E.restore(L);
       const disc = circlePath(wx, wy, WR * 0.985);
-      const rev = E.tween(lt, [[T.tem - 0.05, 0], [T.guz - 0.1, 0.3, 'inOutSine'], [T.ila - 0.1, 0.74, 'inOutSine'], [T.ila + 0.55, 1, 'outCubic']]);
-      mirrorBody(L, wx, wy, WR, mir, 0.3 - 0.18 * rev);
+      mirrorBody(L, wx, wy, WR, mir, 0.3 - 0.18 * veil);
+      pageVeil(L, wx, wy, WR, veil);
 
       // the touch: when the love reaches the world, a ring of warmth spreads over the glass from the contact point
       {
@@ -657,9 +1349,9 @@
         if (g > 0) glint(L.light, wx + WR * 0.42, wy + WR * 0.36, WR * 0.55, 0.85 * g, 0.3);
       }
 
-      // the rose heart reflected in the convex mirror (compressed toward the rim), until it dives in
+      // the rose heart reflected in the convex mirror (compressed toward the rim), until it turns to the works
       if (mir > 0.02) {
-        const ra = (1 - ep(lt, T.don - 0.1, T.don + 0.35)) * ep(lt, T.ay + 0.1, T.ay + 0.7);
+        const ra = (1 - ep(lt, T.don - 0.15, T.don + 0.25)) * ep(lt, T.ay + 0.1, T.ay + 0.7) * (1 - veil);
         if (ra > 0.01) {
           const dx = H.pos[0] - wx, dy = H.pos[1] - wy, dl = Math.hypot(dx, dy) || 1;
           const rx = wx + (dx / dl) * WR * 0.6, ry = wy + (dy / dl) * WR * 0.6;
@@ -672,51 +1364,59 @@
         }
       }
 
-      // pencil construction → gold nakış blooming outward
-      const cons = ep(lt, T.tem - 0.25, T.tem + 0.75, 'outCubic');
-      construction(L, wx, wy, cons, 1 - 0.55 * rev);
-      if (rev > 0) PR().nakis(L, wx, wy, WR * NK, { reveal: rev, t: lt, glow: 0.5, clip: disc });
-      // a glass gleam over the gold (keeps it a mirror)
+      // the works of art appear in the mirror, one after another
+      if (lt > T.tem - 0.2) {
+        E.save(L);
+        E.each(L, (c) => c.clip(disc));
+        drawStudies(L, lt, T, wx, wy);
+        E.restore(L);
+      }
+      // glass over the studies: the window highlight and two faint diagonal gleams (keeps it a mirror)
       if (mir > 0.2) {
         E.save(L);
         E.each(L, (c) => c.clip(disc));
         const gl = new Path2D();
         gl.ellipse(wx - WR * 0.44, wy - WR * 0.5, WR * 0.36, WR * 0.11, -0.66, 0, TAU);
-        E.lift(L.paint, gl, 0.3 * mir, 6);
+        E.lift(L.paint, gl, (0.3 - 0.12 * veil) * mir, 6);
+        const c45 = Math.SQRT1_2, Lc = L.light;
+        Lc.globalCompositeOperation = 'lighter';
+        for (const [d, w, a] of [[-0.6, 0.05, 0.06], [-0.46, 0.012, 0.14]]) {
+          const cx = wx + d * c45 * WR, cy = wy + d * c45 * WR;
+          Lc.strokeStyle = E.rgba('#FFFFFF', a * veil);
+          Lc.lineWidth = w * WR;
+          Lc.beginPath(); Lc.moveTo(cx + c45 * 1.2 * WR, cy - c45 * 1.2 * WR); Lc.lineTo(cx - c45 * 1.2 * WR, cy + c45 * 1.2 * WR); Lc.stroke();
+        }
         E.restore(L);
       }
 
       // ---- the heart-light
       const relA = lt > T.rel - 0.05;
-      if (relA) trail(L, lt, t, shot, T, T.rel, 0.45, { width: 10, a: 0.55 });
-      flowThread(L, lt, shot, wx, wy);
+      if (relA) trail(L, lt, t, shot, T, T.rel, 0.45, { width: 10, a: 0.5 });
       // "Ona": it brightens in his palm with one strong beat
       const ona = seg(lt, T.ona - 0.08, T.ona + 0.9);
       const flare = ona > 0 && ona < 1 ? Math.exp(-Math.pow((ona - 0.12) / 0.09, 2)) * 0.9 + Math.exp(-Math.pow((ona - 0.34) / 0.1, 2)) * 0.5 : 0;
       const bright = ep(lt, T.ona - 0.1, T.ona + 0.3, 'outSine');
-      const glowA = clamp(0.87 + 0.13 * bright) * (1 - 0.2 * tilt);
-      E.glow(L.light, H.pos[0], H.pos[1], H.r * (4.2 + 1.5 * flare), '#FFC6BE', (0.26 + 0.18 * bright + 0.3 * flare) * (1 - 0.45 * tilt));
+      const glowA = clamp(0.87 + 0.13 * bright);
+      E.glow(L.light, H.pos[0], H.pos[1], H.r * (4.2 + 1.5 * flare), '#FFC6BE', 0.26 + 0.18 * bright + 0.3 * flare);
       PR().heartLight(L, H.pos[0], H.pos[1], H.r * (1 + 0.07 * flare), { t: t - S08.start + HCLK, glow: glowA, rot: H.rot, pulse: 2 - ep(lt, T.rel, T.arr) });
-      // when the love reaches the world it warms it (soft rose-gold halo on the near side)
-      if (warm > 0) E.glow(L.light, wx - WR * 0.5, wy - WR * 0.55, WR * 1.1, '#FFD6B8', 0.18 * warm * (1 - 0.5 * mir));
-      // the light the heart pours into the patterns
-      if (tilt > 0) E.glow(L.light, H.pos[0], H.pos[1], WR * 0.35, '#FFE0A8', 0.14 * tilt);
+      // when the love reaches the world it warms it (soft rose-gold halo on the near side); it fades as the love
+      // turns from the world itself to the works it shows
+      if (warm > 0) E.glow(L.light, wx - WR * 0.5, wy - WR * 0.55, WR * 1.1, '#FFD6B8', 0.18 * warm * (1 - 0.5 * mir) * (1 - away));
     },
 
     sfx(shot) {
       const T = times(shot), g = (x) => x + shot.start;
       return [
-        { t: g(T.ona - 0.06), type: 'heart', gain: 0.38 },
-        { t: g(T.rel - 0.15), type: 'swell', gain: 0.32, dur: 1.4 },
-        { t: g(T.arr - 0.06), type: 'bloom', gain: 0.28 },
-        { t: g(T.push0 + 0.1), type: 'whoosh', gain: 0.14 },
-        { t: g(T.ay - 0.08), type: 'sparkle', gain: 0.3 },
-        { t: g(T.ay + 0.45), type: 'chime', gain: 0.2, pitch: 1.5 },
-        { t: g(T.tem - 0.2), type: 'pen', gain: 0.15, dur: 0.9 },
-        { t: g(T.tem + 0.4), type: 'grow', gain: 0.2, dur: 3.1 },
-        { t: g(T.nuk - 0.05), type: 'chime', gain: 0.17, pitch: 1.2 },
-        { t: g(T.don - 0.12), type: 'whoosh', gain: 0.2 },
-        { t: g(T.don + 0.1), type: 'sparkle', gain: 0.2 },
+        { t: g(T.ona - 0.06), type: 'bloom', gain: 0.2 },
+        { t: g(T.rel - 0.15), type: 'swell', gain: 0.24, dur: 1.4 },
+        { t: g(T.arr - 0.06), type: 'bloom', gain: 0.2 },
+        { t: g(T.ay - 0.08), type: 'sparkle', gain: 0.22 },
+        { t: g(T.ay + 0.45), type: 'chime', gain: 0.14, pitch: 1.5 },
+        { t: g(T.tem - 0.1), type: 'grow', gain: 0.14, dur: 1.95 },   // fades out before "esma"
+        { t: g(T.tem), type: 'bloom', gain: 0.14 },
+        { t: g(T.guz - 0.05), type: 'chime', gain: 0.1, pitch: 1.25 },
+        { t: g(T.don + 0.01), type: 'swell', gain: 0.16, dur: 0.9 },   // after "İlahiyeye" has ended
+        { t: g(T.don + 0.55), type: 'chime', gain: 0.1, pitch: 1.7 },
       ];
     },
   });

@@ -14,7 +14,7 @@ Visual through-line (keep these designs identical wherever they recur — they c
 - **The mirror** (`E.props.mirror`): a tall full-length (endam) mirror with an ornate arched frame.
 - **The hourglass** (`E.props.hourglass`): life's running time.
 - **The heart-light** (`E.props.heartLight`): the man's love — a soft luminous rose-coloured heart.
-- Light from above = divine manifestation (never a depicted source).
+- Binding rules: docs/KURALLAR.md (no visual about Allah: no light from above, no sky association, no ornament at Divine Names).
 
 Gloss subtitles are automatic (engine/gloss.js); keep the 64–82% band calm.
 
@@ -106,20 +106,19 @@ hayatımız[57] 31.96 · gibi[58] 32.56 · zâil[59] 32.88 · fâni[60] 33.77 ·
 - Outgoing `bleed` (540, 800).
 
 ## s09 · 36.70–44.65 · "Ona ait muhabbetimiz, o hususi dünyamız âyine olduğu ve temsil ettiği güzel nukuş-u esma-i İlahiyeye döner;"
-Ona[64] 37.07 · ait[65] 37.33 · muhabbetimiz[66] 37.61 · o[67] 38.73 · hususi[68] 38.83 · dünyamız[69] 39.29 · âyine[70] 39.87 · olduğu[71] 40.21 · ve[72] 40.73 · temsil[73] 40.91 · ettiği[74] 41.33 · güzel[75] 42.21 · nukuş[76] 42.55 · esma[78] 43.01 · İlahiyeye[80] 43.43 · döner[81] 44.03 · (glosses "ayna" 39.82, "Allah'ın isimlerinin nakışlarına" 42.50)
-- "muhabbetimiz" 37.61: the heart-light leaves the man's chest and floats toward his personal world.
-- "âyine olduğu" 39.87: the world's surface turns into a **mirror** (silvery, reflective sheen sweeps over it).
-- "temsil ettiği güzel nukuş-u esma-i İlahiye" 40.9–44.0: on the mirror surface exquisite golden patterns bloom
-  outward (`E.props.nakis` — tezhip-like floral arabesques and an eight-fold star lattice), as if the world's
-  flowers, trees and stars were engravings of a deeper beauty. Elegant, slow, luminous.
-- "döner" 44.03: the heart-light turns away from the world itself and flows along the golden patterns.
+- "muhabbetimiz" 37.61: the heart-light leaves the man's chest and floats to his personal world.
+- "âyine olduğu" 39.87: the world's surface becomes a mirror (silver sheen).
+- "temsil ettiği güzel nukuş" 40.8–43.0: in the mirror, one after another, naturalistic watercolour studies of the art in
+  creation appear, placed freely (never circular, never an ornament): a rose opening, leaf veins, a feather, a swallowtail
+  butterfly, a cut pomegranate. All finish before "esma" (43.0); nothing appears, glows or brightens while the Divine Names are
+  recited (rule 3), and no sound plays on them.
+- "döner" 44.03: the heart-light turns away from the globe itself and settles by the rose and the butterfly.
 
 ## s10 · 44.65–47.65 · "ondan, cilve-i esmaya intikal eder."
-ondan[82] 44.99 · cilve[83] 45.51 · esmaya[85] 45.93 · intikal[86] 46.45 · eder[87] 46.89 · (gloss "isimlerin yansımasına geçer" 45.46/46.40)
-- From the patterns, rays of light descend from above (no source) and reflect off the mirror-world ("cilve" =
-  manifestation/reflection). "intikal eder" 46.45: the heart-light rises up along the rays, the camera tilting up
-  with it into a field of warm golden light. Sacred, quiet.
-- Outgoing `bleed` (540, 300) — the light dissolves into a morning garden.
+- Cut on the same rose, butterfly and heart; the world around is an unpainted pencil sketch.
+- From there the heart moves sideways at eye level across a spring meadow by a stream; colour spreads behind it like wet paint:
+  flowers open, butterflies rise, a blossom tree sheds petals, songbirds fly up — beauty everywhere in living creation.
+  No rays, no light from above, no sky symbolism, no ascent (rule 3). Bleeds into s11 at (540, 300).
 
 ## s11 · 47.65–53.60 · "Hem o hususi dünyamız, âhiret ve cennetin muvakkat bir fidanlığı olduğunu derk edip"
 Hem[88] 47.95 · o[89] 48.29 · hususi[90] 48.37 · dünyamız[91] 48.87 · âhiret[92] 49.89 · ve[93] 50.37 · cennetin[94] 50.51 · muvakkat[95] 51.15 · bir[96] 51.67 · fidanlığı[97] 51.83 · olduğunu[98] 52.37 · derk[99] 52.79 · edip[100] 53.07 · (glosses "geçici" 51.10, "anlayıp" 52.74)
@@ -152,11 +151,10 @@ onun[111] 58.67 · neticesi[112] 58.97 · semeresi[114] 60.07 · sümbülü[116]
 
 ## s14 · 63.75–67.70 · "o vakit o mecazî aşk, hakiki aşka inkılab eder."
 o[121] 64.05 · vakit[122] 64.11 · o[123] 64.47 · mecazî[124] 64.55 · aşk[125] 65.19 · hakiki[126] 65.69 · aşka[127] 66.19 · inkılab[128] 66.51 · eder[129] 66.93 · (gloss "dönüşür" 66.46)
-- A still pond in the garden at dusk-gold light. "mecazî aşk" 64.55: in the water, the reflection of the
-  heart-light (only a reflection — wavering, metaphorical). "hakiki aşka" 65.69: the reflection rises out of the
-  water and becomes a real, solid, radiant heart-light (or a blooming rose of light), much brighter.
-  "inkılab eder" 66.51: it transforms with a beautiful bloom of light and ascends upward, leaving ripples.
-- End by fading light down — s15 enters with a quick `fade` into darkness.
+- A still pond at dusk. "mecazî aşk" 64.55: in the water only a wavering reflection of the heart-light (metaphorical).
+  "hakiki aşka" 65.69: it rises out of the water and becomes a real heart; "inkılab eder" 66.51: a natural rose of light opens
+  around it, at eye level, glowing with its own warmth; its reflection becomes steady. Nothing rises to the sky, no light from
+  above (rule 3). Dusk dims into s15's fade.
 
 ## s15 · 67.70–72.65 · "Yoksa — نَسُوا اللّٰهَ فَاَنْسٰيهُمْ اَنْفُسَهُمْ اُولٰٓئِكَ هُمُ الْفَاسِقُونَ"
 Yoksa[130] 68.07 · verse: nesullahe[131] 68.81 · feensahum[132] 69.45 · enfusehum[133] 70.35 · ulaike[134] 71.17 · humul[135] 71.67 · fasikun[136] 71.99 (ends 72.59) · (gloss: verse meaning, 3 lines at y≈1250–1400, 68.76–74.35)

@@ -1,7 +1,11 @@
 /* s15 · 67.70–72.65 · "Yoksa — نَسُوا اللّٰهَ فَاَنْسٰيهُمْ اَنْفُسَهُمْ اُولٰٓئِكَ هُمُ الْفَاسِقُونَ"
    - Yoksa (68.07): the palette turns: a single drop of ink falls and blooms; night-indigo washes flood the paper.
-   - The verse (68.81–72.59) is written in luminous gold, right to left, word by word with the recitation,
-     between two delicate gold tezhip rules. Crisp text on the overlay; its glow goes into the watercolour.
+   - The verse (68.81–72.59) is written in gold ink, right to left, word by word with the recitation (a soft
+     mask), between two plain gold rules. Crisp text on the overlay.
+   KURALLAR 3 (the verse contains the Name of Allah): no brightness of any kind is tied to it — no travelling
+   light at the writing point, no sheen, no glow pulse, no lifted paper or light-layer glow behind it, no
+   twinkling dust; the gold is steady with only a very faint, constant, uniform warmth. The rules carry no
+   medallion or other ornament at their centres (only small leaf tips at their ends) and never glint.
    No figure in this shot. */
 (function () {
   const E = window.E;
@@ -31,7 +35,8 @@
     TM.land = TM.yoksa + 0.06;            // the drop hits the paper on "Yoksa"
     TM.drop0 = TM.land - 0.3;
     TM.flood0 = TM.land + 0.16;           // the bloom reads on its own for a moment, then its ink runs out
-    TM.frame0 = T(131) - 0.24;            // the gold rules open once the night has reached them
+    TM.frame0 = T(131) - 0.45;            // the gold rules open (from the centre) inside the spreading night...
+    TM.frame1 = TM.frame0 + 0.8;          // ...and reach full width as the first word is written (never behind it)
     TM.groups = GROUPS.map(([a, b, wi]) => {
       const s0 = T(wi) - 0.07;
       const d = Math.max(0.26, (Te(wi) - T(wi)) * 0.85);
@@ -171,7 +176,7 @@
 
   function drawLine(octx, li, lt, tm, alpha) {
     const ln = layout().lines[li];
-    const { front, writing } = frontOf(li, lt, tm);
+    const { front } = frontOf(li, lt, tm);
     if (front >= ln.xr + 30) return;
     const sc = scratch();
     const s = sc.getContext('2d');
@@ -184,12 +189,11 @@
     s.textAlign = 'right';
     s.textBaseline = 'alphabetic';
     const by = SC_TOP;
-    const breathe = 0.85 + 0.15 * Math.sin(lt * 1.6 + li);
-    // glow pass
+    // a very faint, constant warmth around the ink (uniform for every word, never animated)
     s.save();
-    s.shadowColor = `rgba(255,190,90,${0.75 * breathe})`;
-    s.shadowBlur = 26;
-    s.fillStyle = 'rgba(232,180,90,0.55)';
+    s.shadowColor = 'rgba(214,160,80,0.22)';
+    s.shadowBlur = 10;
+    s.fillStyle = 'rgba(200,150,80,0.3)';
     s.fillText(ln.text, ln.xr, by);
     s.restore();
     // gold body
@@ -206,20 +210,6 @@
     s.fillStyle = s.createPattern(gildTex(), 'repeat');
     s.fillRect(0, 0, sc.width, sc.height);
     s.globalAlpha = 1;
-    // sheen: a soft band of light following the pen, then one slow sweep over the whole verse at the end
-    s.globalCompositeOperation = 'source-atop';
-    const sheen = (x, w, a) => {
-      if (a <= 0.01) return;
-      const sg = s.createLinearGradient(x - w, 0, x + w, 0);
-      sg.addColorStop(0, 'rgba(255,255,240,0)');
-      sg.addColorStop(0.5, `rgba(255,255,240,${a})`);
-      sg.addColorStop(1, 'rgba(255,255,240,0)');
-      s.fillStyle = sg;
-      s.fillRect(x - w, 0, 2 * w, sc.height);
-    };
-    sheen(front + 70, 70, 0.55 * writing);
-    const fin = E.seg(lt, tm.last + 0.05, tm.last + 1.1);
-    if (fin > 0 && fin < 1) sheen(E.lerp(ln.xr + 120, ln.xl - 120, E.ease.inOutSine(fin)), 90, 0.4);
     // reveal mask (right to left, soft front)
     s.globalCompositeOperation = 'destination-in';
     const soft = 46;
@@ -232,16 +222,50 @@
     octx.save();
     octx.globalAlpha *= alpha;
     octx.drawImage(sc, 0, ln.y - by);
-    // the pen head: a small warm glow travelling with the reveal front
-    if (writing > 0.02) {
-      const hy = ln.y - ln.asc * 0.3;
-      const hg = octx.createRadialGradient(front, hy, 0, front, hy, 26);
-      hg.addColorStop(0, `rgba(255,250,228,${0.7 * writing})`);
-      hg.addColorStop(1, 'rgba(255,236,190,0)');
-      octx.fillStyle = hg;
-      octx.fillRect(front - 26, hy - 26, 52, 52);
-    }
     octx.restore();
+  }
+
+  // ---------------------------------------------------------------- gold rules (frame lines for the verse)
+  /** two horizontal gold rule groups at y ± h/2 (a main rule and a hairline outside it), each ending in a
+      small slender leaf at both ends. Opaque warm gold for the dark ground, a darker edge for definition.
+      Deliberately no centre ornament (no medallion / rosette) and no glow (KURALLAR 3). */
+  function goldRules(L, x, y, w, h, a) {
+    if (a <= 0.003) return;
+    const pa = L.paint;
+    const hw = w / 2, gold = '#ECCF88', edge = '#9C7434';
+    pa.save();
+    pa.globalAlpha *= a;
+    pa.lineCap = 'round';
+    for (const sy of [-1, 1]) {
+      const yy = y + sy * h / 2, y2 = yy + sy * 15.5, x1 = hw * 0.9, x2 = hw * 0.84;
+      // main rule and hairline
+      pa.globalCompositeOperation = 'source-over';
+      pa.strokeStyle = gold; pa.lineWidth = 5.2;
+      pa.beginPath(); pa.moveTo(x - x1, yy); pa.lineTo(x + x1, yy); pa.stroke();
+      pa.lineWidth = 2.2; pa.globalAlpha *= 0.85;
+      pa.beginPath(); pa.moveTo(x - x2, y2); pa.lineTo(x + x2, y2); pa.stroke();
+      pa.globalAlpha /= 0.85;
+      // slender leaf tips continuing each end of the main rule (curving gently away from the verse)
+      const leaves = new Path2D(), edges = new Path2D(); // (edges: the curved outline only, no seam at the rule)
+      for (const sx of [-1, 1]) {
+        const x0 = x + sx * x1, L1 = 46, W1 = 7.5;
+        for (const P of [leaves, edges]) {
+          P.moveTo(x0 - sx * 4, yy - 2.6);
+          P.bezierCurveTo(x0 + sx * L1 * 0.35, yy - W1 - sy * 1, x0 + sx * L1 * 0.75, yy - sy * W1 * 0.9, x0 + sx * L1, yy + sy * 9);
+          P.bezierCurveTo(x0 + sx * L1 * 0.7, yy + sy * W1 * 0.2 + 2, x0 + sx * L1 * 0.3, yy + W1 * 0.5, x0 - sx * 4, yy + 2.6);
+        }
+        leaves.closePath();
+      }
+      pa.fillStyle = gold;
+      pa.fill(leaves);
+      pa.globalCompositeOperation = 'multiply';
+      pa.strokeStyle = E.rgba(edge, 0.7); pa.lineWidth = 1.2;
+      pa.stroke(edges);
+      // a fine darker line along the lower edge of the main rule gives it a gilded edge
+      pa.strokeStyle = E.rgba(edge, 0.55); pa.lineWidth = 1;
+      pa.beginPath(); pa.moveTo(x - x1, yy + 2.4); pa.lineTo(x + x1, yy + 2.4); pa.stroke();
+    }
+    pa.restore();
   }
 
   // ---------------------------------------------------------------- the scene
@@ -261,8 +285,9 @@
       // (the bloom stays as a faint cauliflower texture once the night has soaked into the paper — no dark hole
       //  behind the verse)
       const pDrop = lt < tm.land ? 0.3 * E.seg(lt, tm.drop0, tm.land) : 0.3 + 0.7 * E.seg(lt, tm.land, tm.land + 2.6);
-      const dropA = 1 - 0.85 * E.ep(lt, tm.land + 0.2, tm.land + 0.95, 'inOutSine');
-      if (lt >= tm.drop0) PR.dropBloom(L, DROP.x, DROP.y, 330, { p: pDrop, color: '#26314F', seed: 7, fall: 600, dropSize: 11, alpha: dropA });
+      // (it soaks away completely before the verse reaches the centre: no blot under the sacred text)
+      const dropA = 1 - 0.85 * E.ep(lt, tm.land + 0.2, tm.land + 0.95, 'inOutSine') - 0.15 * E.ep(lt, tm.land + 0.95, tm.land + 1.6, 'inOutSine');
+      if (lt >= tm.drop0 && dropA > 0.002) PR.dropBloom(L, DROP.x, DROP.y, 330, { p: pDrop, color: '#26314F', seed: 7, fall: 600, dropSize: 11, alpha: dropA });
       // ---- ...and its ink floods the whole paper: night-indigo spreads out from it
       const fl = E.ease.outQuad(E.seg(lt, tm.flood0, tm.flood0 + 2.1)); // weighty: fast at first, then it slows
       flood(pa, DROP.x, DROP.y, 60 + 1750 * fl, E.clamp(fl * 8));
@@ -285,41 +310,16 @@
         E.wash(pa, E.rrect(-10, -10, 1100, 1940, 0), '#2A3156', { alpha: night, grad: { from: [540, 830], r0: 300, r: 1200, stops: [[0, 'rgba(42,49,86,0)'], [0.5, 'rgba(42,49,86,0.2)'], [1, 'rgba(36,42,74,0.45)']] } });
       }
       E.camera(L, c);
-      // the verse's own light pulls the dark back a little (lifted paper, very faint) + warm glow
-      const L0 = layout().lines;
-      let vis = 0;
-      L0.forEach((ln, i) => {
-        const { front, writing } = frontOf(i, lt, tm);
-        if (writing > 0.02) E.glow(L.light, front, ln.y - ln.asc * 0.3, 80, '#FFD9A0', 0.34 * writing);
-        const span = E.clamp((ln.xr - front) / ln.w);
-        vis += span / 2;
-        if (span <= 0) return;
-        const cx = (ln.xr + Math.max(front, ln.xl)) / 2, hw = (ln.xr - Math.max(front, ln.xl)) / 2 + 60;
-        L.light.save();
-        L.light.translate(cx, ln.y - 40);
-        L.light.scale(hw / 100, 1);
-        const g = L.light.createRadialGradient(0, 0, 0, 0, 0, 100);
-        g.addColorStop(0, 'rgba(255,214,150,0.16)');
-        g.addColorStop(1, 'rgba(255,190,110,0)');
-        L.light.globalCompositeOperation = 'lighter';
-        L.light.fillStyle = g;
-        L.light.fillRect(-100, -100, 200, 200);
-        L.light.restore();
-      });
-      if (vis > 0) softSpot(pa, VC.x, VC.y, 600, 300, '#FFFFFF', 0.1 * vis, 'source-over');
-      // gold tezhip rules above and below
-      // (revealed with our own clip opening from the centre: the prop's own partial reveal shows a box artefact)
-      const fr = E.ep(lt, tm.frame0, tm.frame0 + 1.4, 'inOutSine');
+      // gold rules above and below the verse: plain double rules with small leaf tips, opening from the centre
+      // (a clip that widens; no glow, no glints, no medallion) as the night arrives, just before the recitation
+      const fr = E.ep(lt, tm.frame0, tm.frame1, 'inOutSine');
       if (fr > 0) {
         E.save(L);
         const hw = 30 + 480 * fr;
         E.each(L, (cx) => { cx.beginPath(); cx.rect(VC.x - hw, 0, 2 * hw, 1920); cx.clip(); });
-        E.alpha(L, E.ep(lt, tm.frame0, tm.frame0 + 0.22, 'outQuad'));
-        PR.calligraphyFrame(L, VC.x, VC.y + 8, 860, 520, { style: 'rules', night: 1, reveal: 1, t: lt, glow: 0.6 * fr * fr });
+        goldRules(L, VC.x, VC.y + 8, 860, 520, E.ep(lt, tm.frame0, tm.frame0 + 0.5, 'inOutSine'));
         E.restore(L);
       }
-      // slow gold dust
-      E.motes(L.light, { x: 60, y: 450, w: 960, h: 760, n: 18, t: lt, seed: 15, color: '#FFD9A0', size: 2.4, a: 0.45 * fr, rise: 14 });
     },
     overlay(octx, lt, t) {
       const shot = E.SHOTS.find((s) => s.id === 's15');
@@ -336,8 +336,8 @@
       const g = (x) => shot.start + x;
       return [
         { t: g(tm.drop0 + 0.05), type: 'drone', gain: 0.28, dur: 5.4 },
-        { t: g(tm.land - 0.02), type: 'bloom', gain: 0.42, pitch: 0.6 },
-        { t: g(tm.land), type: 'rumble', gain: 0.22, dur: 1.8 },
+        { t: g(tm.land - 0.02), type: 'bloom', gain: 0.34, pitch: 0.6 },
+        { t: g(tm.land), type: 'rumble', gain: 0.18, dur: 1.8 },
       ];
     },
   });

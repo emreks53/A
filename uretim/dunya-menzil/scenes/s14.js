@@ -2,9 +2,12 @@
    A still pond in the garden at dusk-gold light.
    - mecazî aşk (64.55): in the water, only the wavering REFLECTION of the heart-light.
    - hakiki aşka (65.69): the reflection rises out of the water (above the surface it is solid, below it still
-     wavers) and becomes a real, radiant heart-light; the water now carries its glitter path.
-   - inkılab eder (66.51): a rose of light blooms around it and it ascends into the light from above, leaving
-     ripples on the pond. Then the light fades down (s15 fades in to darkness). */
+     wavers) and becomes a real heart-light that settles at eye level just above the pond (its centre on the
+     horizon line), glowing with its own warm light.
+   - inkılab eder (66.51): it blooms into a rose — broad petals of light open around it, a cup of front petals
+     holds its point. It stays where it is: no light from above, no rays, no ascent. The water calms, its
+     reflection steadies into a clear mirror image; then dusk dims the scene into s15's fade.
+   (KURALLAR 3: nothing descends from or rises to the sky; the heart's light is its own.) */
 (function () {
   const E = window.E;
   const PR = E.props;
@@ -12,13 +15,13 @@
   // ---------------------------------------------------------------- layout (world coordinates)
   // a wide pond seen from a low angle: its far edge is an almost straight waterline (no "hump")
   const POND = { x: 540, y: 1250, w: 3000, h: 760 };
-  const LINE_Y = 872;          // the waterline (sky / far bank reflect about it)
+  const LINE_Y = 872;          // the waterline (sky / far bank reflect about it) = the horizon = eye level
   const HX = 540;              // heart column
-  const REF_Y = 1185;          // centre of the reflection heart in the water
-  const R0 = 84;               // reflection heart half-width
+  const REF_Y = 1100;          // centre of the reflection heart in the water
+  const R0 = 76;               // reflection heart half-width
   const CROSS = REF_Y - 1.04 * R0; // the surface the heart rises through (its top lobes touch it at the start)
-  const HOVER = 625;           // where the real heart hovers
-  const R1 = 116;              // real heart half-width
+  const HOVER = 800;           // where the real heart settles: its centre at eye level (just above the horizon)
+  const R1 = 100;              // real heart half-width
   /** far water edge at x (top of the pond ellipse) */
   const farEdge = (x) => POND.y - POND.h * 0.5 * Math.sqrt(Math.max(0, 1 - Math.pow((x - POND.x) / (POND.w * 0.5), 2)));
 
@@ -31,20 +34,22 @@
     TM.reflIn = TM.mecazi - 0.14;
     TM.rise0 = TM.hakiki - 0.12;
     TM.surf1 = TM.rise0 + 0.44;          // it has surfaced (tip just out of the water): a breath of stillness
-    TM.rise1 = TM.aska + 0.31;           // ...then it lifts and settles in the air
-    TM.bloom0 = TM.inkilab - 0.1;
-    TM.asc0 = TM.eder - 0.08;
-    TM.asc1 = TM.asc0 + 0.8;
-    TM.dim0 = TM.asc1 - 0.32;
+    TM.rise1 = TM.aska + 0.31;           // ...then it lifts a little and settles in the air
+    TM.bloom0 = TM.inkilab - 0.12;       // the rose opens on "inkılab"
+    TM.bloom1 = TM.bloom0 + 1.05;
+    TM.steady0 = TM.rise1 - 0.1;         // the water settles: the reflection steadies into a mirror image
+    TM.steady1 = TM.rise1 + 0.75;
+    TM.dim0 = TM.eder + 0.42;
     TM.dim1 = shot.dur + 0.3;
     return TM;
   }
 
   // ---------------------------------------------------------------- camera with parallax
+  // (a calm frame: a gentle pull back while the heart rises, then a slow push toward it while it blooms)
   function camAt(lt, tm) {
-    const zoom = E.tween(lt, [[0, 1.07], [tm.rise0, 1.045, 'inOutSine'], [tm.rise1 + 0.25, 1.0, 'inOutCubic'], [tm.dim1, 0.98, 'inOutSine']]);
-    const cy = E.tween(lt, [[0, 1032], [tm.rise0, 1016, 'inOutSine'], [tm.rise1 + 0.25, 905, 'inOutCubic'], [tm.dim1, 862, 'inOutSine']]);
-    return { x: 540 + E.drift(lt, 3, 0.3) * 5, y: cy + E.drift(lt, 7, 0.25) * 3, zoom };
+    const zoom = E.tween(lt, [[0, 1.07], [tm.rise0, 1.05, 'inOutSine'], [tm.rise1 + 0.2, 1.0, 'inOutCubic'], [tm.dim1, 1.06, 'inOutSine']]);
+    const cy = E.tween(lt, [[0, 1032], [tm.rise0, 1024, 'inOutSine'], [tm.rise1 + 0.2, 1000, 'inOutCubic'], [tm.dim1, 986, 'inOutSine']]);
+    return { x: 540 + E.drift(lt, 3, 0.3) * 4, y: cy + E.drift(lt, 7, 0.25) * 3, zoom };
   }
   function setCam(L, c, f) {
     E.camera(L, { x: 540 + (c.x - 540) * f, y: 960 + (c.y - 960) * f, zoom: 1 + (c.zoom - 1) * f });
@@ -52,22 +57,21 @@
 
   // ---------------------------------------------------------------- heart state
   function heartAt(lt, tm) {
-    const asc = E.ep(lt, tm.asc0, tm.asc1, 'inQuad');
-    const bob = Math.sin((lt - tm.rise1) * 2.4) * 5 * E.seg(lt, tm.rise1 - 0.15, tm.rise1 + 0.35) * (1 - asc);
-    const rS = 96; // size when it has just surfaced
-    const r = E.tween(lt, [[tm.rise0, R0], [tm.surf1, rS, 'inOutSine'], [tm.rise1 + 0.1, R1, 'inOutCubic']]) * (1 - 0.45 * asc);
-    // surfacing: slow and deliberate (it decelerates as it clears the water), then the lift into the air
-    const hy0 = E.tween(lt, [[tm.rise0, REF_Y], [tm.surf1, CROSS - 0.95 * rS - 16, 'inOutSine'], [tm.rise1, HOVER, 'inOutCubic']]);
+    // once settled it floats very gently (no drift up or down)
+    const bob = Math.sin((lt - tm.rise1) * 2.1) * 3.5 * E.seg(lt, tm.rise1 - 0.15, tm.rise1 + 0.45);
+    const rS = 88; // size when it has just surfaced
+    const r = E.tween(lt, [[tm.rise0, R0], [tm.surf1, rS, 'inOutSine'], [tm.rise1 + 0.1, R1, 'inOutCubic']]);
+    // surfacing: slow and deliberate (it decelerates as it clears the water), then the short lift into place
+    const hy0 = E.tween(lt, [[tm.rise0, REF_Y], [tm.surf1, CROSS - 0.95 * rS - 12, 'inOutSine'], [tm.rise1, HOVER, 'inOutCubic']]);
     const rise = E.clamp((REF_Y - hy0) / (REF_Y - HOVER));
-    const hy = hy0 + bob - asc * 920;
+    const hy = hy0 + bob;
     return {
-      r, hy, rise, asc,
+      r, hy, rise,
       refl: E.ep(lt, tm.reflIn, tm.reflIn + 0.6, 'outCubic'),
       pulse: Math.exp(-Math.pow((lt - tm.ask - 0.06) / 0.15, 2)),
       bright: E.ep(lt, tm.rise0 + 0.2, tm.aska + 0.2, 'inOutSine'),
-      bloom: E.ep(lt, tm.bloom0, tm.bloom0 + 0.62, 'outCubic'),
-      flash: Math.exp(-Math.pow((lt - tm.inkilab - 0.12) / 0.2, 2)),
-      gone: E.ep(lt, tm.asc0 + 0.5, tm.asc1, 'inQuad'),
+      bloom: E.seg(lt, tm.bloom0, tm.bloom1),
+      steady: E.ep(lt, tm.steady0, tm.steady1, 'inOutSine'),
     };
   }
 
@@ -164,96 +168,129 @@
     c.restore();
   }
 
-  /** soft column of light from above (no source): bare paper lifted + warm glow + rays on the light layer */
-  function lightFromAbove(L, a, lt, x, yBot) {
-    if (a <= 0.003) return;
-    const p = L.paint;
-    p.save();
-    p.setTransform(1, 0, 0, 1, 0, 0);
-    p.translate(x, -120);
-    p.scale(1, (yBot + 120) / 250);
-    const g = p.createRadialGradient(0, 0, 0, 0, 0, 250);
-    g.addColorStop(0, 'rgba(255,255,255,1)');
-    g.addColorStop(0.45, 'rgba(255,255,255,0.6)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    p.globalAlpha *= 0.75 * a;
-    p.fillStyle = g;
-    p.fillRect(-260, 0, 520, 260);
-    p.restore();
-    const l = L.light;
-    l.save();
-    l.setTransform(1, 0, 0, 1, 0, 0);
-    E.rays(l, x, -140, { n: 9, len: yBot + 220, spread: 0.34, width: 0.03, color: '#FFE7B8', a: 0.3 * a, seed: 6, t: lt });
-    E.glow(l, x, -40, 440, '#FFE9C2', 0.55 * a);
-    l.restore();
-  }
-
-  /** a rose of light around (0,0): three rings of broad rounded petals opening one after another;
-      p = opening 0..1; s = scale; spin = slow rotation */
-  // outer ring warm gold, middle peach-rose, inner rose: pale (lit) at the centre, pigment pooled at the tips
-  const ROSE = [
-    { n: 10, d0: 30, len: 196, w: 112, col: '#F3C47C', rim: '#D58F52', off: 0, lag: 0, dir: 1 },
-    { n: 8, d0: 24, len: 150, w: 100, col: '#F1A98E', rim: '#C86F66', off: 0.3, lag: 0.14, dir: -1 },
-    { n: 6, d0: 18, len: 104, w: 80, col: '#EE98A6', rim: '#B45E78', off: 0.9, lag: 0.28, dir: 1 },
+  /* ---------------------------------------------------------------- the rose of the heart
+     An open rose seen from the side at eye level, with the heart as its heart: broad, overlapping rounded
+     petals open behind it (the outer ones reflexed, lips rolled back), two cupping petals wrap the heart's
+     point in front, slender sap-green sepals curl under the bowl. Heart units: heart centre (0,0), half-width
+     100, its point at y = 95. Translucent glazes of light, pale (lit) toward the heart, pigment pooling at the
+     rolled lips. Back petals: a = angle from vertical (− = left), a0 = closed angle; lag = start of opening. */
+  const RB = [0, 112];   // where the back petals spring from (hidden behind the heart's point)
+  const BOWL = [0, 132]; // bottom of the rose's bowl (front petals, sepals)
+  // (curl puts the rolled-back point on the petal's UPPER side: +1 for left petals, −1 for right ones)
+  // (drawn far -> near: the centre petal at the back of the cup, then the side ones, then the reflexed outer pair)
+  const BACK = [
+    { a: 0.02, a0: 0.0, len: 232, w: 164, col: '#EB9C9E', rim: '#B25C6E', lag: 0.18, sd: 5, curl: 0 },
+    { a: -0.53, a0: -0.18, len: 206, w: 172, col: '#EDA48E', rim: '#BA6460', lag: 0.1, sd: 3, curl: 1 },
+    { a: 0.56, a0: 0.2, len: 200, w: 170, col: '#EDA48E', rim: '#BA6460', lag: 0.13, sd: 4, curl: -1 },
+    { a: -0.96, a0: -0.38, len: 160, w: 164, col: '#F0B486', rim: '#C2714A', lag: 0.0, sd: 1, curl: 1 },
+    { a: 0.99, a0: 0.4, len: 156, w: 160, col: '#F0B486', rim: '#C2714A', lag: 0.05, sd: 2, curl: -1 },
   ];
-  function petalPath(R, i, pk, spin, s) {
-    const ang = spin * R.dir + R.off + (i / R.n) * E.TAU - Math.PI / 2;
-    const len = R.len * pk * s, d0 = R.d0 * s, w = R.w * s * (0.45 + 0.55 * pk);
-    const ca = Math.cos(ang), sa = Math.sin(ang);
-    const P2 = (u, v) => [ca * (d0 + u * len) - sa * v, sa * (d0 + u * len) + ca * v];
-    // a rounded petal with a soft point (Ottoman rose / tulip petal), slightly asymmetric
-    const pts = [P2(0, 0), P2(0.16, w * 0.34), P2(0.5, w * 0.5), P2(0.84, w * 0.36), P2(0.98, w * 0.1), P2(1.04, -w * 0.02), P2(0.94, -w * 0.16), P2(0.8, -w * 0.38), P2(0.48, -w * 0.48), P2(0.15, -w * 0.32)];
-    return { path: E.smoothPath(pts, true, 0.5), len, d0 };
+  const backQ = (P, p) => E.clamp((p - P.lag) / 0.55);
+  /** a broad rose petal springing from RB at opening q: shield-like body (about as wide as it is long), its lip
+      rolled back into a soft point at the outer corner (curl ±1) or a shallow dip (curl 0) */
+  function backGeom(P, q) {
+    const e = E.ease.inOutSine(q), g = E.ease.outBackSoft(q);
+    const ang = E.lerp(P.a0, P.a, e);
+    const len = P.len * (0.3 + 0.7 * g), w = P.w * (0.4 + 0.6 * g);
+    const ax = Math.sin(ang), ay = -Math.cos(ang), nx = -ay, ny = ax;
+    const r = E.rng(P.sd * 31 + 7), J = Array.from({ length: 6 }, () => (r() - 0.5) * 0.05);
+    const c = P.curl;
+    const at = (u, v) => [RB[0] + ax * u * len + nx * v * w, RB[1] + ay * u * len + ny * v * w];
+    const tipR = c > 0 ? [1.04, 0.5] : [0.92, 0.44], tipL = c < 0 ? [1.04, -0.5] : [0.92, -0.44];
+    const out = [[0, 0], [0.12, 0.24], [0.38, 0.47 + J[0]], [0.7, 0.52 + J[1]], tipR, [0.99, 0.22 + J[2]], [c ? 1.02 : 0.97, 0],
+      [0.99, -0.22 + J[3]], tipL, [0.7, -0.52 + J[4]], [0.38, -0.47 + J[5]], [0.12, -0.24]];
+    const path = E.smoothPath(out.map(([u, v]) => at(u, v)), true, 0.5);
+    // rolled-back lip: a crescent along the top edge, widest toward the curled corner
+    const lo = [tipR, [0.99, 0.22 + J[2]], [c ? 1.02 : 0.97, 0], [0.99, -0.22 + J[3]], tipL];
+    const li = [[tipL[0] - 0.12 - (c < 0 ? 0.06 : 0), tipL[1] * 0.8], [0.89, -0.2], [c ? 0.91 : 0.88, 0], [0.89, 0.2], [tipR[0] - 0.12 - (c > 0 ? 0.06 : 0), tipR[1] * 0.8]];
+    const lip = E.smoothPath(lo.concat(li).map(([u, v]) => at(u, v)), true, 0.5);
+    const lipLine = E.smoothPath(li.map(([u, v]) => at(u, v)), false, 0.5);
+    return { path, lip, lipLine, len, from: RB };
   }
-  function roseOfLight(L, p, a, spin, s) {
-    if (p <= 0.002 || a <= 0.003) return;
-    const pa = L.paint, li = L.light, ink = L.ink;
-    const rings = [];
-    const all = new Path2D();
-    for (const R of ROSE) {
-      const q = E.clamp((p - R.lag) / (1 - R.lag));
-      const pk = E.ease.outBackSoft(q);
-      if (pk <= 0.001) continue;
+  /** the two cupping front petals (explicit outlines, opening upward from the bowl as q goes 0 -> 1) */
+  const FRONT = [
+    { side: 1, col: '#EE9FA7', rim: '#B25C76', lag: 0.3 },
+    { side: -1, col: '#EFA6AA', rim: '#B8627A', lag: 0.36 },
+  ];
+  const frontQ = (P, p) => E.clamp((p - P.lag) / 0.5);
+  function frontGeom(P, q) {
+    const g = E.ease.outBackSoft(q), sd = P.side;
+    // in the petal's own frame (side = -1: the left petal, whose inner edge overlaps the centre)
+    const body = [[8, 134], [-30, 130], [-68, 114], [-96, 86], [-108, 54], [-122, 34], [-102, 40], [-78, 48], [-48, 56], [-18, 62], [12, 66], [20, 94], [16, 122]];
+    const lipO = [[-122, 34], [-102, 40], [-78, 48], [-48, 56], [-18, 62], [12, 66]];
+    const lipI = [[12, 76], [-18, 72], [-48, 67], [-78, 60], [-100, 50]];
+    const sy = 0.35 + 0.65 * g; // grows up out of the bowl
+    const tf = ([x, y]) => [-sd * x * (0.7 + 0.3 * g), BOWL[1] - (BOWL[1] - y) * sy];
+    return {
+      path: E.smoothPath(body.map(tf), true, 0.45),
+      lip: E.smoothPath(lipO.concat(lipI).map(tf), true, 0.45),
+      lipLine: E.smoothPath(lipI.map(tf), false, 0.45),
+      len: 110 * sy, from: BOWL,
+    };
+  }
+  function paintPetal(L, P, gm, al, solid) {
+    const pa = L.paint;
+    if (solid) E.lift(pa, gm.path, 0.92 * al, 1.5); // a solid lit petal in front: paper given back
+    // the pencil of the petals behind it stops at its edge (only the nearest contour shows)
+    L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.globalAlpha *= al * (solid ? 1 : 0.85); L.ink.fill(gm.path); L.ink.restore();
+    E.wash(pa, gm.path, P.col, {
+      alpha: 0.85 * al,
+      grad: { from: gm.from, r0: 8, r: gm.len * 1.05, stops: [[0, E.rgba('#FCE3C6', 0.2)], [0.42, E.rgba(P.col, 0.45)], [0.8, E.rgba(P.col, 0.9)], [1, E.rgba(P.rim, 1)]] },
+    });
+    // rolled lip: paper lifted along the top edge, a faint pooled line under it
+    E.lift(pa, gm.lip, 0.6 * al, 1.2);
+    E.pencil(pa, gm.lipLine, { w: 1.6, a: 0.2 * al, color: P.rim, double: false });
+    E.pencil(L.ink, gm.path, { w: 1.2, a: 0.36 * al, color: P.rim, double: false });
+  }
+  /** draw one layer of the rose (0 = behind the heart, 1 = in front) in the current frame (heart centre at 0,0;
+      heart units scaled by s). p = bloom 0..1, a = alpha */
+  function rose(L, layer, p, a, s) {
+    if (p <= 0.001 || a <= 0.003) return;
+    E.save(L);
+    E.scale(L, s);
+    if (layer === 0) {
       const ps = [];
-      for (let i = 0; i < R.n; i++) { const pp = petalPath(R, i, pk, spin, s); ps.push(pp); all.addPath(pp.path); }
-      rings.push({ R, ps, pk });
-    }
-    if (!rings.length) return;
-    // the bloom is light: paper given back once under the whole flower (so overlapping petals can layer)
-    E.lift(pa, all, 0.88 * a, 2.5 * s);
-    for (const { R, ps } of rings) {
-      for (const { path, len, d0 } of ps) {
-        // translucent glaze: thin warm light at the base, pigment pooling toward the petal tip
-        E.wash(pa, path, R.col, { alpha: 0.5 * a, grad: { from: [0, 0], r0: d0 * 0.5, r: d0 + len * 1.02, stops: [[0, E.rgba('#FCE9C6', 0.15)], [0.45, E.rgba(R.col, 0.4)], [0.85, E.rgba(R.col, 0.85)], [1, E.rgba(R.rim, 0.95)]] } });
-        E.pencil(ink, path, { w: 1.0, a: 0.22 * a, color: R.rim, double: false });
+      for (const P of BACK) { const q = backQ(P, p); if (q > 0.001) ps.push({ P, gm: backGeom(P, q), k: E.smooth(E.clamp(q * 2.2)) }); }
+      if (ps.length) {
+        // the bloom is light: paper given back under the back petals (so overlapping petals can layer)
+        const all = new Path2D();
+        for (const o of ps) all.addPath(o.gm.path);
+        E.lift(L.paint, all, 0.85 * a * ps[0].k, 2.5);
       }
+      for (const { P, gm, k } of ps) paintPetal(L, P, gm, a * k, false);
+    } else {
+      // sepals first (they sit under the bowl, behind the front petals)
+      const ks = E.smooth(E.seg(p, 0.25, 0.7));
+      if (ks > 0) {
+        const sep = new Path2D();
+        for (const [dx, ang, ln, bend] of [[-22, -2.1, 62, 0.5], [24, 2.05, 60, -0.5], [-8, -2.7, 46, 0.35], [10, 2.75, 44, -0.35]]) {
+          const L2 = ln * (0.4 + 0.6 * ks), bx = BOWL[0] + dx, by = BOWL[1] - 10;
+          const ca = Math.sin(ang), sa = -Math.cos(ang), cb = Math.sin(ang + bend), sb = -Math.cos(ang + bend);
+          const mid = [bx + ca * L2 * 0.5, by + sa * L2 * 0.5], tip = [mid[0] + cb * L2 * 0.5, mid[1] + sb * L2 * 0.5];
+          const wd = 8;
+          sep.addPath(E.smoothPath([[bx - sa * wd, by + ca * wd], [mid[0] - sa * wd * 0.7, mid[1] + ca * wd * 0.7], tip, [mid[0] + sa * wd * 0.6, mid[1] - ca * wd * 0.6], [bx + sa * wd, by - ca * wd]], true, 0.4));
+        }
+        E.wash(L.paint, sep, '#97A86E', { mode: 'over', alpha: 0.85 * a * ks });
+        E.wash(L.paint, sep, '#5F7048', { alpha: 0.35 * a * ks, grad: { from: [0, BOWL[1] - 10], to: [0, BOWL[1] + 60], c2: '#4E5E3C' } });
+        E.pencil(L.ink, sep, { w: 1, a: 0.28 * a * ks, double: false });
+      }
+      for (const P of FRONT) { const q = frontQ(P, p); if (q > 0.001) paintPetal(L, P, frontGeom(P, q), a * E.smooth(E.clamp(q * 2.2)), true); }
+      // light from within: a warm luminous core spreading through the petals (its own light, centred on the heart)
+      const all = new Path2D();
+      for (const P of BACK) { const q = backQ(P, p); if (q > 0.001) all.addPath(backGeom(P, q).path); }
+      const li = L.light;
+      li.save();
+      li.globalCompositeOperation = 'lighter';
+      li.globalAlpha *= a * 0.26 * E.smooth(E.clamp(p * 1.6));
+      const gr = li.createRadialGradient(0, 0, 0, 0, 0, 260);
+      gr.addColorStop(0, 'rgba(255,240,214,0.9)');
+      gr.addColorStop(0.5, 'rgba(255,214,176,0.4)');
+      gr.addColorStop(1, 'rgba(255,196,160,0)');
+      li.fillStyle = gr;
+      li.fill(all);
+      li.restore();
     }
-    // light from within: a warm luminous core spreading through the petals
-    li.save();
-    li.globalCompositeOperation = 'lighter';
-    li.globalAlpha *= a * 0.55;
-    const big = rings[0].R.d0 * s + rings[0].R.len * s * rings[0].pk;
-    const g = li.createRadialGradient(0, 0, 0, 0, 0, big);
-    g.addColorStop(0, 'rgba(255,240,214,0.95)');
-    g.addColorStop(0.45, 'rgba(255,216,170,0.45)');
-    g.addColorStop(1, 'rgba(255,196,150,0)');
-    li.fillStyle = g;
-    li.fill(all);
-    li.restore();
-  }
-
-  /** a soft ring of light expanding from (x, y) */
-  function lightRing(ctx, x, y, r, w, a, col = '255,236,206') {
-    if (a <= 0.005 || r <= 1) return;
-    const g = ctx.createRadialGradient(x, y, Math.max(0, r - w), x, y, r + w);
-    g.addColorStop(0, `rgba(${col},0)`);
-    g.addColorStop(0.5, `rgba(${col},${a})`);
-    g.addColorStop(1, `rgba(${col},0)`);
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = g;
-    ctx.fillRect(x - r - w, y - r - w, 2 * (r + w), 2 * (r + w));
-    ctx.restore();
+    E.restore(L);
   }
 
   function waterPath() {
@@ -439,11 +476,6 @@
       [[930, 300, 15, 0.0], [985, 326, 12, 0.37], [1035, 292, 11, 0.71]].forEach(([x0, y0, sz, ph], i) =>
         bird(L, x0 - lt * 48 - i * 3, y0 + Math.sin(lt * 1.3 + i) * 5, sz, lt * (2.3 + i * 0.2) + ph));
 
-      // ---- light from above (grows with the real heart, peaks as it ascends, then fades)
-      const la = 0.22 * H.bright + 0.42 * H.bloom + 0.45 * H.gone - 1.1 * E.ep(lt, tm.asc1 - 0.02, tm.dim1 - 0.05, 'inOutSine');
-      E.resetCamera(L);
-      lightFromAbove(L, E.clamp(la), lt, 540, 1000);
-
       // ---- landscape (parallax 0.82)
       setCam(L, c, 0.82);
       PR.ground(L, 772, { palette: "dusk", t: lt, seed: 5, trees: 0.75, flowers: 0.35, x0: -300, x1: 1380, bottom: 1150 });
@@ -452,6 +484,8 @@
       setCam(L, c, 1);
       const emerged = E.smooth(E.clamp((CROSS + 24 - (H.hy + 0.95 * H.r)) / 52));
       const mir = (y) => 2 * LINE_Y - y;
+      const yR = 2 * CROSS - H.hy;             // the real heart's reflection (mirrored about the water under it)
+      const wavy = emerged * (1 - H.steady);   // while the water is still disturbed its reflection wavers
       PR.pond(L, POND.x, POND.y, POND.w, POND.h, {
         t: lt, tone: 'gold', ripple: 0, bank: 0,
         lineY: LINE_Y, reflectVeil: 0.22,
@@ -475,13 +509,24 @@
             PR.heartLight(L2, HX, mir(H.hy), H.r, { reflection: true, t: lt, glow: 0.8 + 0.2 * H.pulse, alpha: a, color: '#E39AAA' });
             E.restore(L2);
           }
-          // once real, the water reflects it properly (inverted, about the surface it left) while it is near
-          const ra = emerged * (1 - E.ep(H.hy, CROSS - 60, CROSS - 380, 'linear'));
-          if (ra > 0.01) PR.heartLight(L2, HX, mir(2 * CROSS - H.hy), H.r, { reflection: true, flip: true, t: lt, glow: 0.9, alpha: ra * 0.8, color: '#E39AAA' });
+          // once real, the water reflects it properly (inverted, about the surface it left): wavering at first...
+          if (wavy > 0.01) PR.heartLight(L2, HX, mir(yR), H.r, { reflection: true, flip: true, t: lt, glow: 0.9, alpha: wavy * 0.8, color: '#E39AAA' });
+          // ...then, as the water settles, a clear mirror image of the rose-heart (the mirrored layers flip it)
+          if (H.steady > 0.01 && emerged > 0.5) {
+            const sa = 0.55 * H.steady * emerged, sc = H.r / 100;
+            E.save(L2);
+            E.translate(L2, HX, mir(yR));
+            rose(L2, 0, H.bloom, sa, sc);
+            E.translate(L2, -HX, -mir(yR));
+            PR.heartLight(L2, HX, mir(yR), H.r, { t: lt, glow: 0.8, alpha: sa });
+            E.translate(L2, HX, mir(yR));
+            rose(L2, 1, H.bloom, sa, sc);
+            E.restore(L2);
+          }
         },
       });
 
-      // ---- on the water: glow of the reflection, glitter path of the real heart, ripples
+      // ---- on the water: glow of the reflection, glitter of the real heart's light, ripples
       E.save(L);
       E.each(L, (cx) => cx.clip(waterPath()));
       E.wash(L.paint, waterPath(), '#A68DB0', { alpha: 0.4, grad: { from: [0, farEdge(540) + 40], to: [0, POND.y + POND.h * 0.5], stops: [[0, 'rgba(166,141,176,0)'], [0.45, 'rgba(166,141,176,0.35)'], [1, 'rgba(140,118,160,0.9)']] } });
@@ -492,18 +537,28 @@
         E.lift(L.paint, E.blob(HX, cyR - H.r * 0.1, H.r * 0.5, { rx: H.r * 0.62, ry: H.r * 0.5, seed: 4, irr: 0.15 }), 0.48 * reflGlow, H.r * 0.25);
         E.glow(L.light, HX, cyR - H.r * 0.1, H.r * (2.5 + 0.5 * H.pulse), '#FFB4C6', 0.62 * reflGlow);
       }
-      const ra2 = emerged * (1 - E.ep(H.hy, CROSS - 60, CROSS - 380, 'linear'));
-      if (ra2 > 0.01) {
-        const yR = 2 * CROSS - H.hy;
-        E.lift(L.paint, E.blob(HX, yR + H.r * 0.1, H.r * 0.5, { rx: H.r * 0.6, ry: H.r * 0.45, seed: 6, irr: 0.15 }), 0.35 * ra2, H.r * 0.25);
-        E.glow(L.light, HX, yR, H.r * 2.2, '#FFC8B4', 0.35 * ra2);
+      if (emerged > 0.01) {
+        E.lift(L.paint, E.blob(HX, yR + H.r * 0.1, H.r * 0.5, { rx: H.r * 0.6, ry: H.r * 0.45, seed: 6, irr: 0.15 }), 0.26 * emerged, H.r * 0.25);
+        E.glow(L.light, HX, yR, H.r * 2.2, '#FFC8B4', 0.24 * emerged);
+      }
+      if (H.steady > 0.01) {
+        // the mirror image sinks into the water: a veil deepening downward, and a few calm horizontal glints
+        const top = CROSS + 4, bot = yR + 2.2 * H.r;
+        softSpot(L.paint, HX, bot - 0.35 * H.r, 330, 150, '#A47E98', 0.42 * H.steady);
+        softSpot(L.paint, HX, bot + 0.4 * H.r, 380, 150, '#A47E98', 0.3 * H.steady);
+        const rr = E.rng(57);
+        for (let i = 0; i < 9; i++) {
+          const yy = top + 40 + (bot - top - 70) * (i / 8) + (rr() - 0.5) * 12, ww = 26 + 60 * rr();
+          const xx = HX + (rr() - 0.5) * 300 + Math.sin(lt * 0.5 + i * 1.7) * 8;
+          const gl = new Path2D(); gl.ellipse(xx, yy, ww, 1.5, 0, 0, E.TAU);
+          E.lift(L.paint, gl, 0.5 * H.steady * (1 - 0.4 * i / 8), 0.8);
+        }
       }
       glitter(L, H.refl * 0.35 * (1 - H.rise), lt, HX, REF_Y - 60, REF_Y + 110, 31);
-      glitter(L, (0.35 + 0.65 * H.bright) * E.seg(H.rise, 0.35, 0.8) * (1 - E.ep(lt, tm.asc0 + 0.2, tm.asc1)), lt, HX, farEdge(HX) + 8, 1330, 77);
-      if (H.bright > 0) E.glow(L.light, HX, farEdge(HX) + 120, 300, '#FFD7B4', 0.28 * H.bright * (1 - H.asc));
+      // the heart's own light on the water between the surface and its reflection (calms as the water settles)
+      glitter(L, 0.5 * H.bright * E.seg(H.rise, 0.35, 0.8) * (1 - 0.45 * H.steady), lt, HX, CROSS - 6, yR + 80, 77);
       rings(L, lt, tm.reflIn, HX, REF_Y - 8, { n: 2, gap: 0.55, life: 1.9, maxR: 220, a: 0.45, seed: 2, r0: 100 });
-      rings(L, lt, tm.rise0 + 0.05, HX, CROSS + 8, { n: 4, gap: 0.26, life: 1.8, maxR: 420, a: 0.85, seed: 1 });
-      rings(L, lt, tm.asc0 + 0.12, HX, CROSS + 8, { n: 3, gap: 0.34, life: 1.7, maxR: 460, a: 0.5, seed: 4 });
+      rings(L, lt, tm.rise0 + 0.05, HX, CROSS + 8, { n: 3, gap: 0.28, life: 1.6, maxR: 380, a: 0.8, seed: 1 });
       E.restore(L);
 
       // ---- the far bank: a darker grassy lip with a wet edge at the waterline (lost toward the meadow)
@@ -513,31 +568,19 @@
       // dusk motes drifting low over the water
       E.motes(L.light, { x: 60, y: 880, w: 960, h: 360, n: 14, t: lt, seed: 23, color: '#FFE0A6', size: 2.4, a: 0.55 * (1 - E.ep(lt, tm.dim0, tm.dim1)), rise: 10 });
 
-      // ---- the real heart: above the surface it is solid (rises out of the water)
+      // ---- the real heart: above the surface it is solid (rises out of the water), then the rose opens around it
       const solidA = E.ep(lt, tm.rise0, tm.rise0 + 0.06);
-      if (solidA > 0 && H.gone < 1) {
-        const ga = 1 - H.gone;
+      if (solidA > 0) {
+        const sc = H.r / 100;
         E.save(L);
         // (only pigment and pencil are cut at the surface; its light may spill onto the water)
         if (emerged < 1) for (const cx of [L.paint, L.ink]) { cx.beginPath(); cx.rect(-3000, -6000, 9000, CROSS + 6000); cx.clip(); }
         E.translate(L, HX, H.hy);
-        roseOfLight(L, H.bloom, ga * (1 - 0.6 * H.asc), lt * 0.18, H.r / R1);
-        // a soft trail of light below it as it ascends
-        if (H.asc > 0.01) {
-          const len = 520 * Math.sqrt(H.asc);
-          const tg = L.light.createLinearGradient(0, 0, 0, len);
-          tg.addColorStop(0, E.rgba('#FFE6C4', 0.5 * ga));
-          tg.addColorStop(1, E.rgba('#FFE6C4', 0));
-          L.light.save();
-          L.light.globalCompositeOperation = 'lighter';
-          L.light.fillStyle = tg;
-          L.light.beginPath();
-          L.light.moveTo(-H.r * 0.55, 0); L.light.lineTo(H.r * 0.55, 0); L.light.lineTo(H.r * 0.12, len); L.light.lineTo(-H.r * 0.12, len);
-          L.light.fill();
-          L.light.restore();
-        }
+        rose(L, 0, H.bloom, 1, sc);
         E.translate(L, -HX, -H.hy);
-        PR.heartLight(L, HX, H.hy, H.r, { t: lt, glow: E.clamp(0.72 + 0.28 * H.bright + 0.3 * H.flash), alpha: solidA * ga });
+        PR.heartLight(L, HX, H.hy, H.r, { t: lt, glow: 0.7 + 0.1 * H.bright, alpha: solidA });
+        E.translate(L, HX, H.hy);
+        rose(L, 1, H.bloom, 1, sc);
         E.restore(L);
         // where it breaks the surface: a bright ring of disturbed water
         const dyc = (CROSS - H.hy) / (1.02 * H.r);
@@ -553,12 +596,6 @@
           E.glow(L.light, HX, CROSS, rw * 1.7, '#FFE9C8', 0.55 * ringA);
         }
       }
-      // sparkles trailing the ascent
-      if (H.asc > 0) E.motes(L.light, { x: HX - 170, y: H.hy - 40, w: 340, h: 640, n: 28, t: lt, seed: 9, color: '#FFE7C4', size: 3.2, a: 0.9 * E.seg(lt, tm.asc0, tm.asc0 + 0.3) * (1 - E.ep(lt, tm.asc1, tm.dim1)), rise: 140 });
-      // a soft flash of light at the transformation
-      if (H.flash > 0.01) E.glow(L.light, HX, H.hy, 560, '#FFF0D6', 0.5 * H.flash);
-      const ru = E.seg(lt, tm.inkilab - 0.02, tm.inkilab + 0.75);
-      if (ru > 0 && ru < 1) lightRing(L.light, HX, H.hy, 90 + E.ease.outCubic(ru) * 520, 36 + 40 * ru, 0.42 * Math.pow(1 - ru, 1.5));
 
       // ---- near shore (parallax 1) and foreground (parallax 1.2): reeds framing the lower corners
       setCam(L, c, 1);
@@ -569,14 +606,14 @@
       PR.flower(L, 150, 1660, 190, { kind: 'wild', t: lt, seed: 3, color: '#C98A8A' });
       PR.flower(L, 975, 1640, 170, { kind: 'tulip', t: lt + 2, seed: 6, color: '#D4876E' });
 
-      // ---- dusk deepens: the light fades down into s15's darkness
+      // ---- dusk deepens over the whole scene (the rose-heart's own glow lingers a moment), into s15's fade
       E.resetCamera(L);
       const dim = E.ep(lt, tm.dim0, tm.dim1, 'inOutSine');
       if (dim > 0) {
         E.wash(L.paint, E.rrect(-10, -10, 1100, 1940, 0), '#56557F', { alpha: 0.62 * dim, grad: { from: [0, 0], to: [0, 1920], stops: [[0, '#56557F'], [0.55, '#64628C'], [1, '#46446C']] } });
         L.light.save();
         L.light.globalCompositeOperation = 'destination-out';
-        L.light.fillStyle = E.rgba('#000000', 0.85 * dim);
+        L.light.fillStyle = E.rgba('#000000', 0.75 * dim);
         L.light.fillRect(0, 0, 1080, 1920);
         L.light.restore();
       }
@@ -587,11 +624,10 @@
       return [
         { t: g(tm.reflIn), type: 'bloom', gain: 0.3, pitch: 0.8 },
         { t: g(tm.ask - 0.04), type: 'heart', gain: 0.22 },
-        { t: g(tm.rise0 + 0.03), type: 'water', gain: 0.3, pitch: 1.1 },
-        { t: g(tm.rise0 + 0.12), type: 'swell', gain: 0.28, dur: 1.2 },
-        { t: g(tm.inkilab - 0.04), type: 'chime', gain: 0.36, pitch: 1.0 },
-        { t: g(tm.inkilab + 0.02), type: 'sparkle', gain: 0.22 },
-        { t: g(tm.asc0 + 0.1), type: 'whoosh', gain: 0.18, pitch: 1.3 },
+        { t: g(tm.rise0 + 0.03), type: 'water', gain: 0.28, pitch: 1.1 },
+        { t: g(tm.rise0 + 0.12), type: 'swell', gain: 0.24, dur: 1.1 },
+        { t: g(tm.bloom0 + 0.08), type: 'chime', gain: 0.28, pitch: 1.0 },
+        { t: g(tm.bloom0 + 0.3), type: 'bloom', gain: 0.18, pitch: 1.2 },
       ];
     },
   });

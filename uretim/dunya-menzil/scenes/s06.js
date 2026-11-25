@@ -6,8 +6,9 @@
    camera push starts towards the page. "kalem" 19.86: the pen is complete, its nib glints.
    "onunla" 20.82: close on the page, the pen writes — a line of script, then four small painted miniatures of HIS OWN
    deeds bloom from the nib one after another (the same man, in miniature: giving bread · planting a sapling ·
-   helping someone up · prostrating on a prayer rug, lit by a thin ray from above), a second script line between.
-   "a'malimize" 21.84: the camera starts down to the BOOK OF DEEDS rising below; it opens in a warm aura.
+   helping someone up · prostrating on a prayer rug), a second script line between.
+   "a'malimize" 21.84: the camera starts down to the BOOK OF DEEDS rising below; it opens in its own warm aura.
+   (KURALLAR 3: no light from above anywhere in this shot — no ray onto the one who prays, no column onto the book.)
    "geçecek" 22.42–22.80: the page lifts off, glides into the book and lands as its right-hand page.
    "çok şeyler yazılıyor" 22.84–24.0: on the book, the pen writes the facing page, leaves turn over our page and
    fill with lines (a third turn runs into the outgoing bleed to s07, centre 540, 960).
@@ -118,15 +119,16 @@
     give: { lean: 0.07, head: 0.1, nS: 1.22, nE: 0.28, fS: 1.06, fE: 0.42, nH: 0.08, nK: 0.05, fH: -0.1, fK: 0.08, nF: 0, fF: 0 },
     receive: { lean: 0.05, head: 0.06, nS: 1.08, nE: 0.5, fS: 0.95, fE: 0.62, nH: 0.05, nK: 0.04, fH: -0.07, fK: 0.06, nF: 0, fF: 0 },
     plant: { lean: 0.34, head: 0.32, nS: 0.55, nE: 0.2, fS: 0.42, fE: 0.28, nH: 1.42, nK: 1.42, fH: -0.12, fK: 1.52, nF: 0, fF: -0.35 },
-    help: { lean: 0.26, head: 0.3, nS: 0.98, nE: 0.02, fS: 0.12, fE: 0.35, nH: 0.12, nK: 0.08, fH: -0.16, fK: 0.12, nF: 0, fF: 0 },
-    seated: { lean: -0.2, head: -0.2, nS: 2.3, nE: 0.12, fS: -0.55, fE: 0.15, nH: 2.0, nK: 1.5, fH: 1.82, fK: 1.25, nF: 0.25, fF: 0.25 },
+    // (help / seated: their near hands meet in a clasp — skeleton positions checked against man.js's sideSkeleton)
+    help: { lean: 0.26, head: 0.3, nS: 1.25, nE: 0.04, fS: 0.12, fE: 0.35, nH: 0.12, nK: 0.08, fH: -0.16, fK: 0.12, nF: 0, fF: 0 },
+    seated: { lean: -0.2, head: -0.2, nS: 2.05, nE: 0.05, fS: -0.55, fE: 0.15, nH: 2.0, nK: 1.5, fH: 1.82, fK: 1.25, nF: 0.25, fF: 0.25 },
     sujood: { lean: 1.98, head: 0.18, nS: 0.28, nE: 1.22, fS: 0.18, fE: 1.28, nH: 0.3, nK: 1.85, fH: 0.24, fK: 1.8, nF: -0.5, fF: -0.5 },
   };
   const V = [
     { c: [84, 80], bg: '#EDC77E', name: 'bread' },
     { c: [-84, 80], bg: '#BFD89C', name: 'sapling' },
     { c: [84, 228], bg: '#B3CBE6', name: 'help' },
-    { c: [-84, 228], bg: '#EDB9A8', name: 'prayer', light: true },
+    { c: [-84, 228], bg: '#EDB9A8', name: 'prayer' },
   ];
   const CELL_HW = 60;
 
@@ -215,8 +217,8 @@
         PR.sapling(L, cx + 20, by - 1.5, 33, { t, growth: 0.35 + 0.65 * E.ease.outCubic(clamp(wsh * 1.4)), soil: true, seed: 3 });
         fig(L, cx - 16, by, 1, POSE.plant);
       } else if (v.name === 'help') {
-        fig(L, cx + 25, by, -1, POSE.seated, OTHER);
-        fig(L, cx - 22, by, 1, POSE.help);
+        fig(L, cx + 23, by, -1, POSE.seated, OTHER);
+        fig(L, cx - 23, by, 1, POSE.help);
       } else if (v.name === 'prayer') {
         // the prayer rug (seen almost edge-on): crimson field with a gold border
         const rug = new Path2D(); rug.moveTo(cx - 48, by - 1.5); rug.lineTo(cx + 42, by - 1.5); rug.lineTo(cx + 46, by + 4.5); rug.lineTo(cx - 44, by + 4.5); rug.closePath();
@@ -252,27 +254,6 @@
     }
     vScene(L, vi, wsh, t);
     E.restore(L);
-    // a thin ray of light from above onto the one who prays (divine presence only as light, no source)
-    const la = v.light ? E.ease.inOutSine(clamp(seg(p, 0.45, 1) * 0.7 + wsh * 0.3)) : 0;
-    if (la > 0) {
-      const lc = L.light;
-      const rx = cx + 14, top = by - 122;
-      const beam = (w0, w1, y1) => { const q = new Path2D(); q.moveTo(rx - w0, top); q.lineTo(rx + w0, top); q.lineTo(rx + w1, y1); q.lineTo(rx - w1 - 4, y1); q.closePath(); return q; };
-      // painted warm glaze (light alone cannot brighten the pale paper): stacked widths feather the edges and a
-      // vertical gradient lets the beam fade in from nowhere at the top
-      pc.save(); pc.globalCompositeOperation = 'multiply';
-      const pg2 = pc.createLinearGradient(0, top, 0, by);
-      pg2.addColorStop(0, E.rgba('#EDC779', 0)); pg2.addColorStop(0.45, E.rgba('#EDC779', 0.14 * la)); pg2.addColorStop(1, E.rgba('#E9BD66', 0.2 * la));
-      pc.fillStyle = pg2;
-      for (const [w0, w1] of [[7, 22], [5, 15], [3, 9]]) pc.fill(beam(w0, w1, by - 1));
-      pc.restore();
-      lc.save(); lc.globalCompositeOperation = 'lighter';
-      const g = lc.createLinearGradient(rx, top, rx, by);
-      g.addColorStop(0, E.rgba('#FFE7B0', 0)); g.addColorStop(0.5, E.rgba('#FFE7B0', 0.16 * la)); g.addColorStop(1, E.rgba('#FFF1D0', 0.08 * la));
-      lc.fillStyle = g; lc.fill(beam(5, 18, by));
-      lc.restore();
-      E.glow(lc, rx - 4, by - 10, 26, '#FFE9B8', 0.22 * la);
-    }
   }
   /** pen head for a vignette at reveal p (page-local): along the ground line, then painting outward in a loop */
   function vHead(vi, p) {
@@ -628,33 +609,23 @@
       const bs = bookState(t);
       const bk = { x: BOOK.x, y: BOOK.y + 4 * Math.sin(t * 1.3) };
       if (bs.appear > 0) {
-        // a warm aura behind the book (painted, so it reads on the pale sky) + rising motes of light
+        // a warm aura around the book, centred on it (painted, so it reads on the pale sky) + a few motes hovering
+        // close around it (they only twinkle in place: nothing streams up toward the sky — KURALLAR 3)
         const au = bs.appear * (0.55 + 0.45 * seg(t, OPEN0, OPEN1 + 0.4)) * (1 + 0.3 * bump(t, FLY1 - 0.05, FLY1 + 0.7));
-        const ag = L.paint.createRadialGradient(bk.x, bk.y - 30, 20, bk.x, bk.y - 30, 360);
+        const ag = L.paint.createRadialGradient(bk.x, bk.y, 20, bk.x, bk.y, 360);
         ag.addColorStop(0, E.rgba('#F6D592', 0.6 * au)); ag.addColorStop(0.45, E.rgba('#F3D6A0', 0.28 * au)); ag.addColorStop(1, E.rgba('#F3D6A0', 0));
-        L.paint.save(); L.paint.globalCompositeOperation = 'multiply'; L.paint.fillStyle = ag; L.paint.fillRect(bk.x - 370, bk.y - 400, 740, 740); L.paint.restore();
-        E.glow(L.light, bk.x, bk.y - 30, 320, '#FFE4AE', 0.34 * au);
-        // a soft column of light from above onto the open book (no source), feathered from stacked veils
-        const col = au * seg(t, OPEN0, OPEN1 + 0.3);
-        if (col > 0) {
-          const lc = L.light;
-          lc.save(); lc.globalCompositeOperation = 'lighter';
-          const g = lc.createLinearGradient(0, bk.y - 560, 0, bk.y + 40);
-          g.addColorStop(0, E.rgba('#FFF0CC', 0)); g.addColorStop(0.55, E.rgba('#FFF0CC', 0.035 * col)); g.addColorStop(1, E.rgba('#FFF0CC', 0.06 * col));
-          lc.fillStyle = g;
-          for (let i = 0; i < 5; i++) {
-            const w0 = 30 + i * 22, w1 = 120 + i * 40, sway = 6 * Math.sin(t * 0.7 + i);
-            lc.beginPath(); lc.moveTo(bk.x - w0 + sway, bk.y - 560); lc.lineTo(bk.x + w0 + sway, bk.y - 560); lc.lineTo(bk.x + w1, bk.y + 40); lc.lineTo(bk.x - w1, bk.y + 40); lc.closePath(); lc.fill();
-          }
-          lc.restore();
-        }
-        E.motes(L.light, { x: bk.x - 230, y: bk.y - 360, w: 460, h: 360, n: 14, t, seed: 71, color: '#FFE9B8', size: 2.2, a: 0.7 * au, rise: 40 });
+        L.paint.save(); L.paint.globalCompositeOperation = 'multiply'; L.paint.fillStyle = ag; L.paint.fillRect(bk.x - 370, bk.y - 370, 740, 740); L.paint.restore();
+        E.glow(L.light, bk.x, bk.y, 320, '#FFE4AE', 0.34 * au);
+        E.motes(L.light, { x: bk.x - 250, y: bk.y - 190, w: 500, h: 300, n: 14, t, seed: 71, color: '#FFE9B8', size: 2.2, a: 0.6 * au, rise: 0 });
         E.save(L);
         E.alpha(L, bs.appear);
         const by = bk.y + (1 - bs.appear) * 40;
-        const glow = 0.3 + 0.45 * seg(t, OPEN0, OPEN1 + 0.3) + 0.25 * bump(t, FLY1 - 0.05, FLY1 + 0.6);
-        PR.book(L, bk.x, by, BOOK.w, BOOK.h, { open: bs.open, pages: bs.pages, flip: bs.flip, pages2: bs.pages2, glow, t, shadow: true });
+        // (the prop's own glow is off: it fans rays upward from the book. Its warmth comes from the aura above
+        //  and a soft light on the open pages, centred on the book itself.)
+        PR.book(L, bk.x, by, BOOK.w, BOOK.h, { open: bs.open, pages: bs.pages, flip: bs.flip, pages2: bs.pages2, glow: 0, t, shadow: true });
         E.restore(L);
+        const pglow = bs.appear * bs.open * (0.6 + 0.4 * bump(t, FLY1 - 0.05, FLY1 + 0.6));
+        if (pglow > 0) E.glow(L.light, bk.x, by, BOOK.w * 1.25, '#FFE6B4', 0.22 * pglow);
       }
 
       // ---------------- the page ----------------
