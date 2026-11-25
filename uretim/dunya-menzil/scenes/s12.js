@@ -30,6 +30,9 @@
   const GLOBE = { x: 532, y: 1058, r: 140 };
   const FOOT = { x: GLOBE.x, y: GLOBE.y + GLOBE.r * 0.93 };
   const MAN = { x: 250, y: 1212, h: 404 };
+  /** the gardener's stance, shared by every pose he blends through in s11–s13: both soles exactly on the ground
+      (two-bone IK: near ankle +0.0096h, far −0.0284h from the hip, far knee 0.04), so no blend can move a foot */
+  const LEGS = { nH: 0.07937, nK: 0.11951, fH: -0.04005, fK: 0.04, nF: 0, fF: 0 };
 
   const cam = (L, C, d) => E.camera(L, { x: 540 + (C.x - 540) * d, y: 960 + (C.y - 960) * d, zoom: 1 + (C.z - 1) * d });
   const poly = (pts) => {
@@ -264,6 +267,14 @@
 
   // ==== WORLD END ====
 
+  /** E.props.heartLight without the prop's own twinkling motes: they fell on his coat, sleeve and palm (light specks on
+      the figure). The heart's body, inner light, glow and pulse are unchanged. */
+  function heartLight(L, x, y, r, o) {
+    const motes = E.motes;
+    E.motes = () => {};
+    try { PR.heartLight(L, x, y, r, o); } finally { E.motes = motes; }
+  }
+
   const COL = ['#D8462F', '#DE9F2E', '#C65E7C'];          // hırs · talep · muhabbet
   const NAMES = ['hırs', 'talep', 'muhabbet'];
 
@@ -377,8 +388,14 @@
       L.light.save(); L.light.globalCompositeOperation = 'destination-out'; L.light.globalAlpha = 0.45; L.light.fillRect(0, 0, E.W, E.H); L.light.restore();
 
       // ---------------- the man (foreground, screen space)
-      const push = 1 + 0.008 * lt;                                   // a slow, barely felt push-in on him
-      const MX = 188 - lt * 5, MY = 1490 + 2.4 * lt, MH = 990 * push;
+      // he stands on the meadow (E.props.ground, drawn with the depth-0.88 camera): his ground point is a fixed point
+      // of that meadow and his height follows its zoom, so the slow camera push carries him with the grass under his
+      // feet (no glide, no growth against the ground). At lt = 0: (188, 1490), h 990 on screen.
+      const GD = 0.88;
+      const camD = (q) => ({ x: 540 + (q.x - 540) * GD, y: 960 + (q.y - 960) * GD, z: 1 + (q.z - 1) * GD });
+      const c0 = camD({ x: 636, y: 1004, z: 1.5 }), cN = camD(C);
+      const W0 = [c0.x + (188 - 540) / c0.z, c0.y + (1490 - 960) / c0.z];
+      const MX = (W0[0] - cN.x) * cN.z + 540, MY = (W0[1] - cN.y) * cN.z + 960, MH = 990 * cN.z / c0.z;
       const gaze = { lean: -0.03, head: -0.3, nS: 0.08, nE: 0.16, fS: -0.03, fE: 0.18, nH: 0.04, nK: 0.04, fH: -0.04, fK: 0.04 };
       const calm = { lean: 0.04, head: 0.2, nS: 0.08, nE: 0.14, fS: -0.04, fE: 0.16, nH: 0.04, nK: 0.04, fH: -0.04, fK: 0.04 };
       const surge = { lean: -0.06, head: -0.04, nS: -0.26, nE: 0.3, fS: -0.36, fE: 0.36, nH: 0.05, nK: 0.05, fH: -0.06, fK: 0.06 };
@@ -386,7 +403,8 @@
       const direct = { lean: 0.03, head: -0.14, nS: 0.78, nE: 0.95, nW: -0.45, fS: 0.12, fE: 0.3, nH: 0.06, nK: 0.05, fH: -0.07, fK: 0.07 };
       let pose = E.man.lerp(gaze, calm, E.ep(lt, tOna - 0.05, tOna + 0.65, 'inOutCubic'));   // from the gate down to the nursery
       pose = E.man.lerp(pose, surge, E.ep(lt, tB[0] - 0.15, tB[0] + 0.35, 'outCubic'));
-      pose = E.man.lerp(pose, direct, E.ep(lt, tBraid - 0.05, tBraid + 0.75, 'inOutCubic'));
+      pose = E.man.lerp(pose, direct, E.ep(lt, tBraid - 0.05, tBraid + 0.75, 'inOutSine'));
+      Object.assign(pose, LEGS);   // one stance throughout: planted feet
       // a small recoil at each burst
       let kick = 0;
       for (const tb of tB) kick += Math.exp(-Math.pow((lt - tb - 0.12) / 0.12, 2));
@@ -402,7 +420,7 @@
       const hr = 32 * (0.6 + 0.4 * kindle) * (1 + 0.25 * sedit + 0.12 * kick);
       if (kindle > 0) {
         E.glow(L.light, O[0], O[1], 120 + 80 * sedit, '#FFC9B0', 0.35 * kindle + 0.4 * sedit);
-        PR.heartLight(L, O[0], O[1], hr, { t, glow: 0.6 + 0.4 * sedit, alpha: kindle, pulse: 1.4 });
+        heartLight(L, O[0], O[1], hr, { t, glow: 0.6 + 0.4 * sedit, alpha: kindle, pulse: 1.4 });
       }
       if (sedit > 0.02) {
         // "şedit": two hard pulse rings (kept around the chest, never wide enough to circle his head like a halo)

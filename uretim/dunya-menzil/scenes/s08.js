@@ -21,7 +21,7 @@
   const MH = 700;                     // man height
   const XF = 250;                     // man x after stepping back (s07)
   const SHX = 0.62, SHY = 0.2;        // cast-shadow projection (point at height z -> x + z·SHX, GY + z·SHY)
-  const HZ = 925, GK = 0.82;          // E.props.ground top (world y) and its parallax depth
+  const HZ = 925, GK = 1.0;           // E.props.ground top (world y) and its parallax depth
 
   // ---------------- helpers ----------------
   const ep = E.ep, seg = E.seg, lerp = E.lerp, clamp = E.clamp;
@@ -64,6 +64,14 @@
   /** camera for a parallax layer of depth k (1 = subject plane) */
   function camK(L, c, k) {
     E.camera(L, { x: 540 + (c.x - 540) * k, y: 960 + (c.y - 960) * k, zoom: 1 + (c.z - 1) * k });
+  }
+
+  /** E.props.heartLight without the prop's own twinkling motes: they fell on his coat, sleeve and palm (light specks on
+      the figure). The heart's body, inner light, glow and pulse are unchanged. */
+  function heartLight(L, x, y, r, o) {
+    const motes = E.motes;
+    E.motes = () => {};
+    try { PR.heartLight(L, x, y, r, o); } finally { E.motes = motes; }
   }
 
   // ---------------- the man: grounding offset, skeleton points, arm IK ----------------
@@ -394,7 +402,8 @@
 
       // ---- man state
       const mx = XF - 34;   // (a touch further left than in s07 so he is fully outside the first framing)
-      const kH = ep(lt, W.hissedip - 0.06, W.hissedip + 0.5, 'inOutCubic');       // hand to the heart
+      // hand to the heart: an unhurried gesture (≈0.14 rad/frame at most), settled before "bildik"
+      const kH = ep(lt, W.hissedip - 0.22, W.hissedip + 0.6, 'inOutSine');
       const kO = ep(lt, W.bildik + 0.55, W.bildik + 1.2, 'inOutSine');            // ...then cradles it (as s09 opens)
       const nod = bump(lt, W.bildik + 0.02, W.bildik + 0.7);
       let pose = E.man.pose.stand();
@@ -412,7 +421,17 @@
       }
       const NH = nearHand(mx, pose);
       const palmHeart = [NH.pc[0] - 0.012 * MH, NH.pc[1] + 0.004 * MH];
-      const [hx2, hy2] = [lerp(chest[0], palmHeart[0], kH), lerp(chest[1], palmHeart[1], kH)];
+      // the heart stays in his chest while the hand comes up to it: it only eases forward to just under the palm as
+      // the hand arrives (the palm of the finished gesture, never the moving hand, so it does not drift down to his
+      // waist with it); from the cradle on it rests in the palm
+      let hx2, hy2;
+      if (kO > 0) [hx2, hy2] = palmHeart;
+      else {
+        const ph = { ...pose, nS: 0.0, nE: 2.32, nW: 0.86 };
+        const NH1 = nearHand(mx, ph);
+        const k = E.smooth(seg(kH, 0.45, 1));
+        [hx2, hy2] = [lerp(chest[0], NH1.pc[0] - 0.012 * MH, k), lerp(chest[1], NH1.pc[1] + 0.004 * MH, k)];
+      }
 
       castShadows(L, mx, pose, gyc, gx);
       meadowDetails(L, T7);
@@ -492,7 +511,7 @@
 
       // ---- heart-light + the hand on it
       const hglow = 0.42 + 0.45 * kH + 0.12 * nod;
-      PR.heartLight(L, hx2, hy2, (0.033 + 0.005 * kH - 0.01 * kO) * MH, { t: lt + HCLK, glow: hglow, pulse: 1 + kH });
+      heartLight(L, hx2, hy2, (0.033 + 0.005 * kH - 0.01 * kO) * MH, { t: lt + HCLK, glow: hglow, pulse: 1 + kH });
       const ha = seg(kH, 0.35, 0.65) * (1 - kO);
       if (ha > 0.01) {
         // redraw the hand over the heart (clipped to a capsule around the hand) — fingers resting on it, the light
@@ -514,7 +533,8 @@
         E.glow(L.light, hx2, hy2, 230, '#FFE2C6', 0.35 * a);
         E.save(L);
         E.alpha(L, clamp(rg * 3) * (1 - 0.3 * rg));
-        E.motes(L.light, { x: hx2 - 90, y: hy2 - 260, w: 180, h: 280, n: 12, t: lt, seed: 33, color: '#FFE6CC', size: 3.2, a: 0.8, rise: 40 });
+        // a few warm motes in the air just in front of him (kept off his face, hand and coat: no specks on the figure)
+        E.motes(L.light, { x: hx2 + 78, y: hy2 - 240, w: 150, h: 250, n: 9, t: lt, seed: 33, color: '#FFE6CC', size: 3.2, a: 0.8, rise: 40 });
         E.restore(L);
       }
 

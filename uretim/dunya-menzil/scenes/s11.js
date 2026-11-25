@@ -33,6 +33,9 @@
   const GLOBE = { x: 532, y: 1058, r: 140 };
   const FOOT = { x: GLOBE.x, y: GLOBE.y + GLOBE.r * 0.93 };
   const MAN = { x: 250, y: 1212, h: 404 };
+  /** the gardener's stance, shared by every pose he blends through in s11–s13: both soles exactly on the ground
+      (two-bone IK: near ankle +0.0096h, far −0.0284h from the hip, far knee 0.04), so no blend can move a foot */
+  const LEGS = { nH: 0.07937, nK: 0.11951, fH: -0.04005, fK: 0.04, nF: 0, fF: 0 };
 
   const cam = (L, C, d) => E.camera(L, { x: 540 + (C.x - 540) * d, y: 960 + (C.y - 960) * d, zoom: 1 + (C.z - 1) * d });
   const poly = (pts) => {
@@ -338,8 +341,9 @@
       const haze = E.ep(lt, tGate - 0.15, tGate + 0.4, 'outCubic');
       const appear = E.ep(lt, tGate + 0.05, tGate + 0.75, 'inOutSine');
       const gOpen = E.ep(lt, tOpen, tOpen + 1.0, 'inOutCubic');
-      const look = E.ep(lt, tDerk - 0.05, tDerk + 0.45, 'inOutCubic');
-      const nod = Math.sin(Math.PI * E.seg(lt, tDerk + 0.42, tDerk + 0.8));
+      // an unhurried look up from the saplings to the gate, centred on "derk", then the small nod
+      const look = E.ep(lt, tDerk - 0.22, tDerk + 0.5, 'inOutSine');
+      const nod = Math.sin(Math.PI * E.seg(lt, tDerk + 0.48, tDerk + 0.86));
 
       // camera: on the man and his world, then a pull-back that reveals the nursery and the gate; slow push after
       // (ends on the reference wide framing x 560 · y 950 · z 1.245 that s13 cuts back to; the whole nursery and its
@@ -372,9 +376,15 @@
       // the gardener: tending (bent toward his world / the saplings) → straightens and looks up at the gate
       const tend = { lean: 0.15, head: 0.36, nS: 0.62 + 0.04 * Math.sin(lt * 1.3), nE: 0.32, nW: 0.2, fS: 0.18, fE: 0.42, nH: 0.06, nK: 0.1, fH: -0.07, fK: 0.06 };
       const gaze = { lean: -0.03, head: -0.36, nS: 0.08, nE: 0.16, fS: -0.03, fE: 0.18, nH: 0.04, nK: 0.04, fH: -0.04, fK: 0.04 };
-      const pose = E.man.lerp(tend, gaze, look);
+      const pose = Object.assign(E.man.lerp(tend, gaze, look), LEGS);   // one stance throughout: planted feet
       pose.head += 0.13 * nod + 0.012 * Math.sin(lt * 1.4);
       pose.lean += 0.006 * Math.sin(lt * 1.1);
+      // a few drifting pollen motes in the morning air (ambient), laid down before the gardener so his figure
+      // hides the ones behind it (no speck of light ever sits on his face, hands or coat)
+      E.save(L);
+      E.resetCamera(L);
+      E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 3, seed: 77, size: 2.6, a: 0.45, rise: 18, color: '#FFF1CF' });
+      E.restore(L);
       E.man.shadow(L, MAN.x + 8, MAN.y, MAN.h);
       E.man.draw(L, { x: MAN.x, y: MAN.y, h: MAN.h, view: 'side', facing: 1, pose });
 
@@ -399,10 +409,6 @@
 
       fgCam(L, C);
       foreground(L, t);
-
-      E.resetCamera(L);
-      // a few drifting pollen motes in the morning air (ambient, the same in s12 / s13)
-      E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 3, seed: 77, size: 2.6, a: 0.45, rise: 18, color: '#FFF1CF' });
     },
     sfx() {
       const T = (i) => E.T(i);

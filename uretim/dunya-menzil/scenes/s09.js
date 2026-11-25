@@ -710,7 +710,7 @@
   const HCLK = S07.dur + (0.15 + 2.5 - (E.T(47) - S07.start + 0.05));   // s08's heart clock offset
   const LT7 = S07.dur;                                                   // s08's idle clock offset
   // s08's parallax layers at its final camera, expressed in this shot's world
-  const GK8 = 0.82, SK8 = 0.15;
+  const GK8 = 1.0, SK8 = 0.15;
   const LAY = (k) => ({ x: 540 + (B8.x - 540) * k, y: 960 + (B8.y - 960) * k, z: 1 + (B8.z - 1) * k });
   const G8 = LAY(GK8), K8 = LAY(SK8);
   const HZ8 = 925;                                 // s08 ground top (in its ground space)

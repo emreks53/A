@@ -32,6 +32,9 @@
   const GLOBE = { x: 532, y: 1058, r: 140 };
   const FOOT = { x: GLOBE.x, y: GLOBE.y + GLOBE.r * 0.93 };
   const MAN = { x: 250, y: 1212, h: 404 };
+  /** the gardener's stance, shared by every pose he blends through in s11–s13: both soles exactly on the ground
+      (two-bone IK: near ankle +0.0096h, far −0.0284h from the hip, far knee 0.04), so no blend can move a foot */
+  const LEGS = { nH: 0.07937, nK: 0.11951, fH: -0.04005, fK: 0.04, nF: 0, fF: 0 };
 
   const cam = (L, C, d) => E.camera(L, { x: 540 + (C.x - 540) * d, y: 960 + (C.y - 960) * d, zoom: 1 + (C.z - 1) * d });
   const poly = (pts) => {
@@ -265,6 +268,14 @@
   }
 
   // ==== WORLD END ====
+
+  /** E.props.heartLight without the prop's own twinkling motes: they fell on his coat, sleeve and palm (light specks on
+      the figure). The heart's body, inner light, glow and pulse are unchanged. */
+  function heartLight(L, x, y, r, o) {
+    const motes = E.motes;
+    E.motes = () => {};
+    try { PR.heartLight(L, x, y, r, o); } finally { E.motes = motes; }
+  }
 
   const COL = ['#D8462F', '#DE9F2E', '#C65E7C'];
   const FRUIT = ['#D1453F', '#E58A3A'];             // pomegranate (left block) · apple (right block)
@@ -506,7 +517,14 @@
       let pose = E.man.lerp(direct, guide, E.ep(lt, tPour - 0.35, tPour + 0.3, 'inOutCubic'));
       pose = E.man.lerp(pose, watch, E.ep(lt, tH - 0.25, tH + 0.55, 'inOutCubic'));
       pose = E.man.lerp(pose, offer, E.ep(lt, tC - 0.15, tC + 0.6, 'inOutCubic'));
+      Object.assign(pose, LEGS);   // one stance throughout: planted feet
       pose.head += 0.01 * Math.sin(lt * 1.5);
+      // a few drifting pollen motes in the morning air (ambient), laid down before the gardener so his figure
+      // hides the ones behind it (no speck of light ever sits on his face, hands or coat)
+      E.save(L);
+      E.resetCamera(L);
+      E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 9, seed: 77, size: 2.6, a: 0.45, rise: 18, color: '#FFF1CF' });
+      E.restore(L);
       E.man.shadow(L, MAN.x + 8, MAN.y, MAN.h);
       E.man.draw(L, { x: MAN.x, y: MAN.y, h: MAN.h, view: 'side', facing: 1, pose });
 
@@ -522,8 +540,9 @@
       const s2 = [tip[0] - 70 + 30 * q - 10 * turn, E.lerp(E.lerp(560, 760, q), 590, turn)];
       const N = 120;
       const spine = resample(Array.from({ length: 60 }, (_, k) => bez(O, s1, s2, tip, k / 59)), N);
-      PR.heartLight(L, O[0], O[1], 15, { t, glow: 0.9 });
-      E.glow(L.light, O[0], O[1], 90, '#FFC9B0', 0.45);
+      // (a modest glow: the small figure's heart reads as a rose heart, not a white blot over his chest and arm)
+      heartLight(L, O[0], O[1], 15, { t, glow: 0.6 });
+      E.glow(L.light, O[0], O[1], 55, '#FFC9B0', 0.28);
       for (let i = 0; i < 3; i++) {
         const pts = spine.map((p, k) => {
           const u = k / (N - 1);
@@ -567,7 +586,6 @@
         E.wash(L.paint, full, '#F6D8B0', { mode: 'over', alpha: 0.24 * eve, grad: { from: [0, 0], to: [0, E.H], stops: [[0, E.rgba('#F0C2B4', 1)], [0.45, E.rgba('#F8DDB0', 0.75)], [1, E.rgba('#EFC896', 0.6)]] } });
         E.wash(L.paint, full, '#F2C48A', { alpha: 0.4 * eve, grad: { from: [0, 0], to: [0, E.H], stops: [[0, E.rgba('#E2A0A0', 1)], [0.42, E.rgba('#F0C080', 0.85)], [1, E.rgba('#E2A26E', 1)]] } });
       }
-      E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 9, seed: 77, size: 2.6, a: 0.45, rise: 18, color: '#FFF1CF' });
     },
     sfx() {
       const T = (i) => E.T(i);

@@ -23,7 +23,10 @@
   const MH = 700;                     // man height
   const XE = 398, XF = 250;           // man x while embracing / after stepping back
   const SHX = 0.62, SHY = 0.2;        // cast-shadow projection (point at height z -> x + z·SHX, GY + z·SHY)
-  const HZ = 925, GK = 0.82;          // E.props.ground top (world y) and its parallax depth
+  // E.props.ground top (world y) and its parallax depth. The meadow is the ground he stands on, so it moves with the
+  // subject plane (depth 1): at 0.82 the crane down slid its texture ~100 px past his planted feet (up to 7 px/frame
+  // at 28.3–28.6). The sky and clouds (depth 0.15) still give the crane its depth.
+  const HZ = 925, GK = 1.0;
 
   // ---------------- helpers ----------------
   const ep = E.ep, seg = E.seg, lerp = E.lerp, clamp = E.clamp;
@@ -83,6 +86,14 @@
     return E.smoothPath(pts, true);
   }
 
+  /** E.props.heartLight without the prop's own twinkling motes: they fell on his coat, sleeve and palm (light specks on
+      the figure). The heart's body, inner light, glow and pulse are unchanged. */
+  function heartLight(L, x, y, r, o) {
+    const motes = E.motes;
+    E.motes = () => {};
+    try { PR.heartLight(L, x, y, r, o); } finally { E.motes = motes; }
+  }
+
   // ---------------- the man: grounding offset, skeleton points, arm IK ----------------
   const R = E.man.R;
   const rot = (p, a) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a)];
@@ -122,10 +133,10 @@
     return [a1, a2 - a1];
   }
   /** hug pose for the man at x = mx: wrists placed on the globe (world coords) */
-  function hugPose(mx, k, gyc) {
+  function hugPose(mx, k, gyc, legs) {
     const Pz = {
       lean: lerp(0.07, 0.13, k), head: lerp(0.14, 0.34, k),
-      nH: 0.05, nK: 0.05, fH: -0.07, fK: 0.08, nF: 0, fF: 0, nW: 0.25, fW: 0.2,
+      nH: legs.nH, nK: legs.nK, fH: legs.fH, fK: legs.fK, nF: 0, fF: 0, nW: 0.25, fW: 0.2,
     };
     const dy = groundDy(MH, Pz);
     const S = shoulderOf(MH, Pz.lean);
@@ -137,19 +148,38 @@
     return Pz;
   }
 
-  /** step back with planted feet: body x and leg angles */
+  const smin = (a, b, k) => { const q = clamp(0.5 + (0.5 * (b - a)) / k, 0, 1); return lerp(b, a, q) - k * q * (1 - q); };
+  /** step back with planted feet: body x and leg angles (both legs by two-bone IK from the hip to the ankle).
+      One foot at a time (near foot s 0–0.47, far foot 0.53–1, a moment of double support between them); a planted
+      foot stays exactly where it is. The swing foot rises clear of the grass before it travels and its travel
+      ends before it comes down (lift sin³: the knee bends and straightens smoothly, toe slightly down, lands
+      toe-first). The hip height is the soft minimum of both legs' reach with the knees softening a little during
+      the step and settling 0.35 s after it, so no target is ever out of reach and no knee snaps straight.
+      Before the step (s = 0) this is the standing stance with both soles exactly on the ground. */
   function stepBack(lt, t0, t1, x0, x1, h) {
-    const s = seg(lt, t0, t1);
-    const bx = lerp(x0, x1, E.ease.inOutSine(s));
-    const Lg = 0.475 * h, off = 0.016 * h;
-    const sa = E.ease.inOutSine(seg(s, 0.0, 0.6)), sb = E.ease.inOutSine(seg(s, 0.4, 1.0));
-    const fN = lerp(x0, x1, sa) + off, fF = lerp(x0, x1, sb) - off;
-    const liftN = Math.sin(Math.PI * seg(s, 0, 0.6)), liftF = Math.sin(Math.PI * seg(s, 0.4, 1));
-    return {
-      x: bx, s,
-      nH: Math.asin(clamp((fN - bx) / Lg, -0.8, 0.8)), fH: Math.asin(clamp((fF - bx) / Lg, -0.8, 0.8)),
-      nK: 0.03 + 0.55 * liftN, fK: 0.03 + 0.55 * liftF, nF: -0.1 * liftN, fF: -0.1 * liftF,
+    const s = seg(lt, t0, t1), SP = 0.47;
+    const ios = E.ease.inOutSine;
+    const uA = seg(s, 0, SP), uB = seg(s, 1 - SP, 1);
+    // the body drifts back over the whole step, a little more while each foot travels
+    const bx = lerp(x0, x1, 0.5 * ios(s) + 0.25 * ios(seg(s, 0, SP + 0.03)) + 0.25 * ios(seg(s, 1 - SP - 0.03, 1)));
+    const offN = 0.0072 * h, offF = -0.0213 * h, T = R.thigh * h, S = R.shin * h, LL = T + S;
+    const fN = lerp(x0, x1, ios(seg(uA, 0.14, 0.8))) + offN, fF = lerp(x0, x1, ios(seg(uB, 0.14, 0.8))) + offF;
+    const liftN = Math.sin(Math.PI * uA) ** 3, liftF = Math.sin(Math.PI * uB) ** 3;
+    const clr = 0.034 * h, ank = 0.035 * h;
+    const aN = [fN - bx, ank + clr * liftN], aF = [fF - bx, ank + clr * liftF];   // ankle: x from hip, height
+    const w = Math.sin(Math.PI * seg(lt, t0, t1 + 0.35)) ** 2;
+    const e = 0.99989 - 0.008 * w;
+    const reach = (a) => a[1] + Math.sqrt(Math.max(0, (LL * e) ** 2 - a[0] ** 2));
+    const Y = smin(reach(aN), reach(aF), 0.02 * h * w + 1e-6);
+    const ik = (a) => {
+      const dx = a[0], dy = Y - a[1];
+      const D = clamp(Math.hypot(dx, dy), Math.abs(T - S) + 1e-3, LL * 0.9999);
+      const al = Math.acos(clamp((T * T + D * D - S * S) / (2 * T * D), -1, 1));
+      const kn = Math.acos(clamp((T * T + S * S - D * D) / (2 * T * S), -1, 1));
+      return [Math.atan2(dx, dy) + al, Math.PI - kn];
     };
+    const [nH, nK] = ik(aN), [fH, fK] = ik(aF);
+    return { x: bx, s, nH, nK, fH, fK, nF: -0.12 * liftN, fF: -0.12 * liftF };
   }
 
   // ---------------- timing (local seconds) ----------------
@@ -373,19 +403,19 @@
       const kHug = ep(lt, W.eger - 0.12, W.dunyamizi + 0.5, 'inOutSine');           // draws the globe closer
       const kRel = ep(lt, W.sonra + 0.02, W.sonra + 0.62, 'inOutSine');              // releases the embrace
       const st = stepBack(lt, W.gorduk - 0.02, W.ki + 0.78, XE, XF, MH);
-      const mx = lerp(XE - 8 * (1 - kHug), st.x, seg(lt, W.gorduk - 0.02, W.gorduk));
+      const mx = st.x;   // planted: XE until the step starts (no glide while he draws the globe close)
       const breath = Math.sin(lt * 2.0) * 0.01;
-      const hp = hugPose(XE - 8 * (1 - kHug), kHug, gyc);
+      const hp = hugPose(XE, kHug, gyc, stepBack(0, 1, 2, XE, XF, MH));   // (the standing stance, s = 0)
       // gaze after letting go: at the world (level) → down to the hourglass at "hayatımız" → back up at "edildiği"
       const down = ep(lt, W.hayatimiz - 0.12, W.hayatimiz + 0.5, 'inOutSine') * (1 - ep(lt, W.edildigi - 0.05, W.icin + 0.35, 'inOutSine'));
       let pose = E.man.lerp(hp, E.man.pose.stand(), kRel);
       pose.lean += breath;
       pose.head += kRel * (0.07 + 0.24 * down) + 0.025 * Math.sin(lt * 0.9);
       pose.lean += kRel * 0.035 * down;
+      // the legs always come from the planted-feet step (before it starts: the same standing stance, both soles
+      // exactly on the ground), so nothing blends between stances and no foot can slide
+      for (const q of ['nH', 'fH', 'nK', 'fK', 'nF', 'fF']) pose[q] = st[q];
       if (lt > W.gorduk - 0.02) {
-        // the planted-feet step takes over the legs (blended in, so the stance does not pop)
-        const kb = E.smooth(seg(lt, W.gorduk - 0.02, W.gorduk + 0.22));
-        for (const q of ['nH', 'fH', 'nK', 'fK', 'nF', 'fF']) pose[q] = lerp(pose[q] || 0, st[q], kb);
         pose.lean -= 0.035 * bump(lt, W.gorduk, W.ki + 0.78);
         // arms swing a touch with the step
         const sw = bump(lt, W.gorduk, W.ki + 0.78);
@@ -457,7 +487,7 @@
           if (a > 0.005) warmthRing(L, hx, hy, toG, rr, 60 * (1 - 0.4 * u) + 16, a);
         });
         E.glow(L.light, lerp(hx, GX, 0.55), lerp(hy, gyc, 0.55), 300, '#FFD8AE', 0.2 * love * (1 - 0.75 * reveal));
-        PR.heartLight(L, hx, hy, hr, { t: lt + hOff, glow: 0.55 + 0.35 * love - 0.25 * reveal, pulse: 1.3 });
+        heartLight(L, hx, hy, hr, { t: lt + hOff, glow: 0.55 + 0.35 * love - 0.25 * reveal, pulse: 1.3 });
         // rose-gold sparks drifting along a gentle arc from the heart into the world
         const sa = love * (1 - kRel);
         if (sa > 0.01) {
@@ -470,7 +500,8 @@
             const off = 26 * Math.sin(j * 2.3 + lt * 1.7);
             const x = q * q * hx + 2 * q * u * cp[0] + u * u * tg[0] + off * u * q;
             const y = q * q * hy + 2 * q * u * (cp[1] + off) + u * u * tg[1];
-            const al = sa * Math.sin(Math.PI * u) * (0.6 + 0.4 * Math.sin(lt * 5 + j));
+            // (they show only once clear of his chest, arm and face: no specks on the figure)
+            const al = sa * Math.sin(Math.PI * u) * E.smooth(seg(u, 0.32, 0.52)) * (0.6 + 0.4 * Math.sin(lt * 5 + j));
             const sz = 5 + 3.5 * Math.sin(j * 1.7) ** 2;
             wash(p, E.blob(x, y, sz * 1.6, { seed: j, irr: 0.15, n: 16 }), E.mix(P.rose, P.gamboge, (j % 3) / 3), { alpha: 0.36 * al, soft: sz * 0.5 });
             lift(p, E.blob(x, y, sz * 0.55, { seed: j + 5, irr: 0.1, n: 12 }), 0.9 * al, 1.5);

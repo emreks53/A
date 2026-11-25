@@ -49,7 +49,7 @@ tools/render.cjs      headless renderer (see "Previewing")
   `L.ink.save(); L.ink.globalCompositeOperation='destination-out'; L.ink.fill(path); L.ink.restore();`
   (the man does this automatically).
 - **L.light** — glows/light on transparent, screen-blended last (`E.glow`, `E.rays`, `E.motes`). Use for
-  divine light, sparkles, glow of the heart, lantern light. Do not overuse; watercolour light is mostly bare
+  sparkles, glow of the heart, lantern light, sunlight (never as "divine" light — see docs/KURALLAR.md). Do not overuse; watercolour light is mostly bare
   paper.
 
 Optional scene fields:
@@ -154,5 +154,6 @@ World-class motion design with the warmth of a hand-painted watercolour. Every f
 painting: deliberate composition, focal point, value structure (light/mid/dark), colour harmony, depth,
 generous negative space. Clean, confident shapes (no accidental slivers, no aliasing artefacts, no shapes
 cut off awkwardly by the frame edge unless intended). Metaphors must be instantly clear to a general
-audience. Respectful: no depiction of God, prophets or angels; divine presence is shown only as light from
-above (no source shown). The Qur'anic verse is treated with reverence.
+audience. Respectful: no depiction of God, prophets or angels, and nothing visual stands for Allah — no brightness at His
+Name, no light from above for His mercy, nothing tying Him to the sky, no ornate circular emblem for a Divine Name
+(binding rules: docs/KURALLAR.md). The Qur'anic verse is treated with reverence.
