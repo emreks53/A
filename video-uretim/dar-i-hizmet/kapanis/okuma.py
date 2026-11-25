@@ -510,9 +510,10 @@ def kitap_kur(M, ad, renk, koyu, png_sirt, m_on=None, kuran=False):
     elif callable(m_on):
         m_on = m_on(info)
     if kuran:
+        # Kur'an derisi: gün batımı güneşinde rengin (#144173) solmaması için çok az parlaklık (cilasız, mat)
         for mm in (m_deri, m_kenar, m_sirt, m_on):
-            deri_ayarla(mm, coat=CFG_AKTIF.get("kuran_cila", 0.10), coat_r=0.45, sheen=CFG_AKTIF.get("kuran_sheen", 0.03),
-                        spec=CFG_AKTIF.get("kuran_spec", 0.15), puruz=CFG_AKTIF.get("kuran_puruz", (0.62, 0.82)))
+            deri_ayarla(mm, coat=CFG_AKTIF.get("kuran_cila", 0.0), coat_r=0.45, sheen=CFG_AKTIF.get("kuran_sheen", 0.0),
+                        spec=CFG_AKTIF.get("kuran_spec", 0.012), puruz=CFG_AKTIF.get("kuran_puruz", (0.75, 0.92)))
     root = bpy.data.objects.new("kok_" + A.DOSYA.get(ad, ad), None)
     bpy.context.scene.collection.objects.link(root)
     cov = S.obj_yap("cilt_" + A.DOSYA.get(ad, ad), bm, [m_deri, m_sirt, m_ic, m_kenar, m_on])
@@ -925,6 +926,16 @@ def derinlik_modu():
             o.hide_render = True
 
 
+def exr_derinlik(p):
+    """Derinlik EXR'ini (R kanalı, metre) Blender ile okur (OpenCV'de EXR kapalı)."""
+    import numpy as np
+    im = bpy.data.images.load(p)
+    w, h = im.size
+    px = np.empty(w * h * 4, np.float32)
+    im.pixels.foreach_get(px)
+    return px.reshape(h, w, 4)[::-1, :, 0].copy()
+
+
 def render(path, cfg):
     sc = bpy.context.scene
     sc.render.filepath = path
@@ -953,15 +964,40 @@ def main():
         derinlik_modu()
         p = os.path.join(OKUMA, "kare1_derinlik.exr")
         render(p, cfg)
-        import numpy as np
-        import cv2
-        d = cv2.imread(p, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_ANYCOLOR)
-        if d.ndim == 3:
-            d = d[..., 0]
-        np.save(os.path.join(OKUMA, "kare1_derinlik.npy"), d.astype(np.float32))
+        np.save(os.path.join(OKUMA, "kare1_derinlik.npy"), exr_derinlik(p))
         mesafe = (Vector(cfg["odak"]) - Vector(cfg["kamera"])).length
         json.dump(dict(lens=cfg["lens"], pay=pay, mesafe=mesafe, dolly=cfg["dolly"], kaydir_v=cfg["kaydir_v"]),
                   open(os.path.join(OKUMA, "kare1_bilgi.json"), "w"), indent=1)
+    elif kmt == "bolge":
+        # büyük karenin bir bölgesini (ör. malzemesi değişen Kur'an) aynı ayarlarla yeniden render edip yumuşak
+        # kenarlı bir dikdörtgenle kare1_buyuk.png'ye yerleştirir (eski kare: kare1_buyuk_onceki.png)
+        import numpy as np
+        import cv2
+        pay = cfg.get("pay", 1.03)
+        x0, x1, y0, y1 = cfg["bolge"]
+        cfg.update(rx=1350, ry=2400, samples=cfg.get("samples_buyuk", 384), esik=cfg.get("esik_buyuk", 0.012),
+                   border=[x0, x1, y0, y1])
+        sc = sahne_kur(cfg)
+        sc.camera.data.lens = cfg["lens"] / pay
+        sc.render.use_crop_to_border = False
+        sc.render.image_settings.color_mode = "RGBA"
+        p = os.path.join(OKUMA, "bolge.png")
+        render(p, cfg)
+        yol = os.path.join(OKUMA, "kare1_buyuk.png")
+        eski = os.path.join(OKUMA, "kare1_buyuk_onceki.png")
+        if not os.path.exists(eski):
+            import shutil
+            shutil.copy(yol, eski)
+        A_ = cv2.imread(eski, cv2.IMREAD_UNCHANGED).astype(np.float32)[..., :3]
+        B_ = cv2.imread(p, cv2.IMREAD_UNCHANGED).astype(np.float32)
+        al = (B_[..., 3] > 0).astype(np.float32)
+        al = cv2.erode(al, np.ones((25, 25), np.uint8))
+        al = cv2.GaussianBlur(al, (0, 0), 6.0)[..., None]
+        C_ = A_ * (1 - al) + B_[..., :3] * al
+        cv2.imwrite(yol, np.clip(np.round(C_), 0, 255).astype(np.uint8))
+        d = np.abs(A_ - B_[..., :3]).mean(2)
+        kenar = (al[..., 0] > 0.02) & (al[..., 0] < 0.98)
+        print(f"BOLGE yerlestirildi; gecis bandinda ortalama fark {d[kenar].mean():.2f} (0-255)")
     elif kmt == "son":
         cfg.update(rx=1080, ry=1920, samples=cfg.get("samples_son", 160), esik=0.02)
         sc = sahne_kur(cfg)
