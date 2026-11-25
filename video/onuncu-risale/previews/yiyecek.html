@@ -79,18 +79,16 @@ window.show6 = async () => {
 window.show7 = async () => {
   reset(); ctx.fillStyle = '#E9E2EC'; ctx.fillRect(0, 0, 1080, 1920);
   const pair = (y0) => {
-    drawSpr(ctx, bake('nar-acik'), 280, y0 + 130, 1.05); drawSpr(ctx, bake('nar-acik-kuru'), 800, y0 + 130, 1.05);
-    drawSpr(ctx, bake('uzum-yatik'), 280, y0 + 360, 1.05); drawSpr(ctx, bake('uzum-yatik-kuru'), 800, y0 + 360, 1.05);
-    for (const x of [280, 800]) { ctx.fillStyle = '#1E2A5C'; ctx.fillRect(x - 6, y0 + 129, 12, 2); ctx.fillRect(x - 1, y0 + 124, 2, 12); } // pivot
+    drawSpr(ctx, bake('nar-acik'), 280, y0 + 200, 1.05); drawSpr(ctx, bake('nar-acik-kuru'), 800, y0 + 200, 1.05);
+    drawSpr(ctx, bake('uzum-yatik'), 290, y0 + 570, 1.05); drawSpr(ctx, bake('uzum-yatik-kuru'), 810, y0 + 570, 1.05);
+    for (const x of [280, 800]) { ctx.fillStyle = '#1E2A5C'; ctx.fillRect(x - 6, y0 + 199, 12, 2); ctx.fillRect(x - 1, y0 + 194, 2, 12); } // pivot
+    drawSpr(ctx, bake('uzum'), 150, y0 + 800, 0.62); drawSpr(ctx, bake('uzum-kuru'), 370, y0 + 800, 0.62); drawSpr(ctx, bake('nar'), 690, y0 + 800, 0.5); drawSpr(ctx, bake('nar-kuru'), 920, y0 + 800, 0.5);
   };
-  pair(0);
-  drawSpr(ctx, bake('uzum'), 150, 760, 0.62); drawSpr(ctx, bake('uzum-kuru'), 370, 760, 0.62); drawSpr(ctx, bake('nar'), 690, 750, 0.5); drawSpr(ctx, bake('nar-kuru'), 920, 750, 0.5);
-  pair(960);
-  drawSpr(ctx, bake('uzum'), 150, 1720, 0.62); drawSpr(ctx, bake('uzum-kuru'), 370, 1720, 0.62); drawSpr(ctx, bake('nar'), 690, 1710, 0.5); drawSpr(ctx, bake('nar-kuru'), 920, 1710, 0.5);
+  pair(0); pair(960);
   ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.55;
   const g = ctx.createLinearGradient(0, 960, 0, 1920); g.addColorStop(0, '#9A6A9A'); g.addColorStop(0.6, '#C98A6A'); g.addColorStop(1, '#7A5A7A');
   ctx.fillStyle = g; ctx.fillRect(0, 960, 1080, 960); ctx.restore();
-  label('taze', 240, 40); label('solmuş', 740, 40); label('akşam tonu altında', 400, 1000);
+  label('taze', 250, 30); label('solmuş', 750, 30); label('akşam tonu altında (p2, multiply 0.55)', 330, 990);
   Post.apply(ctx);
 };
 // solmuş eşlerin değer denetimi: opak piksellerde çok koyu (OKLab L < 0.22) ve koyu-kahve (L < 0.42, ton 35°–95°, renkli)

@@ -17,7 +17,7 @@ seed (aynı t/tür için başka gürültü), duck (dB, türün varsayılan kısm
 Rastgelelik belirlenimcidir: her işaretin tohumu (tür, zaman, seed) üçlüsünden türetilir; bir işareti değiştirmek
 diğerlerinin sesini değiştirmez.
 
-Son aşama: BS.1770-4 bütünleşik ölçüm → -14.0 LUFS'e kazanç → 4x örneklemeli gerçek tepe sınırlayıcı (-1.5 dBTP)
+Son aşama: BS.1770-4 bütünleşik ölçüm → -14.0 LUFS'e kazanç → 4x örneklemeli gerçek tepe sınırlayıcı (-1.2 dBTP)
 → TPDF titreşimli 16 bit WAV. Doğrulama: ffmpeg -i <çıktı.wav> -af ebur128=peak=true -f null -
 """
 import json, sys, math, zlib, subprocess, wave
@@ -461,9 +461,9 @@ def build(evs, voice, N):
 
 
 def master(mix):
-    """-14 LUFS'e kazanç + gerçek tepe sınırlayıcı; sınırlayıcı sonrası küçük düzeltme (2 tur). → (karışım, kazanç)"""
+    """-14 LUFS'e kazanç + gerçek tepe sınırlayıcı; sınırlayıcı sonrası küçük düzeltme (3 tur). → (karışım, kazanç)"""
     g = 1.0; out = mix
-    for _ in range(2):
+    for _ in range(3):
         g *= 10 ** ((TARGET_LUFS - lufs_integrated(out)) / 20)
         out = tp_limit(mix * g, CEIL_DBTP)
     return out, g

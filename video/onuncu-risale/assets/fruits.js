@@ -258,7 +258,7 @@ const YIY = (() => {
 // pomegranateOn(S, cx, cy, R, o): var olan sprite'a boyar. o.wither 0..1 kuruma, o.crownAng taç yönü
 const NAR_PAL = ['#2E0418', '#4C0820', '#720C28', '#990F2C', '#BC1530', '#D92436', '#EE4A44', '#FA8A7A', '#FFE4DA'];
 // solmuş nar: kırmızı kalır — tozlu gül-kırmızısı (doygunluk ~%36 düşük, orta tonlar ~%10 koyu, en koyu L 0.29; kahve yok)
-const NAR_KURU = NAR_PAL.map((c) => YIY.fade(c, { dh: -2, kC: 0.68 }));
+const NAR_KURU = NAR_PAL.map((c) => YIY.fade(c, { dh: -5, kC: 0.68, kL: 0.72, add: 0.08 })); // yalnız akşam tonu altında görünür: gül yönüne kaydırıldı
 // kabuk gövdesi (taze ve solmuş AYNI ph/ca ile; solmuş hafif büzüşür, 2-3 yumuşak göçük)
 function narBodyPts(cx, cy, R, ca, ph, wi) {
   const pts = []; const N = 48;

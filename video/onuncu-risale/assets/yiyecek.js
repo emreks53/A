@@ -62,7 +62,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
   };
   // solmuş eşler (fânilik): kırmızı/mor/yeşil kalır, tozlanır ve söner — kahve, siyah, çürük tonu YOK
   const FADE = YIY.fade;
-  PAL.arilK = PAL.aril.map((c) => FADE(c, { dh: -3, kC: 0.64 }));            // soluk lal (garnet), sönük parıltı
+  PAL.arilK = PAL.aril.map((c) => FADE(c, { dh: -5, kC: 0.64, kL: 0.72, add: 0.08 }));            // soluk lal (garnet), sönük parıltı
   PAL.pithK = PAL.pith.map((c) => FADE(c, { kL: 0.95, add: 0, kC: 0.7 }));   // hafif matlaşmış krem zar/kabuk içi
   PAL.grapeK = PAL.grapeP.map((c) => FADE(c, { dh: 8, kC: 0.66 }));          // tozlu menekşe
   PAL.leafW = PAL.leaf.map((c, i) => mix(c, ['#3E4416', '#545A1C', '#6E7224', '#8C8C2E', '#AAA43C', '#C6BC52', '#DED27A'][i], 0.7)); // sarıya dönmeye başlamış // biraz sararmış
