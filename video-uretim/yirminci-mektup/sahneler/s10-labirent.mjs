@@ -15,7 +15,7 @@ import { SON_KAMERA, Z_SON, labirentKamerasi, labirentAdamDurum, labirentAdamCiz
 import { tampon, huzme, zerreler } from './s10-yardim.mjs';
 
 // açılan yolun ve çözülen labirentin zemini
-const YOL_ZEMIN = '#D4D2D6'; // labirent koridorunun kendi zemin tonu (parlak bir ışık şeridi gibi okunmasın)
+const YOL_ZEMIN = '#C5C2CB'; // labirent koridorunun kendi zemin tonu (parlak bir ışık şeridi gibi okunmasın)
 const SON = { ...SON_KAMERA }; // s09'un son kamerası (adam ekranın ortasında, labirent 90° dönük)
 const C = LB.HUCRE;
 const DUV = (C * LB.DUVAR) / 2; // duvarın yarı kalınlığı
