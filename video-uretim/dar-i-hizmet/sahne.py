@@ -353,8 +353,9 @@ def durum(V, evre=None):
     s['kok'] = anahtar(V, [(15.2, 0.25), (16.2, 0.7), (T_KUVVET, 0.72), (T_KUVVET + 0.9, 1.0)])
     s['kesit'] = 0.0 if once else anahtar(V, [(15.25, 0.0), (15.95, 1.0), (16.95, 1.0), (17.4, 0.0), (20.10, 0.0),
                                               (20.45, 1.0), (21.0, 1.0), (21.35, 0.0)])
-    # "o hizmete": yağmur tek bir dere gibi fidana dökülür (ibriğin kafiyesi)
-    s['yagmur_akis'] = 0.0 if once else anahtar(V, [(16.80, 0.0), (17.1, 1.0), (17.75, 1.0), (18.15, 0.0)])
+    # "o hizmete": yağmur doğal hâliyle bahçeye ve fidana yağmaya devam eder (gökten fidana hedefli, ışın gibi
+    # tek bir su çizgisi yok)
+    s['yagmur_akis'] = 0.0
     # çiçekler
     taban = anahtar(V, [(0, 0.12), (8.2, 0.12), (9.6, 0.24), (12.0, 0.24)])
     acilmalar = []

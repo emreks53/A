@@ -24,7 +24,7 @@ Video zamanı V = ses zamanı + 0,30 sn. Toplam ≈ 34 sn (27,6 sn'den sonra ger
 | 12,40–13,50 | ve **musibetler** | Fırtına bulutları yanlardan gelir, yağmur, rüzgârla eğilen fidan, savrulan yapraklar. |
 | 13,50–14,90 | **dinî olmamak** | Kamera göğsüne yaklaşır: kalbinde sıcak altın bir nur; yağmur damlaları ona değmeden kaybolur (din korunur). |
 | 14,90–16,60 | ve **sabretmek** şartıyla | Kamera köklere iner: fidanın altında temiz bir toprak dilimi açılır, kökler derinleşir; adam sırtını doğrultur (sabır). |
-| 16,60–17,70 | **o hizmete** | Bulutlar aralanır; yağmur tek bir dere gibi tam ibriğin döküldüğü yere, fidanın dibine dökülür (musibet, ibriğin işini görür); çiçekler açmaya başlar. |
+| 16,60–17,70 | **o hizmete** | Bulutlar aralanır; yumuşayan yağmur bahçeye ve fidana yağar (musibet hizmete yarar); çiçekler açmaya başlar. |
 | 17,70–18,90 | ve **o ubudiyete** | Kalbindeki nur (iman) olduğu yerde biraz güçlenir. Mana: *kulluğa* (18,13). |
 | 18,90–20,10 | çok **muvafık** oluyor | Kamera çiçeklere yaklaşır: parlak damlalar tam kâselere düşer, küçük bir sıçramayla her biri bir çiçek açtırır (uyum). Mana: *uygun* (18,92). |
 | 20,10–21,00 | ve **kuvvet veriyor** | Fidan güçlü bir ağaca dönüşür (gövde kalınlaşır, dallar uzar, taç dolar, kökler derin); adam ayağa kalkar, dimdik. |
