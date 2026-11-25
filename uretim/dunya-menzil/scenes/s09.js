@@ -746,7 +746,7 @@
   function times(shot) {
     const w = (i) => E.T(i) - shot.start;
     const T = { ona: w(64), muh: w(66), o: w(67), hus: w(68), ay: w(70), tem: w(73), ett: w(74), guz: w(75), nuk: w(76), esm: w(78), ila: w(80), don: w(81) };
-    T.raise0 = T.muh - 0.12; T.raise1 = T.muh + 0.42;   // he lifts the heart up and out
+    T.raise0 = T.muh - 0.22; T.raise1 = T.muh + 0.62;   // he lifts the heart up and out (unhurried)
     T.rel = T.muh + 0.33;                               // ...and lets it go
     T.arr = T.rel + 1.0;                                // it settles by the world
     T.low0 = T.muh + 0.72; T.low1 = T.muh + 1.5;        // his hand lowers, open
@@ -819,7 +819,7 @@
   const OPEN = { nS: 0.13, nE: 0.42, nW: -0.12, fS: -0.04, fE: 0.15 };
   function poseAt(lt, t, T) {
     const { pose } = pose08(t);
-    const kR = ep(lt, T.raise0, T.raise1, 'inOutCubic');
+    const kR = ep(lt, T.raise0, T.raise1, 'inOutSine');
     const kL = ep(lt, T.low0, T.low1, 'inOutSine');
     for (const f of ['nS', 'nE', 'nW', 'fS', 'fE']) {
       pose[f] = lerp(pose[f] ?? 0, RAISE[f], kR);
