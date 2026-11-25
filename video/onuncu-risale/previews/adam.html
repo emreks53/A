@@ -163,6 +163,18 @@ window.dbgT1 = async () => { sceneYk(window.NY || 966, 0); Post.apply(ctx); };
 window.dbgT2 = async () => { sceneYk(window.NY || 966, 0.3); Post.apply(ctx); };
 window.dbgT3 = async () => { sceneYk(window.NY || 966, 0.4); Post.apply(ctx); };
 window.dbgT4 = async () => { sceneYk(window.NY || 966, 0.3, 1.12, 1240, 640); Post.apply(ctx); };
+window.dbgPinch = async () => {
+  bg1();
+  const A = ADAM.yakin, sc = 2.6, names = ['adam-yakin-kol'].concat(hasSpr('adam-yakin-kol-bos') ? ['adam-yakin-kol-bos'] : []);
+  names.forEach((n, i) => {
+    const cx = 540, cy = 480 + i * 960;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, i * 960, W, 960); ctx.clip();
+    drawPart(ctx, spr('adam-yakin-bas'), cx - A.handAtMouth[0] * sc, cy - A.handAtMouth[1] * sc, sc);
+    drawPart(ctx, spr(n), cx - A.handAtMouth[0] * sc, cy - A.handAtMouth[1] * sc, sc);
+    ctx.restore(); label(n, 20, 40 + i * 960);
+  });
+  Post.apply(ctx);
+};
 window.dbgSit = async () => {
   bg1();
   const B = ADAM.oturan, sc = 4.2;

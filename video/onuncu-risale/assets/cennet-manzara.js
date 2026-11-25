@@ -338,20 +338,93 @@ const CENNET_M = (() => {
 
   // ================================================================ 2. BULUT KUŞAĞI (kameranın içinden geçtiği; orta tonlu)
   // Yapı (sahne bu düzene güvenir): üst ~40–230 kabarık kırık kenar, 230–700 tam örtücü gövde, 700–860 seyrek.
-  // Her bulut kümesi ayrı tuvalde boyanır: drawBand() kuşağı alfa ile soldurmak yerine kümeleri kaydırıp dağıtır.
+  // Her bulut kümesi ayrı tuvalde, tam opak boyanır (yarı saydam katman yok): tümsekler arkadan öne, her biri düz
+  // basamaklı tonlarla (altta serin mor gölge, üstte ılık pembe-lila ışık) ve üst yarısında kırık turuncu astar kenarıyla.
+  // drawBand() kuşağı alfa ile soldurmaz: gövde ve kümeler kadrajın altına/yanlarına kayıp küçülerek çıkar.
   const BAND = { x: -200, y: -600, w: 1480, h: 900 };
-  const BC = { deep: '#6763A2', sh: '#7C78B4', lo: '#948FC6', mid: '#ACA5D3', top: '#C5BCE0', crest: '#E4D8EA' };
+  const CLOUD_Z = ['#5D589B', '#716BAE', '#8781C0', '#A099CF', '#BAAFDC', '#D3C3E1', '#E8D4DF'];
+  const CLOUD_TINT = ['#E8B9C6', '#AFD6D2', '#C6B8EA', '#EBC6B4'];
+  // kümenin paleti: açık basamaklar yanardöner pastel tonla (pembe/nane/lila/şeftali) hafifçe ısınır; derinde koyulaşır
+  const cloudPal = (tint, dk = 0, amt = 0.22) => CLOUD_Z.map((c, i) => { const q = shade(c, -dk); return i >= 3 ? mix(q, tint, amt * (i - 2) / 4 + 0.06) : q; });
+  // birleşik yol dolgusu: yükseklik haritasına iç alt-yol çizgisi basmaz (kabartmada "içten görünen kontur" olmasın)
+  function fillU(S, path, col, h = 135) {
+    S.x.save(); S.x.fillStyle = col; S.x.fill(path); S.x.restore();
+    S.hx.save(); S.hx.fillStyle = `rgb(${h},${h},${h})`; S.hx.fill(path); S.hx.restore();
+  }
+  // astar kenarı yalnız verilen yatay şeridin içinde (tümseğin üst yarısı / tabanın alt kenarı)
+  function rimBand(S, path, ya, yb, o) { S.x.save(); const c = new Path2D(); c.rect(-10, ya, S.w + 20, yb - ya); S.x.clip(c); S.rim(path, o); S.x.restore(); }
+  // basamak elipsleri: yukarı kaydıkça küçülür, üst kenara kadar uzanır (tümseğin tepesi açık, altı serin gölge;
+  // top gibi her yanı koyulaşan kenar yok)
+  const ZS = [0.93, 0.8, 0.67, 0.53, 0.4], ZO = [0.14, 0.27, 0.39, 0.5, 0.6];
+  // opak bulut kümesi. bumps: [[cx, cy, R], ...] tasarım px'i; o: {k, pal, seed, base: [x0, x1, y], cover, rimA}
+  // Döner: {c (tuval, k ölçekli), x, y (tasarım sol üst), w, h (tasarım)}
+  function puffMass(bumps, o = {}) {
+    const k = o.k ?? 1, pal = o.pal || cloudPal(CLOUD_TINT[2]), seed = o.seed ?? 1;
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const [cx, cy, R] of bumps) { x0 = Math.min(x0, cx - R * 1.22); x1 = Math.max(x1, cx + R * 1.22); y0 = Math.min(y0, cy - R * 1.12); y1 = Math.max(y1, cy + R * 1.08); }
+    if (o.base) { x0 = Math.min(x0, o.base[0] - 16); x1 = Math.max(x1, o.base[1] + 16); y1 = Math.max(y1, o.base[2] + 12); }
+    x0 = Math.floor(x0 - 6); y0 = Math.floor(y0 - 6); x1 = Math.ceil(x1 + 6); y1 = Math.ceil(y1 + 6);
+    const S = Paint.sprite((x1 - x0) * k, (y1 - y0) * k, { seed, k }); const r = S.r;
+    const X = (v) => (v - x0) * k, Y = (v) => (v - y0) * k;
+    const rimA = o.rimA ?? 0.8;
+    const bpaths = bumps.map(([cx, cy, R], bi) => smoothPath(blobPts(X(cx), Y(cy), R * 1.1 * k, R * k, 22, 0.07, seed * 31 + bi * 101)));
+    let basePath = null, by = 0;
+    if (o.base) { const [bx0, bx1] = o.base; by = o.base[2]; const bry = 15; basePath = smoothPath(blobPts(X((bx0 + bx1) / 2), Y(by - bry * 0.55), ((bx1 - bx0) / 2 + 12) * k, bry * k, 26, 0.05, seed * 7 + 3)); }
+    // kümenin tek silueti: kırık astar kenarı yalnız dış kenarda (iç tümsek sınırları dolguyla örtülür)
+    const sil = new Path2D(); for (const bp of bpaths) sil.addPath(bp); if (basePath) sil.addPath(basePath);
+    const yLow = o.base ? Y(by - 4) : Y(Math.max(...bumps.map((b) => b[1] + b[2] * 0.3)));
+    rimBand(S, sil, -10, yLow, { w: 1.7, alpha: rimA });
+    if (basePath) rimBand(S, basePath, Y(by - 6), S.h + 10, { w: 1.5, alpha: rimA * 0.75 });
+    fillU(S, sil, pal[0], 128);
+    if (basePath) field(S, { bbox: [X(o.base[0] - 12), Y(by - 26), X(o.base[1] + 12), Y(by + 4)], clip: basePath, ramp: [pal[0], shade(pal[0], 0.03)], shade: Paint.cst(0.5), dir: 0, dirJit: 0.05,
+      len: [30, 70], wid: [5, 8], cover: 0.5, noise: 0, broken: 0, lJit: 0.02, hJit: 3, dry: 0.4 });
+    // tümsekler arkadan öne (büyükler arkada); her biri kendi düz ton basamaklarıyla (kenarları gürültülü)
+    const order = bumps.map((b, i) => [b, i]).sort((a, b) => b[0][2] - a[0][2]);
+    for (const [[cx, cy, R], bi] of order) {
+      const sd = bi % 2 ? 1 : -1; const sb = seed * 31 + bi * 101; const bp = bpaths[bi];
+      fillU(S, bp, pal[0], 128);
+      const nz = R >= 30 ? 5 : R >= 16 ? 4 : 3;
+      const Z = []; for (let j = 0; j < nz; j++) Z.push([X(cx + sd * R * 0.06 * (j + 1)), Y(cy - R * ZO[j]), R * 1.1 * ZS[j] * k * (1 + j * 0.04), R * ZS[j] * k]);
+      S.x.save(); S.hx.save(); S.x.clip(bp); S.hx.clip(bp);
+      Z.forEach(([zx, zy, rx, ry], j) => fillU(S, smoothPath(blobPts(zx, zy, rx, ry, 18, 0.12, sb + j * 17)), pal[j + 1], 132 + j * 8));
+      S.x.restore(); S.hx.restore();
+      // tümsek biçimini izleyen kısa darbeler: rengini bulunduğu basamaktan alır (düz tonu bozmaz, doku verir)
+      const zoneAt = (x, y) => { for (let j = nz - 1; j >= 0; j--) { const [zx, zy, rx, ry] = Z[j]; const u = (x - zx) / rx, v = (y - zy) / ry; if (u * u + v * v < 1) return j + 1; } return 0; };
+      const bx = X(cx), byy = Y(cy), rxk = R * 1.1 * k, ryk = R * k;
+      const dirF = (x, y) => { const dx = x - bx, dy = y - byy; const l = Math.hypot(dx, dy) || 1; let tx = -dy / l, ty = dx / l; if (tx < 0) { tx = -tx; ty = -ty; } const vx = tx * 0.62 + 0.96 * 0.38, vy = ty * 0.62 - 0.26 * 0.38; return Math.atan2(vy, vx) + (r() - 0.5) * 0.25; };
+      field(S, { bbox: [bx - rxk, byy - ryk, bx + rxk, byy + ryk], clip: bp, mask: (x, y) => { const u = (x - bx) / rxk, v = (y - byy) / ryk; return u * u + v * v < 0.94; },
+        ramp: [pal[0]], shade: Paint.cst(0.5), dir: dirF, len: [clamp(R * 0.3, 9, 30), clamp(R * 0.58, 16, 56)], wid: [clamp(R * 0.08, 3.2, 9), clamp(R * 0.13, 5, 13)],
+        cover: o.cover ?? 0.55, noise: 0, broken: 0, lJit: 0.025, hJit: 4, dry: 0.3, colorF: (x, y) => { let j = zoneAt(x, y); if (r() < 0.07) j = clamp(j + r.sign(), 0, nz); return pal[j]; } });
+      // büyük tümseklerin tepesinde ılık, kuru tek fırça ışığı (parıltı noktası değil)
+      if (R > 34 && r() < 0.7) Paint.drawStroke(S, X(cx - sd * R * 0.12), Y(cy - R * 0.8), -0.12 * sd + (r() - 0.5) * 0.2, R * 0.75 * k, Math.max(3, R * 0.07) * k, pal[6], { dry: 0.7, height: false });
+    }
+    return { c: S.finish({ emboss: o.emboss ?? 0.3 }), x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  }
+  // tümsek dizisi (bir küme): sol kenar x, taban y; çan biçimli yarıçaplar
+  const R0end = (b) => b[b.length - 1][2] * 0.35;
+  function bumpRow(r, x, yb, n, rA, rB) {
+    const bumps = []; let bx = x;
+    for (let i = 0; i < n; i++) {
+      const bell = 1 - Math.abs(i - (n - 1) / 2) / n; const R = (rA + Math.pow(r(), 0.8) * (rB - rA)) * (0.7 + bell * 0.45);
+      if (i === 0) bx += R;
+      bumps.push([bx, yb - R * (0.45 + r() * 0.3), R]); bx += R * (0.64 + r() * 0.3);
+    }
+    return { bumps, end: bx + R0end(bumps) };
+  }
   let _band = null;
   function buildBand() {
     if (_band) return _band;
     const { w } = BAND; const r = rng(5202);
-    // gövde: düz, koyuca lavanta taban (kümeler ayrılınca altındaki manzara görünsün diye ayrı tuval)
+    // gövde: iki kenarı da kabarık, opak lavanta kütle (kümeler ayrılınca altındaki manzara görünsün diye ayrı tuval)
     const BY = 118, BH = 632; // gövde kuşak satırı ~152..730 arasını kesintisiz örter (sahnede A/B bindirmesi ve önceki sahne kenarı delik bırakmasın)
     const body = Paint.sprite(w, BH, { seed: 5203, k: 1 });
-    { const pts = []; for (let x = -20; x <= w + 20; x += 24) pts.push([x, 10 + NOISE(x * 0.02, 1.5) * 8]); for (let x = w + 20; x >= -20; x -= 24) pts.push([x, BH - 6 - NOISE(x * 0.02, 7.5) * 14]); const bp = poly(pts);
-      fill(body, bp, BC.lo, { h: 135 });
-      field(body, { bbox: [-20, 20, w + 20, BH - 4], path: bp, ramp: [BC.sh, BC.lo, mix(BC.lo, BC.mid, 0.5)], shade: (x, y) => 0.5 + (NOISE(x * 0.004 + 1, y * 0.012) - 0.5) * 0.8, dir: -0.22, dirJit: 0.12, len: [70, 150], wid: [16, 24], cover: 1.7, noise: 0.06 }); }
-    const bodyC = body.finish({ emboss: 0.4 });
+    { const bp = new Path2D(); bp.rect(-30, 44, w + 60, BH - 88);
+      for (const yc of [44, BH - 44]) for (let x = -40; x < w + 50;) { const R = 30 + r() * 18; bp.addPath(ellipsePath(x + R, yc + (yc < 100 ? 4 : -4), R * 1.08, R)); x += R * (1.4 + r() * 0.4); }
+      body.rim(bp, { w: 1.6, alpha: 0.75 });
+      fillU(body, bp, CLOUD_Z[2], 132);
+      const bz = (x, y) => 0.5 + (NOISE(x * 0.004 + 1, y * 0.012) - 0.5) * 0.9;
+      field(body, { bbox: [-20, 0, w + 20, BH], path: bp, ramp: [CLOUD_Z[1], CLOUD_Z[2], mix(CLOUD_Z[2], CLOUD_Z[3], 0.5)], shade: bz, dir: -0.18, dirJit: 0.1, len: [70, 150], wid: [16, 24], cover: 1.1, noise: 0.04, broken: 0.04 }); }
+    const bodyC = body.finish({ emboss: 0.36 });
     const ROWS = [
       { yb: 142, rA: 16, rB: 36, n: [2, 4], gap: [50, 200], t: 0, jy: 30 },
       { yb: 208, rA: 36, rB: 72, n: [3, 6], gap: [-40, -6], t: 0.08, jy: 18 },
@@ -362,66 +435,93 @@ const CENNET_M = (() => {
       { yb: 638, rA: 48, rB: 98, n: [3, 5], gap: [-70, -20], t: 0.76 },
       { yb: 714, rA: 36, rB: 84, n: [2, 5], gap: [10, 110], t: 0.88, jy: 36 },
     ];
-    const TINTS = ['#E3BAC4', '#B2D3D2', '#C8BCE6', '#E6C7B6'];
     const pieces = []; let seed = 9000;
     for (const R0 of ROWS) {
       let x = -140 + r() * 80;
       while (x < w + 100) {
-        const nb = R0.n[0] + Math.floor(r() * (R0.n[1] - R0.n[0] + 1)); const bumps = [];
-        let bx = x; const yb0 = R0.yb + (R0.jy ? (r() - 0.5) * R0.jy : 0);
-        for (let i = 0; i < nb; i++) {
-          const bell = 1 - Math.abs(i - (nb - 1) / 2) / nb; const R = (R0.rA + Math.pow(r(), 0.8) * (R0.rB - R0.rA)) * (0.7 + bell * 0.45);
-          if (i === 0) bx += R;
-          bumps.push([bx, yb0 - R * (0.45 + r() * 0.3), R]); bx += R * (0.75 + r() * 0.35);
-        }
-        const xs0 = Math.min(...bumps.map((b) => b[0] - b[2] * 1.1)), xs1 = Math.max(...bumps.map((b) => b[0] + b[2] * 1.1));
-        const y0 = Math.min(...bumps.map((b) => b[1] - b[2] * 1.08)) - 6, y1 = yb0 + 22;
-        const px0 = Math.floor(xs0 - 10), py0 = Math.floor(y0);
-        const S = Paint.sprite(xs1 - px0 + 12, y1 - py0 + 6, { seed: seed++, k: 1 }); const rr = S.r;
-        const L = (b) => [b[0] - px0, b[1] - py0, b[2]]; const BL = bumps.map(L); const ybL = yb0 - py0;
-        const sil = new Path2D(); for (const [cx, cy, R] of BL) sil.addPath(smoothPath(blobPts(cx, cy, R * 1.1, R, 16, 0.1, Math.floor(rr() * 1e5))));
-        const fx0 = BL[0][0] - BL[0][2] * 0.6, fx1 = BL[BL.length - 1][0] + BL[BL.length - 1][2] * 0.6;
-        sil.addPath(poly([[fx0, ybL - 30], [fx1, ybL - 30], [fx1 + 6, ybL + 4 + rr() * 6], [lerp(fx0, fx1, 0.5), ybL + 8 + rr() * 6], [fx0 - 6, ybL + 4 + rr() * 6]]));
-        const tint = TINTS[Math.floor(NOISE(x * 0.004 + 3, R0.t * 4) * 4) % 4];
-        const dk = R0.t * 0.04;
-        const C = [BC.deep, shade(BC.sh, -dk), shade(BC.lo, -dk), mix(shade(BC.mid, -dk), tint, 0.16), mix(shade(BC.top, -dk), tint, 0.2)];
-        S.rim(sil, { w: 1.4, alpha: R0.t > 0.05 && R0.t < 0.95 ? 0.28 : 0.4 });
-        fill(S, sil, C[1], { h: 135 });
-        const baseK = R0.t > 0.85 ? 0.12 : 0.4;
-        const sf = (px, py) => { let v = 0; for (const [cx, cy, R] of BL) { const d = Math.hypot((px - cx) / (R * 1.12), (py - cy) / R); if (d > 1.05) continue; const g = 1 - clamp((py - (cy - R)) / (R * 1.5)) - Math.max(0, d - 0.8) * 0.6; if (g > v) v = g; } return clamp(0.12 + v * 0.95 - clamp((py - (ybL - 44)) / 44) * baseK); };
-        field(S, { bbox: [0, 0, S.w, S.h], clip: sil, ramp: C, shade: sf, dir: -0.4, dirJit: 0.22, len: [26, 58], wid: [10, 16], cover: 2.6, noise: 0.02, broken: 0.02, jitter: 4, jitterFreq: 0.02 });
-        // düz alt yüz: yatay koyu lavanta darbeler
-        if (R0.t > 0.05 && R0.t < 0.85) field(S, { bbox: [fx0 - 10, ybL - 22, fx1 + 10, ybL + 12], clip: sil, ramp: [BC.deep, C[0]], shade: Paint.grad(0, ybL + 8, 0, ybL - 22, 0.1, 0.9), dir: 0, dirJit: 0.05, len: [40, 90], wid: [8, 12], count: Math.round((fx1 - fx0) / 24), noise: 0.15 });
-        // ince inci tepe: kümelerin ~%20'sinde tek kısa kırık kuru darbe
-        for (const [cx, cy, R] of BL) if (R > 22 && rr() < 0.25) stroke(S, cx - R * 0.22, cy - R * 0.86, -0.32 + (rr() - 0.5) * 0.2, R * 0.7, 3.2 + rr() * 1.6, BC.crest, { dry: 0.8, alpha: 0.8, height: false });
-        pieces.push({ c: S.finish({ emboss: 0.4 }), x: px0, y: py0, cx: (xs0 + xs1) / 2, row: R0.t, delay: clamp(0.05 + Math.abs(R0.t - 0.5) * 0.25 + r() * 0.3, 0, 0.6) });
-        x = bx + R0.gap[0] + r() * (R0.gap[1] - R0.gap[0]);
+        const nb = R0.n[0] + Math.floor(r() * (R0.n[1] - R0.n[0] + 1));
+        const yb0 = R0.yb + (R0.jy ? (r() - 0.5) * R0.jy : 0);
+        const { bumps, end } = bumpRow(r, x, yb0, nb, R0.rA, R0.rB);
+        const fx0 = bumps[0][0] - bumps[0][2] * 0.6, fx1 = bumps[nb - 1][0] + bumps[nb - 1][2] * 0.6;
+        const tint = CLOUD_TINT[Math.floor(NOISE(x * 0.004 + 3, R0.t * 4) * 4) % 4];
+        const pm = puffMass(bumps, { k: 1, seed: seed++, pal: cloudPal(tint, R0.t * 0.05), base: R0.t > 0.05 ? [fx0, fx1, yb0 + 8] : null, rimA: R0.t > 0.05 && R0.t < 0.95 ? 0.82 : 0.9 });
+        pieces.push({ ...pm, cx: pm.x + pm.w / 2, row: R0.t, fringe: R0.t < 0.1, delay: clamp(0.02 + (R0.t < 0.1 ? 0 : 0.06) + r() * 0.14, 0, 0.3) });
+        x = end + R0.gap[0] + r() * (R0.gap[1] - R0.gap[0]);
       }
     }
-    const canvas = makeCanvas(BAND.w, BAND.h); const cx2 = canvas.getContext('2d');
-    cx2.drawImage(bodyC, 0, BY); for (const pc of pieces) cx2.drawImage(pc.c, pc.x, pc.y);
-    _band = { canvas, body: bodyC, bodyY: BY, pieces };
+    // A: düz kuşak. B: ters kuşak (sahnede alttaki kat) — yerleşim aynalanır ama kümeler dik kalır (tepeleri yukarıda,
+    // alttakiler önde); önceki sahneye bakan alt kenarı gövdenin kabarık kenarı ve saçak kümeleri oluşturur.
+    const canvas = makeCanvas(BAND.w, BAND.h); const cA = canvas.getContext('2d');
+    cA.drawImage(bodyC, 0, BY); for (const pc of pieces) cA.drawImage(pc.c, pc.x, pc.y);
+    const orderB = [...pieces].reverse();
+    const canvasB = makeCanvas(BAND.w, BAND.h); const cB = canvasB.getContext('2d');
+    cB.save(); cB.translate(0, BAND.h); cB.scale(1, -1); cB.drawImage(bodyC, 0, BY); cB.restore();
+    for (const pc of orderB) drawPiece(cB, pc, true, 0, 0, 1);
+    _band = { canvas, canvasB, body: bodyC, bodyY: BY, pieces, orderB };
     return _band;
   }
+  // kümeyi kuşak koordinatında çiz; B'de (flip) aynalanmış yerine, dik
+  function drawPiece(ctx, pc, flip, dx, dy, s) {
+    const py = flip ? BAND.h - pc.y - pc.h : pc.y; const w = pc.w * s, h = pc.h * s;
+    ctx.drawImage(pc.c, pc.x + dx + (pc.w - w) / 2, py + dy + (pc.h - h) / 2, w, h);
+  }
   defSprite('bulut-kusagi', () => ({ canvas: buildBand().canvas, px: 0, py: 0, k: 1 }));
-  // kuşağı (x,y) sol üst köşesine sc ölçekle çiz; p 0..1 dağılma (0: tam kuşak). flip: dikey ters (sahnedeki B katı).
-  // Global alfa yerine: gövde erken çekilir, kümeler kenarlara kayıp küçülerek tek tek söner.
+  // kuşağı (x,y) sol üst köşesine sc ölçekle çiz; p 0..1 dağılma (0: tam kuşak). flip: sahnedeki alt (B) kat.
+  // Global alfa yok: gövde ve kümeler bulundukları yerden kadrajın altına (ve kenarlara doğru) kayıp küçülerek çıkar;
+  // p = 0.85'te hepsi kadraj dışındadır. Alfa yalnız son %10'da ve kümeler zaten kadraj dışındayken sıfıra iner.
   function drawBand(ctx, x, y, sc = 1, p = 0, flip = false) {
     const B = buildBand();
-    ctx.save(); ctx.translate(x, y); if (flip) { ctx.translate(0, BAND.h * sc); ctx.scale(1, -1); } ctx.scale(sc, sc);
-    if (p <= 0.001) { ctx.drawImage(B.canvas, 0, 0); ctx.restore(); return; }
+    if (p >= 0.999) return;
+    ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+    if (p <= 0.001) { ctx.drawImage(flip ? B.canvasB : B.canvas, 0, 0); ctx.restore(); return; }
+    const m = ctx.getTransform(); const CH = ctx.canvas ? ctx.canvas.height : H;
+    const down = m.d > 0.01 ? m.d : 0; // kuşak birimi → aygıt pikseli (dikey)
+    const needDown = (v, hh) => (down ? Math.max(70, (CH - (m.d * v + m.f)) / down + hh * 0.32 + 18) : 900);
     const a0 = ctx.globalAlpha;
-    const bodyA = 1 - E.io2(clamp(p * 2.4)); if (bodyA > 0.01) { ctx.globalAlpha = a0 * bodyA; ctx.drawImage(B.body, 0, B.bodyY); }
-    for (const pc of B.pieces) {
-      const q = clamp((p - pc.delay) / (1 - pc.delay + 1e-6)); const a = 1 - E.in2(q); if (a <= 0.01) continue;
-      const dir = Math.sign(pc.cx - BAND.w / 2) || 1; const far = Math.abs(pc.cx - BAND.w / 2) / (BAND.w / 2);
-      const e = E.in2(q); const dx = dir * e * (220 + 320 * far), dy = e * 70 * (0.5 + pc.row), s = 1 - 0.18 * e;
-      const cw = pc.c.width, ch = pc.c.height;
-      ctx.globalAlpha = a0 * a;
-      ctx.drawImage(pc.c, pc.x + dx + cw * (1 - s) / 2, pc.y + dy + ch * (1 - s) / 2, cw * s, ch * s);
+    // gövde: kümelerin arkasında, erken ve düz aşağı iner
+    { const q = clamp(p / 0.6); if (q < 1) {
+      const top = flip ? BAND.h - B.bodyY - B.body.height : B.bodyY; const e = E.io2(q); const dy = e * needDown(top, 0);
+      ctx.globalAlpha = a0 * (1 - inv(0.9, 1, q));
+      if (flip) { ctx.save(); ctx.translate(0, top + dy + B.body.height); ctx.scale(1, -1); ctx.drawImage(B.body, 0, 0); ctx.restore(); } else ctx.drawImage(B.body, 0, top + dy);
+    } }
+    for (const pc of flip ? B.orderB : B.pieces) {
+      const q = clamp((p - pc.delay) / (0.85 - pc.delay)); if (q >= 1) continue;
+      const e = E.io2(q); const s = 1 - 0.36 * e;
+      const py = flip ? BAND.h - pc.y - pc.h : pc.y; const dir = Math.sign(pc.cx - BAND.w / 2) || 1; const far = Math.abs(pc.cx - BAND.w / 2) / (BAND.w / 2);
+      const dx = dir * e * (110 + 320 * far), dy = e * needDown(py + pc.h * 0.5, pc.h);
+      ctx.globalAlpha = a0 * (1 - inv(0.9, 1, q));
+      drawPiece(ctx, pc, flip, dx, dy, s);
     }
     ctx.restore();
   }
+  // ---- önde hızlı geçen bulut kümeleri (yükselişte paralaks derinliği): 4 ayrı opak küme, aralarında boşluk.
+  // Kuşakla aynı palet ve boya; k = 2 boyanır (sc 1.6–1.8'de pikselleşmez). Yerleşim (cx, cy) çevresinde tasarım
+  // x −420…+420 (sc 1.7'de ≈1430 px), y −150…+90.
+  let _wisps = null;
+  function buildWisps() {
+    if (_wisps) return _wisps;
+    const r = rng(5260);
+    const DEF = [ // [sol x, taban y, tümsek sayısı, rA, rB, renk]
+      [-420, 40, 3, 34, 62, 0], [-172, 84, 4, 40, 78, 2], [96, 26, 3, 30, 58, 3], [272, 70, 3, 36, 66, 1],
+    ];
+    const masses = DEF.map(([x, yb, n, rA, rB, ti], i) => {
+      const { bumps } = bumpRow(r, x, yb, n, rA, rB);
+      // ortadaki tümseğin üstüne bir tepe: küme tek sıra gibi değil, kabarık küme gibi okunur
+      const mid = bumps[Math.floor(n / 2)]; bumps.push([mid[0] + (r() - 0.5) * mid[2] * 0.4, mid[1] - mid[2] * 0.62, mid[2] * 0.66]);
+      const fx0 = bumps[0][0] - bumps[0][2] * 0.55, fx1 = bumps[n - 1][0] + bumps[n - 1][2] * 0.55;
+      return puffMass(bumps, { k: 2, seed: 9600 + i, pal: cloudPal(CLOUD_TINT[ti], 0.01, 0.26), base: [fx0, fx1, yb + 8], cover: 0.75, rimA: 0.9 });
+    });
+    return (_wisps = { masses });
+  }
+  // (cx, cy) çevresine sc ölçekle 4 opak küme çiz; alpha genel çarpan (1 = tam opak)
+  function drawWisps(ctx, cx, cy, sc = 1, alpha = 1) {
+    if (alpha <= 0.001 || sc <= 0.0001) return;
+    const Wm = buildWisps();
+    ctx.save(); ctx.globalAlpha *= alpha; ctx.translate(cx, cy); ctx.scale(sc, sc);
+    for (const m of Wm.masses) ctx.drawImage(m.c, m.x, m.y, m.w, m.h);
+    ctx.restore();
+  }
+  defSprite('bulut-kumeleri', () => { const Wm = buildWisps(); const c = makeCanvas(900 * 2, 360 * 2); const cx = c.getContext('2d'); cx.scale(2, 2); for (const m of Wm.masses) cx.drawImage(m.c, m.x + 450, m.y + 220, m.w, m.h); return { canvas: c, px: 900, py: 440, k: 2 }; });
 
   // ================================================================ 3. UZAK TERASLI TEPELER (sise karışan)
   const FAR = { x: -200, y: 540, w: 1480, h: 1100 };
@@ -1311,6 +1411,7 @@ const CENNET_M = (() => {
     streams: STREAMS.map((s) => ({ id: s.id, ctrl: s.ctrl })),
     loggia: { x: 250, y: 1036, w: 440 }, // sol köşkün açık revağı (yakınlaşma hedefi), dünya
     drawBand,
+    drawWisps, // (ctx, cx, cy, sc, alpha): önde geçen 4 opak bulut kümesi
     SKY, BAND, FAR, MID, RIV,
   };
 })();

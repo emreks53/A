@@ -11,13 +11,14 @@ Kazanç kuralı (scenes/ses.js'teki gainDb):
   * dokunuş/geçiş türleri (tek kanallı): sinyal tepe = 0 dBFS'e normalize edilir → gainDb ≈ tepe dBFS (kısmadan önce)
   * zemin türleri (air, air-dusk, room-warm, air-soft, paradise, room-window, water): kararlı bölümün kanal başı
     RMS'i -20 dBFS'e normalize edilir → gainDb, bu -20 dBFS'e eklenir (ör. -24 → yaklaşık -44 dBFS RMS)
-Ek alanlar: dur (sn), a / r (zeminlerde giriş/çıkış sn), pan (-1..1), v ('lub'|'dub'), close (su: 1 yakın),
+Ek alanlar: dur (sn), a / r (zeminlerde giriş/çıkış sn), peak (geçişlerde zarf tepesi 0..1), pan (-1..1),
+v ('lub'|'dub'), close (su: 1 yakın), fc (dab bant merkezi Hz),
 seed (aynı t/tür için başka gürültü), duck (dB, türün varsayılan kısma derinliğini ezer).
 
 Rastgelelik belirlenimcidir: her işaretin tohumu (tür, zaman, seed) üçlüsünden türetilir; bir işareti değiştirmek
 diğerlerinin sesini değiştirmez.
 
-Son aşama: BS.1770-4 bütünleşik ölçüm → -14.0 LUFS'e kazanç → 4x örneklemeli gerçek tepe sınırlayıcı (-1.2 dBTP)
+Son aşama: BS.1770-4 bütünleşik ölçüm → -14.0 LUFS'e kazanç → 4x örneklemeli gerçek tepe sınırlayıcı (-1.5 dBTP; AAC 256k→128k zincirinde ≤ -1.2 dBTP kalır)
 → TPDF titreşimli 16 bit WAV. Doğrulama: ffmpeg -i <çıktı.wav> -af ebur128=peak=true -f null -
 """
 import json, sys, math, zlib, subprocess, wave
@@ -200,10 +201,18 @@ def fx_heart(ev, rng):
 
 
 def fx_whoosh(ev, rng, f0, f1, q=1.2):
-    """Hava geçişi: pembe gürültü, kayan geniş bant (tınısız)."""
+    """Hava geçişi: pembe gürültü, kayan geniş bant (tınısız). peak: zarfın tepe noktası (0..1, varsayılan 0.55)."""
     d = ev.get('dur', 1.0); n = int(d * SR)
     x = sweep_bp(pink(rng, n), lambda p: f0 * (f1 / f0) ** p, q)
-    e = np.ones(n); na = int(n * 0.55); e[:na] = rcos(na); e[na:] = rcos(n - na)[::-1]
+    e = np.ones(n); na = int(n * ev.get('peak', 0.55)); e[:na] = rcos(na) ** 1.4; e[na:] = rcos(n - na)[::-1]
+    return peak_norm(x * e)
+
+
+def fx_breath(ev, rng):
+    """Yumuşak hava kabarması (ışık/feyiz anları için): 1.8-6.5 kHz pembe gürültü, tınısız, kıvılcımsız."""
+    d = ev.get('dur', 0.7); n = int(d * SR)
+    x = bandpass(pink(rng, n), 1800, 6500)
+    e = np.ones(n); na = int(n * 0.4); e[:na] = rcos(na); e[na:] = rcos(n - na)[::-1] ** 1.3
     return peak_norm(x * e)
 
 
@@ -257,7 +266,7 @@ def water_layer(rng, n, close):
         b = rbj_bp(white(rng, n), fc * rng.uniform(0.9, 1.1), 1.2)
         m = np.exp((0.55 + 0.2 * close) * smooth(rng, n, rate * rng.uniform(0.8, 1.25)))
         bab += b / rms(b) * m / rms(m)
-    hiss = highpass(white(rng, n), 3800); hiss *= np.exp(0.5 * smooth(rng, n, 9.0))
+    hiss = lowpass(highpass(white(rng, n), 3800), 9000); hiss *= np.exp(0.5 * smooth(rng, n, 9.0))
     x = 0.65 * flow / rms(flow) + 0.75 * bab / rms(bab) + (0.18 + 0.22 * close) * hiss / rms(hiss)
     if not close: x = lowpass(x, 5200)  # uzak ırmak: yumuşak üst uç
     return x
@@ -274,10 +283,10 @@ def bed_water(ev, rng, n):
 
 def bed_air(ev, rng, n):
     """Sabah çayırı havası: yumuşak geniş hava + uzak ağaç hışırtısı, çok yavaş esinti."""
-    base = stereo(lambda: bandpass(pink(rng, n), 120, 5000), 0.35)
-    leafy = stereo(lambda: bandpass(pink(rng, n), 2500, 8000), 0.2)
+    base = stereo(lambda: lowpass(bandpass(pink(rng, n), 120, 7000), 1700, 1), 0.35)  # doğal eğim (tıslama olmasın)
+    leafy = stereo(lambda: bandpass(pink(rng, n), 2500, 7000), 0.2)
     leafy *= np.exp(0.6 * smooth(rng, n, 0.4))[:, None]
-    x = base / rms(base) + 0.22 * leafy / rms(leafy)
+    x = base / rms(base) + 0.16 * leafy / rms(leafy)
     return x * np.exp(0.22 * smooth(rng, n, 0.12))[:, None]
 
 
@@ -299,23 +308,23 @@ def bed_room_warm(ev, rng, n):
 
 def bed_air_soft(ev, rng, n):
     """Perde 4 (soyut zemin): pürüzsüz, hafif aydınlık hava."""
-    base = stereo(lambda: bandpass(pink(rng, n), 200, 6000), 0.4)
+    base = stereo(lambda: lowpass(bandpass(pink(rng, n), 200, 7000), 2000, 1), 0.4)
     return base / rms(base) * np.exp(0.1 * smooth(rng, n, 0.08))[:, None]
 
 
 def bed_paradise(ev, rng, n):
     """Cennet havası: geniş, yumuşak esinti + pürüzsüz uzak yaprak salınımı."""
-    base = stereo(lambda: bandpass(pink(rng, n), 180, 7000), 0.3)
-    fol = stereo(lambda: bandpass(white(rng, n), 1500, 5000), 0.15)
+    base = stereo(lambda: lowpass(bandpass(pink(rng, n), 180, 8000), 2000, 1), 0.3)
+    fol = stereo(lambda: lowpass(bandpass(white(rng, n), 1500, 5000), 2500, 1), 0.15)
     fol *= np.exp(0.5 * smooth(rng, n, 1.2))[:, None]
-    x = base / rms(base) + 0.25 * fol / rms(fol)
+    x = base / rms(base) + 0.2 * fol / rms(fol)
     return x * np.exp(0.18 * smooth(rng, n, 0.1))[:, None]
 
 
 def bed_room_window(ev, rng, n):
     """Son sahne: kitapların olduğu oda + açık pencereden gelen yumuşak hava ve uzak ırmak (kuş/ton yok)."""
     room = stereo(lambda: lowpass(highpass(pink(rng, n), 70), 1000, 4), 0.5)
-    air = stereo(lambda: bandpass(pink(rng, n), 200, 6000), 0.3)
+    air = stereo(lambda: lowpass(bandpass(pink(rng, n), 200, 7000), 1800, 1), 0.3)
     air *= np.exp(0.25 * smooth(rng, n, 0.12))[:, None]
     river = np.stack([lowpass(water_layer(rng, n, 0), 1800), lowpass(water_layer(rng, n, 0), 1800)], 1)
     river = 0.6 * river.mean(1, keepdims=True) + 0.4 * river
@@ -327,9 +336,10 @@ BEDS = {'water': bed_water, 'air': bed_air, 'air-dusk': bed_air_dusk, 'room-warm
 BED_AR = {'water': (0.8, 0.6), 'room-window': (0.4, 0.45)}
 
 TOUCH = {'brush': fx_brush, 'brush-big': fx_brush, 'brush-ring': fx_brush_ring, 'dab': fx_dab, 'tap': fx_tap,
-         'flick': fx_flick, 'heart': fx_heart, 'leaves': fx_leaves, 'foliage': fx_foliage, 'paper': fx_paper}
+         'flick': fx_flick, 'heart': fx_heart, 'leaves': fx_leaves, 'foliage': fx_foliage, 'paper': fx_paper,
+         'breath': fx_breath}
 WHOOSH = {'whoosh-soft': (500, 2200, 1.2), 'whoosh-in': (250, 2600, 1.6), 'whoosh-out': (2200, 260, 1.6),
-          'whoosh-deep': (110, 700, 1.1), 'rise': (180, 2400, 1.2), 'airy': (1400, 3400, 0.9),
+          'whoosh-deep': (110, 700, 1.1), 'whoosh-down': (1600, 180, 1.1), 'rise': (180, 2400, 1.2), 'airy': (1400, 3400, 0.9),
           'sweep': (600, 3000, 1.3)}
 # kısma derinliği (dB, konuşma tam varken) ve zaman sabitleri (giriş, bırakış sn)
 DUCK = {'bed': (6.0, 0.12, 0.6), 'whoosh': (6.0, 0.05, 0.3), 'touch': (2.0, 0.03, 0.2)}

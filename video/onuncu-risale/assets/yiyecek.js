@@ -30,9 +30,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
   // ---------------------------------------------------------------- paletler (koyu → açık)
   const PAL = {
     aril: ['#2A0210', '#5C0620', '#8E0A28', '#B80F2E', '#DA1E3A', '#F0475A', '#FF97A2', '#FFFFFF'],
-    arilK: ['#1A0608', '#300C12', '#4E181C', '#682422', '#80302A', '#943E34', '#A85A4A', '#C08070'],
     pith: ['#B89A62', '#D2B47C', '#E6CC98', '#F3E0B6', '#FBF0D4', '#FFFAEC'],
-    pithK: ['#3A2418', '#46301E', '#543A24', '#62442A', '#6E4E30', '#7A5A3A'],
     grapeP: ['#140828', '#24103E', '#381A5C', '#4C287A', '#663A98', '#8A62BA', '#B4A6DC', '#F0ECFC'],
     grapeG: ['#2E4A10', '#46661A', '#628A22', '#82AA2C', '#A3C83E', '#C6E070', '#E6F4AE', '#FBFFE6'],
     raisin: ['#1A0A08', '#2C120C', '#401C12', '#56281A', '#6C3622', '#84482C', '#A0623C', '#C89A70'],
@@ -263,7 +261,6 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     }
     // zarlar: tanelerin üstünü örten krem duvarlar (gölge yanı koyu, ışık yanı açık sırt)
     withClip(S, face.path, () => {
-      const mr = rng(1301);
       for (const m of memb) {
         let segs = [m.pts];
         if (wi) segs = [m.pts.map(([u, v], j) => [u + Math.sin(j * 1.7 + m.ph) * 0.006 * wi, v + Math.cos(j * 1.3 + m.ph) * 0.004 * wi])]; // solmuş: bütün, yalnız hafif dalgalı
@@ -467,7 +464,7 @@ const YIYECEK = { names: ['nar', 'nar-kuru'], onTableSpots: {}, base: { nar: [0,
     const bloomC = kind === 'yesil' ? '#E8F0C8' : dry ? WILT_BLOOM : '#B4A6DC';
     for (const [x, y, rr0, u, t, sd] of fr) if (u > 0.6 || t > 0.8 || t < 0.08) S.rim(grapeShape(x, y, rr0 * shrink(sd), sd, 0, dry ? 1 : 0).path, { w: 2, alpha: 0.9 });
     let i = 0;
-    for (const [x, y, rr0] of L.back) { const sd = seed * 100 + i++; grape(S, x, y, rr0 * shrink(sd), P, { ...opt, seed: sd, dark: 1, dl: gl(x, y) - 0.03, bloom: bloomPick(sd) * 0.6, bloomC }); }
+    for (const [x, y, rr0] of L.back) { const sd = seed * 100 + i++; grape(S, x, y, rr0 * shrink(sd), P, { ...opt, seed: sd, dark: 1, dl: gl(x, y) - 0.03, bloom: bloomPick(sd) * 0.6, bloomC: dry ? bloomC : undefined }); }
     for (const [x, y, rr0, u, t, sd] of fr) grape(S, x, y, rr0 * shrink(sd), P, { ...opt, seed: sd, dl: gl(x, y), bloom: bloomPick(sd), bloomC });
     return done(S, cx, 250 * K, 0.4);
   }

@@ -1,10 +1,13 @@
 // Cennet ziyafeti (Perde 5, 33.19–36.40 sn): köşkün altında, ırmak kıyısında yakın plan — insansız (88:13-16):
 // yükseltilmiş, altın örgülü karşılıklı tahtlar, dizili yastıklar, serili halılar, altın tepside meyveler, hazır kadehler,
-// gümüş ibrik, uzayan serin gölge (56:30) ve kümeleri alçalan dallar (69:23, 76:14); tahtların altından berrak ırmak akar.
+// gümüş ibrik, uzayan serin gölge (56:30) ve kümeleri alçalan dallar (69:23, 76:14).
 // Dünya koordinatı = zoom 1'de ekran pikseli (1080×1920, sol üst köken); kamera itmesi için 120 px kenar payı.
 // Işık: güneş yok, gökte kaynak yok, huzme yok; yumuşak, eşit, kaynaksız ortam ışığı. Parıltı patlaması yok.
 // Köşk: üst üste odalar (39:20) — kemerin üstünde bir sonraki katın inci pencereleri; çatı / kubbe / kaynak yok.
-// Irmak: oyuksuz, setsiz; terasın ince direkleri arasından zeminin ALTINDAN akar, kıyısı çimen ve inci çakıl.
+// Zemin: döşeme / kiriş / direk / iskele YOK — tahtlar ve halı doğal çimene serili. Irmaklar oyuksuz, setsiz, YÜZEYDE akar
+// (Enes hadisi): bahçeden gelen dere tahtların arasından iner, sağ tahtın ayaklarının yanından kıvrılır, halının sağından
+// geçip öndeki ırmağa çimenin üstünde katılır; hiçbir yerde zeminin altına girmez. Kıyılar yumuşak: çimen, inci çakıl, çiçek.
+// Arka bahçe: altın gövdeli, yapraklı, meyveli canlı ağaçlar (her gövde bir tacın içine girer); fon düz basamaklı inci-nane-şeftali.
 'use strict';
 const ZIYAFET = (() => {
   const TAU = Math.PI * 2;
@@ -12,6 +15,12 @@ const ZIYAFET = (() => {
   // ortak perspektif (zemin, halı, tahtlar, tepsi, kadehler): göz hizası y=760, odak 1100, göz yüksekliği 1 birim
   const CAM = { hz: 760, f: 1100, cx: 540 };
   const proj = (X, Y, Z) => [CAM.cx + (CAM.f * X) / Z, CAM.hz + (CAM.f * (1 - Y)) / Z];
+  // ziyafet takımı (tahtlar, halı, tepsi, kadehler, ibrik) ufuk noktasına göre SET ölçeğiyle küçültülür = derinlikte geri itilir;
+  // böylece karşılıklı tahtların kolçakları geniş kadrajda (z 0.95–1.07) çerçeve kenarlarına değmez. Sprite'lar aynı, k / SET ile çizilir.
+  const SET = 0.92;
+  const setP = (x, y) => [CAM.cx + (x - CAM.cx) * SET, CAM.hz + (y - CAM.hz) * SET];
+  const gP = (X, Z) => [CAM.cx + (CAM.f * X) / Z, CAM.hz + CAM.f / Z]; // zemin düzlemi (X, Z) → dünya
+  const w2g = (x, y) => { const Z = CAM.f / Math.max(0.5, y - CAM.hz); return [((x - CAM.cx) * Z) / CAM.f, Z]; };
 
   // ---------------------------------------------------------------- palet (koyu → açık, basamaklı)
   const PAL = {
@@ -438,7 +447,7 @@ const ZIYAFET = (() => {
     const rowF = [[604, 472, -0.22], [680, 468, 0.02], [752, 480, 0.22]];
     for (const [x, y, a] of rowB) date(S, x, y, 86, a, PAL.dateA.map((c) => shade(c, -0.05)), { th: 0.2, dim: 0.85 });
     for (const [x, y, a] of rowF) date(S, x, y, 90, a, PAL.dateA, { th: 0.2, dim: 0.92 });
-    return { canvas: S.finish({ emboss: 0.55 }), px: cx, py: cy, k };
+    return { canvas: S.finish({ emboss: 0.55 }), px: cx, py: cy, k: k / SET };
   }
 
   // ---------------------------------------------------------------- 2) z-akvab: kulpsuz, ağızsız, ayaksız gümüş-billur kadeh (küçük; halıda)
@@ -510,7 +519,7 @@ const ZIYAFET = (() => {
     S.x.restore();
     S.hx.save(); S.hx.strokeStyle = 'rgb(205,205,205)'; S.hx.lineWidth = 7 * k; S.hx.beginPath(); S.hx.ellipse(cx, rimY, RX - 3, RY - 1.5, 0, 0, TAU); S.hx.stroke(); S.hx.restore();
     for (let i = 1; i < 6; i++) { const a = (i / 6) * Math.PI; bead(S, cx + Math.cos(a) * (RX - 3), rimY + 12 + Math.sin(a) * (RY - 1), 4.4); }
-    return { canvas: S.finish({ emboss: 0.45 }), px: cx, py: baseY + BY - 4, k: AKVAB_K };
+    return { canvas: S.finish({ emboss: 0.45 }), px: cx, py: baseY + BY - 4, k: AKVAB_K / SET };
   }
 
   // ---------------------------------------------------------------- 3) z-ibrik: ince gümüş ibrik (56:18), lüleli ve kulplu
@@ -561,11 +570,11 @@ const ZIYAFET = (() => {
     stroke(S, cx - 5, 51, -0.7, 6, 3, PAL.nacre[0], { alpha: 0.8 }); stroke(S, cx + 6, 62, 0.8, 6, 2.4, PAL.nacre[1], { alpha: 0.7 });
     for (let y = 280; y < 500; y += 18) { const hw = hwAt(y); stroke(S, cx - hw * 0.46, y, Math.PI / 2 - 0.05, 22, 5, '#FFFFFF', { alpha: 0.8 }); }
     for (let y = 150; y < 240; y += 14) { const hw = hwAt(y); stroke(S, cx - hw * 0.45, y, Math.PI / 2, 14, 3, '#FFFFFF', { alpha: 0.75 }); }
-    return { canvas: S.finish({ emboss: 0.5 }), px: cx, py: 592, k: IBRIK_K };
+    return { canvas: S.finish({ emboss: 0.5 }), px: cx, py: 592, k: IBRIK_K / SET };
   }
 
   // ---------------------------------------------------------------- 4) z-hali: perspektifte serili halı (zümrüt + altın, yakut vurgular; figürsüz)
-  const HALI = { w: 900, h: 300, yF: 14, yN: 282, nearW: 868 }; // sprite satırları; dünya y = sprite y + 1180
+  const HALI = { w: 900, h: 300, yF: 14, yN: 282, nearW: 840 }; // sprite satırları; dünya y = sprite y + 1180
   function paintHali() {
     const FW = 868, FH = 620; const F = Paint.sprite(FW, FH, { seed: 7601, k: 1 });
     const C = { em: '#10694A', em2: '#0B553C', emd: '#073E2D', emB: '#0A3A2E', ruby: '#A3193A', ruby2: '#7A1230', gold: '#DDA636', gold2: '#A9741E', goldL: '#EEC458', fr: '#C4B48E', fr2: '#A99A76' };
@@ -631,7 +640,7 @@ const ZIYAFET = (() => {
       const ww = wAt(yy);
       for (let j = 0; j < n; j++) { const x = w / 2 - ww / 2 + ((j + 0.5) / n) * ww; const dx = (x - w / 2) * 0.03; stroke(S, x + dx * 0.5, yy + (yy === yN ? len / 2 : -len / 2), Math.PI / 2 + dx * 0.01, len, yy === yN ? 3.4 : 2.2, j % 2 ? C.fr : C.fr2, { dry: 0.5 }); }
     }
-    return { canvas: S.finish({ emboss: 0.5 }), px: w / 2, py: 150, k: 1 };
+    return { canvas: S.finish({ emboss: 0.5 }), px: w / 2, py: 150, k: 1 / SET };
   }
 
   // ---------------------------------------------------------------- 5) z-taht-sol / z-taht-sag: altın örgülü, yükseltilmiş, karşılıklı tahtlar
@@ -783,7 +792,7 @@ const ZIYAFET = (() => {
     limb(S, crPts([Q(t * 0.5, D + 0.01, arm + 0.012), Q(t * 0.5, D * 0.5, arm + 0.016), Q(t * 0.5, -0.005, arm + 0.012)], 5), pxu(0, D / 2, arm) * 0.045, pxu(0, D / 2, arm) * 0.04, { rim: { w: 0.9, alpha: 0.7 } });
     for (const pt of [Q(0, D, arm + 0.012), Q(L, D, arm + 0.012)]) pearl(pt, 4 * k);
     // tacın uzayan serin gölgesi: şilte, yastık ve arkalıkta yumuşak lekeler (ışık lekesi yok)
-    return { canvas: S.finish({ emboss: 0.5 }), px: (cxW - ox) * k, py: (1180 - oy) * k, k };
+    return { canvas: S.finish({ emboss: 0.5 }), px: (cxW - ox) * k, py: (1180 - oy) * k, k: k / SET };
   }
 
   // ---------------------------------------------------------------- 6) z-platform: inci-krem köşk zemini, ince direkli yükseltilmiş teras, altından akan berrak ırmak
