@@ -22,3 +22,25 @@ Seçerken bakılacaklar:
 
 Görseli (1–3 aday) bu sohbete ekleyin; videoya `kapanis/kareler/ai.jpg` olarak girer (yavaş kamera itmesi, kaynak yazısı
 ve geçiş eklenir).
+
+## GPT (ChatGPT görsel üretimi) için istem
+
+Shutterstock'un sonucu beğenilmedi (Arapça yazı bozuk, Kur'an kitapların üstüne eğik dayanmış, sırt yazıları anlamsız,
+örtü dağınık). GPT metni çok daha doğru yazar; aşağıdaki istemi aynen yapıştırın:
+
+```
+Create a vertical 9:16 photograph that looks exactly like a real camera photo (not CGI, not an illustration).
+
+Scene: a calm, beautiful reading corner beside a large old wooden window at golden-hour sunset. Outside, softly out of focus: a still lake with forested hills and a small town along the far shore, warm orange-rose sky reflected in the water. The window and sky fill the upper part of the frame. Camera slightly elevated, about 30 degrees above the sill.
+
+On a wide oak window sill covered with a smooth, neatly laid cream linen cloth (no messy wrinkles):
+1. Foreground, bottom of the frame: one hardcover book lying open and flat toward the viewer, as if I am reading it; cream pages with neat, small Turkish text in a classic serif font, slightly out of focus.
+2. Middle left: four thick hardcover books (about 5 cm thick each) standing upright, perfectly straight, side by side, spines toward the camera. Matte leather in exact color #D68661 (soft dusty terracotta-rose with a light-brown leather undertone). Each spine has two thin gold-foil raised bands near the top and bottom, a small gold Ottoman geometric rosette, and a gold title, exactly: "SÖZLER", "MEKTUBAT", "LEM'ALAR", "ŞUALAR", with "Bediüzzaman Said Nursî" in small letters near the bottom. No other letters.
+3. Middle right, the most honored place, in the warm sunlight: the Holy Qur'an lying perfectly flat and straight on top of a neat stack of two more #D68661 books, front cover facing up and clearly visible. Cover: fine leather in exact color #144173 (elegant deep ocean blue). Centered on the cover, the Arabic words exactly "القرآن الكريم" in beautiful white thuluth calligraphy, correctly spelled, inside an elegant white Islamic geometric frame with white corner ornaments. All writing and ornaments on the Qur'an are white. Nothing is placed on top of the Qur'an, and it is not on any stand or holder.
+
+Lighting and lens: low warm sun from the window, soft long shadows, gentle glow on the leather, 35mm lens at f/2.8 with shallow depth of field. Real textures: leather grain, slight wear on the gilt edges, paper fibers, linen weave, wood grain.
+
+Do not include: people, hands, candles, lamps, flowers, extra objects, any other text, watermark.
+```
+
+Görseli ekran görüntüsü olarak değil, indirilen asıl dosya (en yüksek çözünürlük) olarak gönderin.
