@@ -116,13 +116,17 @@
   const FIG_H = 66;
   const OTHER = { desat: 0.35, tint: '#A9764E', tintAmt: 0.45 }; // the other people: muted warm ochre robes
   const POSE = {
-    give: { lean: 0.07, head: 0.1, nS: 1.22, nE: 0.28, fS: 1.06, fE: 0.42, nH: 0.08, nK: 0.05, fH: -0.1, fK: 0.08, nF: 0, fF: 0 },
-    receive: { lean: 0.05, head: 0.06, nS: 1.08, nE: 0.5, fS: 0.95, fE: 0.62, nH: 0.05, nK: 0.04, fH: -0.07, fK: 0.06, nF: 0, fF: 0 },
-    plant: { lean: 0.34, head: 0.32, nS: 0.55, nE: 0.2, fS: 0.42, fE: 0.28, nH: 1.42, nK: 1.42, fH: -0.12, fK: 1.52, nF: 0, fF: -0.35 },
-    // (help / seated: their near hands meet in a clasp — skeleton positions checked against man.js's sideSkeleton)
-    help: { lean: 0.26, head: 0.3, nS: 1.25, nE: 0.04, fS: 0.12, fE: 0.35, nH: 0.12, nK: 0.08, fH: -0.16, fK: 0.12, nF: 0, fF: 0 },
-    seated: { lean: -0.2, head: -0.2, nS: 2.05, nE: 0.05, fS: -0.55, fE: 0.15, nH: 2.0, nK: 1.5, fH: 1.82, fK: 1.25, nF: 0.25, fF: 0.25 },
-    sujood: { lean: 1.98, head: 0.18, nS: 0.28, nE: 1.22, fS: 0.18, fE: 1.28, nH: 0.3, nK: 1.85, fH: 0.24, fK: 1.8, nF: -0.5, fF: -0.5 },
+    // (both feet of every standing figure reach the ground: equal leg lengths to the soles)
+    give: { lean: 0.07, head: 0.1, nS: 1.22, nE: 0.28, fS: 1.06, fE: 0.42, nH: 0.08, nK: 0.05, fH: -0.06, fK: 0.02, nF: 0, fF: 0 },
+    receive: { lean: 0.05, head: 0.06, nS: 1.08, nE: 0.5, fS: 0.95, fE: 0.62, nH: 0.05, nK: 0.04, fH: -0.05, fK: 0.0, nF: 0, fF: 0 },
+    // one knee down (the rig's kneel legs: near foot, far knee and far toes all on the ground)
+    // (arms by IK: both hands hold the young tree's stem, the near one above the far one)
+    plant: { lean: 0.76, head: 0.45, nS: 0.3702, nE: 0.7246, nW: 0.476, fS: 0.3932, fE: 0.5216, fW: 0.7, nH: 1.55, nK: 1.55, fH: -0.06, fK: 1.94, nF: 0, fF: -1.3 },
+    // help / seated: solved against man.js's skeleton, joint limits and grounding (helper at −20, seated at +25): the
+    // seat, both feet and the planted far hand of the seated man lie on the ground; the helper's near wrist sits on
+    // the seated man's fingers (80% along his hand), its hand turned back along it — a clasp
+    help: { lean: 0.7, head: 0.3, nS: 0.727, nE: 0.5484, nW: -0.3563, fS: 0.25, fE: 0.4, nH: 0.247, nK: 0.3, fH: 0.0266, fK: 0.28, nF: 0, fF: 0 },
+    seated: { lean: -0.24, head: -0.2, nS: 2.1226, nE: 0.1, fS: -0.3975, fE: 0, fW: -1.1133, nH: 2.3, nK: 1.5687, fH: 2.22, fK: 1.3987, nF: 0, fF: 0 },
   };
   const V = [
     { c: [84, 80], bg: '#EDC77E', name: 'bread' },
@@ -162,6 +166,206 @@
     pc.drawImage(SCR, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
     pc.restore();
   }
+  // ---------------- the prostration (sujood), drawn directly ----------------
+  // The rig's side view cannot place a real sujood's arms: the elbows are raised and spread, so in profile both
+  // arm segments are foreshortened. This figure is built from the same pieces, colours, shading and pencil as
+  // engine/man.js (geometry in units of h; right-facing; ground point (0, 0)): knees and shins on the rug, toes
+  // tucked under (socks: shoes are left off for prayer), hips high, the back gently rounded, forehead and nose on the
+  // rug, palms flat beside the head (at the ears, fingers toward the qibla), forearms raised off the rug.
+  const SJ = (() => {
+    const G = {
+      hip: [-0.024, -0.275], knee: [0.0, -0.036], ankle: [-0.226, -0.098],
+      nb: [0.2265, -0.110], sh: [0.208, -0.1365], hb: [0.2575, -0.0645], hc: [0.3008, -0.053], ha: 1.83,
+      el: [0.100, -0.066], wr: [0.1985, -0.0165],
+    };
+    // spine: quadratic from the hip joint to the neck base, bowed toward the back (dorsal)
+    const mid = [(G.hip[0] + G.nb[0]) / 2, (G.hip[1] + G.nb[1]) / 2];
+    const ax = [G.nb[0] - G.hip[0], G.nb[1] - G.hip[1]], al = Math.hypot(ax[0], ax[1]);
+    const dors = [ax[1] / al, -ax[0] / al];                       // perpendicular toward the back (up)
+    G.cp = [mid[0] + dors[0] * 0.042, mid[1] + dors[1] * 0.042];
+    G.alen = al;
+    return G;
+  })();
+  function sjSpine(u) {
+    const a = SJ.hip, b = SJ.cp, c = SJ.nb, v = 1 - u;
+    const p = [v * v * a[0] + 2 * v * u * b[0] + u * u * c[0], v * v * a[1] + 2 * v * u * b[1] + u * u * c[1]];
+    const d = [2 * v * (b[0] - a[0]) + 2 * u * (c[0] - b[0]), 2 * v * (b[1] - a[1]) + 2 * u * (c[1] - b[1])];
+    const l = Math.hypot(d[0], d[1]) || 1;
+    return { p, t: [d[0] / l, d[1] / l], f: [-d[1] / l, d[0] / l] };   // f: the front (ventral) normal
+  }
+  /** torso frame point: x across (+ front), y along the body from the hip (man.js torso units) */
+  function sjT(x, y) {
+    const u = y / SJ.alen;
+    if (u <= 1) { const s = sjSpine(Math.max(0, u)); const ex = u < 0 ? y : 0; return [s.p[0] + s.t[0] * ex + s.f[0] * x, s.p[1] + s.t[1] * ex + s.f[1] * x]; }
+    const s = sjSpine(1), ex = y - SJ.alen;
+    return [s.p[0] + s.t[0] * ex + s.f[0] * x, s.p[1] + s.t[1] * ex + s.f[1] * x];
+  }
+  const sjCap = (a, b, r0, r1, n = 12) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], Ls = Math.hypot(dx, dy);
+    const th = Math.atan2(dy, dx), ph = Math.asin(clamp((r0 - r1) / Ls, -1, 1));
+    const out = [];
+    const a1 = th + Math.PI / 2 + ph, a2 = th + 1.5 * Math.PI - ph;
+    for (let i = 0; i <= n; i++) { const q = a1 + ((a2 - a1) * i) / n; out.push([a[0] + Math.cos(q) * r0, a[1] + Math.sin(q) * r0]); }
+    const b1 = th - Math.PI / 2 - ph, b2 = th + Math.PI / 2 + ph;
+    for (let i = 0; i <= n; i++) { const q = b1 + ((b2 - b1) * i) / n; out.push([b[0] + Math.cos(q) * r1, b[1] + Math.sin(q) * r1]); }
+    return out;
+  };
+  const sjArea = (pts) => { let s2 = 0; for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; s2 += a[0] * b[1] - b[0] * a[1]; } return s2; };
+  const sjCW = (pts) => (sjArea(pts) < 0 ? pts.slice().reverse() : pts);
+  function sjHull(points) {
+    const q = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = [];
+    for (const r of q) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], r) <= 0) lo.pop(); lo.push(r); }
+    for (let i = q.length - 1; i >= 0; i--) { const r = q[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], r) <= 0) up.pop(); up.push(r); }
+    lo.pop(); up.pop();
+    return lo.concat(up);
+  }
+  /** man.js roundHull(): convex hull with filleted corners (radius ≤ r) */
+  function sjRoundHull(points, r, step = 0.2) {
+    const H = sjCW(sjHull(points)), n = H.length, out = [];
+    for (let i = 0; i < n; i++) {
+      const a = H[(i - 1 + n) % n], b = H[i], c = H[(i + 1) % n];
+      const la = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1e-9, lc = Math.hypot(c[0] - b[0], c[1] - b[1]) || 1e-9;
+      const u1 = [(a[0] - b[0]) / la, (a[1] - b[1]) / la], u2 = [(c[0] - b[0]) / lc, (c[1] - b[1]) / lc];
+      const phi = Math.acos(clamp(u1[0] * u2[0] + u1[1] * u2[1], -1, 1)), tanH = Math.tan(phi / 2);
+      if (tanH > 50 || phi < 1e-3) { out.push(b); continue; }
+      const t = Math.min(r / tanH, 0.45 * la, 0.45 * lc), rr = t * tanH;
+      const p1 = [b[0] + u1[0] * t, b[1] + u1[1] * t], p2 = [b[0] + u2[0] * t, b[1] + u2[1] * t];
+      const bis = [u1[0] + u2[0], u1[1] + u2[1]], bl = Math.hypot(bis[0], bis[1]) || 1;
+      const cc = [b[0] + (bis[0] / bl) * rr / Math.sin(phi / 2), b[1] + (bis[1] / bl) * rr / Math.sin(phi / 2)];
+      let a0 = Math.atan2(p1[1] - cc[1], p1[0] - cc[0]), a1 = Math.atan2(p2[1] - cc[1], p2[0] - cc[0]);
+      while (a1 < a0) a1 += E.TAU;
+      if (a1 - a0 > Math.PI) a1 -= E.TAU;
+      const k = Math.max(1, Math.ceil(Math.abs(a1 - a0) / step));
+      for (let j = 0; j <= k; j++) { const tt = a0 + ((a1 - a0) * j) / k; out.push([cc[0] + Math.cos(tt) * rr, cc[1] + Math.sin(tt) * rr]); }
+    }
+    return out;
+  }
+  /** man.js part(): opaque paint, a shading glaze away from the upper-left light, pencil contour, occlusion */
+  function sjPart(L, path, col, h, bb, amt, seam) {
+    const p = L.paint, ink = L.ink;
+    p.save(); p.globalCompositeOperation = 'source-over'; p.fillStyle = col; p.fill(path); p.restore();
+    if (bb && amt > 0) {
+      const sc = E.shade(col, -0.55), dx = 0.62, dy = 0.78, ext = bb[2];
+      p.save(); p.clip(path);
+      const g = p.createLinearGradient(bb[0] - dx * ext, bb[1] - dy * ext, bb[0] + dx * ext, bb[1] + dy * ext);
+      g.addColorStop(0, E.rgba(sc, 0)); g.addColorStop(0.5, E.rgba(sc, 0)); g.addColorStop(0.62, E.rgba(sc, amt * 0.75)); g.addColorStop(1, E.rgba(sc, amt));
+      p.globalCompositeOperation = 'multiply'; p.fillStyle = g; p.fillRect(bb[0] - ext * 1.5, bb[1] - ext * 1.5, ext * 3, ext * 3);
+      p.restore();
+    }
+    const stroke = (clips) => {
+      ink.save(); for (const [cp, rule] of clips) ink.clip(cp, rule);
+      ink.strokeStyle = E.P.ink; ink.lineJoin = 'round'; ink.lineCap = 'round';
+      ink.globalAlpha *= 0.42; ink.lineWidth = Math.max(1.6, h * 0.0042) * 2; ink.stroke(path); ink.restore();
+    };
+    if (!seam) stroke([]);
+    else {
+      // (man.js seam) no pencil where the sleeve's round root lies inside the coat
+      const notCut = new Path2D(); notCut.rect(-1e6, -1e6, 2e6, 2e6); notCut.addPath(seam.cut);
+      const notIn = new Path2D(); notIn.rect(-1e6, -1e6, 2e6, 2e6); notIn.addPath(seam.inside);
+      stroke([[notCut, 'evenodd']]);
+      stroke([[seam.cut, 'nonzero'], [notIn, 'evenodd']]);
+    }
+    ink.save(); ink.globalCompositeOperation = 'destination-out'; ink.fillStyle = '#000'; ink.fill(path); ink.restore();
+    L.light.save(); L.light.globalCompositeOperation = 'destination-out'; L.light.fill(path); L.light.restore();
+  }
+  function sujood(L, h) {
+    const C = E.man.colors, dk = (c) => E.shade(c, -0.28);
+    const P2 = (q) => [q[0] * h, q[1] * h];
+    const poly = (pts) => { const pa = new Path2D(); const q = sjCW(pts).map(P2); pa.moveTo(q[0][0], q[0][1]); for (let i = 1; i < q.length; i++) pa.lineTo(q[i][0], q[i][1]); pa.closePath(); return pa; };
+    const smooth = (pts, ten = 0.5) => E.smoothPath(sjCW(pts).map(P2), true, ten);
+    const SOCK = '#77727F';
+    const G = SJ;
+    // ---- an arm: sleeve (shoulder → elbow → wrist), hand flat on the rug (edge-on), cuff
+    const arm = (o, near, torsoPath) => {
+      const sh = [G.sh[0] + o[0], G.sh[1] + o[1]], el = [G.el[0] + o[0], G.el[1] + o[1]], wr = [G.wr[0] + o[0], G.wr[1]];
+      const fd = [wr[0] - el[0], wr[1] - el[1]], fl = Math.hypot(fd[0], fd[1]); fd[0] /= fl; fd[1] /= fl;
+      const wr2 = [wr[0] - fd[0] * 0.004, wr[1] - fd[1] * 0.004];
+      const sleeve = new Path2D();
+      [sjCap(sh, el, 0.031, 0.0255), sjCap(el, wr2, 0.0246, 0.0205)].forEach((pts) => { const q = sjCW(pts).map(P2); sleeve.moveTo(q[0][0], q[0][1]); q.forEach((r) => sleeve.lineTo(r[0], r[1])); sleeve.closePath(); });
+      const col = near ? C.coat : dk(C.coat);
+      // hand: palm on the rug, seen from its little-finger edge (the thumb lies on the far side)
+      const hx = wr[0], fy = 0;                                      // fy: the rug
+      const hand = smooth([[hx - 0.004, fy - 0.0235], [hx + 0.02, fy - 0.0245], [hx + 0.042, fy - 0.0215], [hx + 0.058, fy - 0.0135],
+        [hx + 0.07, fy - 0.0055], [hx + 0.0735, fy - 0.0012], [hx + 0.066, fy - 0.0002], [hx + 0.035, fy - 0.0002], [hx + 0.008, fy - 0.0004], [hx - 0.006, fy - 0.006]], 0.45);
+      let seam = null;
+      if (torsoPath) { const cut = new Path2D(); cut.arc(sh[0] * h, sh[1] * h, 0.05 * h, 0, E.TAU); seam = { inside: torsoPath, cut }; }
+      sjPart(L, sleeve, col, h, [((sh[0] + wr[0]) / 2) * h, ((sh[1] + wr[1]) / 2 - 0.03) * h, 0.18 * h], 0.4, seam);
+      sjPart(L, hand, near ? C.skin : dk(C.skin), h, [(hx + 0.035) * h, -0.012 * h, 0.05 * h], 0.35);
+      // cuff: a band over the wrist end of the sleeve
+      const c0 = [wr[0] - fd[0] * 0.017, wr[1] - fd[1] * 0.017], c1 = [wr[0] + fd[0] * 0.003, wr[1] + fd[1] * 0.003];
+      const nx = -fd[1] * 0.0222, ny = fd[0] * 0.0222;
+      sjPart(L, smooth([[c0[0] + nx, c0[1] + ny], [c1[0] + nx, c1[1] + ny], [c1[0] - nx, c1[1] - ny], [c0[0] - nx, c0[1] - ny]], 0.2), near ? E.shade(C.coat, -0.2) : dk(E.shade(C.coat, -0.2)), h, null, 0);
+    };
+    // ---- a leg: sock (toes tucked under), trousers (thigh, shin on the rug)
+    const leg = (o, near) => {
+      // (the far leg shares the hip; its knee and foot sit a little behind the near ones)
+      const hip = [G.hip[0], G.hip[1]], kn = [G.knee[0] + o[0] * 0.6, G.knee[1]], an = [G.ankle[0] + o[0], G.ankle[1]];
+      const A = (x, y) => [an[0] + x, an[1] + y];
+      const fl = -an[1];                                            // the rug, relative to the ankle
+      const sock = smooth([A(-0.008, -0.026), A(-0.031, -0.019), A(-0.0445, 0.004), A(-0.0425, 0.03), A(-0.034, 0.06), A(-0.026, fl - 0.014),
+        A(-0.016, fl - 0.0008), A(0.012, fl - 0.0005), A(0.035, fl - 0.003), A(0.0365, fl - 0.011), A(0.03, fl - 0.016), A(0.014, fl - 0.018),
+        A(0.017, 0.052), A(0.022, 0.02), A(0.017, -0.012)], 0.45);
+      sjPart(L, sock, near ? SOCK : dk(SOCK), h, [(an[0]) * h, (an[1] + 0.05) * h, 0.07 * h], 0.3);
+      const sd = [an[0] - kn[0], an[1] - kn[1]], sl = Math.hypot(sd[0], sd[1]); sd[0] /= sl; sd[1] /= sl;
+      const hemTop = [an[0] - sd[0] * 0.016, an[1] - sd[1] * 0.016], hemBot = [an[0] + sd[0] * 0.006, an[1] + sd[1] * 0.006];
+      const nx = -sd[1], ny = sd[0];
+      const tr = new Path2D();
+      [sjCap(hip, kn, 0.048, 0.0362), sjCap(kn, hemTop, 0.0345, 0.0272),
+        [[hemTop[0] + nx * 0.0272, hemTop[1] + ny * 0.0272], [hemBot[0] + nx * 0.0282, hemBot[1] + ny * 0.0282], [hemBot[0] - nx * 0.0282, hemBot[1] - ny * 0.0282], [hemTop[0] - nx * 0.0272, hemTop[1] - ny * 0.0272]]]
+        .forEach((pts) => { const q = sjCW(pts).map(P2); tr.moveTo(q[0][0], q[0][1]); q.forEach((r) => tr.lineTo(r[0], r[1])); tr.closePath(); });
+      sjPart(L, tr, near ? C.trousers : dk(C.trousers), h, [((hip[0] + an[0]) / 2) * h, ((hip[1] + an[1]) / 2) * h, 0.26 * h], 0.38);
+    };
+    leg([-0.022, 0], false);
+    leg([0, 0], true);
+    // ---- coat: the torso along the rounded back ∪ the skirt draped over the hips and the tops of the thighs
+    const T = sjT;
+    const torso = smooth([
+      T(-0.048, 0.296), T(-0.062, 0.25), T(-0.058, 0.17), T(-0.05, 0.1), T(-0.058, 0.02), T(-0.0585, -0.03),
+      T(-0.045, -0.032), T(0.04, -0.032), T(0.054, -0.03), T(0.054, 0.02), T(0.058, 0.12), T(0.07, 0.2), T(0.06, 0.265), T(0.03, 0.302), T(-0.02, 0.31),
+    ].map((q) => [q[0], q[1]]), 0.5);
+    const hip = G.hip, kd = [G.knee[0] - hip[0], G.knee[1] - hip[1]], kl = Math.hypot(kd[0], kd[1]); kd[0] /= kl; kd[1] /= kl;
+    const kn = [-kd[1], kd[0]];
+    const skirtPts = [T(-0.058, 0.03), T(0.054, 0.03), T(-0.061, -0.03), T(0.054, -0.03),
+      [hip[0] + kd[0] * 0.112 + kn[0] * 0.05, hip[1] + kd[1] * 0.112 + kn[1] * 0.05], [hip[0] + kd[0] * 0.112 - kn[0] * 0.05, hip[1] + kd[1] * 0.112 - kn[1] * 0.05],
+      [hip[0] - 0.07, hip[1] + 0.088], [hip[0] - 0.045, hip[1] + 0.1], [hip[0] + 0.015, hip[1] + 0.103], [hip[0] + 0.045, hip[1] + 0.088]];
+    // the seat: the coat stretches over the round tops of the thighs (no trouser shows behind it)
+    for (const a of [2.6, 3.0, 3.4, 3.8, 4.2]) skirtPts.push([hip[0] + Math.cos(a) * 0.056, hip[1] + Math.sin(a) * 0.056]);
+    const coat = new Path2D(); coat.addPath(torso); coat.addPath(poly(sjRoundHull(skirtPts, 0.016)));
+    const tc = T(0, 0.12);
+    sjPart(L, coat, C.coat, h, [tc[0] * h, tc[1] * h, 0.22 * h], 0.42);
+    E.pencil(L.ink, [T(-0.052, 0.03), T(0.052, 0.035)].map(P2), { w: Math.max(1.0, h * 0.0024), a: 0.18, double: false });
+    // ---- neck, collar, head (forehead and nose on the rug), ear, hair
+    const nb2 = T(0.0, 0.29);
+    sjPart(L, poly(sjCap(nb2, G.hb, 0.0235, 0.0205)), C.skin, h, [G.nb[0] * h, G.nb[1] * h, 0.04 * h], 0.4);
+    sjPart(L, poly(sjCap(T(-0.037, 0.295), T(0.03, 0.303), 0.0125, 0.0125)), E.shade(C.coat, -0.15), h, null, 0);
+    const ca = Math.cos(G.ha), sa = Math.sin(G.ha);
+    const H2 = (x, y) => [G.hc[0] + x * ca - y * sa, G.hc[1] + x * sa + y * ca];
+    const head = smooth([
+      H2(-0.047, -0.01), H2(-0.044, -0.042), H2(-0.025, -0.062), H2(0.005, -0.066), H2(0.033, -0.056),
+      H2(0.047, -0.03), H2(0.049, -0.006), H2(0.056, 0.004), H2(0.05, 0.012), H2(0.047, 0.026), H2(0.043, 0.044),
+      H2(0.032, 0.058), H2(0.012, 0.064), H2(-0.012, 0.052), H2(-0.03, 0.035), H2(-0.044, 0.02),
+    ], 0.5);
+    sjPart(L, head, C.skin, h, [G.hc[0] * h, G.hc[1] * h, 0.07 * h], 0.38);
+    const ec = H2(-0.006, 0.006);
+    sjPart(L, E.blob(ec[0] * h, ec[1] * h, 0.012 * h, { rx: 0.0105 * h, ry: 0.016 * h, irr: 0.02, rot: G.ha, seed: 3 }), E.shade(C.skin, -0.12), h, null, 0);
+    const hair = smooth([
+      H2(-0.05, 0.012), H2(-0.051, -0.03), H2(-0.034, -0.062), H2(-0.004, -0.073), H2(0.028, -0.066),
+      H2(0.046, -0.044), H2(0.044, -0.032), H2(0.022, -0.042), H2(0.0, -0.036), H2(-0.012, -0.02),
+      H2(-0.016, 0.0), H2(-0.024, 0.018), H2(-0.04, 0.03),
+    ], 0.5);
+    sjPart(L, hair, C.hair, h, [G.hc[0] * h, G.hc[1] * h, 0.07 * h], 0.3);
+    // ---- the near arm, over everything
+    arm([0, 0], true, torso);
+  }
+  /** the sujood figure in miniature (as fig(): K× larger under a 1/K scale) */
+  function figSujood(L, x, y) {
+    const K = 4;
+    E.save(L); E.translate(L, x, y); E.scale(L, 1 / K);
+    sujood(L, FIG_H * K);
+    E.restore(L);
+  }
   /** E.man in miniature: drawn K× larger under a 1/K scale so his pencil contour stays fine */
   function fig(L, x, y, facing, pose, o = {}) {
     const K = 4;
@@ -197,7 +401,7 @@
         fig(L, cx - 25, by, 1, POSE.give);
         fig(L, cx + 25, by, -1, POSE.receive, OTHER);
         // a round loaf passing between their hands
-        const lx = cx + 0.5, ly = by - 0.6 * H;
+        const lx = cx + 0.5, ly = by - 0.6 * H - 9.2;   // it rests on their hands
         const loaf = new Path2D();
         loaf.moveTo(lx - 8.2, ly + 3.2);
         loaf.bezierCurveTo(lx - 8.6, ly - 3.6, lx - 4, ly - 6.4, lx, ly - 6.4);
@@ -205,6 +409,7 @@
         loaf.bezierCurveTo(lx + 4, ly + 4.6, lx - 4, ly + 4.6, lx - 8.2, ly + 3.2);
         loaf.closePath();
         pc.save(); pc.globalCompositeOperation = 'source-over'; pc.fillStyle = '#E7BC72'; pc.fill(loaf); pc.restore();
+        L.ink.save(); L.ink.globalCompositeOperation = 'destination-out'; L.ink.fill(loaf); L.ink.restore();   // no hand contour through it
         pc.save(); pc.clip(loaf);
         E.wash(pc, E.blob(lx + 2.2, ly + 1.4, 6, { rx: 8, ry: 4.4, seed: 3, irr: 0.15 }), '#B9743A', { alpha: 0.6 });
         E.wash(pc, E.blob(lx - 2.6, ly - 3.2, 2.4, { rx: 3.6, ry: 1.5, seed: 4, irr: 0.1 }), '#FFFFFF', { mode: 'over', alpha: 0.5 });
@@ -212,22 +417,23 @@
         E.pencil(L.ink, loaf, { w: 0.6, a: 0.6, double: false });
         for (const [x0, y0, x1, y1] of [[-4.4, -4.6, -2.4, -0.6], [-0.6, -5.4, 1.2, -1.2], [3.2, -4.6, 4.8, -1.2]]) E.pencil(L.ink, [[lx + x0, ly + y0], [lx + x1, ly + y1]], { w: 0.55, a: 0.5, double: false });
       } else if (v.name === 'sapling') {
-        // the soil he has just turned
-        E.wash(pc, E.blob(cx + 20, by - 0.5, 9, { rx: 14, ry: 3.6, seed: 7, irr: 0.15 }), '#9C7A5A', { alpha: 0.55 * wsh });
-        PR.sapling(L, cx + 20, by - 1.5, 33, { t, growth: 0.35 + 0.65 * E.ease.outCubic(clamp(wsh * 1.4)), soil: true, seed: 3 });
-        fig(L, cx - 16, by, 1, POSE.plant);
+        // the soil he has just turned; he steadies the young tree with both hands
+        E.wash(pc, E.blob(cx + 13, by - 0.5, 8, { rx: 10, ry: 3.2, seed: 7, irr: 0.15 }), '#9C7A5A', { alpha: 0.55 * wsh });
+        PR.sapling(L, cx + 13, by - 1.5, 33, { t, growth: 0.86 + 0.14 * E.ease.outCubic(clamp(wsh * 1.4)), soil: true, seed: 3 });
+        fig(L, cx - 17, by, 1, POSE.plant);
       } else if (v.name === 'help') {
-        fig(L, cx + 23, by, -1, POSE.seated, OTHER);
-        fig(L, cx - 23, by, 1, POSE.help);
+        fig(L, cx + 25, by, -1, POSE.seated, OTHER);
+        fig(L, cx - 20, by, 1, POSE.help);
       } else if (v.name === 'prayer') {
-        // the prayer rug (seen almost edge-on): crimson field with a gold border
-        const rug = new Path2D(); rug.moveTo(cx - 48, by - 1.5); rug.lineTo(cx + 42, by - 1.5); rug.lineTo(cx + 46, by + 4.5); rug.lineTo(cx - 44, by + 4.5); rug.closePath();
+        // the prayer rug (seen almost edge-on): crimson field with a gold border, as long as the one who prays on it
+        const rx0 = cx - 26, rx1 = cx + 30;
+        const rug = new Path2D(); rug.moveTo(rx0, by - 1.5); rug.lineTo(rx1 - 3, by - 1.5); rug.lineTo(rx1, by + 4.5); rug.lineTo(rx0 + 3, by + 4.5); rug.closePath();
         pc.save(); pc.globalCompositeOperation = 'source-over'; pc.fillStyle = '#B4473F'; pc.fill(rug); pc.restore();
-        const band = new Path2D(); band.moveTo(cx - 45, by + 0.2); band.lineTo(cx + 41, by + 0.2); band.lineTo(cx + 43, by + 2.8); band.lineTo(cx - 43, by + 2.8); band.closePath();
+        const band = new Path2D(); band.moveTo(rx0 + 2.5, by + 0.2); band.lineTo(rx1 - 3.5, by + 0.2); band.lineTo(rx1 - 1.5, by + 2.8); band.lineTo(rx0 + 4.5, by + 2.8); band.closePath();
         E.wash(pc, band, '#E3B45A', { mode: 'over', alpha: 0.75 });
         E.wash(pc, band, '#B4473F', { alpha: 0.35 });
         E.pencil(L.ink, rug, { w: 0.6, a: 0.5, double: false });
-        fig(L, cx - 5, by - 1.5, 1, POSE.sujood);
+        figSujood(L, cx - 2, by - 1.5);
       }
     });
   }
@@ -712,6 +918,7 @@
       camK(L, c, 1.3);
       E.motes(L.light, { x: 0, y: 150, w: 1080, h: 1100, n: 14, t, seed: 66, color: '#FFF1D2', size: 2.6, a: 0.45, rise: 18 });
     },
+    _dbg: { vScene: (...a) => vScene(...a), sujood: (...a) => sujood(...a), fig: (...a) => fig(...a), POSE, V, FIG_H },
     sfx() {
       return [
         { t: THREAD0, type: 'swell', gain: 0.3, dur: 0.9 },

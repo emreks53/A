@@ -228,17 +228,21 @@
   /** the world's bob (the man's dies away before the zoom so it sits exactly on the zoom centre) */
   const bobOf = (p, i, lt) => 4 * Math.sin(lt * 1.4 + i * 1.7) * (p.man ? 1 - E.ep(lt, 3.6, 4.4) : 1);
 
+  // his RIGHT hand on his heart (front view: the screen-left arm crossing to the left side of his chest) — the
+  // rig's fHeart, mirrored (fHeart lays the left hand on the right side of the chest)
+  const HEART_R = { tilt: 0, headTilt: -0.06, rS: 0.06, rE: 0.04, lS: 0.16, lE: 2.45, lFs: 0.62, lFsU: 0.8, lH: 0.035, rH: 0.035, lFront: true };
   function poseOf(p, lt, st, T) {
     const M = E.man.pose;
     const arrive = E.ep(lt, st.s0 - 0.35, st.s0 + 0.3);
     const relax = E.ep(lt, st.s0 + 0.6, st.s0 + 1.6);
     let P0;
     if (p.view === 'side') {
-      // looks up as the drop comes down, reaches up to touch it, then lowers the hands into an offering
+      // looks up as the drop comes down, reaches up toward it (fingertips stay just clear of the glass: the world is
+      // drawn over the people), then lowers the hands into an offering
       const look = E.ep(lt, E.lerp(st.f0, st.f1, 0.35), st.s0 + 0.1);
       const up = E.ep(lt, st.s0 - 0.4, st.s0 + 0.2);
       const offer = E.ep(lt, st.s0 + 0.5, st.s0 + 1.45);
-      const REACH = { lean: -0.05, head: -0.42, nS: 2.3, nE: 0.22, nW: -0.15, fS: 1.35, fE: 0.5, fW: 0, nH: 0.03, nK: 0.03, fH: -0.03, fK: 0.03 };
+      const REACH = { lean: -0.05, head: -0.42, nS: 2.17, nE: 0.22, nW: -0.15, fS: 1.35, fE: 0.5, fW: 0, nH: 0.03, nK: 0.03, fH: -0.03, fK: 0.03 };
       const OFFER = { lean: -0.02, head: -0.3, nS: 0.72, nE: 1.05, nW: 0.3, fS: 0.5, fE: 1.0, fW: 0.2, nH: 0.03, nK: 0.03, fH: -0.03, fK: 0.03 };
       P0 = E.man.lerp(M.stand(), REACH, up);
       P0 = E.man.lerp(P0, OFFER, offer);
@@ -251,7 +255,7 @@
       const open = 0.32 * arrive * (1 - E.ep(lt, T.birer2, T.alem));
       P0 = E.man.lerp(M.fStand(), M.fOpen(1), open);
       const heart = E.ep(lt, T.birer2 + 0.05, T.alem + 0.25);
-      if (heart > 0) P0 = E.man.lerp(P0, M.fHeart(1), heart * 0.9);
+      if (heart > 0) P0 = E.man.lerp(P0, HEART_R, heart * 0.9);
     } else P0 = E.man.lerp(M.fStand(), M.fOpen(1), 0.36 * arrive * (1 - 0.55 * relax));
     P0.headTilt = (P0.headTilt || 0) + (p.x < 540 ? 0.05 : p.x > 540 ? -0.05 : 0) * (0.5 + 0.5 * Math.sin(lt * 0.9 + p.o)) * (0.3 + 0.7 * arrive);
     P0.hipDrop = 0.004 * Math.sin(lt * 1.9 + p.o * 1.3);

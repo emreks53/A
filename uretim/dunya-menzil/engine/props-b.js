@@ -28,6 +28,7 @@
         Footprint ≈ 0.45·h wide (frame 0.39·h). Glass ≈ 0.30·h × 0.69·h (see mirrorGlass).
         opts: t=0 · shine 0..1 (a gleam sweeps across the glass as shine goes 0→1; 0 and 1 show none)
               night 0..1 · arch 'pointed'|'round' ('pointed') · glassTint ('#C9D2DE') · alpha 1
+              sheen 1 (strength of the static diagonal glass streaks; lower it so a reflected face stays clear)
               shadow true (contact shadow) · glints 1 (gilded sparkles on L.light)
               reflect(L, rect): called with ALL THREE layers clipped to the glass and the CALLER's transform;
                 rect = {x, y, w, h, cx, springY, apexY} = glass bounding box in caller coords (y+h = glass
@@ -693,7 +694,7 @@
     // frame shadow falling on the glass (stacked strokes instead of a blur)
     for (const [sw, sa] of [[40, 0.1], [26, 0.12], [14, 0.14]]) D.stroke(P, g.glass, n ? '#27304F' : '#7D8797', sw, { alpha: sa });
     // diagonal sheen strokes left as bare paper
-    const sheenA = (hasRef ? 0.5 : 0.8) * (n ? 0.62 : 1);
+    const sheenA = (hasRef ? 0.5 : 0.8) * (n ? 0.62 : 1) * (o.sheen ?? 1);
     // bare-paper strokes: crisp (found) edges, the paper showing more strongly towards the upper left (lost)
     const shG = D.lin(P, -A, gr.y, A, gr.y + gr.h, [[0, '#FFFFFF', 1], [0.55, '#FFFFFF', 0.75], [1, '#FFFFFF', 0.45]]);
     g.sheen.forEach((p, i) => D.fill(P, p, shG, { mode: 'over', alpha: sheenA * (i % 2 ? 0.8 : 1) }));

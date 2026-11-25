@@ -143,8 +143,9 @@
   // ------------------------------------------------------------------------------------------ camera
   /** dip: 0 = on the world, 1 = revealing the man below */
   function dipOf(lt, T) {
-    const a = E.ep(lt, T.hayat - 0.32, T.hayat + 0.18, 'inOutCubic');
-    const b = E.ep(lt, T.end - 0.5, T.end - 0.01, 'inOutSine');
+    // (sine easing and a 0.61 s exit: the man and his near meadow, the nearest layer, peak at ≈ 120 / 160 px per frame)
+    const a = E.ep(lt, T.hayat - 0.32, T.hayat + 0.18, 'inOutSine');
+    const b = E.ep(lt, T.end - 0.62, T.end - 0.01, 'inOutSine');
     return a * (1 - b);
   }
   function camOf(lt, T) {
@@ -320,6 +321,51 @@
     L.ink.restore();
   }
 
+  /** the near meadow he stands on (screen space): moves rigidly with him, so his feet stay planted while the far
+      land (PR.ground) glides by more slowly behind — true parallax for the camera's dip. top = its crest line y
+      near his feet; drawn from the crest to below the frame. Calm, low contrast (it lies behind the subtitles). */
+  const MEADOW = { near: '#97BF69', fore: '#7AA758', dark: '#557F45', flowers: ['#FBF3E2', '#EDBF55', '#DD6A7A'] };
+  function nearMeadow(L, top, t) {
+    if (top > E.H + 40) return;
+    const x0 = -80, x1 = E.W + 80, bot = Math.max(top + 300, E.H + 80);
+    const crest = (x) => top + 16 * E.fbm1(x * 0.0035 + 3.7, 21, 3) + 9 * Math.sin(x * 0.0052 + 1.3);
+    const pts = [];
+    for (let x = x0; x <= x1 + 1; x += 36) pts.push([x, crest(x)]);
+    const band = E.smoothPath(pts.concat([[x1 + 40, bot], [x0 - 40, bot]]), true);
+    const p = L.paint;
+    E.wash(p, band, MEADOW.near, { mode: 'over' });
+    for (const k of [L.ink, L.light]) { k.save(); k.globalCompositeOperation = 'destination-out'; k.fill(band); k.restore(); }
+    // depth: deepening toward the bottom, a sunlit crest along the top
+    E.wash(p, band, '#ffffff', { grad: { from: [0, top], to: [0, top + 760], stops: [[0, 'rgba(255,255,255,0)'], [1, E.rgba(MEADOW.dark, 0.42)]] } });
+    p.save(); p.clip(band);
+    const strip = E.smoothPath(pts.map(([x, y]) => [x, y + 1]).concat(pts.slice().reverse().map(([x, y]) => [x, y + 30])), true);
+    E.wash(p, strip, '#ffffff', { mode: 'over', alpha: 0.32, soft: 4 });
+    // a lower, darker fold of the meadow and a few soft cloud-shadow patches
+    const fpts = [];
+    for (let x = x0; x <= x1 + 1; x += 40) fpts.push([x, top + 330 + 22 * E.fbm1(x * 0.003 + 9.1, 23, 3)]);
+    E.wash(p, E.smoothPath(fpts.concat([[x1 + 40, bot], [x0 - 40, bot]]), true), MEADOW.fore, { alpha: 0.35 });
+    E.wash(p, E.blob(300, top + 210, 120, { rx: 260, ry: 34, seed: 31, irr: 0.3 }), MEADOW.dark, { alpha: 0.1, soft: 14 });
+    E.wash(p, E.blob(830, top + 470, 120, { rx: 300, ry: 40, seed: 33, irr: 0.3 }), MEADOW.dark, { alpha: 0.1, soft: 16 });
+    p.restore();
+    E.pencil(L.ink, pts, { w: 1.1, a: 0.12, double: false, seed: 9 });
+    // sparse grass tufts swaying, and flower dots (fixed in the meadow)
+    const r = E.rng(77);
+    const gs = new Path2D();
+    for (let i = 0; i < 26; i++) {
+      const x = x0 + r() * (x1 - x0), v = r(), yy = top + 40 + v * 560;
+      const hh = 7 + 12 * v, sw = Math.sin(t * 1.2 + x * 0.02) * hh * 0.12;
+      for (let j = -1; j <= 1; j++) { gs.moveTo(x + j * hh * 0.18, yy); gs.quadraticCurveTo(x + j * hh * 0.3 + sw * 0.5, yy - hh * 0.6, x + j * hh * 0.5 + sw, yy - hh * (1 - Math.abs(j) * 0.25)); }
+    }
+    p.save(); p.globalCompositeOperation = 'multiply'; p.strokeStyle = E.rgba(MEADOW.dark, 0.32); p.lineWidth = 1.1; p.stroke(gs); p.restore();
+    const byCol = MEADOW.flowers.map(() => new Path2D());
+    for (let i = 0; i < 30; i++) {
+      const v = Math.pow(r(), 0.8), x = x0 + r() * (x1 - x0), yy = top + 50 + v * 560, sz = 1.4 + 2.6 * v;
+      const ci = Math.floor(r() * byCol.length);
+      for (let j = 0; j < 3; j++) { const c = new Path2D(); c.arc(x + (r() - 0.5) * 9 * sz, yy + (r() - 0.5) * 3 * sz, sz * (0.7 + r() * 0.5), 0, E.TAU); byCol[ci].addPath(c); }
+    }
+    byCol.forEach((q, i) => E.wash(p, q, MEADOW.flowers[i], { mode: 'over', alpha: 0.85 }));
+  }
+
   E.scene('s04', {
     draw(L, lt, t, shot) {
       const T = tm(shot);
@@ -395,18 +441,21 @@
       E.resetCamera(L);
       // the land far below: a soft band at the foot of the frame during the beats, rising with the man in the
       // dip, then left behind as the camera rides up (gone in the last frame, like s05's first)
-      {
-        const a = E.ep(lt, T.hayat - 0.32, T.hayat + 0.18, 'inOutCubic');
-        const b = E.ep(lt, T.end - 0.5, T.end - 0.01, 'inOutSine');
-        const gTop = b > 0 ? E.lerp(1040, 2030, b) : E.lerp(1650, 1040, a);
-        if (gTop < E.H + 20) {
-          E.save(L);
-          E.translate(L, 0, gTop - 1000);
-          PR.ground(L, 1000, { palette: 'spring', seed: 4, t: lt, trees: 0.5, flowers: 0.3 });
-          E.restore(L);
-        }
+      const gA = E.ep(lt, T.hayat - 0.32, T.hayat + 0.18, 'inOutSine');      // (same curves as dipOf)
+      const gB = E.ep(lt, T.end - 0.62, T.end - 0.01, 'inOutSine');
+      const gTop = gB > 0 ? E.lerp(1040, 2030, gB) : E.lerp(1650, 1040, gA);
+      if (gTop < E.H + 20) {
+        E.save(L);
+        E.translate(L, 0, gTop - 1000);
+        PR.ground(L, 1000, { palette: 'spring', seed: 4, t: lt, trees: 0.5, flowers: 0.3 });
+        E.restore(L);
       }
-      const fy = MAN_FEET + (1 - c.k) * 980 + (1 - c.k) * (1 - c.k) * 900;   // leaves the frame fully before the cut
+      // the man and the near meadow under his feet are a nearer layer of the same land: they move with it, PAR times
+      // as far (one consistent parallax for the camera's dip and rise; he is below the frame while the land is low)
+      const PAR = 1.9;
+      const fy = MAN_FEET + PAR * (gTop - 1040);
+      // he stands on a near meadow that moves with him (his feet never glide over the slower far land)
+      if (c.k > 0.001) nearMeadow(L, fy - 132, lt);
       const mk = E.ep(lt, T.hayat - 0.2, T.hayat + 0.45, 'inOutSine');   // he looks up at his world
       const chest = [MAN_X + 0.068 * MAN_H, fy - 0.69 * MAN_H];
       if (c.k > 0.001) {
@@ -496,7 +545,7 @@
         { t: Math.ceil((g(T.hayat) - 0.1) * 1.18) / 1.18, type: 'heart', gain: 0.34 },
         { t: g(T.hayat - 0.02), type: 'swell', gain: 0.26, dur: 0.85 },
         { t: Math.ceil((g(T.hayat) - 0.1) * 1.18 + 1) / 1.18, type: 'heart', gain: 0.44 },
-        { t: g(T.end - 0.52), type: 'whoosh', gain: 0.16, dur: 0.55 },
+        { t: g(T.end - 0.64), type: 'whoosh', gain: 0.16, dur: 0.62 },
       ];
     },
   });

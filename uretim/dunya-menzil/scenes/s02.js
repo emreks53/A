@@ -8,7 +8,7 @@
    "hayatı" 3.48: his reflection blooms in, the glass lights up from within (his life: a road winding to a
    little home, swirling colour, rising motes), warm light spills onto the floor and catches his front.
    "endam" 4.38: the camera eases back and tilts so the whole mirror and the whole man read head to toe above the
-   subtitle band; a band of light runs down the reflection; "âyinesidir" 4.76: the gleam sweeps the glass. */
+   subtitle band; a soft gleam rises over the reflection from toe to head; "âyinesidir" 4.76: the gleam sweeps the glass. */
 (function () {
   const E = window.E;
   const PR = E.props;
@@ -84,29 +84,98 @@
   const DEPTH = { cloud: 1.5, skyline: 0.6, arcade: 0.06, crowd: 0.05, floor: 0, near: -0.012 };
 
   // ================================================================ the man's walk (integrated, no foot sliding)
-  const V0 = E.man.walkSpeed(MAN_H, CYCLE);
-  const W0 = 0.45, W1 = 1.05;
-  function walkRaw(lt) {
-    let x = 0, ph = 0.15;
-    const dt = 1 / 240, n = Math.max(0, Math.round(lt / dt));
-    for (let i = 0; i < n; i++) {
-      const tau = (i + 0.5) * dt;
-      const k = 1 - E.smooth(E.seg(tau, W0, W1));
-      const cad = 0.55 + 0.45 * k;
-      x += V0 * k * cad * dt;
-      ph += (cad / CYCLE) * dt;
-    }
-    return { x, ph, k: 1 - E.smooth(E.seg(lt, W0, W1)) };
+  // He walks in with the rig's planted-foot cycle at full stride, slowing only his cadence (stride per cycle stays
+  // constant, so x = ∫ walkSpeed·cad dt keeps the feet planted). At the far foot's toe-off (lt = TB) a closing step
+  // takes over: the near foot stays exactly where it struck (it rolls flat), the far foot swings forward and lands
+  // flat beside it in the stand stance, the hip eases to a stop above them; legs by two-bone IK (rig skeleton maths,
+  // replicated from engine/man.js: keep in sync).
+  const R = E.man.R;
+  const WK = { st: 0.58, flat: 0.12, heelOff: 0.3, faS: 0.24, faO: -0.52, mid: 0.29, x0: -0.055 };
+  const STR = 4 * Math.sin(0.40) * (R.thigh + R.shin) * 0.92;          // stride per cycle (units of h)
+  const LEGL = R.thigh + R.shin, HEEL = [-R.heel, 0.035], TOE = [R.foot, 0.035];
+  const rot2 = (p, a) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a)];
+  const sst = (a, b, x) => { const u = E.clamp((x - a) / (b - a)); return u * u * (3 - 2 * u); };
+  /** rig stance foot: ankle (x rel. hip, y rel. ground, y down) + foot angle at stance progress u (amp 1) */
+  function stanceFoot(u) {
+    const s = STR, xh = WK.x0 + s * WK.mid - s * u;
+    let fa;
+    if (u < WK.flat) fa = WK.faS * (1 - sst(0, WK.flat, u));
+    else if (u < WK.heelOff) fa = 0;
+    else fa = WK.faO * sst(WK.heelOff, WK.st, u);
+    let a;
+    if (fa >= 0) { const q = rot2(HEEL, -fa); a = [xh - q[0], -q[1]]; } else { const q = rot2(TOE, -fa); a = [xh + R.heel + R.foot - q[0], -q[1]]; }
+    return { a, fa, xh };
   }
-  const TOTAL = walkRaw(1.6).x;
+  const reachOf = (a, e) => { const L2 = LEGL * e; return -a[1] + Math.sqrt(Math.max(0, L2 * L2 - a[0] * a[0])); };
+  const extOf = (u) => 0.9995 - 0.014 * Math.pow(Math.sin(Math.PI * E.clamp(u / 0.32)), 2);
+  const sminF = (a, b, k) => { const hh = E.clamp(0.5 + (0.5 * (b - a)) / k); return E.lerp(b, a, hh) - k * hh * (1 - hh); };
+  function ik2(dx, dy) {
+    const t = R.thigh, s = R.shin;
+    const D = E.clamp(Math.hypot(dx, dy), Math.abs(t - s) + 1e-4, (t + s) * 0.99995);
+    const al = Math.acos(E.clamp((t * t + D * D - s * s) / (2 * t * D), -1, 1));
+    const kn = Math.acos(E.clamp((t * t + s * s - D * D) / (2 * t * s), -1, 1));
+    return { H: Math.atan2(dx, dy) + al, K: Math.PI - kn };
+  }
+  const V0 = E.man.walkSpeed(MAN_H, CYCLE);
+  const TB = 0.72, DSTEP = 0.5, W0 = 0.2;                 // closing step: TB .. TB + DSTEP (local s)
+  const U_X = 0.08;                                        // near foot's stance progress at the far foot's toe-off
+  const XH_X = stanceFoot(U_X).xh;                         // near heel rel. hip at TB (h)
+  const ANK_N = 0.24 * Math.sin(0.03) + 0.235 * Math.sin(0), ANK_F = 0.24 * Math.sin(-0.03) + 0.235 * Math.sin(-0.06);  // stand ankles rel. hip
+  const HIPF = XH_X - HEEL[0] - ANK_N;                     // final hip rel. the hip at TB (h): near ankle in stand stance
+  const C_B = (2 * HIPF * MAN_H) / (DSTEP * V0);           // cadence at TB: the hip enters the stop at its walking speed
+  const cadOf = (lt) => 1 - (1 - C_B) * E.smooth(E.seg(lt, W0, TB));
+  // ∫ cad dt (closed form: smoothstep integral)
+  const cadInt = (lt) => {
+    const a = Math.min(lt, W0), b = E.clamp(lt, W0, TB) - W0, d = TB - W0, u = b / d;
+    return a + b - (1 - C_B) * d * (u * u * u - 0.5 * u * u * u * u);
+  };
+  const PH_B = 0.33;                                        // walk phase at TB: far toe-off (u 0.58), near u 0.08
+  const PH0 = PH_B - cadInt(TB) / CYCLE;
+  const X_B = V0 * cadInt(TB);                              // hip x at TB (local, from 0)
+  const X0 = MAN_STOP - (X_B + HIPF * MAN_H);               // so that he stops at MAN_STOP
+  /** legs during / after the closing step (tau = lt − TB), world hip x */
+  function closingStep(tau) {
+    const h = MAN_H, s = E.clamp(tau / DSTEP), hx0 = X0 + X_B;
+    const hipX = hx0 + HIPF * h * (1 - (1 - s) * (1 - s));
+    // near foot: heel planted where it struck, rolling flat
+    const uX = U_X + (tau * C_B) / CYCLE;
+    const faX = uX < WK.flat ? WK.faS * (1 - sst(0, WK.flat, uX)) : 0;
+    const heelX = hx0 + XH_X * h;
+    const qX = rot2(HEEL, -faX);
+    const aX = [(heelX - hipX) / h - qX[0], -qX[1]];
+    // far foot: from its toe-off pose, a short swing that lands flat beside the near foot (stand stance)
+    const A0 = stanceFoot(WK.st).a, a0x = hx0 + A0[0] * h;
+    const afx = hx0 + (HIPF + ANK_F) * h;
+    const w = s, sw = w * w * w * (w * (6 * w - 15) + 10);
+    const lift = 0.03 * Math.pow(Math.sin(Math.PI * Math.pow(w, 0.85)), 1.2);
+    const faY = WK.faO * (1 - sst(0.12, 0.92, w));
+    const aY = [(E.lerp(a0x, afx, sw) - hipX) / h, E.lerp(A0[1], -0.035, E.smooth(w)) - lift];
+    // hip height: the rig's rule (as high as the legs allow, softened over the stance foot)
+    let Y = Math.min(reachOf(aX, 0.9995), reachOf(aY, 0.9995));
+    Y = sminF(Y, reachOf(aX, extOf(uX)), 0.006);
+    Y = sminF(Y, reachOf(aY, extOf(WK.st + tau * 9)), 0.006);
+    const nI = ik2(aX[0], Y + aX[1]), fI = ik2(aY[0], Y + aY[1]);
+    return { x: hipX, nH: nI.H, nK: Math.max(0, nI.K), fH: fI.H, fK: Math.max(0, fI.K), nF: faX, fF: faY };
+  }
   function manState(lt, shot) {
-    const w = walkRaw(Math.min(lt, 1.6));
-    const x = MAN_STOP - TOTAL + w.x;
-    const st = E.smooth(E.seg(lt, 0.72, 1.15));
-    let pose = E.man.lerp(E.man.pose.walk(w.ph % 1, w.k), E.man.pose.stand(), st);
-    // wonder at the glowing glass, then standing tall for "endam"
+    let x, pose;
+    if (lt < TB) {
+      x = X0 + V0 * cadInt(lt);
+      pose = E.man.pose.walk((PH0 + cadInt(lt) / CYCLE) % 1, 1);
+    } else {
+      const tau = lt - TB, s = E.clamp(tau / DSTEP);
+      const legs = closingStep(tau);
+      x = legs.x;
+      // upper body: the arm swing carries on and settles into the stand pose
+      const ph = PH_B + (Math.min(tau, DSTEP) * C_B) / CYCLE;
+      pose = E.man.lerp(E.man.pose.walk(ph % 1, 1), E.man.pose.stand(), E.smooth(E.seg(tau, 0, DSTEP * 1.1)));
+      for (const q of ['nH', 'nK', 'fH', 'fK', 'nF', 'fF']) pose[q] = legs[q];
+    }
+    // wonder at the glowing glass, then standing tall for "endam" (upper body only)
     const look = E.ep(lt, T(7, shot) - 0.05, T(7, shot) + 0.6) * (1 - E.ep(lt, T(9, shot) - 0.2, T(9, shot) + 0.5));
-    pose = E.man.lerp(pose, E.man.pose.lookUp(0.16), look * 0.8);
+    const lk = E.man.lerp(pose, E.man.pose.lookUp(0.16), look * 0.8);
+    for (const q of ['lean', 'head', 'nS', 'nE', 'fS', 'fE']) pose[q] = lk[q];
+    const st = E.smooth(E.seg(lt, TB, TB + DSTEP));
     pose.lean = (pose.lean || 0) + 0.006 * Math.sin(lt * 1.9) * st;
     return { x, pose };
   }
@@ -332,6 +401,8 @@
     const rim = E.rrect(x - w * 0.56, y - h - 14, w * 1.12, 18, 6);
     E.wash(p, rim, '#DE9A74', { mode: 'over' });
     E.wash(p, rim, E.shade(P.terracotta, -0.2), { alpha: 0.4, grad: { from: [x - w / 2, 0], to: [x + w / 2, 0], c2: E.shade(P.terracotta, -0.5) } });
+    // the pot is opaque: no pencil line or light of what lies behind it (the man's trailing foot) shows through
+    for (const c of [L.ink, L.light]) { c.save(); c.globalCompositeOperation = 'destination-out'; c.fill(pp); c.fill(rim); c.restore(); }
     E.pencil(L.ink, pp, { w: 1.2, a: 0.3 });
     E.pencil(L.ink, rim, { w: 1.1, a: 0.3, double: false });
   }
@@ -627,7 +698,7 @@
         E.man.shadow(L, x1, BACK + 40, hB, 0.25);
         E.man.draw(L, { x: x1, y: BACK + 40, h: hB, view: 'side', facing: -1, pose: E.man.pose.walk((lt / 0.95 + 0.3) % 1), tint: '#B0694F', tintAmt: 0.4, desat: 0.3 });
       }
-      const x2 = 690 + vB * lt;
+      const x2 = 690 + E.man.walkSpeed(hB * 0.92, 0.95) * lt;   // its own height's ground speed (no foot slide)
       if (x2 < 1800) {
         E.man.shadow(L, x2, BACK + 26, hB * 0.92, 0.22);
         E.man.draw(L, { x: x2, y: BACK + 26, h: hB * 0.92, view: 'side', facing: 1, pose: E.man.pose.walk((lt / 0.95 + 0.7) % 1), tint: '#5E7F56', tintAmt: 0.4, desat: 0.3 });
@@ -646,12 +717,14 @@
 
       const ra = E.ep(lt, tH - 0.15, tH + 0.35);
       PR.mirror(L, MX, FLOOR, MH, {
-        t: lt, glassTint: E.mix('#C9D2DE', '#F1E3C8', life),
+        t: lt, glassTint: E.mix('#C9D2DE', '#F1E3C8', life), sheen: 0.3,   // faint streaks: the reflected face stays clear
         shine: E.ep(lt, tAy - 0.1, tAy + 0.8, 'linear'),
         reflectAlpha: ra,
         reflect: ra > 0 ? (L2, r) => {
           lifeInGlass(L2, r, lt, life);
-          E.man.draw(L2, { x: REF_X, y: REF_FEET, h: REF_H, view: 'side', facing: -1, pose: man.pose, tint: '#C99A62', tintAmt: 0.1 * life });
+          // the reflection comes toward the glass as he does (mirrored), so its planted foot stays put too
+          const rx = REF_X + (MAN_STOP - man.x) * (REF_H / MAN_H);
+          E.man.draw(L2, { x: rx, y: REF_FEET, h: REF_H, view: 'side', facing: -1, pose: man.pose, tint: '#C99A62', tintAmt: 0.1 * life });
         } : undefined,
       });
       // luminous glass: warm light over the reflection, a soft aura round him, motes rising
@@ -661,7 +734,15 @@
         L.light.save();
         L.light.clip(gp);
         E.glow(L.light, GR.cx, chest - 110, GR.h * 0.55 * (1 + 0.03 * Math.sin(lt * 2.2)), '#FFD9A0', (0.12 + 0.34 * flash) * life);
+        // motes never cross the reflected face (a speck on a face reads as a stain)
+        const rxh = REF_X + (MAN_STOP - man.x) * (REF_H / MAN_H), ryh = REF_FEET - REF_H * 0.9;
+        const nf = new Path2D();
+        nf.rect(GR.x - 50, GR.y - 50, GR.w + 100, GR.h + 100);
+        nf.ellipse(rxh, ryh, REF_H * 0.11, REF_H * 0.13, 0, 0, Math.PI * 2);
+        L.light.save();
+        L.light.clip(nf, 'evenodd');
         E.motes(L.light, { x: GR.x, y: GR.y, w: GR.w, h: GR.h, n: 14, t: lt, seed: 7, size: 2.3, a: 0.75 * life, rise: 34 });
+        L.light.restore();
         L.light.restore();
         E.glow(L.light, MX, GR.y + GR.h * 0.5, GR.h * 0.85, '#FFE6B8', (0.12 + 0.22 * flash) * life);
       }
@@ -670,11 +751,12 @@
       // the glow of the glass catches his front
       if (life > 0) E.glow(L.light, man.x + 44, FLOOR - MAN_H * 0.62, MAN_H * 0.42, '#FFD8A0', (0.16 + 0.12 * flash) * life);
 
-      // "endam": a soft band of light runs down the reflection from head to toe
+      // "endam": a soft gleam measures the reflection from toe to head (it rises inside the glass: no light comes
+      // down from above anywhere — KURALLAR 3)
       const sc = E.seg(lt, tEn - 0.05, tEn + 0.75);
       if (sc > 0 && sc < 1) {
         const gp = PR.mirrorGlassPath(MX, FLOOR, MH);
-        const y0 = REF_FEET - REF_H * 1.06, y1 = REF_FEET + 10;
+        const y0 = REF_FEET + 10, y1 = REF_FEET - REF_H * 1.06;
         const yy = E.lerp(y0, y1, E.ease.inOutSine(sc));
         const env = Math.sin(Math.PI * sc);
         L.light.save();

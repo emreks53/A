@@ -27,6 +27,7 @@
   const GATE = PR.bigWorldGate(WX, WY, WR);      // ≈ (540, 486)
   const Z1 = 2.75;                                 // final zoom: gate opening ≈ 110 px wide on screen
   const GOAL = [540, 1010];                        // outgoing zoom centre (s02 trans)
+  const TRAV_DT = 4.9;                             // bigWorld time offset (see the bigWorld call)
 
   /** camera state at local time lt: focus world point F shown at screen point S with zoom Z */
   function cam(lt) {
@@ -205,8 +206,11 @@
       const fl = 5 * Math.sin(lt * 1.6 + 0.4) * (1 - c.v);
       const r = WR * sIn * breath;
       const wy = WY + fl;
+      // (prop time runs TRAV_DT ahead: its travellers are drawn before the han façade, so one walking onto the
+      // forecourt loses his head behind it — with this offset nobody is on the forecourt while they are visible
+      // (1.2 s → the end of the zoom tail): one walks up the road toward the gate, others leave by the exit road)
       PR.bigWorld(L, WX, wy, r, {
-        t: lt, rot: -0.08 + 0.05 * lt, alpha: fade,
+        t: lt + TRAV_DT, rot: -0.08 + 0.05 * lt, alpha: fade,
         decor: E.ep(lt, 0.86, 1.8, 'linear'),
         gateGlow: E.ep(lt, 1.34, 2.1, 'inOutSine'),
         travellers: E.ep(lt, 1.2, 1.6),
