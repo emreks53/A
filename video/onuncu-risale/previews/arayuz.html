@@ -21,16 +21,19 @@ function paintedBg(key, ramp, f, seed) {
   S.region(rectPath(0, 0, W, H), { ramp, shade: f, dir: (x, y) => -0.12 + (NOISE(x * 0.003, y * 0.003) - 0.5) * 0.3, len: [80, 170], wid: [18, 28], cover: 2.4, rim: false, jitter: 14, jitterFreq: 0.004, noise: 0.015, broken: 0.02, lJit: 0.02 });
   return (BGC[key] = S.finish({ emboss: 0.45 }));
 }
+const vadi = () => paintedBg('vadi', ['#2B4A63', '#33616A', '#3E7466', '#57895E', '#7DA266', '#A9C27E', '#CFDDA0'], (x, y) => clamp(0.98 - (y / H) * 1.0 + Math.sin(x * 0.006 + 1) * 0.05), 61);
+const civit = () => paintedBg('civit', ['#121A42', '#161F4C', '#1B2550', '#202C5C', '#263468'], (x, y) => clamp(0.85 - Math.hypot((x - 540) / 900, (y - 860) / 1300) * 1.1), 62);
 // kare başına maliyet: ekran dışı tuvalde N kez çağır
 function perfUI() {
   const N = 200; const c = makeCanvas(W, H), x = c.getContext('2d');
   const tests = {
     'ring r73 p.6': () => UI.ring(x, 300, 300, 73, 0.6, '#FFD36E', 7, 4),
-    'ring r26 p1': () => UI.ring(x, 300, 300, 26, 1, '#9BF0E8', 4, 10),
+    'ring r15 p1': () => UI.ring(x, 300, 300, 15, 1, '#9BF0E8', 3.4, 10),
     'dots 700px': () => UI.dots(x, 100, 1500, 900, 900, 1, '#FFF0CF', { gap: 19, size: 5, bend: 80, offset: -13 }),
     'line 3pt': () => UI.line(x, [[200, 900], [420, 860], [700, 640]], 1, '#7FE3E0', 3, 20),
     'ripple t.5': () => UI.ripple(x, 500, 500, 0.5, '#FFE2B0', 210),
     'glow': () => UI.glow(x, 500, 500, 140, '#FFC56B', 0.3),
+    'haze': () => UI.haze(x, 540, 900, 700, 160, '#FFF4E0', 0.3),
     'sparkle': () => UI.sparkle(x, 500, 500, 30, 0.2, '#FFFFFF'),
     'chevron': () => UI.chevron(x, 500, 500, 18, 0, '#FFF0CF', 1),
   };
@@ -38,18 +41,20 @@ function perfUI() {
 }
 
 // Sayfa 1: Perde 1 içindekiler listesi taklidi — kâğıt pano, altı madalyon, noktalı göstergeler ve oklar, nar halkayla vurgulu
+// (satır aralığı 192 = 3 × 64 kılavuz aralığı: satırlar kılavuz çizgilerine göre kaymaz)
 window.show = async () => {
   ICONS.forEach(timed); timed('kagit-panel');
   bg('#000');
-  ctx.drawImage(paintedBg('vadi', ['#2B4A63', '#33616A', '#3E7466', '#57895E', '#7DA266', '#A9C27E', '#CFDDA0'], (x, y) => clamp(0.98 - (y / H) * 1.0 + Math.sin(x * 0.006 + 1) * 0.05), 61), 0, 0);
+  ctx.drawImage(vadi(), 0, 0);
   ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.42; ctx.fillStyle = '#4A4F86'; ctx.fillRect(0, 0, W, H); ctx.restore();
   drawSpr(ctx, spr('kagit-panel'), 540, 960, 1);
-  const X0 = 238, Y0 = 486, DY = 194, MED = 156;
-  const dotCol = '#B07A34', hiCol = '#E2582E';
+  const K = ARAYUZ.KAGIT;
+  const X0 = 238, Y0 = 960 + K.rules[0] + K.ruleGap / 2, DY = K.ruleGap * 3, MED = 156;
+  const dotCol = '#B07A34', hiCol = '#FFD36E', hiDot = '#E2582E';
   ICONS.forEach((n, i) => {
     const y = Y0 + i * DY; const hi = i === 0; const ye = y + (i - 2.5) * 6;
-    UI.dots(ctx, X0 + MED * 0.5 + 10, y, 890, ye, 1, hi ? hiCol : dotCol, { gap: 24, size: hi ? 8 : 6.6, bend: (i % 2 ? 1 : -1) * 16 });
-    UI.chevron(ctx, 924, ye, hi ? 26 : 22, Math.atan2(ye - y, 890 - X0), hi ? hiCol : dotCol, 1);
+    UI.dots(ctx, X0 + MED * 0.5 + 10, y, 890, ye, 1, hi ? hiDot : dotCol, { gap: 24, size: hi ? 8 : 6.6, bend: (i % 2 ? 1 : -1) * 16 });
+    UI.chevron(ctx, 924, ye, hi ? 26 : 22, Math.atan2(ye - y, 890 - X0), hi ? hiDot : dotCol, 1);
     if (hi) { UI.glow(ctx, X0, y, 130, '#FFC56B', 0.45); UI.ring(ctx, X0, y, MED * 0.5 + 15, 1, hiCol, 7, 4); }
     drawSpr(ctx, spr(n), X0, y, (MED / 300) * (hi ? 1.08 : 1));
   });
@@ -59,67 +64,85 @@ window.show = async () => {
 // Sayfa 2: duyu madalyonları çivit zeminde + UI örnekleri (çeşitli ilerleme değerleri)
 window.show2 = async () => {
   SENSE.forEach(timed);
-  bg('#1B2550');
-  ctx.drawImage(paintedBg('civit', ['#121A42', '#161F4C', '#1B2550', '#202C5C', '#263468'], (x, y) => clamp(0.85 - Math.hypot((x - 540) / 900, (y - 860) / 1300) * 1.1), 62), 0, 0);
-  // üst sıra: sahnedeki boy (0.6 → 132 px), altında halka ilerlemeleri ve bağ çizgileri
+  bg('#1B2550'); ctx.drawImage(civit(), 0, 0);
+  // üst sıra: sahnedeki boy (0.6 → 132 px), altında yüz noktası halkaları (r 15) ve bağ çizgileri
   const ps = [0.2, 0.45, 0.7, 1, 1];
   SENSE.forEach((n, i) => {
     const mx = 120 + i * 210, my = 170;
     const px = mx + (i % 2 ? 40 : -40), py = 380;
-    UI.ring(ctx, px, py, 26, ps[i], '#9BF0E8', 4, 10 + i);
-    ctx.fillStyle = '#FFF3D6'; ctx.beginPath(); ctx.arc(px, py, 4, 0, 7); ctx.fill();
-    UI.line(ctx, [[px, py - 30], [lerp(px, mx, 0.55), lerp(py, my, 0.4)], [mx, my + 70]], ps[i], '#7FE3E0', 2.6, 20 + i);
+    UI.ring(ctx, px, py, 15, ps[i], '#9BF0E8', 3.4, 10 + i);
+    ctx.fillStyle = '#FFF3D6'; ctx.beginPath(); ctx.arc(px, py, 3, 0, 7); ctx.fill();
+    UI.line(ctx, [[px, py - 18], [lerp(px, mx, 0.55), lerp(py, my, 0.4)], [mx, my + 70]], ps[i], '#7FE3E0', 2.6, 20 + i);
     drawSpr(ctx, spr(n), mx, my, 0.6);
-    label('p=' + ps[i], px - 20, py + 50);
+    label('p=' + ps[i], px - 20, py + 42);
   });
   // orta: tam nominal boy (220 px)
   SENSE.forEach((n, i) => drawSpr(ctx, spr(n), i < 3 ? 170 + i * 370 : 355 + (i - 3) * 370, 620 + Math.floor(i / 3) * 240, 1));
-  // UI.ring büyük (Perde 1 vurgu halkası boyu) p = 0.15 .. 1
-  [0.15, 0.4, 0.7, 1].forEach((p, i) => { const x = 150 + i * 260, y = 1110; UI.glow(ctx, x, y, 120, '#FFC56B', 0.25 * p); UI.ring(ctx, x, y, 73, p, '#FFD36E', 7, 4); label('ring p=' + p, x - 50, y + 110); });
+  // UI.ring büyük (Perde 1 vurgu halkası boyu) p = 0.15 .. 1, arkasında basamaklı ışıma (screen)
+  [0.15, 0.4, 0.7, 1].forEach((p, i) => { const x = 150 + i * 260, y = 1110; UI.glow(ctx, x, y, 120, '#FFC56B', 0.4 * p); UI.ring(ctx, x, y, 73, p, '#FFD36E', 7, 4); label('ring p=' + p, x - 50, y + 110); });
   // UI.line + UI.glow (alet → nimet bağı, nabız)
-  [0.3, 0.65, 1].forEach((p, i) => { const x0 = 90 + i * 330, y0 = 1360; UI.line(ctx, [[x0, y0], [x0 + 120, y0 - 70], [x0 + 260, y0 - 20]], p, '#FFD27A', 3 + (i === 2 ? 2.5 : 0), 40 + i); if (i === 2) UI.glow(ctx, x0 + 260, y0 - 20, 90, '#FFD27A', 0.35); label('line p=' + p, x0 + 60, y0 + 40); });
+  [0.3, 0.65, 1].forEach((p, i) => { const x0 = 90 + i * 330, y0 = 1360; UI.line(ctx, [[x0, y0], [x0 + 120, y0 - 70], [x0 + 260, y0 - 20]], p, '#FFD27A', 3 + (i === 2 ? 2.5 : 0), 40 + i); if (i === 2) UI.glow(ctx, x0 + 260, y0 - 20, 90, '#FFD27A', 0.5); label('line p=' + p, x0 + 60, y0 + 40); });
   // UI.ripple t = 0.15, 0.45, 0.9 s
   [0.15, 0.45, 0.9].forEach((t, i) => { const x = 190 + i * 350, y = 1580; UI.ripple(ctx, x, y, t, '#FFE2B0', 150); ctx.fillStyle = '#FFE2B0'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); label('ripple t=' + t, x - 55, y + 170); });
-  // UI.sparkle t = 0.06 .. 0.52 ; UI.dots + chevron (akış ofsetli, eğik); glow tek başına
+  // UI.sparkle t = 0.06 .. 0.52 ; UI.dots + chevron (akış ofsetli, eğik); göğüs nabzı ışıması
   [0.06, 0.14, 0.25, 0.4, 0.52].forEach((t, i) => { UI.sparkle(ctx, 120 + i * 90, 1820, 34, t, '#FFFFFF'); });
   label('sparkle t=.06 .. .52', 90, 1885);
   UI.dots(ctx, 600, 1860, 1000, 1770, 1, '#FFF3D6', { gap: 20, size: 4.6, bend: -60, offset: -7, size1: 3 });
   UI.chevron(ctx, 1028, 1764, 18, -0.25, '#FFF3D6', 1);
   UI.dots(ctx, 600, 1800, 900, 1720, 0.55, '#7FE3E0', { gap: 18, size: 4.6, bend: 40 });
-  UI.glow(ctx, 990, 1660, 70, '#FF9A7A', 0.45);
+  UI.glow(ctx, 990, 1660, 80, '#FF9A7A', 0.55);
   Post.apply(ctx);
   perfUI();
 };
 
-// Sayfa 3: madalyon yakın plan (300 px) ve sahne boyları (118 / 142 px)
+// Sayfa 3: madalyon yakın plan (300 px), sahne boyları (118 / 142 px), sönük eşler, nar dalışı (k=3 → 5x)
 window.show3 = async () => {
   bg('#5F6E8E');
-  ICONS.forEach((n, i) => drawSpr(ctx, spr(n), 190 + (i % 3) * 350, 200 + Math.floor(i / 3) * 340, 1));
-  ICONS.forEach((n, i) => drawSpr(ctx, spr(n), 110 + i * 170, 900, 118 / 300));
-  ICONS.forEach((n, i) => drawSpr(ctx, spr(n), 110 + i * 170, 1080, 142 / 300));
-  // 1.6x yakın (dalış için)
-  drawSpr(ctx, spr('ikon-nar'), 290, 1560, 1.6); drawSpr(ctx, spr('ikon-bal'), 790, 1560, 1.6);
+  ICONS.forEach((n, i) => drawSpr(ctx, spr(n), 190 + (i % 3) * 350, 180 + Math.floor(i / 3) * 330, 1));
+  ctx.drawImage(vadi(), 0, 650, W, 560, 0, 650, W, 560);
+  ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.42; ctx.fillStyle = '#4A4F86'; ctx.fillRect(0, 650, W, 560); ctx.restore();
+  ICONS.forEach((n, i) => drawSpr(ctx, spr(n), 100 + i * 176, 740, 118 / 300));
+  ICONS.forEach((n, i) => drawSpr(ctx, spr(n), 100 + i * 176, 900, 142 / 300));
+  // sönük eşler (opak) ve drawMed geçişi: dim 0 → .33 → .66 → 1
+  ICONS.forEach((n, i) => ARAYUZ.drawMed(ctx, n, 100 + i * 176, 1070, 118 / 300, i ? 1 : 0));
+  label('drawMed dim: 0 | 1 1 1 1 1 (opak sönük eşler)', 40, 1150);
+  [0, 0.33, 0.66, 1].forEach((d, i) => ARAYUZ.drawMed(ctx, 'ikon-uzum', 640 + i * 120, 1180, 100 / 300, d));
+  // nar dalışı: 118 px × 5 ≈ 590 px'lik kesit (k=3 ile keskin)
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 1240, W, 680); ctx.clip();
+  ctx.fillStyle = '#2A2F44'; ctx.fillRect(0, 1240, W, 680); drawSpr(ctx, spr('ikon-nar'), 540, 1640, (118 / 300) * 5); ctx.restore();
+  label('ikon-nar × 5 (dalış)', 30, 1270);
   Post.apply(ctx);
 };
-// Sayfa 4: duyu madalyonları büyük + kâğıt pano
+// Sayfa 4: duyu madalyonları büyük + kâğıt pano (orta tonlu ve koyu zeminde)
 window.show4 = async () => {
-  bg('#1B2550');
+  bg('#1B2550'); ctx.drawImage(civit(), 0, 0);
   SENSE.forEach((n, i) => drawSpr(ctx, spr(n), 190 + (i % 3) * 350, 180 + Math.floor(i / 3) * 330, 1.25));
-  drawSpr(ctx, spr('kagit-panel'), 540, 1350, 0.62);
+  ctx.fillStyle = '#7C8DA8'; ctx.fillRect(0, 760, 540, 1160);
+  drawSpr(ctx, spr('kagit-panel'), 540, 1340, 0.62);
   Post.apply(ctx);
 };
 // Sayfa 5: UI işaretleri ham (doku yok) — yakın inceleme için
 window.show5 = async () => {
   bg('#1B2550');
   UI.ring(ctx, 200, 200, 73, 0.7, '#FFD36E', 7, 4);
-  UI.ring(ctx, 420, 200, 73, 1, '#E2582E', 7, 5);
+  UI.ring(ctx, 420, 200, 73, 1, '#FFD36E', 7, 5);
   UI.ring(ctx, 600, 200, 26, 0.8, '#9BF0E8', 4, 11);
+  UI.ring(ctx, 700, 200, 15, 0.8, '#9BF0E8', 3.4, 12);
+  UI.ring(ctx, 800, 200, 15, 1, '#9BF0E8', 3.4, 13);
   UI.line(ctx, [[100, 400], [260, 330], [460, 380]], 0.8, '#FFD27A', 5, 40);
   UI.line(ctx, [[500, 400], [600, 330], [700, 380]], 1, '#7FE3E0', 2.6, 41);
+  UI.line(ctx, [[740, 400], [840, 330], [1000, 380]], 0.7, '#FFD27A', 3, 42);
   UI.dots(ctx, 80, 480, 700, 470, 1, '#B07A34', { gap: 20, size: 6 });
   UI.chevron(ctx, 730, 470, 20, 0, '#B07A34', 1);
   UI.dots(ctx, 80, 540, 700, 530, 0.7, '#FFF0CF', { gap: 20, size: 5 });
   UI.chevron(ctx, 760, 535, 26, 0, '#FFF0CF', 1);
+  // basamaklı ışıma (screen) farklı renklerde; pus bandı
+  [['#FFC56B', 0.6], ['#FF9A7A', 0.6], ['#FFD27A', 0.5], ['#9BF0E8', 0.5]].forEach(([c, a], i) => UI.glow(ctx, 150 + i * 260, 760, 110, c, a));
+  UI.haze(ctx, 540, 1000, 900, 170, '#FFF4E0', 0.5);
+  label('UI.haze (ufuk pus bandı)', 40, 1110);
+  UI.ripple(ctx, 300, 1350, 0.5, '#FFE2B0', 180); UI.ripple(ctx, 760, 1350, 1.0, '#FFE2B0', 180);
+  UI.ripple(ctx, 300, 1700, 0.6, '#FFE2B0', 180, { sector: [-1.1, 1.1] }); label('ripple sector [-1.1, 1.1] (yüzün önü)', 40, 1890);
+  UI.ripple(ctx, 760, 1700, 1.0, '#FFE2B0', 180, { sector: [-1.1, 1.1] });
 };
 window.READY = true;
 </script></body></html>

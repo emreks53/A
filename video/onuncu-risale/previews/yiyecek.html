@@ -30,8 +30,9 @@ window.show = async () => {
 window.show2 = async () => {
   reset(); band(0, 640, BG.wall); band(640, 1280, BG.cream); band(1280, 1920, BG.indigo);
   put('uzum', 200, 300, 1); put('uzum-kuru', 540, 300, 1); put('uzum-yesil', 880, 300, 1);
-  put('elma', 200, 960, 1); put('incir', 540, 960, 1); put('hurma', 880, 960, 1);
-  put('uzum', 160, 1600, 0.5); put('zeytin', 420, 1600, 0.5); put('gul', 680, 1600, 0.5); put('ekmek', 920, 1600, 0.5);
+  put('elma', 200, 920, 1); put('incir', 540, 920, 1); put('hurma', 880, 920, 1);
+  put('uzum-yatik', 290, 1450, 1); put('uzum-yatik-kuru', 800, 1450, 1);
+  put('uzum', 120, 1760, 0.5); put('zeytin', 380, 1760, 0.5); put('gul', 640, 1740, 0.5); put('ekmek', 900, 1760, 0.5);
   Post.apply(ctx);
 };
 window.show3 = async () => {
@@ -41,23 +42,36 @@ window.show3 = async () => {
   put('sut', 200, 1600, 1); put('su-testi', 540, 1600, 1); put('su-bardak', 880, 1600, 1);
   Post.apply(ctx);
 };
-window.show4 = async () => {
-  reset(); band(0, 1920, BG.wall);
-  // p2 kompozisyonu: sofra (600,1712) ve üstündeki nimetler
-  ctx.fillStyle = '#B1543A'; ctx.fillRect(0, 0, 1080, 1920);
-  put('tabak', 540, 260, 1); put('altin-tepsi', 540, 520, 1);
-  drawSpr(ctx, bake('sofra'), 540, 1080, 0.93);
+// sofra kompozisyonu: önerilen yerleşim (onTableSpots) + temas gölgeleri; altta solmuş hali
+function table(cx, cy, sc, wither, mainOnly) {
+  drawSpr(ctx, bake('sofra'), cx, cy, sc);
   const sp = YIYECEK.onTableSpots;
-  const order = Object.keys(sp).filter((n) => sp[n].main).sort((a, b) => sp[a].z - sp[b].z);
-  for (const n of order) { if (!SPRITE_DEFS[n]) continue; const q = sp[n]; drawSpr(ctx, bake(n), 540 + q.x * 0.93, 1080 + q.y * 0.93, q.s * 0.93, q.rot); }
+  const order = Object.keys(sp).filter((n) => !mainOnly || sp[n].main).sort((a, b) => sp[a].z - sp[b].z);
+  for (const n of order) { const q = sp[n]; const nm = wither && q.wither ? q.wither : n; if (q.shadow) drawSpr(ctx, bake(q.shadow), cx + q.x * sc, cy + q.y * sc, q.s * sc); drawSpr(ctx, bake(nm), cx + q.x * sc, cy + q.y * sc, q.s * sc); }
+}
+window.show4 = async () => {
+  reset(); ctx.fillStyle = '#B1543A'; ctx.fillRect(0, 0, 1080, 1920);
+  put('tabak', 540, 150, 1);
+  table(540, 620, 0.93, false, true);
+  table(540, 1250, 0.93, false, false);
+  table(540, 1760, 0.93, true, true);
   Post.apply(ctx);
 };
 window.show5 = async () => {
   reset(); band(0, 960, BG.green); band(960, 1920, BG.violet);
-  put('altin-tepsi', 300, 200, 1); put('kadeh-gumus', 700, 200, 1); put('kadeh-billur', 920, 200, 1);
+  put('altin-tepsi', 300, 200, 1); put('kadeh-gumus', 720, 200, 1); put('kadeh-billur', 930, 200, 1);
   put('tepsi-meyve', 330, 640, 1); put('ibrik', 860, 660, 1);
-  put('kadeh-gumus', 150, 1200, 2); put('kadeh-billur', 450, 1200, 2); put('ibrik', 820, 1300, 1.6);
-  put('tepsi-meyve', 540, 1720, 0.6);
+  put('kadeh-gumus', 190, 1150, 2); put('kadeh-billur', 520, 1150, 2); put('ibrik', 860, 1300, 1.6);
+  put('tepsi-meyve', 440, 1700, 0.7);
+  Post.apply(ctx);
+};
+// p2 açılışı benzetimi: kamera z = 2.6, yarım nara odaklı (öneri yerleşimiyle) — yakın planda yumuşama kontrolü
+window.show6 = async () => {
+  reset(); ctx.fillStyle = '#B1543A'; ctx.fillRect(0, 0, 1080, 1920);
+  const sp = YIYECEK.onTableSpots; const q = sp['nar-acik']; const z = 2.6; const tcx = 600, tcy = 1712;
+  ctx.save(); ctx.translate(540, 900); ctx.scale(z, z); ctx.translate(-(tcx + q.x), -(tcy + q.y));
+  table(tcx, tcy, 1.0, false, true);
+  ctx.restore();
   Post.apply(ctx);
 };
 // ölçüm: her sprite'ın görünür (alfa) sınır kutusu, pivota göre ekran px (ölçek 1)
@@ -70,6 +84,15 @@ window.measure = async () => {
     const k = s.k; out[n] = { canvas: [c.width, c.height], k, pivot: [Math.round(s.px), Math.round(s.py)], screen: [Math.round((cc - a) / k), Math.round((dd - b) / k)], box: [Math.round((a - s.px) / k), Math.round((b - s.py) / k), Math.round((cc - s.px) / k), Math.round((dd - s.py) / k)], ms: T[n] };
   }
   console.log('MEASURE ' + JSON.stringify(out));
+};
+// geliştirme: #bg=RRGGBB|ad,x,y,ölçek|ad,x,y,ölçek ...  (kontrol için tek tek büyük çizim)
+window.dev = async () => {
+  reset(); const parts = decodeURIComponent(location.hash.slice(1)).split('|').filter(Boolean);
+  let bg = '#C96E3E'; const items = [];
+  for (const p of parts) { if (p.startsWith('bg=')) bg = '#' + p.slice(3); else { const [n, x, y, s, r] = p.split(','); items.push([n, +x, +y, +(s || 1), +(r || 0)]); } }
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 1080, 1920);
+  for (const [n, x, y, s, r] of items) { if (n.startsWith('@')) { const q = YIYECEK.shadow && YIYECEK.shadow[n.slice(1)]; if (q) drawSpr(ctx, bake(q.spr), x + q.dx * s, y + q.dy * s, s); continue; } drawSpr(ctx, bake(n), x, y, s, r); }
+  Post.apply(ctx);
 };
 window.READY = true;
 </script></body></html>

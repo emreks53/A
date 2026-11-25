@@ -16,18 +16,30 @@
     return { canvas: S.finish({ emboss: 0.5 }), px: 0, py: 0 };
   });
 
-  const ITEMS = [ // sofra üzerindeki yerleşim (ekran, kamera z=1)
-    { n: 'ekmek', x: 352, y: 1724, s: 0.62, w: null },
-    { n: 'bal', x: 1004, y: 1528, s: 0.5, w: null },
-    { n: 'uzum', x: 942, y: 1640, s: 0.62, w: 'uzum-kuru' },
-    { n: 'nar-acik', x: 704, y: 1648, s: 0.78, w: 'nar-acik-kuru' },
+  // sofra üstü yerleşim: yiyecek grubunun önerdiği ana takım (sofra pivotuna göre), temas gölgeleriyle
+  const SOFRA = [600, 1712];
+  const FALLBACK = [
+    { n: 'ekmek', x: 352, y: 1724, s: 0.62, w: null }, { n: 'bal', x: 1004, y: 1528, s: 0.5, w: null },
+    { n: 'uzum', x: 942, y: 1640, s: 0.62, w: 'uzum-kuru' }, { n: 'nar-acik', x: 704, y: 1648, s: 0.78, w: 'nar-acik-kuru' },
     { n: 'hurma', x: 538, y: 1806, s: 0.46, w: null },
   ];
+  let _items = null;
+  function items() {
+    if (_items) return _items;
+    const Y = window.YIYECEK; const T = Y && Y.onTableSpots;
+    if (!T || !Object.keys(T).length) return (_items = FALLBACK);
+    _items = Object.entries(T).filter(([, o]) => o.main).sort((a, b) => a[1].z - b[1].z)
+      .map(([n, o]) => ({ n, x: SOFRA[0] + o.x, y: SOFRA[1] + o.y, s: o.s, w: o.wither, sh: o.shadow }));
+    return _items;
+  }
+  const narAt = () => { const it = items().find((q) => q.n === 'nar-acik'); return it ? [it.x, it.y] : [704, 1648]; };
 
   function cam(t) {
     const c = camAt([
-      [T0, { x: 704, y: 1630, z: 2.6 }],
-      [11.95, { x: 540, y: 960, z: 1.0 }, E.out4],
+      // açılış: sofradaki nar altta, üstünde nar taneleri tutan el (rızık → lezzet); sonra geri çekilip adam görünür
+      [T0, { x: narAt()[0], y: narAt()[1] - 235, z: 2.0 }],
+      [11.22, { x: narAt()[0] - 4, y: narAt()[1] - 245, z: 1.9 }, E.lin],
+      [12.1, { x: 540, y: 960, z: 1.0 }, E.io3],
       [14.4, { x: 556, y: 990, z: 1.045 }, E.ioSine],
       [15.5, { x: 640, y: 1240, z: 1.12 }, E.io2],
       [T1, { x: 640, y: 1300, z: 0.5 }, E.in3],
@@ -41,9 +53,9 @@
     const ox = 300 - A.neck[0], oy = 1112 - A.neck[1];
     // kol: aşağıdan ağza, sonra hafifçe iner
     const up = E.io3(inv(11.15, 12.6, t)); const down = E.io2(inv(13.15, 14.2, t));
-    const armRot = lerp(0.55, 0, up) + down * 0.32;
+    const armRot = lerp(0.4, 0, up) + down * 0.3;
     // baş: tatma anında hafif öne/aşağı; fânilikte düşünceli eğilir
-    const headRot = -0.02 * E.ioSine(inv(12.6, 13.0, t)) + 0.02 * E.ioSine(inv(13.0, 13.6, t)) - 0.09 * E.io3(inv(tFani(), tFani() + 0.9, t)) + Math.sin(t * 1.3) * 0.004;
+    const headRot = 0.025 * E.ioSine(inv(12.6, 13.0, t)) - 0.025 * E.ioSine(inv(13.0, 13.6, t)) + 0.09 * E.io3(inv(tFani(), tFani() + 0.9, t)) + Math.sin(t * 1.3) * 0.004; // + öne/aşağı
     drawPart(ctx, spr('adam-yakin-govde'), ox, oy, sc);
     drawPart(ctx, spr('adam-yakin-bas'), ox, oy, sc, headRot);
     drawPart(ctx, spr('adam-yakin-kol'), ox, oy, sc, armRot);
@@ -61,17 +73,19 @@
       withCam(ctx, c, () => {
         const man = drawMan(ctx, t);
         if (hasSpr('sofra')) drawSpr(ctx, spr('sofra'), 600, 1712, 1.0);
-        for (const it of ITEMS) {
+        const Y = window.YIYECEK;
+        for (const it of items()) {
           if (!hasSpr(it.n)) continue;
-          const bob = 0;
+          const sh = it.sh && hasSpr(it.sh) ? it.sh : null;
+          if (sh) drawSpr(ctx, spr(sh), it.x, it.y, it.s);
           if (it.w && wither > 0 && hasSpr(it.w)) {
-            drawSpr(ctx, spr(it.n), it.x, it.y + bob, it.s * lerp(1, 0.97, wither), 0, 1 - wither);
-            drawSpr(ctx, spr(it.w), it.x, it.y + bob, it.s, 0, wither);
-          } else drawSpr(ctx, spr(it.n), it.x, it.y + bob, it.s);
+            drawSpr(ctx, spr(it.n), it.x, it.y, it.s * lerp(1, 0.985, wither), 0, 1 - wither);
+            drawSpr(ctx, spr(it.w), it.x, it.y, it.s, 0, wither);
+          } else drawSpr(ctx, spr(it.n), it.x, it.y, it.s);
         }
         // tat: ağızdan sıcak halkalar, tanelerde parıltı
         const tl = tLez();
-        if (window.UI && man && t > tl - 0.05 && t < tl + 1.8) UI.ripple(ctx, man.mouth[0] + 26, man.mouth[1], t - tl, '#FFE2B0', 210);
+        if (window.UI && man && t > tl - 0.05 && t < tl + 1.8) UI.ripple(ctx, man.mouth[0] + 26, man.mouth[1], t - tl, '#FFE2B0', 210, { sector: [-1.1, 1.1] });
         if (window.UI && t > tl && t < tl + 1.5) {
           const r = rng(77);
           for (let i = 0; i < 6; i++) { const st = tl + i * 0.16; if (t < st) continue; UI.sparkle(ctx, 640 + r() * 140, 1590 + r() * 90, 26 + r() * 12, t - st, '#FFFFFF'); }

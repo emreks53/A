@@ -1,6 +1,7 @@
 // Manzara (Perde 1 ve 3): sabah/akşam göğü, güneş, bulutlar, tepeler, vadi, tümsek, büyük ağaç,
 // küçük bahçe ağaçları, düşen yapraklar ve çiçek taneleri.
 // Dünya koordinatı = kamera zoom 1'de ekran pikseli (1080×1920), sol üst köken.
+// Işık bütün nesnelerde sol üstten; sabah güneşi de sol üstte (214,268). Akşam parıltısı sağda (batı), dağ sırtının üstünde.
 'use strict';
 const MANZARA = (() => {
   const TAU = Math.PI * 2;
@@ -85,25 +86,6 @@ const MANZARA = (() => {
     S.x.save(); S.x.translate(x, y); S.x.rotate(ang); S.x.fillStyle = col; S.x.fill(sh); S.x.restore();
     S.hx.save(); S.hx.translate(x, y); S.hx.rotate(ang); S.hx.fillStyle = `rgb(${g},${g},${g})`; S.hx.fill(sh); S.hx.strokeStyle = `rgb(${g + 60},${g + 60},${g + 60})`; S.hx.lineWidth = 1; S.hx.stroke(sh); S.hx.restore();
   }
-  // kavisli darbe (bulut kemerleri): merkez (cx,cy), yarıçap rr, açı a0→a1, genişlik wid
-  function arc(S, cx, cy, rr, a0, a1, wid, col, o = {}) {
-    const r = S.r, ctx = S.x, hx = S.hx; const ro = rr + wid / 2, ri = Math.max(1, rr - wid / 2);
-    const p = new Path2D();
-    p.arc(cx, cy, ro, a0, a1);
-    const tx = cx + Math.cos(a1) * rr, ty = cy + Math.sin(a1) * rr;
-    p.lineTo(tx + Math.cos(a1 + 1.4) * wid * 0.2, ty + Math.sin(a1 + 1.4) * wid * 0.2);
-    p.arc(cx, cy, ri, a1 - 0.02, a0 + 0.02, true);
-    p.closePath();
-    ctx.save(); ctx.globalAlpha = o.alpha ?? 1; ctx.fillStyle = col; ctx.fill(p); ctx.clip(p);
-    const n = Math.max(3, Math.round(wid / 2.5));
-    for (let i = 0; i < n; i++) {
-      const rad = ri + ((i + 0.5) / n) * (ro - ri);
-      ctx.globalAlpha = 0.08 + r() * 0.14; ctx.strokeStyle = shade(col, r() < 0.5 ? 0.06 : -0.06); ctx.lineWidth = 0.6 + r() * 0.8;
-      ctx.beginPath(); ctx.arc(cx, cy, rad, a0 + (a1 - a0) * r() * 0.2, a1 - (a1 - a0) * r() * 0.2); ctx.stroke();
-    }
-    ctx.restore();
-    hx.save(); const g = 130 + Math.floor(r() * 30); hx.fillStyle = `rgb(${g},${g},${g})`; hx.fill(p); hx.strokeStyle = `rgb(${g + 70},${g + 70},${g + 70})`; hx.lineWidth = 1.2; hx.stroke(p); hx.restore();
-  }
 
   // ---------------------------------------------------------------- 1. sabah / akşam göğü
   const SKY = { x: -200, y: -300, w: 1480, h: 1500 };
@@ -113,7 +95,7 @@ const MANZARA = (() => {
     const S = Paint.sprite(w, h, { seed: kind === 'aksam' ? 311 : 101, k: 1 }); const r = S.r;
     // kuşaklar: [dünya y, renk] — y'ye göre basamaklı ton
     const bands = kind === 'aksam'
-      ? [[-300, '#16163F'], [-60, '#1C1B4F'], [90, '#26245E'], [220, '#33306C'], [340, '#463A79'], [450, '#5F4682'], [550, '#7D5087'], [640, '#A05D84'], [715, '#C46C7B'], [780, '#E07F70'], [835, '#F09A6C'], [880, '#F7BC7E'], [940, '#FAD69A']]
+      ? [[-300, '#16163F'], [-60, '#1C1B4F'], [70, '#26245E'], [190, '#33306C'], [300, '#463A79'], [400, '#5F4682'], [490, '#7D5087'], [565, '#A05D84'], [630, '#C46C7B'], [690, '#E07F70'], [740, '#F09A6C'], [790, '#F7BC7E'], [850, '#FAD69A']]
       : [[-300, '#16337F'], [-60, '#1A3E99'], [90, '#1F4AA7'], [230, '#2558B4'], [360, '#2B69C0'], [470, '#2F7DCA'], [570, '#3893D2'], [655, '#4FA8D8'], [730, '#74BDDC'], [790, '#9DD0DC'], [840, '#C4E0D8'], [880, '#E4E6CC'], [940, '#F1E6C3']];
     const ramp = bands.map((b) => b[1]); const n = ramp.length;
     // y → sürekli kuşak indeksi (0..1)
@@ -124,17 +106,17 @@ const MANZARA = (() => {
     // uzun yatay darbeler
     field(S, { bbox: [-60, -20, w + 60, h + 20], ramp, shade: sf, dir: 0, dirJit: 0.05, len: [130, 300], wid: [16, 30], cover: 3.2, jitter: 20, jitterFreq: 0.004, noise: 0.025, broken: 0.07, max: 9000, sortJit: 0.6 });
     if (kind === 'aksam') {
-      // batmış güneşin parıltısı: sağda ufka yakın sıcak yatay şeritler
-      const gx = 920 - ox, gy = 900 - oy; const cols = ['#FFEDB8', '#FDD796', '#F8BD7E', '#F1A072', '#E2837A', '#C76E80'];
+      // batmış güneşin parıltısı: sağda, dağ sırtının (y≈750–790) ÜSTÜNDE görünen sıcak yatay şerit kuşağı
+      const gx = 960 - ox, gy = 772 - oy; const cols = ['#FFF1C4', '#FFE0A0', '#FBC886', '#F4A876', '#E58A7A', '#C97284'];
       const L2 = [];
-      for (let i = 0; i < 260; i++) {
-        const u = Math.pow(r(), 0.75); const a = Math.PI + r() * Math.PI; const x = gx + Math.cos(a) * u * 640, y = gy + Math.sin(a) * u * 300;
+      for (let i = 0; i < 300; i++) {
+        const u = Math.pow(r(), 0.75); const a = Math.PI + r() * Math.PI; const x = gx + Math.cos(a) * u * 680, y = gy + Math.sin(a) * u * 250;
         L2.push([u, x, y]);
       }
       L2.sort((a, b) => b[0] - a[0]);
-      for (const [u, x, y] of L2) stroke(S, x, y, (r() - 0.5) * 0.08, 90 + r() * 170, 12 + r() * 14, cols[Math.min(5, Math.floor(u * 6 + (r() - 0.5) * 0.8))]);
-      // yukarıda birkaç ince, ışık almış bulut şeridi
-      for (let i = 0; i < 18; i++) { const y = 470 - oy + r() * 230, x = 200 - ox + r() * 1000; const l = 60 + r() * 160; stroke(S, x, y, (r() - 0.5) * 0.04, l, 7 + r() * 6, r() < 0.5 ? '#D98A8C' : '#B97894', { alpha: 0.75 }); stroke(S, x + l * 0.3, y - 5, (r() - 0.5) * 0.04, l * 0.5, 4 + r() * 3, '#F2B39A', { alpha: 0.7 }); }
+      for (const [u, x, y] of L2) stroke(S, x, y, (r() - 0.5) * 0.06, 90 + r() * 170, 11 + r() * 13, cols[clamp(Math.floor(u * 6 + (r() - 0.5) * 0.8), 0, 5)]);
+      // yukarıda birkaç ince, ışık almış bulut şeridi (opak)
+      for (let i = 0; i < 16; i++) { const y = 360 - oy + r() * 220, x = 160 - ox + r() * 1060; const l = 60 + r() * 160; stroke(S, x, y, (r() - 0.5) * 0.04, l, 7 + r() * 6, r() < 0.5 ? '#C77E8E' : '#A9729A'); stroke(S, x + l * 0.3, y - 5, (r() - 0.5) * 0.04, l * 0.5, 4 + r() * 3, '#EBA79A'); }
     } else {
       // güneş halesi: güneşin çevresinde dolanan (teğet yönlü) iri, kısa mavi darbeler (kaynak resimdeki gibi)
       const sx = SUN[0] - ox, sy = SUN[1] - oy; const R0 = 98, R1 = 285;
@@ -170,13 +152,14 @@ const MANZARA = (() => {
     S.rim(disk, { w: 1.6, alpha: 0.55 });
     fill(S, disk, '#F8D232');
     // dış sarı halka: teğet darbeler
-    field(S, { bbox: [c - R - 10, c - R - 10, c + R + 10, c + R + 10], clip: disk, mask: (x, y) => Math.hypot(x - c, y - c) > R * 0.6,
-      ramp: ['#F1BA22', '#F7CB2B', '#FAD83B', '#FCE35A'], shade: Paint.sphere(c - 20, c - 26, R * 1.25, [LX, LY], 0.4),
+    field(S, { bbox: [c - R - 10, c - R - 10, c + R + 10, c + R + 10], clip: disk, mask: (x, y) => Math.hypot(x - c, y - c) > R * 0.78,
+      ramp: ['#F2C232', '#F6CE40', '#F9D850', '#FBE068'], shade: Paint.sphere(c - 20, c - 26, R * 1.25, [LX, LY], 0.4),
       dir: (x, y) => Math.atan2(y - c, x - c) + Math.PI / 2 + (S.r() - 0.5) * 0.4, len: [40, 70], wid: [14, 20], count: 110, noise: 0.05 });
     // iç krem disk: geniş çapraz düz darbeler (eşmerkezli değil)
-    const inner = smoothPath(blobPts(c - 3, c - 3, R * 0.74, R * 0.73, 32, 0.03, 9));
-    fill(S, inner, '#FCF2CC');
-    field(S, { bbox: [c - R, c - R, c + R, c + R], clip: inner, ramp: ['#F9EDB4', '#FCF3CD', '#FEF8E2', '#FFFCF0'], shade: Paint.sphere(c - 26, c - 30, R, [LX, LY], 0.5),
+    // dolu, sıcak disk (halka gibi okunmasın): iç kısım dış bantla aynı aileden, yalnızca biraz açık
+    const inner = smoothPath(blobPts(c - 3, c - 3, R * 0.88, R * 0.87, 32, 0.03, 9));
+    fill(S, inner, '#FBE68C');
+    field(S, { bbox: [c - R, c - R, c + R, c + R], clip: inner, ramp: ['#FADF78', '#FCE78E', '#FDEEA8', '#FEF4C2'], shade: Paint.sphere(c - 26, c - 30, R, [LX, LY], 0.5),
       dir: -0.7, dirJit: 0.5, len: [50, 90], wid: [20, 30], count: 40, noise: 0.05, dry: 0.05, height: false });
     return { canvas: S.finish({ emboss: 0.35 }), px: c, py: c, k: S.k };
   }
@@ -187,7 +170,7 @@ const MANZARA = (() => {
   // sol üstte değer, gölge sağ altta hilal olarak kalır) → puf başına 3–5 geniş, hafif kavisli düz darbe
   // (ortak merkezli değil). Alt kenar: yumrulu, cetvel düzü olmayan lavanta taban. İnce kırık turuncu astar.
   const CLOUD_PAL = {
-    sabah: { hi: '#FFF8EA', lit: '#FFFFFF', mid: '#E2DFF1', sh: '#C2BDE0', deep: '#ABA5D0', base: '#9C96C6', baseD: '#8E88BB', ridge: '#CFCAE8' },
+    sabah: { hi: '#FFFBF2', lit: '#FFFFFF', mid: '#DCD8EE', sh: '#C2BDE0', deep: '#ABA5D0', base: '#9C96C6', baseD: '#8E88BB', ridge: '#CFCAE8' },
     aksam: { hi: '#FFE7CC', lit: '#FAD2B8', mid: '#EBAAAA', sh: '#BE8BA7', deep: '#9A79A3', base: '#7E6797', baseD: '#6C578A', ridge: '#D79AA6' },
   };
   // spec: {wc, baseH, top: [[cx,cy,r]...] (üst kubbeler), low: [[cx,cy,r]...] (alt yumrular); taban merkezi 0,0; yukarı negatif}
@@ -212,6 +195,8 @@ const MANZARA = (() => {
     const base = smoothPath(bp, true, 0.5);
     const puffP = puffs.map(([cx, cy, rr], i) => smoothPath(blobPts(X(cx), Y(cy), rr, rr * 0.95, 26, 0.04, seed * 13 + i)));
     const pu = new Path2D(); puffP.forEach((q) => pu.addPath(q));
+    // iç boşluk kalmasın: pufların altındaki gövdeyi dolduran çekirdek (siluetin içinde kalır)
+    pu.addPath(smoothPath(blobPts(X(0), Y(-ht * 1.1), wc * 0.34, ht * 0.95, 20, 0.02, seed + 99)));
     const sil = new Path2D(); sil.addPath(base); sil.addPath(pu);
     S.rim(sil, { w: 2.1, alpha: 0.9 });
     // 1) bütün siluet: koyu lavanta + yatay darbeler
@@ -220,17 +205,16 @@ const MANZARA = (() => {
     field(S, { bbox: [0, 0, w, h], ramp: [P.baseD, P.base, P.deep], shade: Paint.grad(0, Y(-Hc * 0.4), 0, Y(4), 0.95, 0.05), dir: 0, dirJit: 0.06, len: [50, 110], wid: [9, 13], cover: 1.4, noise: 0.25, broken: 0.05 });
     // basamaklar: [kayma x, kayma y, renk, darbe rampası]
     const steps = [
-      [-4, -0.08 * Hc, P.sh, [P.sh, shade(P.sh, 0.02)]],
-      [-7, -0.16 * Hc, P.mid, [P.mid, shade(P.mid, 0.02)]],
+      [-6, -0.12 * Hc, P.mid, [P.mid, shade(P.mid, 0.02)]],
       [-11, -0.27 * Hc, P.lit, [P.lit, P.lit, shade(P.lit, -0.012)]],
-      [-20, -0.56 * Hc, P.hi, [P.hi, P.lit]],
+      [-20, -0.58 * Hc, P.hi, [P.hi, P.lit]],
     ];
     steps.forEach(([dx, dy, col, rp], si) => {
       S.x.save(); S.hx.save();
       S.x.translate(dx, dy); S.hx.translate(dx, dy); S.x.clip(pu); S.hx.clip(pu); S.x.translate(-dx, -dy); S.hx.translate(-dx, -dy);
       S.x.fillStyle = col; S.x.fillRect(0, 0, w, h);
       // geniş, hafif kavisli düz darbeler (ortak merkez yok): yatay, sol üste doğru hafif yükselen
-      field(S, { bbox: [0, 0, w, h], ramp: rp, shade: (x, y) => clamp(0.3 + (Y(-Hc) - y) / Hc * -0.6 + r() * 0.2), dir: -0.12, dirJit: 0.2, len: si === 3 ? [26, 50] : [44, 96], wid: si === 3 ? [8, 12] : [13, 21], cover: si === 2 ? 1.25 : 0.9, noise: 0.3, broken: 0, dry: 0.35, max: si === 2 ? 160 : 90 });
+      field(S, { bbox: [0, 0, w, h], ramp: rp, shade: (x, y) => clamp(0.3 + (Y(-Hc) - y) / Hc * -0.6 + r() * 0.2), dir: -0.12, dirJit: 0.2, len: si === 2 ? [26, 50] : [44, 96], wid: si === 2 ? [8, 12] : [13, 21], cover: si === 1 ? 1.25 : 0.9, noise: 0.3, broken: 0, dry: 0.35, max: si === 1 ? 160 : 90 });
       S.x.restore(); S.hx.restore();
     });
     S.x.restore(); S.hx.restore();
@@ -296,7 +280,7 @@ const MANZARA = (() => {
   // küçük top ağaç (bahçe noktası): iki tonlu daire + ışık lekesi
   function dotTree(S, x, y, rr, o = {}) {
     const dk = o.dark ?? '#1B5A3A', md = o.mid ?? '#2F8448', lt = o.light ?? '#6DB552';
-    S.x.save(); S.x.globalAlpha = 0.35; S.x.fillStyle = '#123524'; S.x.beginPath(); S.x.ellipse(x + rr * 0.5, y + rr * 0.85, rr * 1.0, rr * 0.35, 0, 0, TAU); S.x.fill(); S.x.restore();
+    S.x.save(); S.x.fillStyle = o.shadow ?? '#2C6A3C'; S.x.beginPath(); S.x.ellipse(x + rr * 0.5, y + rr * 0.85, rr * 1.0, rr * 0.35, 0, 0, TAU); S.x.fill(); S.x.restore();
     fill(S, circ(x, y, rr), dk, { h: 150 });
     fill(S, circ(x - rr * 0.18, y - rr * 0.2, rr * 0.78), md, { h: 160 });
     fill(S, circ(x - rr * 0.36, y - rr * 0.4, rr * 0.4), lt, { h: 170 });
@@ -324,11 +308,16 @@ const MANZARA = (() => {
         }
       }
     });
-    // ön sırada teraslı bahçe noktaları (sağda) ve solda bir bahçe
-    for (const [x0, y0, cols, rowsN, dx, dy, rr] of [[846, 972, 9, 3, 22, 11, 6], [120, 990, 8, 3, 22, 11, 6], [560, 1004, 5, 2, 20, 10, 5.5]]) {
-      for (let j = 0; j < rowsN; j++) for (let i = 0; i < cols; i++) {
-        const x = x0 + i * dx + j * 8 + (r() - 0.5) * 3 - ox, y = y0 + j * dy + (r() - 0.5) * 2 - oy;
-        dotTree(S, x, y, rr * (0.9 + r() * 0.2), { dark: '#1E5B40', mid: '#2F7C4A', light: '#6EAE57' });
+    // ön sırada teraslı bahçeler: her teras bir sürekli koyu ağaç bandı (yumrulu, ışıklı üst kenar) + ara sıra iri taç
+    for (const [x0, y0, len, rowsN, dy] of [[846, 974, 200, 3, 11], [120, 992, 180, 3, 11], [560, 1006, 100, 2, 10]]) {
+      for (let j = 0; j < rowsN; j++) {
+        const xa = x0 + j * 8 - ox, xb = xa + len - j * 6, yb = y0 + j * dy - oy; const hb = 6.5;
+        const topP = [], botP = [];
+        for (let x = xa; x <= xb; x += 2) { const bump = 0.6 + 0.5 * NOISE(x * 0.16 + j * 5, y0 * 0.1); topP.push([x, yb - hb * bump - 1.2 * Math.sin((x - xa) * 0.05)]); botP.push([x, yb + 2]); }
+        fill(S, poly(topP.concat(botP.reverse())), '#1E5B40', { h: 150 });
+        let run = []; const flush = () => { if (run.length > 2) fill(S, poly(run.map(([x, y]) => [x - 0.8, y - 0.2]).concat(run.slice().reverse().map(([x, y]) => [x, y + 2.2]))), '#3A8650', { h: 160 }); run = []; };
+        topP.forEach((q) => { if (NOISE(q[0] * 0.07 + j, 2.2 + y0 * 0.01) > 0.38) run.push(q); else flush(); }); flush();
+        for (let x = xa + r() * 20; x < xb; x += 18 + r() * 34) if (r() < 0.45) { const cr = 4.5 + r() * 2.5; fill(S, circ(x, yb - hb * 0.6 - cr * 0.3, cr), '#1E5B40', { h: 152 }); fill(S, circ(x - cr * 0.22, yb - hb * 0.6 - cr * 0.52, cr * 0.7), '#3A8650', { h: 160 }); }
       }
     }
     // serviler: tepe sırtlarında birkaç tane
@@ -336,8 +325,6 @@ const MANZARA = (() => {
       const yb = humpProf(rows[1].humps, rows[1].base, rows[1].floor)(x) + 8;
       cypress(S, x - ox, yb - oy, hgt, hgt * 0.24);
     }
-    // ufukta ince pus şeritleri (uzak sırada)
-    for (let i = 0; i < 26; i++) { const x = r() * MID.w, y = humpProf(rows[0].humps, rows[0].base, rows[0].floor)(x + ox) - oy + 8 + r() * 26; stroke(S, x, y, (r() - 0.5) * 0.06, 50 + r() * 70, 5 + r() * 4, '#9CC2A6', { alpha: 0.35 }); }
     return { canvas: S.finish({ emboss: 0.45 }), px: 0, py: 0, k: S.k };
   }
   defSprite('tepe-orta', paintMid);
@@ -349,7 +336,7 @@ const MANZARA = (() => {
   const unproj = (x, y) => { const gz = GK / Math.max(1, y - HZ); return [((x - 540) * gz) / 100, gz]; };
   const depthS = (y) => clamp((y - HZ) / 615, 0.02, 1.4); // 1 → y=1600
   // nehir: ekranda tasarlanan orta hat → yer düzleminde sabit genişlik → perspektifle izdüşüm
-  const RIVER_C = [[648, 1032], [662, 1050], [724, 1064], [796, 1082], [856, 1108], [902, 1150], [906, 1205], [850, 1262], [730, 1318], [590, 1378], [460, 1440], [345, 1510], [250, 1595], [175, 1690], [120, 1780]];
+  const RIVER_C = [[648, 1041], [664, 1053], [724, 1066], [796, 1082], [856, 1108], [902, 1150], [906, 1205], [850, 1262], [730, 1318], [590, 1378], [460, 1440], [345, 1510], [250, 1595], [175, 1690], [120, 1780]];
   let riverCache = null;
   function riverGeom() {
     if (riverCache) return riverCache;
@@ -394,7 +381,9 @@ const MANZARA = (() => {
     const lx = lerp(L[i][0], L[i + 1][0], t), ly = lerp(L[i][1], L[i + 1][1], t), rx = lerp(R[i][0], R[i + 1][0], t), ry = lerp(R[i][1], R[i + 1][1], t);
     const q = (clamp(v, -1, 1) + 1) / 2; return [lerp(lx, rx, q), lerp(ly, ry, q), lerp(T[i], T[i + 1], t), Math.hypot(rx - lx, ry - ly)];
   }
-  const SPOTS = { nar: [962, 1478], bugday: [1012, 1288], uzum: [790, 1404], nehir: [884, 1160], cicek: [850, 1792], kovan: [1052, 1552], koy: [748, 1172] };
+  // NAR_BASE: kahraman nar ağacının gövde dibi; KOVAN_BASE: kovan sırasının taban çizgisi (dışa açılan noktalar bunların görünür ortası)
+  const NAR_BASE = [962, 1512], KOVAN_BASE = [968, 1556];
+  const SPOTS = { nar: [962, 1440], bugday: [1012, 1288], uzum: [790, 1404], nehir: [884, 1160], cicek: [850, 1792], kovan: [968, 1542], koy: [748, 1172] };
 
   // arazi dalgası: sıra sınırları birbirine paralel kalsın diye derinlikle ölçeklenen ortak dalga
   const undul = (x, s) => s * (16 * Math.sin(x * 0.0052 + 1.1) + 7 * Math.sin(x * 0.0131 + 2.3));
@@ -403,7 +392,7 @@ const MANZARA = (() => {
     const S = Paint.sprite(w * k, h * k, { seed: 701, k }); const r = S.r;
     const X = (x) => (x - ox) * k, Y = (y) => (y - oy) * k; // dünya → sprite
     const P = (pts) => poly(pts.map(([x, y]) => [X(x), Y(y)]));
-    const topY = (x) => 1040 + 5 * Math.sin(x * 0.013) - 30 * Math.exp(-(((x - 650) / 30) ** 2));
+    const topY = (x) => 1040 + 4 * Math.sin(x * 0.013);
     const top = new Path2D(); top.moveTo(X(-220), Y(1800)); for (let x = -220; x <= 1300; x += 8) top.lineTo(X(x), Y(topY(x))); top.lineTo(X(1300), Y(1800)); top.closePath();
     S.rim(top, { w: 1.4, alpha: 0.45 });
     fill(S, top, '#2F6E40');
@@ -454,7 +443,7 @@ const MANZARA = (() => {
     const force = (x, y, t) => { const c = cellAt(x, y); if (c) c.t = t; return c; };
     force(...SPOTS.bugday, 'bugday'); force(SPOTS.bugday[0] + 90, SPOTS.bugday[1] + 6, 'bugday'); force(SPOTS.bugday[0] - 20, SPOTS.bugday[1] + 44, 'bugday'); force(SPOTS.bugday[0] + 80, SPOTS.bugday[1] + 48, 'bugday');
     force(...SPOTS.uzum, 'bag'); force(SPOTS.uzum[0] + 60, SPOTS.uzum[1] + 2, 'bag');
-    force(...SPOTS.nar, 'narbahce'); force(SPOTS.kovan[0], SPOTS.kovan[1] + 6, 'cayir'); force(SPOTS.kovan[0] + 50, SPOTS.kovan[1] - 4, 'cayir');
+    force(NAR_BASE[0], NAR_BASE[1] - 34, 'narbahce'); force(KOVAN_BASE[0], KOVAN_BASE[1] + 6, 'cayir'); force(KOVAN_BASE[0] + 46, KOVAN_BASE[1] - 2, 'cayir'); force(KOVAN_BASE[0] - 46, KOVAN_BASE[1] - 2, 'cayir');
     force(...SPOTS.koy, 'koy'); force(SPOTS.koy[0] - 60, SPOTS.koy[1], 'koy'); force(SPOTS.koy[0] + 60, SPOTS.koy[1], 'genc');
     const extra = { bugday: { ramp: ['#E0A22E', '#EBB73B', '#F3CA4C', '#F8DA6C'], dir: 'v' }, bag: { ramp: ['#C2B474', '#CDBF7E', '#D7C988'], dir: 'v' }, narbahce: { ramp: ['#4F9C48', '#5BA84D', '#68B352'], dir: 'h' }, koy: { ramp: ['#94BE5E', '#A2C766', '#AFCF70'], dir: 'h' } };
     for (const c of cells) {
@@ -471,6 +460,7 @@ const MANZARA = (() => {
     }
     // ---- özel tarla ayrıntıları
     const vpLine = (x0, y0, len) => { const a = Math.atan2(y0 - HZ, x0 - 540); return [x0 - Math.cos(a) * len, y0 - Math.sin(a) * len, x0 + Math.cos(a) * len, y0 + Math.sin(a) * len]; };
+    const NAR_C = [NAR_BASE[0], NAR_BASE[1] - 14]; // kahraman nar ağacının çevresi bahçe sırasından boşaltılır
     for (const c of cells) {
       const s = c.s;
       if (c.t === 'bugday') {
@@ -484,24 +474,34 @@ const MANZARA = (() => {
         S.x.restore(); S.hx.restore();
         const xs = c.pts.map((q) => X(q[0])), ys = c.pts.map((q) => Y(q[1]));
         field(S, { bbox: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], clip: c.path, ramp: ['#E3A92F', '#F2C94E', '#FCE592'], shade: Paint.cst(0.62), dir: -Math.PI / 2 + 0.2, dirJit: 0.5, len: [5 * s + 3, 12 * s + 4], wid: [2 * s + 1, 3.6 * s + 1.2], cover: 0.8, noise: 0.7, max: 600 });
-        // birkaç gelincik
         for (let q = 0; q < 10 * s; q++) { const x = lerp(c.ba, c.bb, r()), y = rowsY[c.i + 1] - r() * c.rowH * 0.25; S.x.fillStyle = '#E0322E'; S.x.beginPath(); S.x.arc(X(x), Y(y), (1 + s * 1.6) * k, 0, TAU); S.x.fill(); }
       }
       if (c.t === 'bag') {
+        // üzüm bağı: ufka yakınsayan yeşil asma sıraları (ışık kenarı üstte), altlarında 3–5 tanelik üçgen salkımlar
         S.x.save(); S.hx.save(); S.x.clip(c.path); S.hx.clip(c.path);
-        const n = 13; const L = [];
-        for (let m = -n; m <= n; m++) { const xb = c.cx + m * (c.tb - c.ta) / (n * 0.95); L.push(vpLine(xb, rowsY[c.i + 1] + 6, 240)); }
+        const n = 11; const L = [];
+        for (let m = -n; m <= n; m++) { const xb = c.cx + m * (c.tb - c.ta) / (n * 0.9); L.push(vpLine(xb, rowsY[c.i + 1] + 6, 240)); }
         for (const [x1, y1, x2, y2] of L) {
-          S.x.lineCap = 'round';
-          S.x.strokeStyle = '#245E31'; S.x.lineWidth = (2.4 + 5.2 * s) * k; S.x.beginPath(); S.x.moveTo(X(x1), Y(y1)); S.x.lineTo(X(x2), Y(y2)); S.x.stroke();
-          S.x.strokeStyle = '#5FA046'; S.x.lineWidth = (0.8 + 2 * s) * k; S.x.beginPath(); S.x.moveTo(X(x1) - 1.5 * k, Y(y1) - 1 * k); S.x.lineTo(X(x2) - 1.5 * k, Y(y2) - 1 * k); S.x.stroke();
-          S.hx.strokeStyle = 'rgb(180,180,180)'; S.hx.lineWidth = (2 + 4 * s) * k; S.hx.beginPath(); S.hx.moveTo(X(x1), Y(y1)); S.hx.lineTo(X(x2), Y(y2)); S.hx.stroke();
-          // üzüm salkımları
-          for (let t = 0; t < 1; t += 0.022) {
-            const x = lerp(x1, x2, t), y = lerp(y1, y2, t); if (y < rowsY[c.i] - 2 || y > rowsY[c.i + 1] + 2 || r() < 0.2) continue;
-            const ss = depthS(y); const rr = (1.3 + ss * 3) * k;
-            fill(S, circ(X(x) + (r() - 0.5) * 2 * k, Y(y) + rr * 0.9, rr), r() < 0.5 ? '#572B7A' : '#7444A0', { h: 185 });
-            S.x.fillStyle = '#B794DA'; S.x.beginPath(); S.x.arc(X(x) - rr * 0.35, Y(y) + rr * 0.5, rr * 0.38, 0, TAU); S.x.fill();
+          const segs = 90;
+          // asma yaprağı bandı: sürekli koyu şerit (derinlikle kalınlaşır), üstünde sık, ışıklı yumrular
+          const pts = []; for (let q = 0; q <= segs; q++) { const t = q / segs; const x = lerp(x1, x2, t), y = lerp(y1, y2, t); if (y < rowsY[c.i] - 4 || y > rowsY[c.i + 1] + 5) continue; pts.push([x, y, depthS(y)]); }
+          if (pts.length < 2) continue;
+          const bw = (q) => (2.4 + 5.6 * q[2]) * (0.9 + 0.22 * NOISE(q[0] * 0.25, q[1] * 0.25));
+          const band = P(pts.map((q) => [q[0], q[1] - bw(q) * 0.55]).concat(pts.slice().reverse().map((q) => [q[0], q[1] + bw(q) * 0.45])));
+          fill(S, band, '#245A31', { h: 165 });
+          for (const q of pts) { if (r() < 0.3) continue; const b2 = bw(q); S.x.fillStyle = r() < 0.5 ? '#4E9440' : '#62A847'; S.x.beginPath(); S.x.ellipse(X(q[0] - b2 * 0.1), Y(q[1] - b2 * 0.3), b2 * 0.42 * k, b2 * 0.24 * k, -0.25, 0, TAU); S.x.fill(); }
+          // salkımlar: düzensiz aralıkla, bandın altında (gölge yanı); 3–6 tanelik sıkı aşağı bakan üçgen
+          let t = r() * 0.08;
+          while (t < 1) {
+            const x = lerp(x1, x2, t), y = lerp(y1, y2, t); const ss = depthS(y);
+            if (y > rowsY[c.i] + 1 && y < rowsY[c.i + 1] - 1) {
+              const br = (0.9 + 1.5 * ss) * k; const bx = X(x) + (r() - 0.5) * br, by = Y(y) + (1.2 + 2.0 * ss) * k;
+              const tri = r() < 0.5 ? [[-0.5, 0], [0.5, 0], [0, 0.85]] : r() < 0.5 ? [[-1, 0], [0, 0], [1, 0], [-0.5, 0.85], [0.5, 0.85], [0, 1.7]] : [[-0.5, 0], [0.5, 0], [0, 0.85], [0.1, 1.65]];
+              S.hx.fillStyle = 'rgb(196,196,196)'; S.hx.beginPath(); S.hx.arc(bx, by + br * 0.7, br * 1.9, 0, TAU); S.hx.fill();
+              for (const [u, v] of tri) { S.x.fillStyle = r() < 0.55 ? '#4A2370' : '#5E3194'; S.x.beginPath(); S.x.arc(bx + u * br * 1.05, by + v * br * 1.05, br * 0.68, 0, TAU); S.x.fill(); }
+              S.x.fillStyle = '#A884D2'; S.x.beginPath(); S.x.arc(bx - br * 0.55, by - br * 0.15, br * 0.26, 0, TAU); S.x.fill();
+            }
+            t += (0.035 + r() * 0.08);
           }
         }
         S.x.restore(); S.hx.restore();
@@ -513,35 +513,70 @@ const MANZARA = (() => {
         for (let a = 0; a < nr; a++) {
           const yy = lerp(rowsY[c.i], rowsY[c.i + 1], (a + 0.6) / (nr + 0.2)); const f = (yy - rowsY[c.i]) / c.rowH;
           const xl = lerp(c.ta, c.ba, f), xr = lerp(c.tb, c.bb, f); const sp = 16 + 26 * depthS(yy); const nn = Math.floor((xr - xl) / sp);
-          for (let q = 0; q < nn; q++) list.push([xl + (q + 0.5 + (a % 2) * 0.5) * sp, yy]);
+          for (let q = 0; q < nn; q++) { const x = xl + (q + 0.5 + (a % 2) * 0.5) * sp; if (Math.hypot(x - NAR_C[0], (yy - NAR_C[1]) * 1.3) < 74) continue; list.push([x, yy]); }
         }
         list.sort((p, q) => p[1] - q[1]);
         for (const [x, y] of list) { const ss = depthS(y); dotTree(S, X(x), Y(y - 4 * ss), (4 + 9 * ss) * k, nar ? { fruit: '#D8283A', dark: '#1D5A3A', mid: '#2E8048', light: '#68B050' } : { dark: '#1B5A3A', mid: '#2F8448', light: '#6DB552' }); }
         S.x.restore(); S.hx.restore();
       }
     }
-    // ---- çit ağaçları: orta/yakın sıra sınırlarının bir kısmında
+    // ---- çitler: orta/yakın sıra sınırlarının bir kısmında sürekli koyu bant, yumrulu ışıklı üst kenar, ara sıra iri taç
+    const hedge = (i, xa, xb) => {
+      const s0 = depthS(rowsY[i]); const hb = 1.8 + 6.5 * s0; const st = 1.5 + 3 * s0; const hz = (1 - s0) * 0.32;
+      const topP = [], botP = [];
+      for (let x = xa; x <= xb; x += st) { const yb = bnd(i, x); const bump = 0.62 + 0.55 * NOISE(x * 0.09 / (0.35 + s0) + i * 3.1, i * 1.7); topP.push([x, yb - hb * bump]); botP.push([x, yb + hb * 0.2]); }
+      if (topP.length < 3) return;
+      const dk = mix('#174E33', HAZE, hz), md = mix('#2A7242', HAZE, hz), lt = mix('#5BA64E', HAZE, hz);
+      fill(S, P(topP.concat(botP.slice().reverse())), dk, { h: 150 });
+      // ışıklı üst kenar: kırık, sol üste kaymış ince şerit
+      if (s0 > 0.16) {
+        let run = [];
+        const flush = () => { if (run.length > 2) { const up = run.map(([x, y]) => [x - hb * 0.12, y - 0.3]); const dn = run.slice().reverse().map(([x, y]) => [x, y + hb * 0.36]); fill(S, P(up.concat(dn)), md, { h: 162 }); } run = []; };
+        topP.forEach((q, j) => { if (NOISE(q[0] * 0.05 + i, 4.2) > 0.36) run.push(q); else flush(); }); flush();
+      }
+      // ara sıra iri taç (uzak sıralarda tek ton ışık, yakında üç ton)
+      let x = xa + r() * 30 * (0.4 + s0);
+      while (x < xb) {
+        if (r() < 0.32) {
+          const yb = bnd(i, x); const cr = hb * (0.9 + r() * 0.5); const cx = X(x), cy = Y(yb - hb * 0.55 - cr * 0.3);
+          fill(S, circ(cx, cy, cr * k), dk, { h: 152 }); fill(S, circ(cx - cr * 0.2 * k, cy - cr * 0.22 * k, cr * 0.72 * k), md, { h: 160 });
+          if (s0 > 0.45) fill(S, circ(cx - cr * 0.38 * k, cy - cr * 0.42 * k, cr * 0.34 * k), lt, { h: 170 });
+        }
+        x += (26 + r() * 50) * (0.4 + s0);
+      }
+    };
     for (let i = 5; i < rowsY.length - 1; i++) {
       const s = depthS(rowsY[i]); let x = -220 + r() * 200;
-      while (x < 1300) {
-        const len = (180 + r() * 360) * (0.5 + s); const on = r() < 0.42;
-        if (on) { const sp = 3 + 9 * s; for (let xx = x; xx < x + len; xx += sp * (0.8 + r() * 0.4)) { const yy = bnd(i, xx); const ss = depthS(yy); dotTree(S, X(xx), Y(yy - 2 * ss), (1.8 + 5.6 * ss) * k, { dark: mix('#174E33', HAZE, (1 - ss) * 0.3), mid: mix('#256F40', HAZE, (1 - ss) * 0.3), light: mix('#4E9C4C', HAZE, (1 - ss) * 0.3) }); } }
-        x += len + r() * 200;
-      }
+      while (x < 1300) { const len = (180 + r() * 360) * (0.5 + s); if (r() < 0.42) hedge(i, x, x + len); x += len + r() * 200; }
     }
-    // ---- uzak pus: ufka yakın açık mavi-yeşil yatay darbeler
-    for (let i = 0; i < 220; i++) {
-      const y = 1037 + Math.pow(r(), 1.8) * 50; const x = -200 + r() * 1480; const a = clamp(1 - (y - 1037) / 55) * 0.8;
-      stroke(S, X(x), Y(y), (r() - 0.5) * 0.04, 30 + r() * 60, 3 + r() * 2.6, r() < 0.5 ? '#9CC6AE' : '#B4D4B6', { alpha: a });
+    S.x.restore(); S.hx.restore();
+    // ---- alçak etek tepeleri: vadinin uzak kenarı (nehir bunların arasındaki boğazdan çıkar; nehirden ÖNCE boyanır)
+    {
+      const humps = [[-160, 1018, 150], [70, 1008, 170], [290, 1022, 140], [470, 1012, 150], [790, 1016, 130], [935, 1006, 150], [1100, 1020, 150], [1270, 1010, 160]];
+      const base = 1060;
+      const prof = (x) => { let y = humpProf(humps, base, 1032)(x); y = Math.max(y, 1016 + 26 * Math.exp(-(((x - 648) / 20) ** 2))); return y; };
+      const lowE = (x) => 1052 + 3 * Math.sin(x * 0.03);
+      const fp = new Path2D(); fp.moveTo(X(-230), Y(lowE(-230))); for (let x = -230; x <= 1310; x += 5) fp.lineTo(X(x), Y(prof(x)));
+      for (let x = 1310; x >= -230; x -= 10) fp.lineTo(X(x), Y(lowE(x)));
+      fp.closePath();
+      S.rim(fp, { w: 1.3, alpha: 0.4 });
+      const fr = ['#5A9077', '#6A9E80', '#7DAD8B', '#92BC97', '#A8CBA3'];
+      fill(S, fp, fr[2], { h: 140 });
+      const sh = (x, y) => { const xw = x / k + ox, yw = y / k + oy; const hp = humpAt(humps, base, xw); if (!hp) return 0.5; const nx = (xw - hp[0]) / hp[2]; return clamp(0.6 - nx * 0.5 + (yw - hp[1]) / 160); };
+      field(S, { bbox: [X(-230), Y(996), X(1310), Y(1060)], clip: fp, ramp: fr, shade: sh, dir: (x, y) => { const hp = humpAt(humps, base, x / k + ox); const nx = hp ? (x / k + ox - hp[0]) / hp[2] : 0; return nx * 0.35 + (r() - 0.5) * 0.25; }, len: [20, 40], wid: [4, 7], cover: 1.8, noise: 0.06, fast: true, max: 3000 });
+      S.x.save(); S.hx.save(); S.x.clip(fp); S.hx.clip(fp);
+      for (let i = 0; i < 46; i++) { const x = -200 + r() * 1480; if (Math.abs(x - 648) < 40) continue; const y = prof(x) + 7 + r() * 16; dotTree(S, X(x), Y(y), (2 + r() * 1.2) * k, { dark: '#3E7563', mid: '#4F8A6C', light: '#4F8A6C' }); }
+      S.x.restore(); S.hx.restore();
     }
-    // ---- nehir
+    // ---- nehir: boğazdan tek sürekli çizgi olarak çıkar, mesafeyle genişler
     const { L, R, T, P: RP } = riverGeom();
     const rp = riverPathWorld(-ox, -oy, k);
     S.x.save(); S.x.lineJoin = 'round';
     S.x.strokeStyle = '#25603A'; S.x.lineWidth = 6 * k; S.x.stroke(rp);
     S.x.strokeStyle = '#D6E59A'; S.x.lineWidth = 2.6 * k; S.x.setLineDash([46 * k, 12 * k, 80 * k, 8 * k]); S.x.stroke(rp); S.x.restore();
+    // kaynakta koyu kıyı çizgisi çok kalın kalmasın: ilk birkaç pikselde yalnız su rengi
     fill(S, rp, '#2E86CE', { h: 140 });
-    field(S, { bbox: [X(100), Y(1000), X(960), Y(1800)], clip: rp, ramp: ['#1D5BAD', '#2671C0', '#2E86CE', '#3E9DD5', '#5AB8DC', '#86D0E3'],
+    field(S, { bbox: [X(100), Y(1030), X(960), Y(1800)], clip: rp, ramp: ['#1D5BAD', '#2671C0', '#2E86CE', '#3E9DD5', '#5AB8DC', '#86D0E3'],
       shade: (x, y) => { const yw = y / k + oy; return clamp(0.9 - depthS(yw) * 0.5 + 0.1 * Math.sin(x * 0.03 / k + yw * 0.06)); },
       dir: (x, y) => { const f = riverFlow(x / k + ox, y / k + oy); return Math.atan2(f[1], f[0]) + (r() - 0.5) * 0.15; },
       size: (x, y) => 0.3 + depthS(y / k + oy) * 0.8, len: [28, 50], wid: [7, 11], cover: 2.4, noise: 0.12, broken: 0.06, max: 2200 });
@@ -552,108 +587,118 @@ const MANZARA = (() => {
       stroke(S, X(x), Y(y), T[idx] + (r() - 0.5) * 0.1, 8 + 30 * ss, 1.4 + 3.4 * ss, r() < 0.6 ? '#F4FDFF' : '#BDEBF2');
     }
     S.x.restore(); S.hx.restore();
-    // ---- alçak etek tepeleri: vadinin uzak kenarında (yakın plan paralaksında ufuk çizgisini tepeler çizer)
-    {
-      const humps = [[-160, 1018, 150], [70, 1008, 170], [290, 1022, 140], [470, 1012, 150], [560, 1026, 70], [760, 1016, 120], [905, 1006, 150], [1085, 1020, 150], [1265, 1010, 160]];
-      const base = 1060;
-      const prof = (x) => { let y = humpProf(humps, base, 1030)(x); y = Math.max(y, 1004 + 34 * Math.exp(-(((x - 648) / 28) ** 2))); return y; };
-      const fp = new Path2D(); fp.moveTo(X(-230), Y(1068)); for (let x = -230; x <= 1310; x += 5) fp.lineTo(X(x), Y(prof(x))); fp.lineTo(X(1310), Y(1068));
-      // alt kenar: uzak tarlalara yumuşakça oturan dalgalı çizgi
-      for (let x = 1310; x >= -230; x -= 10) fp.lineTo(X(x), Y(1050 + 4 * Math.sin(x * 0.03)));
-      fp.closePath();
-      S.rim(fp, { w: 1.3, alpha: 0.4 });
-      const fr = ['#5A9077', '#6A9E80', '#7DAD8B', '#92BC97', '#A8CBA3'];
-      fill(S, fp, fr[2], { h: 140 });
-      const sh = (x, y) => { const xw = x / k + ox, yw = y / k + oy; const hp = humpAt(humps, base, xw); if (!hp) return 0.5; const nx = (xw - hp[0]) / hp[2]; return clamp(0.6 - nx * 0.5 + (yw - hp[1]) / 160); };
-      field(S, { bbox: [X(-230), Y(996), X(1310), Y(1062)], clip: fp, ramp: fr, shade: sh, dir: (x, y) => { const hp = humpAt(humps, base, x / k + ox); const nx = hp ? (x / k + ox - hp[0]) / hp[2] : 0; return nx * 0.35 + (r() - 0.5) * 0.25; }, len: [20, 40], wid: [4, 7], cover: 1.8, noise: 0.06, fast: true, max: 3000 });
-      for (let i = 0; i < 46; i++) { const x = -200 + r() * 1480; if (Math.abs(x - 648) < 50) continue; const y = prof(x) + 6 + r() * 20; dotTree(S, X(x), Y(y), (2 + r() * 1.2) * k, { dark: '#3E7563', mid: '#4F8A6C', light: '#7DAE86' }); }
-    }
     // ---- nehir boyunca kavaklar
     for (const [ix, side] of [[26, 1], [29, 1], [32, 1], [50, -1], [54, -1], [58, -1], [70, 1], [74, 1], [92, -1], [97, -1], [103, -1], [120, 1], [126, 1]]) {
       if (ix >= RP.length) continue;
       const q = side > 0 ? L[ix] : R[ix]; const ss = depthS(q[1]);
       cypress(S, X(q[0] + (side > 0 ? -5 : 5) * ss), Y(q[1] - 3 * ss), (20 + 64 * ss) * k, (6 + 14 * ss) * k);
     }
-    S.x.restore(); S.hx.restore();
     village(S, X, Y, k, r);
-    valleyPomegranate(S, X(SPOTS.nar[0]), Y(SPOTS.nar[1] + 34), k, r);
+    valleyPomegranate(S, X(NAR_BASE[0]), Y(NAR_BASE[1]), k, r);
     hives(S, X, Y, k, r);
     return { canvas: S.finish({ emboss: 0.45 }), px: 0, py: 0, k };
   }
-  function house(S, x, y, wd, ht, k, r, flip) {
-    // x,y: ön yüzün alt sol köşesi (sprite px). Ön yüz beyaz, yan yüz lavanta gölge, kiremit çatı.
-    const sd = wd * 0.45; // yan derinlik
-    const front = poly([[x, y], [x + wd, y], [x + wd, y - ht], [x, y - ht]]);
-    const side = poly([[x + wd, y], [x + wd + sd, y - sd * 0.35], [x + wd + sd, y - ht - sd * 0.35], [x + wd, y - ht]]);
+  // ev: (x,y) ön yüzün alt sol köşesi (sprite px). o.gable: 'yan' (mahya cepheye paralel) | 'on' (üçgen alın önde).
+  // Tek pencere + kenara kaymış kapı (yüz gibi okunmasın); gölge yüzü sağda (ışık sol üstten); astar kenarı.
+  function house(S, x, y, wd, ht, k, r, o = {}) {
+    const sd = wd * (0.4 + r() * 0.12); const lift = sd * 0.35;
+    const gable = o.gable || 'yan';
+    const front = gable === 'on' ? poly([[x, y], [x + wd, y], [x + wd, y - ht], [x + wd / 2, y - ht - wd * 0.42], [x, y - ht]]) : poly([[x, y], [x + wd, y], [x + wd, y - ht], [x, y - ht]]);
+    const side = poly([[x + wd, y], [x + wd + sd, y - lift], [x + wd + sd, y - ht - lift], [x + wd, y - ht]]);
+    let roofA, roofB;
+    if (gable === 'on') {
+      roofA = poly([[x + wd / 2, y - ht - wd * 0.48], [x + wd * 1.06, y - ht + 0.6], [x + wd * 1.06 + sd, y - ht - lift + 0.6], [x + wd / 2 + sd, y - ht - wd * 0.48 - lift]]);
+      roofB = poly([[x - wd * 0.06, y - ht + 0.6], [x + wd / 2, y - ht - wd * 0.48], [x + wd / 2 + 1.2 * k, y - ht - wd * 0.48 - 1.2 * k], [x - wd * 0.02, y - ht - 0.6]]);
+    } else {
+      const rh = ht * (0.5 + r() * 0.15);
+      roofA = poly([[x - wd * 0.08, y - ht], [x + wd * 1.08, y - ht], [x + wd * 0.5 + sd * 0.5, y - ht - rh], [x + wd * 0.5 - sd * 0.1, y - ht - rh]]);
+      roofB = poly([[x + wd * 1.08, y - ht], [x + wd + sd * 1.08, y - ht - sd * 0.38], [x + wd * 0.5 + sd * 1.0, y - ht - rh - sd * 0.32], [x + wd * 0.5 + sd * 0.5, y - ht - rh]]);
+    }
+    const all = new Path2D(); [front, side, roofA, roofB].forEach((q) => all.addPath(q));
+    S.rim(all, { w: 0.9, alpha: 0.85 });
     fill(S, side, '#B9B2D3', { h: 150 }); fill(S, front, '#FBF6EA', { h: 165 });
-    const rh = ht * 0.55;
-    const roofF = poly([[x - wd * 0.08, y - ht], [x + wd * 1.08, y - ht], [x + wd * 0.5 + sd * 0.5, y - ht - rh], [x + wd * 0.5 - sd * 0.1, y - ht - rh]]);
-    const roofS = poly([[x + wd * 1.08, y - ht], [x + wd + sd * 1.08, y - ht - sd * 0.38], [x + wd * 0.5 + sd * 1.0, y - ht - rh - sd * 0.32], [x + wd * 0.5 + sd * 0.5, y - ht - rh]]);
-    fill(S, roofS, '#A8432A', { h: 160 }); fill(S, roofF, '#DE6A3E', { h: 175 });
-    S.x.save(); S.x.strokeStyle = '#F59A6A'; S.x.lineWidth = Math.max(0.8, wd * 0.06); S.x.beginPath(); S.x.moveTo(x - wd * 0.06, y - ht - 0.5); S.x.lineTo(x + wd * 1.06, y - ht - 0.5); S.x.stroke(); S.x.restore();
-    // pencere / kapı
-    if (wd > 9 * k) { S.x.fillStyle = '#3D3A6A'; S.x.fillRect(x + wd * 0.2, y - ht * 0.62, wd * 0.18, ht * 0.26); S.x.fillRect(x + wd * 0.6, y - ht * 0.62, wd * 0.18, ht * 0.26); S.x.fillStyle = '#7A4A3A'; S.x.fillRect(x + wd * 0.42, y - ht * 0.45, wd * 0.16, ht * 0.45); }
+    if (gable === 'on') { fill(S, roofA, '#C2532F', { h: 160 }); fill(S, roofB, '#E7774A', { h: 175 }); }
+    else { fill(S, roofB, '#A8432A', { h: 160 }); fill(S, roofA, '#DE6A3E', { h: 175 }); S.x.save(); S.x.strokeStyle = '#F59A6A'; S.x.lineWidth = Math.max(0.8, wd * 0.06); S.x.beginPath(); S.x.moveTo(x - wd * 0.06, y - ht - 0.5); S.x.lineTo(x + wd * 1.06, y - ht - 0.5); S.x.stroke(); S.x.restore(); }
+    if (wd > 8 * k) {
+      const doorLeft = o.flip ? 0.16 : 0.62; const winLeft = o.flip ? 0.58 : 0.18;
+      S.x.fillStyle = '#7A4A3A'; S.x.fillRect(x + wd * doorLeft, y - ht * 0.5, wd * 0.2, ht * 0.5);
+      S.x.fillStyle = '#3D3A6A'; S.x.fillRect(x + wd * winLeft, y - ht * 0.66, wd * 0.2, ht * 0.24);
+      S.x.fillStyle = '#E9E2D2'; S.x.fillRect(x + wd * winLeft, y - ht * 0.66 + ht * 0.24, wd * 0.2, Math.max(0.8, ht * 0.04));
+    }
   }
   function village(S, X, Y, k, r) {
     const [vx, vy] = SPOTS.koy;
-    const hs = [[-46, -14, 1.0], [-20, -22, 0.9], [8, -12, 1.1], [32, -24, 0.85], [-60, 6, 1.15], [-28, 8, 1.2], [6, 14, 1.25], [40, 4, 1.05], [64, -8, 0.9], [-4, -32, 0.75]];
+    // [dx, dy, ölçek, çatı, kapı yanı]
+    const hs = [[-48, -14, 1.0, 'yan', 0], [-20, -24, 0.8, 'on', 1], [10, -12, 1.15, 'yan', 1], [36, -26, 0.75, 'on', 0], [-64, 6, 1.2, 'on', 0], [-30, 8, 1.05, 'yan', 1], [6, 14, 1.3, 'on', 1], [42, 4, 0.95, 'yan', 0], [66, -8, 0.85, 'on', 1], [-4, -34, 0.7, 'yan', 0]];
     hs.sort((a, b) => a[1] - b[1]);
-    // köyün altında açık toprak yaması
     fill(S, smoothPath(blobPts(X(vx), Y(vy + 2), 92 * k, 30 * k, 18, 0.12, 5)), '#9FBF62', { h: 140 });
-    for (const [dx, dy, sc] of hs) {
-      const ss = depthS(vy + dy); const wd = (22 * ss + 7) * sc * k, ht = (15 * ss + 5) * sc * k;
-      house(S, X(vx + dx), Y(vy + dy), wd, ht, k, r);
+    for (const [dx, dy, sc, g, fl] of hs) {
+      const ss = depthS(vy + dy); const wd = (21 * ss + 7) * sc * k, ht = (13 * ss + 5) * sc * (g === 'on' ? 0.9 : 1) * k;
+      house(S, X(vx + dx), Y(vy + dy), wd, ht, k, r, { gable: g, flip: fl });
     }
-    // köy ağaçları
     for (const [dx, dy] of [[-76, -6], [74, 10], [22, -34], [-40, 22], [50, 22]]) { const ss = depthS(vy + dy); dotTree(S, X(vx + dx), Y(vy + dy - 4), (4 + 6 * ss) * k, { dark: '#174E33', mid: '#256F40', light: '#5DA64E' }); }
     cypress(S, X(vx - 88), Y(vy + 2), 44 * k, 11 * k); cypress(S, X(vx + 88), Y(vy + 16), 50 * k, 12 * k);
   }
-  function valleyPomegranate(S, x, y, k, r) {
-    // gövde
-    S.line([[x, y], [x - 2 * k, y - 18 * k], [x + 1 * k, y - 34 * k]], 6 * k, '#6B4430', { w1: 4 * k, rim: false });
-    S.line([[x, y - 22 * k], [x - 14 * k, y - 40 * k]], 3 * k, '#6B4430', { rim: false });
-    S.line([[x, y - 26 * k], [x + 15 * k, y - 42 * k]], 3 * k, '#6B4430', { rim: false });
-    // gölge
-    S.x.save(); S.x.globalAlpha = 0.35; S.x.fillStyle = '#123524'; S.x.beginPath(); S.x.ellipse(x + 14 * k, y + 2 * k, 34 * k, 7 * k, 0, 0, TAU); S.x.fill(); S.x.restore();
-    const lobes = [[-16, -54, 22], [14, -56, 23], [0, -72, 22], [-24, -40, 15], [24, -40, 15]];
-    const sil = new Path2D(); lobes.forEach(([dx, dy, rr]) => sil.addPath(circ(x + dx * k, y + dy * k, rr * k)));
-    S.rim(sil, { w: 1.4, alpha: 0.7 });
-    fill(S, sil, '#1A5A3A', { h: 150 });
-    for (const [dx, dy, rr] of lobes) {
-      const cx = x + dx * k, cy = y + dy * k; const lp = circ(cx, cy, rr * k);
-      field(S, { bbox: [cx - rr * k, cy - rr * k, cx + rr * k, cy + rr * k], clip: lp, ramp: ['#1A5A3A', '#287A44', '#3C9A4C', '#6DBB55'], shade: sph(cx - rr * 0.2 * k, cy - rr * 0.3 * k, rr * 1.2 * k, 0.1), dir: -0.6, dirJit: 1.4, len: [7, 12], wid: [4, 6], cover: 3, noise: 0.08 });
-    }
-    // kırmızı narlar: belirgin, parlak noktalı
-    const fr = [[-22, -50], [-6, -62], [12, -48], [24, -62], [-14, -36], [6, -78], [30, -44], [-30, -60], [2, -40], [18, -70]];
-    for (const [dx, dy] of fr) {
-      const cx = x + dx * k, cy = y + dy * k, rr = 4.6 * k;
-      fill(S, circ(cx + 0.6 * k, cy + 0.8 * k, rr), '#8E1424', { h: 170 });
-      fill(S, circ(cx, cy, rr * 0.9), '#D9283A', { h: 185 });
-      S.x.fillStyle = '#FF8A86'; S.x.beginPath(); S.x.arc(cx - rr * 0.35, cy - rr * 0.35, rr * 0.32, 0, TAU); S.x.fill();
-      S.x.fillStyle = '#6E1020'; S.x.fillRect(cx - rr * 0.2, cy - rr * 1.05, rr * 0.4, rr * 0.35);
-    }
+  // nar meyvesi: hafif basık yuvarlak, kırmızı-turuncu ışık yanı, koyu kızıl gölge yanı, üstte belirgin taç (çiçek çanağı)
+  function pomegranate(S, cx, cy, rr) {
+    const body = ellipsePath(cx, cy, rr * 1.06, rr * 0.94, -0.12);
+    fill(S, body, '#9C1828', { h: 175 });
+    const lit = ellipsePath(cx - rr * 0.16, cy - rr * 0.14, rr * 0.86, rr * 0.76, -0.12);
+    S.x.save(); S.x.clip(body); S.x.fillStyle = '#D83A2E'; S.x.fill(lit);
+    S.x.fillStyle = '#F06A3C'; S.x.beginPath(); S.x.ellipse(cx - rr * 0.38, cy - rr * 0.34, rr * 0.4, rr * 0.3, -0.5, 0, TAU); S.x.fill(); S.x.restore();
+    S.x.fillStyle = '#FFC7A6'; S.x.beginPath(); S.x.ellipse(cx - rr * 0.48, cy - rr * 0.44, rr * 0.16, rr * 0.11, -0.5, 0, TAU); S.x.fill();
+    // taç: kısa boyun + 4 sivri diş
+    const t = cy - rr * 0.86; const cw = rr * 0.42;
+    fill(S, poly([[cx - cw * 0.55, t + rr * 0.12], [cx - cw * 0.62, t - rr * 0.18], [cx - cw * 0.92, t - rr * 0.46], [cx - cw * 0.28, t - rr * 0.26], [cx, t - rr * 0.52], [cx + cw * 0.28, t - rr * 0.26], [cx + cw * 0.92, t - rr * 0.46], [cx + cw * 0.62, t - rr * 0.18], [cx + cw * 0.55, t + rr * 0.12]]), '#7E1422', { h: 185 });
+    S.x.fillStyle = '#C8432F'; S.x.fillRect(cx - cw * 0.5, t - rr * 0.02, cw * 0.32, rr * 0.12);
   }
+  function valleyPomegranate(S, x, y, k, r) {
+    const q = 1.4; const K = k * q; // 1.4× büyütülmüş
+    // gölge (sağ alta): opak, tarlanın koyu tonu
+    fill(S, ellipsePath(x + 20 * K, y + 1 * K, 36 * K, 7 * K), '#2B6438', { h: 140 });
+    S.line([[x, y], [x - 2 * K, y - 18 * K], [x + 1 * K, y - 34 * K]], 6 * K, '#6B4430', { w1: 4 * K, rim: false });
+    S.line([[x, y - 22 * K], [x - 14 * K, y - 40 * K]], 3 * K, '#6B4430', { rim: false });
+    S.line([[x, y - 26 * K], [x + 15 * K, y - 42 * K]], 3 * K, '#6B4430', { rim: false });
+    const lobes = [[-16, -54, 22], [14, -56, 23], [0, -73, 22], [-25, -40, 15], [25, -40, 15], [0, -46, 18]];
+    const lp = lobes.map(([dx, dy, rr], i) => smoothPath(blobPts(x + dx * K, y + dy * K, rr * K, rr * K * 0.96, 18, 0.06, 40 + i)));
+    const sil = new Path2D(); lp.forEach((p2) => sil.addPath(p2));
+    S.rim(sil, { w: 1.8, alpha: 0.9 });
+    fill(S, sil, '#0F4A35', { h: 150 });
+    const big = Paint.sphere(x - 10 * K, y - 70 * K, 52 * K, [LX, LY], 0);
+    lobes.forEach(([dx, dy, rr], i) => {
+      const cx = x + dx * K, cy = y + dy * K;
+      const loc = Paint.sphere(cx - rr * 0.3 * K, cy - rr * 0.35 * K, rr * 1.15 * K, [LX, LY], 0);
+      field(S, { bbox: [cx - rr * K, cy - rr * K, cx + rr * K, cy + rr * K], clip: lp[i], ramp: ['#0F4A35', '#1E6B40', '#3A9449', '#6DBB55', '#A2D867'], shade: (px, py) => clamp(loc(px, py) * 0.55 + big(px, py) * 0.55 - 0.08), dir: -0.6, dirJit: 1.2, len: [8, 13], wid: [4, 6.5], cover: 3, noise: 0.06, broken: 0.03 });
+    });
+    const fr = [[-24, -50], [-8, -64], [12, -49], [26, -64], [-16, -34], [6, -82], [32, -42], [-32, -64], [2, -38], [18, -76], [-4, -52]];
+    for (const [dx, dy] of fr) pomegranate(S, x + dx * K, y + dy * K, 4.4 * K);
+  }
+  // arı kovanları: bal/ahşap renginde, üst üste katlı kutu bantları, koyu giriş yarığı ve uçuş tahtası, kiremit kapak
   function hives(S, X, Y, k, r) {
-    const [hx0, hy0] = SPOTS.kovan;
-    fill(S, smoothPath(blobPts(X(hx0 + 6), Y(hy0 + 2), 80 * k, 14 * k, 16, 0.1, 9)), '#8CC85A', { h: 140 });
-    const bodies = [['#FBF8F0', '#B3ADCF', '#2E6FBF'], ['#FBF8F0', '#B3ADCF', '#D8562F'], ['#FBF8F0', '#B3ADCF', '#2E6FBF'], ['#FBF8F0', '#B3ADCF', '#D8562F']];
-    [-45, -15, 15, 45].forEach((dx, hi) => {
-      const y0 = hy0 + Math.abs(dx) * 0.05; const ss = depthS(y0); const wd = (16 + 7 * ss) * k, ht = (17 + 7 * ss) * k;
-      const x = X(hx0 + dx) - wd / 2, y = Y(y0); const sd = wd * 0.32; const [cf, cs, cl] = bodies[hi];
-      S.x.save(); S.x.globalAlpha = 0.4; S.x.fillStyle = '#1F4A2A'; S.x.beginPath(); S.x.ellipse(x + wd * 0.9, y + 1 * k, wd * 0.75, 2.6 * k, 0, 0, TAU); S.x.fill(); S.x.restore();
-      fill(S, rectPath(x + wd * 0.12, y - 2.4 * k, wd * 0.76, 2.4 * k), '#5A4636', { h: 140 }); // ayaklık
-      const body = y - 2.4 * k;
+    const [hx0, hy0] = KOVAN_BASE;
+    fill(S, smoothPath(blobPts(X(hx0 + 4), Y(hy0 + 3), 86 * k, 13 * k, 16, 0.1, 9)), '#8CC85A', { h: 140 });
+    const woods = [['#E4B062', '#AE7A3C', '#C8643A'], ['#D79B4C', '#A06A34', '#8C5A34'], ['#EBC77F', '#B4874A', '#C8643A'], ['#DDA556', '#A87238', '#8C5A34']];
+    [-51, -17, 17, 51].forEach((dx, hi) => {
+      const y0 = hy0 + Math.abs(dx) * 0.04 + (hi % 2) * 1.5; const ss = depthS(y0); const wd = (19 + 6 * ss) * k, ht = (17 + 6 * ss + (hi === 1 ? 4 : 0)) * k;
+      const x = X(hx0 + dx) - wd / 2, y = Y(y0); const sd = wd * 0.3; const [cf, cs, cl] = woods[hi];
+      fill(S, ellipsePath(x + wd * 0.95, y + 1 * k, wd * 0.7, 2.6 * k), '#4E8A3E', { h: 140 }); // opak gölge
+      const body = y - 2.6 * k;
+      S.rim(poly([[x - wd * 0.12, body - ht], [x + sd * 0.05, body - ht - sd * 0.5], [x + wd + sd * 1.15, body - ht - sd * 0.5], [x + wd + sd, body - sd * 0.5], [x + wd, body + 2.6 * k], [x, body + 2.6 * k], [x, body - ht]]), { w: 0.8, alpha: 0.8 });
+      fill(S, rectPath(x + wd * 0.1, body, wd * 0.8, 2.6 * k), '#5A4636', { h: 140 }); // ayaklık
       fill(S, poly([[x + wd, body], [x + wd + sd, body - sd * 0.5], [x + wd + sd, body - ht - sd * 0.5], [x + wd, body - ht]]), cs, { h: 150 });
-      fill(S, rectPath(x, body - ht, wd, ht), cf, { h: 172 });
-      // iki kat (gövde + ballık) arasında gölge çizgisi, ışık kenarı
-      S.x.fillStyle = shade(cf, -0.14, 1.1); S.x.fillRect(x, body - ht * 0.5, wd, Math.max(1, ht * 0.08));
-      S.x.fillStyle = shade(cf, 0.05, 0.8); S.x.fillRect(x, body - ht, Math.max(1, wd * 0.12), ht);
-      // kapak: hafif taşan, beyaz üst yüz + koyu ön kenar
-      fill(S, poly([[x - wd * 0.1, body - ht], [x + wd * 1.1, body - ht], [x + wd + sd * 1.15, body - ht - sd * 0.5], [x + sd * 0.1, body - ht - sd * 0.5]]), '#F2EFF7', { h: 185 });
-      fill(S, rectPath(x - wd * 0.1, body - ht, wd * 1.2, Math.max(1.6 * k, ht * 0.16)), cl, { h: 160 });
-      // giriş deliği ve uçuş tahtası
-      S.x.fillStyle = '#3B2E40'; S.x.fillRect(x + wd * 0.26, body - ht * 0.15, wd * 0.48, Math.max(1, ht * 0.08));
-      S.x.fillStyle = shade(cf, -0.2, 1); S.x.fillRect(x + wd * 0.2, body - ht * 0.06, wd * 0.6, Math.max(1, ht * 0.05));
+      fill(S, rectPath(x, body - ht, wd, ht), cf, { h: 170 });
+      // katlar: yatay bantlar (gölge çizgisi + ışık kenarı)
+      const nb = hi === 1 ? 3 : 2;
+      for (let b = 1; b < nb; b++) { const yy = body - (ht * b) / nb; S.x.fillStyle = shade(cf, -0.16, 1.1); S.x.fillRect(x, yy, wd, Math.max(1, ht * 0.07)); S.x.fillStyle = shade(cs, -0.1); S.x.fillRect(x + wd, yy - sd * 0.5 * 0.5, sd, Math.max(1, ht * 0.06)); S.x.fillStyle = shade(cf, 0.07, 0.8); S.x.fillRect(x, yy + ht * 0.07, wd, Math.max(0.8, ht * 0.04)); }
+      S.x.fillStyle = shade(cf, 0.06, 0.8); S.x.fillRect(x, body - ht, Math.max(1, wd * 0.1), ht);
+      // kapak: hafif taşan çatı
+      fill(S, poly([[x - wd * 0.12, body - ht], [x + wd * 1.12, body - ht], [x + wd + sd * 1.15, body - ht - sd * 0.5], [x + sd * 0.05, body - ht - sd * 0.5]]), shade(cl, 0.12, 0.9), { h: 185 });
+      fill(S, rectPath(x - wd * 0.12, body - ht, wd * 1.24, Math.max(1.8 * k, ht * 0.15)), cl, { h: 160 });
+      // giriş yarığı ve uçuş tahtası
+      S.x.fillStyle = '#2E1F18'; S.x.fillRect(x + wd * 0.22, body - ht * 0.17, wd * 0.56, Math.max(1.2 * k, ht * 0.09));
+      S.x.fillStyle = shade(cf, 0.1, 0.9); S.x.fillRect(x + wd * 0.14, body - ht * 0.07, wd * 0.72, Math.max(1, ht * 0.07));
+      // arılar
+      for (let b = 0; b < 2; b++) { const bx = x + wd * (0.2 + r() * 0.9) + (r() - 0.5) * 8 * k, by = body - ht * (0.1 + r() * 0.6) - (r() * 10 + 2) * k; S.x.fillStyle = '#2A1E14'; S.x.beginPath(); S.x.ellipse(bx, by, 1.2 * k, 0.9 * k, 0, 0, TAU); S.x.fill(); S.x.fillStyle = '#F4C430'; S.x.beginPath(); S.x.arc(bx - 0.8 * k, by, 0.6 * k, 0, TAU); S.x.fill(); }
     });
   }
   defSprite('vadi', paintValley);
@@ -661,24 +706,53 @@ const MANZARA = (() => {
   // ---------------------------------------------------------------- 7. ön tümsek (çimen, çiçekler)
   const KNOLL = { x: -200, y: 1440, w: 1480, h: 820, k: 1.6 };
   const knollTop = (x) => { const pts = [[-260, 1544], [-100, 1504], [100, 1476], [260, 1478], [430, 1500], [610, 1540], [800, 1594], [1000, 1642], [1200, 1680], [1340, 1694]]; for (let i = 0; i < pts.length - 1; i++) if (x <= pts[i + 1][0]) { const t = smooth(inv(pts[i][0], pts[i + 1][0], x)); return lerp(pts[i][1], pts[i + 1][1], t); } return 1690; };
-  // kır çiçeği: yuvarlak taç yaprakları (ışık yönüne göre iki ton), iç halka ve göbek
+  // taç yaprağı biçimi: tabanı (0,0), +x yönünde; yanları dolgun, ucu hafif tırtıllı (kuru fırça ucu)
+  function petalShape(len, wid, r) {
+    const p = new Path2D(); p.moveTo(0, 0);
+    p.bezierCurveTo(len * 0.18, -wid * 0.56, len * 0.68, -wid * 0.64, len * 0.9, -wid * 0.36);
+    const n = 3; for (let i = 1; i <= n; i++) { const t = i / (n + 1); const yy = lerp(-wid * 0.36, wid * 0.36, t); p.lineTo(len * (0.97 + (r() - 0.5) * 0.1) - Math.abs(yy) * 0.25, yy); }
+    p.lineTo(len * 0.9, wid * 0.36);
+    p.bezierCurveTo(len * 0.68, wid * 0.64, len * 0.18, wid * 0.56, 0, 0);
+    p.closePath(); return p;
+  }
+  // beyaz taç yapraklarının gölgesi gri değil pembe-lavanta
+  const petalShadow = (petal) => { const [L] = hex2lch(petal); return L > 0.93 ? '#EED3E5' : shade(petal, -0.08, 1.12, -6); };
+  function petalAt(S, x, y, a, len, wid, col, h = 188) {
+    const r = S.r; const sh = petalShape(len, wid, r); const m = new DOMMatrix().translate(x, y).rotate((a * 180) / Math.PI);
+    const pp = new Path2D(); pp.addPath(sh, m); fill(S, pp, col, { h });
+    // 1–2 kıl izi (tabandan uca)
+    S.x.save(); S.x.translate(x, y); S.x.rotate(a); S.x.clip(sh); S.x.lineCap = 'round';
+    for (let j = 0; j < 1 + (r() < 0.6 ? 1 : 0); j++) { const off = (r() - 0.5) * wid * 0.5; S.x.globalAlpha = 0.55; S.x.strokeStyle = shade(col, r() < 0.5 ? -0.07 : 0.05, 1.1, -6); S.x.lineWidth = Math.max(0.8, wid * 0.09); S.x.beginPath(); S.x.moveTo(len * 0.15, off * 0.4); S.x.lineTo(len * 0.86, off); S.x.stroke(); }
+    S.x.restore();
+  }
+  // kır çiçeği: tırtıl uçlu taç yaprakları (ışığa bakanlar açık, diğerleri pembe-lavanta gölge), iç halka ve göbek
   function flower(S, x, y, rr, petal, center, n = 5, rot = 0, ring) {
-    const lite = shade(petal, 0.03, 0.9), dark = shade(petal, -0.1, 1.15, -6);
-    for (let i = 0; i < n; i++) {
-      const a = rot + (i / n) * TAU; const lit = Math.cos(a) * LX + Math.sin(a) * LY > -0.1;
-      const p = ellipsePath(x + Math.cos(a) * rr * 0.52, y + Math.sin(a) * rr * 0.52, rr * 0.56, rr * 0.42, a);
-      fill(S, p, lit ? lite : dark, { h: 185 + (i % 2) * 10 });
+    const lite = petal, dark = petalShadow(petal);
+    const order = []; for (let i = 0; i < n; i++) order.push(i);
+    order.sort((i, j) => Math.sin(rot + (i / n) * TAU) - Math.sin(rot + (j / n) * TAU)); // üsttekiler önce
+    for (const i of order) {
+      const a = rot + (i / n) * TAU + (S.r() - 0.5) * 0.2; const lit = Math.cos(a) * LX + Math.sin(a) * LY > -0.15;
+      petalAt(S, x + Math.cos(a) * rr * 0.08, y + Math.sin(a) * rr * 0.08, a, rr * 1.08, rr * (n > 5 ? 0.78 : 0.92), lit ? lite : dark, 185 + (i % 2) * 10);
     }
-    if (ring) fill(S, circ(x, y, rr * 0.42), ring, { h: 195 });
+    if (ring) fill(S, circ(x, y, rr * 0.4), ring, { h: 195 });
     fill(S, circ(x, y, rr * 0.24), center, { h: 210 });
     S.x.fillStyle = shade(center, 0.12, 0.8); S.x.beginPath(); S.x.arc(x - rr * 0.07, y - rr * 0.08, rr * 0.09, 0, TAU); S.x.fill();
   }
   // koyu yaprak (çiçek tarhı): ışık kenarlı, orta damarlı
+  // koyu yaprak (çiçek tarhı): iki düz ton (ışık yarısı açık, gölge yarısı koyu), orta damar, ışık yanında ince kenar
   function bigLeaf(S, x, y, a, len, wid, col) {
-    leaf(S, x, y, a, len, wid, col, { vein: shade(col, 0.16, 0.8) });
-    const k = S.k; S.x.save(); S.x.translate(x, y); S.x.rotate(a); S.x.globalAlpha = 0.55; S.x.strokeStyle = shade(col, 0.2, 0.8, -10); S.x.lineWidth = 1.4 * k;
-    S.x.beginPath(); S.x.moveTo(-len * k * 0.4, -wid * k * 0.32); S.x.quadraticCurveTo(0, -wid * k * 0.55, len * k * 0.4, -wid * k * 0.12); S.x.stroke();
-    S.x.globalAlpha = 0.7; S.x.strokeStyle = '#0B4A36'; S.x.lineWidth = 1.6 * k; S.x.beginPath(); S.x.moveTo(-len * k * 0.45, wid * k * 0.18); S.x.quadraticCurveTo(0, wid * k * 0.62, len * k * 0.45, wid * k * 0.05); S.x.stroke(); S.x.restore();
+    const k = S.k, r = S.r; const L = len * k, Wd = wid * k;
+    const p = leafPath(L, Wd, r); const m = new DOMMatrix().translate(x, y).rotate((a * 180) / Math.PI); const pp = new Path2D(); pp.addPath(p, m);
+    const upLit = Math.sin(a) * LX - Math.cos(a) * LY > 0; const lite = shade(col, 0.1, 0.95, -6), dark = shade(col, -0.05, 1.05, 6);
+    fill(S, pp, dark, { h: 160 });
+    S.x.save(); S.hx.save(); S.x.translate(x, y); S.x.rotate(a); S.hx.translate(x, y); S.hx.rotate(a); S.x.clip(p); S.hx.clip(p);
+    const half = new Path2D(); half.rect(-L, upLit ? -Wd : 0, L * 2, Wd); S.x.fillStyle = lite; S.x.fill(half);
+    S.hx.fillStyle = 'rgb(172,172,172)'; S.hx.fill(half);
+    // kıl izleri
+    for (let j = 0; j < 3; j++) { const yy = (upLit ? -1 : 1) * Wd * (0.12 + j * 0.12); S.x.globalAlpha = 0.25; S.x.strokeStyle = shade(lite, 0.06); S.x.lineWidth = 0.9 * k; S.x.beginPath(); S.x.moveTo(-L * 0.4, yy * 0.8); S.x.lineTo(L * 0.4, yy * 0.6); S.x.stroke(); }
+    S.x.globalAlpha = 0.9; S.x.strokeStyle = shade(col, 0.22, 0.75, -10); S.x.lineWidth = Math.max(1, Wd * 0.07); S.x.beginPath(); S.x.moveTo(-L * 0.46, 0); S.x.lineTo(L * 0.4, 0); S.x.stroke();
+    S.x.globalAlpha = 0.85; S.x.strokeStyle = '#B8E266'; S.x.lineWidth = 1.2 * k; S.x.beginPath(); const sg = upLit ? -1 : 1; S.x.moveTo(-L * 0.36, sg * Wd * 0.38); S.x.quadraticCurveTo(0, sg * Wd * 0.56, L * 0.38, sg * Wd * 0.16); S.x.stroke();
+    S.x.restore(); S.hx.restore();
   }
   function paintKnoll() {
     const { w, h, k } = KNOLL; const ox = KNOLL.x, oy = KNOLL.y;
@@ -688,6 +762,13 @@ const MANZARA = (() => {
     S.rim(top, { w: 2.6 });
     fill(S, top, '#2A9A50');
     const ramp = ['#0B4A36', '#0F5C3E', '#187244', '#22904C', '#2EAD56', '#5CC453', '#8FD44C', '#B8E266'];
+    // sıkı kır çiçeği öbeği: ortada bir çiçek, çevresinde düzenli aralıklı halka (içi boş/harf biçimli dizilim olmaz)
+    const rosette = (cx, cy, n, rr, pc, cc, stems) => {
+      const a0 = r() * TAU; const ring = n <= 3 ? n : n - 1; const pts = n <= 3 ? [] : [[cx, cy]]; const R0 = n <= 3 ? 1.05 : 1.55;
+      for (let j = 0; j < ring; j++) { const a = a0 + (j / ring) * TAU + (r() - 0.5) * 0.4; pts.push([cx + Math.cos(a) * rr * R0, cy + Math.sin(a) * rr * R0 * 0.62]); }
+      pts.sort((p2, q2) => p2[1] - q2[1]);
+      for (const [x, y] of pts) { if (stems) S.line([[X(x), Y(y)], [X(x + (r() - 0.5) * 4), Y(y + 14 * rr / 7)]], 1.8 * k, '#246E3C', { rim: false, edge: false }); flower(S, X(x), Y(y), rr * (0.85 + r() * 0.3) * k, pc, cc, 5, r() * 6); }
+    };
     // ağaç gölgesi (sol üst ışık → gölge sağa/aşağı): oturma yerinin çevresi
     const shadowF = (xw, yw) => { const dx = (xw - 470) / 380, dy = (yw - 1690) / 120; return Math.exp(-(dx * dx + dy * dy) * 1.4); };
     const sh = (x, y) => { const xw = x / k + ox, yw = y / k + oy; const t = yw - knollTop(xw); let v = 0.86 - t / 520 - (xw - 200) / 2600; v -= shadowF(xw, yw) * 0.38; if (t < 26) v += 0.12; return clamp(v); };
@@ -709,30 +790,39 @@ const MANZARA = (() => {
       const xw = -180 + r() * 1440, yw = knollTop(xw) + 40 + r() * 600; if (Math.abs(xw - SPOTS.cicek[0]) < 120 && Math.abs(yw - SPOTS.cicek[1]) < 80) continue;
       if (shadowF(xw, yw) > 0.5 && r() < 0.6) continue;
       const ss = 0.7 + clamp((yw - 1500) / 600) * 0.8; const [pc, cc] = r.pick(fl);
-      for (let j = 0; j < 3 + r.int(0, 3); j++) flower(S, X(xw + (r() - 0.5) * 40 * ss), Y(yw + (r() - 0.5) * 16 * ss), (5 + r() * 3) * ss * k, pc, cc, 5, r() * 6);
+      rosette(xw, yw, 3 + r.int(0, 3), (5 + r() * 2.5) * ss, pc, cc, false);
     }
     // yakın planda görünen ön kısımda birkaç küçük öbek daha
     for (const [cx0, cy0, n] of [[150, 1880, 5], [560, 1990, 6], [700, 1840, 4], [250, 2060, 5], [40, 1760, 4]]) {
-      const [pc, cc] = r.pick(fl); const ss = 0.9 + clamp((cy0 - 1500) / 600) * 0.7;
-      for (let j = 0; j < n; j++) { const x = cx0 + (r() - 0.5) * 50 * ss, y = cy0 + (r() - 0.5) * 18 * ss; S.line([[X(x), Y(y)], [X(x), Y(y + 14 * ss)]], 1.8 * k, '#246E3C', { rim: false, edge: false }); flower(S, X(x), Y(y), (6 + r() * 3) * ss * k, pc, cc, 5, r() * 6); }
+      const [pc, cc] = r.pick(fl); const ss = 0.9 + clamp((cy0 - 1500) / 600) * 0.7; rosette(cx0, cy0, n, (6 + r() * 2.5) * ss, pc, cc, true);
     }
-    // ağacın altında dökülmüş pembe-beyaz taç yaprakları
-    for (let i = 0; i < 38; i++) {
+    // ağacın altında dökülmüş pembe-beyaz taç yaprakları: sivri tabanlı, ucu çentikli (kiraz yaprağı) damla biçim, boyları farklı
+    const fallen = (x, y, a, len, wid, col) => {
+      const p = new Path2D(); p.moveTo(0, 0);
+      p.bezierCurveTo(len * 0.25, -wid * 0.62, len * 0.8, -wid * 0.66, len * 0.98, -wid * 0.24);
+      p.lineTo(len * 0.8, 0); p.lineTo(len * 0.98, wid * 0.24);
+      p.bezierCurveTo(len * 0.8, wid * 0.66, len * 0.25, wid * 0.62, 0, 0); p.closePath();
+      const pp = new Path2D(); pp.addPath(p, new DOMMatrix().translate(x, y).rotate((a * 180) / Math.PI));
+      fill(S, pp, col, { h: 186 });
+      // gölge yarısı (pembe-lavanta) ve kıl izi
+      S.x.save(); S.x.clip(pp); S.x.translate(x, y); S.x.rotate(a); const up = Math.sin(a) * LX - Math.cos(a) * LY > 0;
+      S.x.fillStyle = petalShadow(col); S.x.fillRect(-2, up ? 0 : -wid, len + 4, wid); S.x.globalAlpha = 0.5; S.x.strokeStyle = shade(col, -0.06, 1.1, -6); S.x.lineWidth = Math.max(0.8, wid * 0.08);
+      S.x.beginPath(); S.x.moveTo(len * 0.12, 0); S.x.lineTo(len * 0.7, (r() - 0.5) * wid * 0.3); S.x.stroke(); S.x.restore();
+    };
+    for (let i = 0; i < 40; i++) {
       const a = r() * TAU, d = Math.pow(r(), 0.7); const x = 360 + Math.cos(a) * d * 300, y = 1750 + Math.sin(a) * d * 80; if (y < knollTop(x) + 30) continue;
-      const rot = r() * TAU, rw = (4.6 + r() * 2) * k, rh = (3 + r() * 1.2) * k; const col = r() < 0.55 ? '#F7A8CB' : '#FFF4F8';
-      fill(S, ellipsePath(X(x), Y(y), rw, rh, rot), col, { h: 185 });
-      S.x.fillStyle = shade(col, -0.12, 1.2); S.x.beginPath(); S.x.ellipse(X(x) + Math.cos(rot) * rw * 0.3, Y(y) + Math.sin(rot) * rw * 0.3, rw * 0.45, rh * 0.5, rot, 0, TAU); S.x.fill();
+      const sz = 0.6 + r() * 0.8; fallen(X(x), Y(y), r() * TAU, (13 + r() * 3) * sz * k, (7.5 + r() * 1.5) * sz * k, r() < 0.55 ? '#F7A8CB' : '#FFF6FA');
     }
     // ÇİÇEK TARHI (tanınır öbek): kaynak resimdeki gibi iri beyaz-pembe kır gülleri, koyu yapraklar, tomurcuklar
     const [fx, fy] = SPOTS.cicek;
     const inPatch = (x, y) => ((x - fx) / 165) ** 2 + ((y - fy) / 66) ** 2 < 1;
-    for (let i = 0; i < 90; i++) { const a = r() * TAU, d = Math.sqrt(r()); const x = fx + Math.cos(a) * d * 165, y = fy + Math.sin(a) * d * 64; bigLeaf(S, X(x), Y(y), -Math.PI / 2 + (x - fx) / 120 + (r() - 0.5) * 1.4, 28 + r() * 14, 12 + r() * 4, r() < 0.5 ? '#3FAE52' : '#5CC253'); }
+    for (let i = 0; i < 90; i++) { const a = r() * TAU, d = Math.sqrt(r()); const x = fx + Math.cos(a) * d * 165, y = fy + Math.sin(a) * d * 64; bigLeaf(S, X(x), Y(y), -Math.PI / 2 + (x - fx) / 120 + (r() - 0.5) * 1.4, 40 + r() * 18, 16 + r() * 6, r.pick(['#1E7A3E', '#28894A', '#176A38', '#2F9A4C'])); }
     const fp = []; for (let i = 0; i < 600 && fp.length < 34; i++) { const a = r() * TAU, d = Math.pow(r(), 0.75); const q = [fx + Math.cos(a) * d * 155, fy + Math.sin(a) * d * 58 - 12, 0]; q[2] = (1 - d) * 0.7 + r() * 0.45; if (fp.some(([x, y]) => Math.hypot(x - q[0], (y - q[1]) * 1.5) < 31)) continue; fp.push(q); }
     fp.sort((a, b) => a[1] - b[1]);
     fp.forEach(([x, y, big], i) => {
       const kind = i % 5; const rr = (12 + big * 11) * k;
       S.line([[X(x), Y(y) + rr * 0.3], [X(x) + (r() - 0.5) * 8 * k, Y(y) + rr * 1.8 + 8 * k]], 2.4 * k, '#246E3C', { rim: false, edge: false });
-      if (r() < 0.6) bigLeaf(S, X(x + 12), Y(y + 14), -0.5 + (r() - 0.5), 26, 11, '#4DB653');
+      if (r() < 0.6) bigLeaf(S, X(x + 12), Y(y + 14), -0.5 + (r() - 0.5), 34, 14, '#2A8C46');
       if (kind <= 1) flower(S, X(x), Y(y), rr, '#FFFFFF', '#F4C430', 5, r() * 3, '#F07BB2'); // beyaz kır gülü
       else if (kind === 2) flower(S, X(x), Y(y), rr * 0.9, '#F7A8CB', '#F4C430', 5, r() * 3, '#E0609D'); // pembe
       else if (kind === 3) flower(S, X(x), Y(y), rr * 0.75, '#F7D23A', '#E0841E', 5, r() * 3); // sarı
@@ -750,7 +840,7 @@ const MANZARA = (() => {
   const TREE_MASSES = [
     { c: [330, 690, 230], dark: 0.0, lobes: [[220, 650, 118], [338, 598, 132], [452, 668, 112], [300, 742, 140], [180, 760, 108], [420, 770, 110]] },
     { c: [10, 900, 270], dark: 0.04, lobes: [[-160, 880, 104], [-70, 800, 128], [50, 760, 132], [92, 880, 140], [-40, 960, 140], [140, 990, 104]] },
-    { c: [580, 860, 190], dark: 0.06, lobes: [[512, 822, 112], [618, 800, 104], [722, 874, 80], [566, 912, 90], [440, 884, 92], [662, 936, 66]] },
+    { c: [580, 860, 190], dark: 0.06, lobes: [[512, 822, 112], [618, 800, 104], [722, 874, 80], [566, 912, 90], [440, 884, 92], [662, 936, 66], [722, 814, 50]] },
     { c: [110, 1090, 170], dark: 0.16, lobes: [[150, 1060, 112], [36, 1132, 86], [244, 976, 100], [110, 1162, 62], [-60, 1060, 92]] },
   ];
   const TREE_LOBES = TREE_MASSES.flatMap((m) => m.lobes);
@@ -818,19 +908,20 @@ const MANZARA = (() => {
   }
   // taç alt kenarının girintilerini kapatan "etek": kolon kolon en alt nokta → kapama (max sonra min süzgeç) → yumuşatma
   function canopySkirt(ctxT, und, x0, x1) {
-    const st = 4; const xs = [], ys = [];
-    for (let x = x0; x <= x1; x += st) {
+    const st = 4; const xs = [], ys = []; const pad = 120;
+    for (let x = x0 - pad; x <= x1 + pad; x += st) {
       let yb = -1e9;
       for (const [cx, cy, rr] of TREE_LOBES) { const d = Math.abs(x - cx); if (d < rr) yb = Math.max(yb, cy + Math.sqrt(rr * rr - d * d) * 0.97); }
       for (let y = 1120; y > 740; y -= 4) if (ctxT.isPointInPath(und, x, y)) { yb = Math.max(yb, y); break; }
       xs.push(x); ys.push(yb);
     }
+    // 1B kapama (önce max, sonra min süzgeç): yalnız pencereden dar girintiler dolar; uçlar -sonsuz dolguyla korunur
     const win = 22; const n = ys.length; const mx = ys.slice(), mn = ys.slice();
     for (let i = 0; i < n; i++) { let m = -1e9; for (let j = Math.max(0, i - win); j <= Math.min(n - 1, i + win); j++) m = Math.max(m, ys[j]); mx[i] = m; }
     for (let i = 0; i < n; i++) { let m = 1e9; for (let j = Math.max(0, i - win); j <= Math.min(n - 1, i + win); j++) m = Math.min(m, mx[j]); mn[i] = Math.max(ys[i], m); }
-    const sm = mn.map((v, i) => { let s = 0, c = 0; for (let j = Math.max(0, i - 4); j <= Math.min(n - 1, i + 4); j++) if (mn[j] > -1e8) { s += mn[j]; c++; } return c ? s / c : v; });
-    const pts = []; for (let i = 0; i < n; i++) if (ys[i] > -1e8) pts.push([xs[i], Math.max(ys[i], sm[i])]);
-    return pts;
+    const out = []; for (let i = 0; i < n; i++) if (ys[i] > -1e8) out.push([xs[i], mn[i], ys[i]]);
+    // yumuşatma (yalnız kapanmış alt kenar)
+    return out.map((q, i) => { let s2 = 0, c = 0; for (let j = Math.max(0, i - 3); j <= Math.min(out.length - 1, i + 3); j++) { s2 += out[j][1]; c++; } return [q[0], Math.max(q[2], s2 / c), q[2]]; });
   }
   function paintTree() {
     const { w, h, k } = TREE; const ox = TREE.x, oy = TREE.y;
@@ -844,7 +935,8 @@ const MANZARA = (() => {
     const undS = new Path2D(); undS.addPath(und, new DOMMatrix().translate(-ox * k, -oy * k).scale(k));
     const tc = makeCanvas(4, 4).getContext('2d');
     const skirtPts = canopySkirt(tc, und, -250, 830);
-    const skPoly = orientPts(skirtPts.map(([x, y]) => [X(x), Y(y)]).concat(skirtPts.slice().reverse().map(([x, y]) => [X(x), Y(y - 90)])));
+    // etek: yalnız girintileri doldurur (üst kenar gerçek alt kenarın 6 px içinde), dışa taşmaz
+    const skPoly = orientPts(skirtPts.map(([x, y]) => [X(x), Y(y)]).concat(skirtPts.slice().reverse().map(([x, , y0]) => [X(x), Y(y0 - 6)])));
     const skirt = poly(skPoly);
     const canopy = new Path2D(); lobeP.flat().forEach((q) => canopy.addPath(q)); canopy.addPath(skirt); canopy.addPath(undS);
     const skel = TREE_SKEL.map(([C, w0, w1]) => ribbonGeom(C, w0, w1));
@@ -873,27 +965,28 @@ const MANZARA = (() => {
     }
     // ---- 3) gövde + dallar: tek bölge; kesitte basamaklı silindir ışığı, kabuk darbeleri dal yönünde uzun ve ince
     const bark = ['#35201A', '#472B20', '#5B3A28', '#724B31', '#8C5E3C', '#A87649'];
-    const nearest = (xw, yw) => { let best = null, bd = 1e18; for (const R of skel) for (let i = 0; i < R.P.length; i += 2) { const d = ((R.P[i][0] - xw) ** 2 + (R.P[i][1] - yw) ** 2) / (R.W[i] * R.W[i]); if (d < bd) { bd = d; best = [R, i]; } } return best; };
-    const barkShade = (x, y) => {
-      const [xw, yw] = W2(x, y); const [R, i] = nearest(xw, yw); const n = R.N[i];
-      const off = clamp(((xw - R.P[i][0]) * n[0] + (yw - R.P[i][1]) * n[1]) / (R.W[i] / 2), -1, 1); const lit = n[0] * LX + n[1] * LY;
-      let v = 0.52 + off * lit * 0.62;
-      if (yw < 1420) v -= clamp((1420 - yw) / 260) * 0.22; // tacın gölgesi
-      if (yw > 1690) v -= 0.12;
-      return clamp(v);
-    };
-    const barkDir = (x, y) => { const [xw, yw] = W2(x, y); const [R, i] = nearest(xw, yw); const a = R.P[Math.max(0, i - 2)], b = R.P[Math.min(R.P.length - 1, i + 2)]; return Math.atan2(b[1] - a[1], b[0] - a[0]) + (r() - 0.5) * 0.08; };
-    S.region(skelP, { ramp: bark, shade: barkShade, dir: barkDir, len: [44, 90], wid: [5, 8], cover: 2.8, jitter: 2, noise: 0.02, broken: 0.01, lJit: 0.02, rim: false, max: 3000 });
-    // kabuk yarıkları (gölge yanında koyu, ışık yanında açık uzun ince çizgiler) — dikdörtgen blok yok
-    for (let i = 0; i < 22; i++) {
-      const lit = i % 3 === 0; const xx = lit ? 246 + r() * 26 : 300 + r() * 44; const y0 = 1380 + r() * 300; const l = 40 + r() * 70;
-      S.line(XY([[xx, y0], [xx + (r() - 0.5) * 6, y0 + l * 0.5], [xx + (r() - 0.5) * 8, y0 + l]]), (lit ? 1.6 : 2.2 + r()) * k, lit ? '#B98652' : '#2C1914', { rim: false, edge: false, taper: true });
-    }
-    for (const R of skel.slice(1, 3)) for (let j = 0; j < 7; j++) {
-      const i = Math.floor((0.1 + r() * 0.6) * R.P.length); const n = R.N[i]; const side = r() < 0.6 ? -1 : 1; const off = side * R.W[i] * 0.22;
-      const a = R.P[i], b = R.P[Math.min(R.P.length - 1, i + 8)];
-      S.line(XY([[a[0] + n[0] * off, a[1] + n[1] * off], [b[0] + n[0] * off, b[1] + n[1] * off]]), 1.8 * k, (n[0] * LX + n[1] * LY) * side > 0 ? '#A87649' : '#2C1914', { rim: false, edge: false, taper: true });
-    }
+    // taban dolgusu, sonra her dal/gövde boyunca uzun, ince, uçları sivrilen kabuk lifleri (blok/basamak ucu yok)
+    fill(S, skelP, bark[2], { h: 150 });
+    const barkTone = (R, i, off) => { const n = R.N[i]; const lit = n[0] * LX + n[1] * LY; let v = 0.52 + off * lit * 0.66; const yw = R.P[i][1]; if (yw < 1420) v -= clamp((1420 - yw) / 260) * 0.2; if (yw > 1690) v -= 0.1; return clamp(v); };
+    S.x.save(); S.hx.save(); S.x.clip(skelP); S.hx.clip(skelP);
+    skel.forEach((R, ri) => {
+      const nL = Math.max(5, Math.round(R.W[0] / 5.5)); const segs = []; const np = R.P.length;
+      for (let j = 0; j < nL * 2.4; j++) {
+        const off = (r() * 2 - 1) * 0.97; const i0 = Math.floor(r() * np * 0.75); const i1 = Math.min(np - 1, i0 + Math.max(4, Math.floor((0.3 + r() * 0.55) * np)));
+        const im = (i0 + i1) >> 1; segs.push([barkTone(R, im, off) + (r() - 0.5) * 0.05, off, i0, i1, im]);
+      }
+      // gövdenin iki kenarında koyu/açık kenar lifleri boydan boya
+      segs.push([barkTone(R, np >> 1, 0.9), 0.9, 0, np - 1, np >> 1], [barkTone(R, np >> 1, -0.9), -0.9, 0, np - 1, np >> 1]);
+      segs.sort((p2, q2) => p2[0] - q2[0]);
+      for (const [v, off, i0, i1, im] of segs) {
+        const pts = []; const wob = r() * 10;
+        for (let i = i0; i <= i1; i += 2) { const o2 = off + 0.05 * Math.sin(i * 0.25 + wob); pts.push([R.P[i][0] + R.N[i][0] * o2 * R.W[i] / 2, R.P[i][1] + R.N[i][1] * o2 * R.W[i] / 2]); }
+        if (pts.length < 2) continue;
+        const wd = (R.W[im] / nL) * (1.7 + r() * 0.6);
+        S.line(XY(pts), wd * k, shade(bark[clamp(Math.floor(v * bark.length), 0, bark.length - 1)], (r() - 0.5) * 0.02), { rim: false, edge: false, taper: true });
+      }
+    });
+    S.x.restore(); S.hx.restore();
     // ---- 4) taç kütleleri: basamaklı tonlu badem yaprak öbekleri
     TREE_MASSES.forEach((M, mi) => {
       const [mx, my, mr] = M.c;
@@ -917,15 +1010,20 @@ const MANZARA = (() => {
       S.x.restore(); S.hx.restore();
       // kütle kenarında dışa taşan öbekler
       M.lobes.forEach(([x, y, rr], li) => {
-        const nE = Math.round(rr / 9);
+        const nE = Math.round(rr / 6);
         for (let i = 0; i < nE; i++) {
-          const a = r() * TAU; const wx = x + Math.cos(a) * rr * 0.95, wy = y + Math.sin(a) * rr * 0.95;
+          const a = r() * TAU; const wx = x + Math.cos(a) * rr * 0.98, wy = y + Math.sin(a) * rr * 0.98;
           if (M.lobes.some(([x2, y2, r2], j) => j !== li && Math.hypot(wx - x2, wy - y2) < r2 * 0.95)) continue;
           const px = X(wx), py = Y(wy); const ki = clamp(Math.floor(tone(px, py) * G.length), 1, G.length - 1);
           leafCluster(px, py, a + (r() - 0.5) * 0.5, G[ki], 3, 17);
         }
       });
     });
+    // taç alt kenarında sarkan koyu yaprak öbekleri: düz alt kenarı ve dalların yaprağa giriş yerini kırar
+    for (let i = 0; i < skirtPts.length; i += 5 + r.int(0, 4)) {
+      const [x, y] = skirtPts[i]; const px = X(x + (r() - 0.5) * 8), py = Y(y - 3 - r() * 6);
+      leafCluster(px, py, Math.PI / 2 + (r() - 0.5) * 1.2, G[1 + r.int(0, 1)], 3 + r.int(0, 1), 17);
+    }
     // görünür ışık (en üstteki kütleye göre, 0..1); kütle dışında -1
     const topLit = (wx, wy) => { for (let mi = TREE_MASSES.length - 1; mi >= 0; mi--) { const M = TREE_MASSES[mi]; if (M.lobes.some(([x, y, rr]) => Math.hypot(wx - x, wy - y) < rr * 0.9)) return M.tone(X(wx), Y(wy)); } return -1; };
     // ---- 5) gökyüzü delikleri (tacın içinde): içinden yapraktan çıkıp yaprağa giren çatallı ince dal görünür
@@ -948,7 +1046,7 @@ const MANZARA = (() => {
       beyaz: { d: '#D9B7D3', m: '#F3E3EF', l: '#FFFFFF', h: '#FFFFFF', c: '#F2B52E' },
     };
     const drifts = [];
-    const plan = [[0, 8], [1, 8], [2, 6], [3, 3]];
+    const plan = [[0, 10], [1, 10], [2, 7], [3, 3]];
     for (const [mi, nD] of plan) {
       const M = TREE_MASSES[mi]; let got = 0;
       for (let t = 0; t < 400 && got < nD; t++) {
@@ -986,7 +1084,7 @@ const MANZARA = (() => {
       for (let j = 0; j < 2; j++) { const a = 0.4 + r() * 1.3; const fx = px + Math.cos(a) * rx * 0.85, fy = py + Math.sin(a) * ry * 0.85; const tl = topLit(fx, fy); if (tl < 0) continue; leafCluster(X(fx), Y(fy), a, G[clamp(Math.floor(tl * G.length) - 1, 1, G.length - 2)], 3, 16); }
     }
     // taç kenarında (ışıklı yüzlerde) tek tük çiçekler
-    for (let i = 0, got = 0; i < 600 && got < 26; i++) {
+    for (let i = 0, got = 0; i < 900 && got < 38; i++) {
       const [x, y, rr] = TREE_LOBES[r.int(0, TREE_LOBES.length - 1)]; const a = r() * TAU; const px = x + Math.cos(a) * rr * 0.93, py = y + Math.sin(a) * rr * 0.93;
       const lit = topLit(px, py); if (lit < 0.5) continue;
       if (TREE_LOBES.some(([x2, y2, r2]) => (x2 !== x || y2 !== y) && Math.hypot(px - x2, py - y2) < r2 * 0.88)) continue;
@@ -1000,49 +1098,49 @@ const MANZARA = (() => {
   defSprite('agac-buyuk', paintTree);
 
   // ---------------------------------------------------------------- 9. küçük bahçe ağaçları
+  // üç ayrı siluet: nar = dik oval taç, iki gövdeli; çiçek = geniş yuvarlak taç, çatallı gövde; yeşil = sağa yatık, eğik gövde
+  const SMALL_TREES = {
+    nar: { lobes: [[0, -196, 40], [-28, -164, 40], [26, -160, 42], [-2, -132, 46], [-34, -112, 32], [34, -110, 32], [4, -224, 26]], light: [-20, -200, 130],
+      limbs: [[[[-6, 4], [-10, -46], [-20, -96], [-28, -136]], 14, 6], [[[6, 4], [10, -50], [18, -100], [24, -150]], 14, 6], [[[0, -60], [2, -110], [0, -170]], 8, 4]] },
+    cicek: { lobes: [[-56, -116, 44], [52, -120, 46], [0, -146, 56], [-82, -92, 28], [80, -90, 30], [0, -104, 50], [-30, -160, 36], [34, -158, 34]], light: [-30, -170, 160],
+      limbs: [[[[0, 4], [-2, -50], [2, -86]], 20, 12], [[[0, -70], [-26, -98], [-50, -122]], 10, 5], [[[2, -76], [28, -104], [52, -126]], 10, 5]] },
+    yesil: { lobes: [[-24, -122, 42], [28, -156, 54], [72, -116, 40], [-52, -96, 28], [12, -108, 46], [84, -86, 24], [60, -168, 30]], light: [-10, -180, 150],
+      limbs: [[[[-6, 4], [2, -46], [16, -90], [26, -120]], 19, 10], [[[12, -80], [46, -104], [70, -120]], 9, 4]] },
+  };
   function paintSmallTree(kind, seed) {
-    const k = 1.5, w = 240, h = 270; const S = Paint.sprite(w * k, h * k, { seed, k }); const r = S.r;
+    const k = 1.5, w = 240, h = 270; const S = Paint.sprite(w * k, h * k, { seed, k }); const r = S.r; const T = SMALL_TREES[kind];
     const bx = 120 * k, by = 258 * k; const X = (x) => bx + x * k, Y = (y) => by + y * k;
-    S.x.save(); S.x.globalAlpha = 0.3; S.x.fillStyle = '#0E3A28'; S.x.beginPath(); S.x.ellipse(X(14), Y(0), 70 * k, 9 * k, 0, 0, TAU); S.x.fill(); S.x.restore();
-    limb(S, [[X(0), Y(4)], [X(-2), Y(-50)], [X(2), Y(-100)]], 20, 11);
-    limb(S, [[X(-1), Y(-58)], [X(-22), Y(-92)], [X(-40), Y(-122)]], 10, 5, { rim: false });
-    limb(S, [[X(1), Y(-66)], [X(24), Y(-98)], [X(42), Y(-128)]], 10, 5, { rim: false });
+    fill(S, ellipsePath(X(14), Y(1), 66 * k, 8 * k), '#1F5A36', { h: 135 }); // opak gölge
+    for (const [pts, w0, w1] of T.limbs) limb(S, pts.map(([x, y]) => [X(x), Y(y)]), w0, w1, { rim: false });
     for (const sg of [-1, 1]) S.line([[X(sg * 3), Y(-6)], [X(sg * 14), Y(2)]], 6 * k, '#523223', { w1: 2 * k, rim: false, edge: false });
-    const lobes = kind === 'cicek' ? [[-44, -128, 48], [42, -132, 50], [0, -170, 56], [-58, -96, 34], [56, -98, 34], [0, -118, 46]] : [[-46, -124, 50], [44, -128, 52], [0, -168, 58], [-62, -92, 34], [60, -94, 34], [0, -112, 48]];
-    const sil = new Path2D(); lobes.forEach(([x, y, rr]) => sil.addPath(circ(X(x), Y(y), rr * k)));
-    S.rim(sil, { w: 2.6 }); fill(S, sil, '#11523A', { h: 140 });
+    const lobes = T.lobes;
+    const lp = lobes.map(([x, y, rr], i) => smoothPath(blobPts(X(x), Y(y), rr * k, rr * k * 0.96, 22, 0.05, seed + i)));
+    const sil = new Path2D(); lp.forEach((q) => sil.addPath(q));
+    S.rim(sil, { w: 2.4 }); fill(S, sil, '#11523A', { h: 140 });
     const G = kind === 'yesil' ? ['#0F4A35', '#176240', '#22804A', '#35A050', '#62BC52', '#9AD450'] : ['#0F4A35', '#176240', '#22804A', '#349C4E', '#5CB650', '#8ECC4E'];
-    const big = sph(X(-20), Y(-170), 150 * k, 0.05);
+    const big = sph(X(T.light[0]), Y(T.light[1]), T.light[2] * k, 0.05);
     lobes.forEach(([x, y, rr], li) => {
-      const cx = X(x), cy = Y(y), R = rr * k; const lp = circ(cx, cy, R);
+      const cx = X(x), cy = Y(y), R = rr * k; const lpp = lp[li];
       const loc = sph(cx - R * 0.25, cy - R * 0.35, R * 1.15, 0);
       const f = (px, py) => clamp(loc(px, py) * 0.6 + big(px, py) * 0.5 - 0.05);
-      fill(S, lp, G[2], { h: 145 });
+      fill(S, lpp, G[2], { h: 145 });
       const n = Math.round((R * R * 3.1) / (16 * 8 * k * k) * 1.6); const L = [];
       for (let i = 0; i < n; i++) { const a = r() * TAU, d = Math.sqrt(r()) * R; const px = cx + Math.cos(a) * d, py = cy + Math.sin(a) * d; const ki = clamp(Math.floor((f(px, py) + (r() - 0.5) * 0.08) * G.length), 0, G.length - 1); L.push([ki + r() * 0.3, px, py, a, ki]); }
       L.sort((p, q) => p[0] - q[0]);
-      S.x.save(); S.hx.save(); S.x.clip(lp); S.hx.clip(lp);
+      S.x.save(); S.hx.save(); S.x.clip(lpp); S.hx.clip(lpp);
       for (const [, px, py, a, ki] of L) leaf(S, px, py, a + (r() - 0.5) * 1.1, 15 + r() * 9, 7 + r() * 3, shade(G[ki], (r() - 0.5) * 0.04));
       S.x.restore(); S.hx.restore();
-      for (let i = 0; i < R / (5 * k); i++) { const a = r() * TAU; const px = cx + Math.cos(a) * R * 0.97, py = cy + Math.sin(a) * R * 0.97; const ki = clamp(Math.floor(f(px, py) * G.length), 1, G.length - 1); leaf(S, px, py, a + (r() - 0.5) * 0.8, 14 + r() * 8, 6 + r() * 3, G[ki]); }
+      for (let i = 0; i < R / (5 * k); i++) { const a = r() * TAU; const px = cx + Math.cos(a) * R * 0.97, py = cy + Math.sin(a) * R * 0.97; if (lobes.some(([x2, y2, r2], j) => j !== li && Math.hypot(px / k - bx / k - x2, py / k - by / k - y2) < r2 * 0.92)) continue; const ki = clamp(Math.floor(f(px, py) * G.length), 1, G.length - 1); leaf(S, px, py, a + (r() - 0.5) * 0.8, 14 + r() * 8, 6 + r() * 3, G[ki]); }
     });
     if (kind === 'nar') {
-      const fr = [[-48, -112], [-14, -146], [28, -120], [52, -150], [-30, -168], [10, -186], [64, -104], [-66, -138], [0, -104], [36, -170], [-50, -84]];
-      for (const [dx, dy] of fr) {
-        const cx = X(dx), cy = Y(dy), rr = 10 * k;
-        fill(S, circ(cx + 1.2 * k, cy + 1.5 * k, rr), '#7E1222', { h: 170 });
-        S.region(circ(cx, cy, rr * 0.93), { ramp: ['#9E1A2A', '#C02233', '#D9343F', '#EA6A5E'], shade: sph(cx - rr * 0.3, cy - rr * 0.3, rr * 1.2, 0.1), dir: -0.7, dirJit: 0.6, len: [6, 10], wid: [4, 6], cover: 2.6, rim: false, jitter: 0 });
-        S.dab(cx - rr * 0.35, cy - rr * 0.45, -0.7, 5, 2.4, '#FFC2B4');
-        // taç
-        fill(S, poly([[cx - rr * 0.32, cy - rr * 0.82], [cx - rr * 0.4, cy - rr * 1.25], [cx - rr * 0.12, cy - rr * 1.0], [cx, cy - rr * 1.3], [cx + rr * 0.12, cy - rr * 1.0], [cx + rr * 0.4, cy - rr * 1.25], [cx + rr * 0.32, cy - rr * 0.82]]), '#7A1424', { h: 175 });
-      }
+      const fr = [[-30, -118], [-6, -150], [24, -126], [30, -170], [-26, -178], [6, -206], [36, -104], [-38, -146], [0, -112], [18, -190], [-14, -90]];
+      for (const [dx, dy] of fr) pomegranate(S, X(dx), Y(dy), 9.5 * k);
     }
     if (kind === 'cicek') {
-      const lobesL = lobes;
-      for (let i = 0; i < 90; i++) {
-        const [x, y, rr] = lobesL[r.int(0, lobesL.length - 1)]; const a = r() * TAU, d = Math.sqrt(r()) * rr * 0.9; const px = x + Math.cos(a) * d, py = y + Math.sin(a) * d;
-        if (big(X(px), Y(py)) < 0.3 && r() < 0.6) continue;
-        blossom(S, X(px), Y(py), (6 + r() * 3) * k, r() < 0.75 ? '#FFFFFF' : '#FBE0EC', '#F2B52E');
+      for (let i = 0; i < 70; i++) {
+        const [x, y, rr] = lobes[r.int(0, lobes.length - 1)]; const a = r() * TAU, d = Math.sqrt(r()) * rr * 0.9; const px = x + Math.cos(a) * d, py = y + Math.sin(a) * d;
+        if (big(X(px), Y(py)) < 0.35 && r() < 0.7) continue;
+        blossom(S, X(px), Y(py), (6 + r() * 3) * k, r() < 0.75 ? '#FFFFFF' : '#FBE0EC', '#F2B52E', 5, '#EED3E5');
       }
     }
     return { canvas: S.finish({ emboss: 0.5 }), px: bx, py: by, k };
@@ -1122,7 +1220,7 @@ const MANZARA = (() => {
     layers, spots, spotPar, man: [430, 1640], manLayer: 'agac-buyuk',
     riverPath: () => riverPathWorld(), riverFlow, riverSample, riverBBox, riverCenter: RIVER_C,
     knollTop, layerCam, sun: SUN, horizon: 1000, skyHorizon: 880,
-    treeBase: TREE.base, canopy: { x0: -230, y0: 480, x1: 820, y1: 1225 },
+    treeBase: TREE.base, canopy: { x0: -272, y0: 458, x1: 812, y1: 1232 },
   };
 })();
 window.MANZARA = MANZARA; // sahneler window.MANZARA üzerinden okur (üst düzey const window'a bağlanmaz)

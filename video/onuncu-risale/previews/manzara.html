@@ -71,12 +71,13 @@ window.show8 = async () => { reset(); world({ x: 580, y: 972, z: 1.0 }); Post.ap
 window.show9 = async () => { reset(); world({ x: 540, y: 960, z: 1 }, 1); Post.apply(ctx); };             // geniş akşam, renk düşürmesiz
 window.show10 = async () => { reset(); world({ x: 540, y: 1150, z: 1.45 }, 1); duskGrade(); Post.apply(ctx); }; // p3 başı
 let SHOW2 = [
-  ['gunes', 960, 1120, 0.6],
+  ['gunes', 920, 1460, 0.6],
   ['bulut-1', 260, 760, 0.9], ['bulut-3', 760, 760, 0.9],
   ['bulut-2', 200, 940, 0.9], ['bulut-1-aksam', 560, 960, 0.6], ['bulut-3-aksam', 880, 960, 0.5],
   ['agac-kucuk-1', 190, 1280, 1], ['agac-kucuk-2', 540, 1280, 1], ['agac-kucuk-3', 890, 1280, 1],
   ['yaprak-1', 140, 1450, 1.4], ['yaprak-2', 340, 1450, 1.4], ['yaprak-3', 540, 1450, 1.4], ['yaprak-4', 740, 1450, 1.4],
   ['cicek-tane-1', 200, 1680, 2], ['cicek-tane-2', 440, 1680, 2], ['cicek-tane-3', 680, 1680, 2], ['bulut-2-aksam', 920, 1700, 0.8],
 ];
+console.log("MANZARA", JSON.stringify({ riverBBox: MANZARA.riverBBox, spots: MANZARA.spots, sun: MANZARA.sun, canopy: MANZARA.canopy, layers: MANZARA.layers.map((l) => [l.name, l.x, l.y, l.parallax, l.dusk || ""]), sample: MANZARA.riverSample(0.5, 0).map((v) => +v.toFixed(2)), flow: MANZARA.riverFlow(700, 1300).map((v) => +v.toFixed(3)) }));
 window.READY = true;
 </script></body></html>

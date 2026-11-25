@@ -20,7 +20,8 @@
 
   defSprite('p4-sicak', () => {
     const S = Paint.sprite(W, H, { seed: 404 });
-    const f = (x, y) => clamp(1.08 - Math.hypot((x - 540) / 820, (y - 900) / 1150) * 1.2);
+    // başın çevresinde parlak odak yok (hale gibi okunmasın): geniş, çapraz, sıcak bir geçiş
+    const f = (x, y) => clamp(0.34 + 0.42 * ((x * 0.3 + y * 0.7) / (W * 0.3 + H * 0.7)) + (NOISE(x * 0.0012 + 7, y * 0.0012) - 0.5) * 0.16);
     S.region(rectPath(0, 0, W, H), { ramp: ['#7E3A2E', '#A44C34', '#C4643A', '#DA8442', '#EAA552', '#F4C46A', '#F9DA8E'], shade: f, dir: (x, y) => -0.62 + (NOISE(x * 0.0025, y * 0.0025) - 0.5) * 0.55, len: [70, 140], wid: [16, 26], cover: 2.6, rim: false, jitter: 26, jitterFreq: 0.004, noise: 0.03 });
     return { canvas: S.finish({ emboss: 0.5 }), px: 0, py: 0 };
   });
@@ -121,7 +122,7 @@
         const organ = (name, key, t0, pulse) => {
           if (!hasSpr(name)) return; const a = E.out3(inv(t0, t0 + 0.45, t)); if (a <= 0) return;
           const [cx, cy] = P(fr, key); const s = 0.85 + 0.15 * E.outBack(inv(t0, t0 + 0.5, t)) + (pulse || 0);
-          if (window.UI) UI.glow(ctx, cx, cy, 120, '#FF9A7A', 0.28 * a + (pulse || 0) * 1.5);
+          if (window.UI) UI.glow(ctx, cx, cy, 120, '#FF9A7A', 0.17 * a + (pulse || 0) * 0.9);
           ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy); drawPart(ctx, spr(name), fr.ox, fr.oy, 1, 0, a); ctx.restore();
         };
         const beat = (tt, b) => Math.exp(-Math.pow((tt - b) * 9, 2)) * 0.09;
@@ -141,7 +142,8 @@
           const [px, py] = P(fr, s[2]); const mx = s[3], my = s[4];
           const pulse = Math.exp(-Math.pow((t - tAnla() - 0.15) * 5, 2));
           if (window.UI) {
-            UI.ring(ctx, px, py, 26, E.out3(p), '#9BF0E8', 4, 10 + i);
+            const face = ['eye', 'nose', 'mouth'].includes(s[2]);
+            UI.ring(ctx, px, py, face ? 15 : 24, E.out3(p), '#9BF0E8', face ? 3.4 : 4, 10 + i);
             ctx.save(); ctx.globalAlpha = E.out3(inv(st + 0.15, st + 0.55, t));
             UI.line(ctx, [[px, py], [lerp(px, mx, 0.55), lerp(py, my, 0.2)], [mx, my]], E.out3(inv(st + 0.1, st + 0.55, t)), '#7FE3E0', 2.6 + pulse * 2, 20 + i);
             ctx.restore();
@@ -151,7 +153,7 @@
           if (n && lp > 0 && window.UI) {
             ctx.save(); ctx.globalAlpha = 0.95;
             UI.line(ctx, [[mx, my], [lerp(mx, n[4], 0.5), lerp(my, n[5], 0.5) - 10], [n[4], n[5]]], lp, '#FFD27A', 3 + pulse * 2.5, 40 + i);
-            if (pulse > 0.05) UI.glow(ctx, n[4], n[5], 90, '#FFD27A', 0.35 * pulse);
+            if (pulse > 0.05) UI.glow(ctx, n[4], n[5], 90, '#FFD27A', 0.2 * pulse);
             ctx.restore();
           }
           const ms = E.outBack(inv(st + 0.2, st + 0.65, t), 1.5) * (1 + pulse * 0.08);

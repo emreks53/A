@@ -37,6 +37,6 @@ const out = document.getElementById('out'); const ctx = out.getContext('2d', { w
 ctx.imageSmoothingQuality = 'high';
 window.renderFrame = async (t) => { await Engine.render(ctx, t); };
 // nesne dosyalarındaki üst düzey const'ları window'a bağla (sahneler window.X ile okur)
-for (const n of ['ADAM', 'UI', 'MANZARA', 'CENNET_M', 'ZIYAFET', 'YIYECEK']) { try { if (!window[n]) window[n] = (0, eval)(n); } catch (e) {} }
+for (const n of ['ADAM', 'UI', 'ARAYUZ', 'MANZARA', 'CENNET_M', 'ZIYAFET', 'YIYECEK']) { try { if (!window[n]) window[n] = (0, eval)(n); } catch (e) {} }
 (async () => { await Engine.init(); if (window.FOTO_READY) await window.FOTO_READY(); window.READY = true; })();
 </script></body></html>

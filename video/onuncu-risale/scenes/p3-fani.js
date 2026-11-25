@@ -15,7 +15,7 @@
     name: 'p3', t0: T0, t1: T1, z: 3,
     draw(ctx, t) {
       if (!window.P1) return;
-      ctx.globalAlpha = E.out2(inv(T0, T0 + 0.4, t));
+      ctx.globalAlpha = E.io2(inv(T0 + 0.04, T0 + 0.32, t));
       const c = cam(t);
       P1.drawWorld(ctx, t, c, 1);
       // sönük, soluk akşam: çarpma ile renk düşür

@@ -35,16 +35,15 @@
     for (const L of M.layers) {
       const cc = camPar(c, L.parallax);
       withCam(ctx, cc, () => {
-        if (L.name === 'gok-sabah' && dusk > 0 && hasSpr('gok-aksam')) {
-          drawSpr(ctx, spr('gok-sabah'), L.x, L.y); drawSpr(ctx, spr('gok-aksam'), L.x, L.y, 1, 0, dusk);
-          return;
-        }
-        if (L.name.startsWith('bulut')) { drawSpr(ctx, spr(L.name), L.x + t * (6 + (L.parallax * 10)), L.y); return; }
+        const dk = dusk > 0 && L.dusk && hasSpr(L.dusk) ? L.dusk : null; // akşam eşi (gökyüzü, bulutlar)
+        const dx = L.name.startsWith('bulut') ? t * (6 + L.parallax * 10) : 0;
         if (L.name === 'gunes' && dusk > 0) { drawSpr(ctx, spr(L.name), L.x, L.y + dusk * 520, 1, 0, 1 - dusk); return; }
+        if (dk) { if (dusk < 1) drawSpr(ctx, spr(L.name), L.x + dx, L.y); drawSpr(ctx, spr(dk), L.x + dx, L.y, 1, 0, dusk); return; }
+        if (dx) { drawSpr(ctx, spr(L.name), L.x + dx, L.y); return; }
         drawSpr(ctx, spr(L.name), L.x, L.y);
         if (L.name === 'vadi' && M.riverPath) {
           const rp = M.riverPath();
-          waterShimmer(ctx, rp, t, { n: 90, bbox: [180, 1000, 720, 1620], speed: 30, flow: (x, y) => [-0.42, 0.91], len: 22, wid: 3, alpha: 0.75 * (1 - dusk * 0.6) });
+          waterShimmer(ctx, rp, t, { n: 110, bbox: M.riverBBox || [180, 1000, 720, 1620], speed: 30, flow: M.riverFlow || ((x, y) => [-0.42, 0.91]), len: 22, wid: 3, alpha: 0.75 * (1 - dusk * 0.6) });
         }
         if (L.name === (M.manLayer || 'tumsek')) drawMan(ctx, t, M);
       });
@@ -59,7 +58,7 @@
     const ox = M.man[0] - A.seat[0] * sc, oy = M.man[1] - A.seat[1] * sc;
     // baş: önce hafif öne eğik, "eyyühe'l-aziz" ile kalkar
     const lift = E.outBackSoft(inv(0.5, 1.45, t));
-    const rot = lerp(-0.16, 0.05, lift) + Math.sin(t * 1.1) * 0.006;
+    const rot = lerp(0.14, -0.04, lift) + Math.sin(t * 1.1) * 0.006; // + öne eğik, − kalkık
     drawPart(ctx, spr('adam-oturan-govde'), ox, oy, sc);
     drawPart(ctx, spr('adam-oturan-bas'), ox, oy, sc, rot);
   }
@@ -97,7 +96,7 @@
     ENTRIES.forEach((en, i) => {
       const st = tf + i * 0.09; const lp = E.out3(inv(st + 0.35, st + 1.2, t)); if (lp <= 0) return;
       const [mx, my] = markerPos(c, en, t, i); const isNar = i === 0;
-      const dim = isNar ? 1 : lerp(1, 0.22, hiP);
+      const dim = isNar ? 1 : lerp(1, 0.22, hiP) * (1 - E.in2(inv(tZoom - 0.45, tZoom - 0.05, t)));
       const col = isNar ? mix('#FFF0CF', '#FFD27A', hiP) : '#FFF0CF';
       const x0 = mx, y0 = my - MED_PX * 0.55; const x1 = lerp(x0, H0[0] + (i - 2.5) * 26, lp), y1 = lerp(y0, H0[1], lp);
       const flow = Math.max(0, t - tBu() + 0.3) * 38; // "fihristede": göstergeler ötelere akar
@@ -108,14 +107,14 @@
     });
     // ufkun ötesi: göstergelerin kaybolduğu yumuşak sis (ışık kaynağı değil)
     const hz = E.out2(inv(tf + 0.6, tf + 1.6, t)) * (1 - hiP * 0.5);
-    if (hz > 0 && hasUI) UI.glow(ctx, H0[0], H0[1] + 10, 230, '#FFF4E0', 0.22 * hz);
+    if (hz > 0 && hasUI) { if (UI.haze) UI.haze(ctx, H0[0], H0[1] + 10, 900, 150, '#FFF4E0', 0.25 * hz); else UI.glow(ctx, H0[0], H0[1] + 10, 230, '#FFF4E0', 0.22 * hz); }
     // madalyonlar: noktalarından kalkıp üstlerinde süzülür, ince sapla bağlı
     ENTRIES.forEach((en, i) => {
       const st = tf + i * 0.09; const p = inv(st, st + 0.6, t); if (p <= 0) return;
       const sp = spotScreen(c, en);
       const [mx0, my] = markerPos(c, en, t, i); const isNar = i === 0;
       const rise = E.out3(p); const yy = sp ? lerp(sp[1], my, rise) : my; const mx = sp ? lerp(sp[0], mx0, rise) : mx0;
-      const dim = isNar ? 1 : lerp(1, 0.3, hiP);
+      const dim = isNar ? 1 : lerp(1, 0.3, hiP) * (1 - E.in2(inv(tZoom - 0.45, tZoom - 0.05, t)));
       const pop = E.outBack(clamp(p * 1.5), 1.8);
       if (sp) { // sap: madalyondan nimetin kendisine ince çizgi ve küçük halka
         ctx.save(); ctx.globalAlpha = dim * 0.9 * rise; ctx.strokeStyle = '#FFF0CF'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
@@ -123,9 +122,11 @@
         ctx.beginPath(); ctx.moveTo(mx + dx / L * MED_PX * 0.48, yy + dy / L * MED_PX * 0.48); ctx.lineTo(sp[0] - dx / L * 12, sp[1] - dy / L * 12); ctx.stroke();
         ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sp[0], sp[1], 11, 0, 7); ctx.stroke(); ctx.restore();
       }
-      if (isNar && hiP > 0 && hasUI) { UI.glow(ctx, mx, yy, 140, '#FFC56B', 0.32 * hiP); UI.ring(ctx, mx, yy, MED_PX * 0.5 + 14, hiP, '#FFD36E', 7, 4); }
+      if (isNar && hiP > 0 && hasUI) { UI.glow(ctx, mx, yy, 140, '#FFC56B', 0.22 * hiP); UI.ring(ctx, mx, yy, MED_PX * 0.5 + 14, hiP, '#FFD36E', 7, 4); }
       const sc = (MED_PX / 300) * pop * (isNar ? 1 + 0.2 * hiP : 1);
-      if (hasSpr(en.icon)) drawSpr(ctx, spr(en.icon), mx, yy, sc, 0, dim);
+      const goneA = isNar ? 1 : 1 - E.in2(inv(tZoom - 0.45, tZoom - 0.05, t)); // dalıştan önce diğerleri tamamen söner
+      if (window.ARAYUZ && ARAYUZ.drawMed && hasSpr(en.icon)) { if (goneA > 0.01) ARAYUZ.drawMed(ctx, en.icon, mx, yy, sc, isNar ? 0 : hiP, goneA); }
+      else if (hasSpr(en.icon)) drawSpr(ctx, spr(en.icon), mx, yy, sc, 0, dim);
       else { ctx.fillStyle = '#F6E7CF'; ctx.globalAlpha = dim; ctx.beginPath(); ctx.arc(mx, yy, 56 * pop, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
     });
     ctx.restore();
