@@ -81,3 +81,30 @@ Sonra aynı sohbette, gerekirse tek tek şu düzeltmeleri iste (her biri "keep e
 - Kur'an'ın şekli yanlışsa: "Make the Qur'an a real Turkish mushaf: portrait 17 x 24 cm, 3.5 cm thick, rounded spine, fore-edge flap, white almond medallion with correctly spelled القرآن الكريم; keep everything else exactly the same."
 - Renk koyuysa: "Make the Risale leather lighter: exactly #D68661, soft faded terracotta-rose; keep everything else exactly the same."
 - Açık kitaptaki yazı okunuyorsa: "Blur the open book's pages more so no letters can be read; keep everything else exactly the same."
+
+## GPT istemi — 3. sürüm (kullanıcının örnek konsepti: akşam, çalışma masası köşesi)
+
+Kullanıcının örneği: çalışma masasında sıra hâlinde, sırtları yaldızlı ve kurdeleli kitaplar; sıranın başında kapağı bize
+dönük dik duran kitap (burada Kur'an); önde kalemle bir kitap; çay; masa lambası; sıcak şömine ışığı. Vecize yok.
+
+```
+Use the attached photos only as a design reference for the Risale-i Nur books (thickness, gilt patterns, spine layout); make them similar but not identical.
+
+An unedited, real photograph taken with a full-frame camera (35mm lens, f/2.2), vertical 9:16, looking down at about 35 degrees at the corner of a cozy home study desk in the evening. It must be indistinguishable from a real photo: natural colors, real textures, subtle real-life imperfections; no CGI, no 3D render, no product-mockup look.
+
+Setting: a warm, quiet study corner with cream-white walls and a small white shelf above the desk. A white desk lamp on the right casts warm, soft light; on the left, in the soft-focus background, the warm glow of a real fireplace. To the right, a thin-waisted Turkish tea glass with amber tea on a small saucer, a little steam rising.
+
+On the desk, in a neat row slightly angled toward the camera, stand seven Risale-i Nur books of different realistic thicknesses (about 3 to 5 cm; each about 24 cm tall and 17 cm wide), bound in leather of exact color #D68661 (a light, soft, slightly faded terracotta-rose with a light tan leather undertone, RGB 214,134,97; not dark brown, not bright red). Their spines have fine gold bands, small gold Ottoman illumination ornaments and gold titles in small framed labels, exactly: "SÖZLER", "MEKTUBAT", "LEM'ALAR", "ŞUALAR", "MESNEVÎ-İ NURİYE", "İŞARÂTÜ'L-İ'CAZ", "BARLA LÂHİKASI". A few thin silk ribbon bookmarks hang out at the bottom.
+
+At the head of the row, in the most honored place, the Holy Qur'an stands upright on the desk with its front cover turned toward the camera, neat and natural (not on any stand or holder, nothing touching or covering it). It is a real Turkish mushaf: portrait about 17 x 24 cm, about 3.5 cm thick, rounded spine, fine leather in exact color #144173 (elegant deep ocean blue, RGB 20,65,115). On the cover, all in white: a central almond-shaped medallion with the Arabic calligraphy "القرآن الكريم" in elegant thuluth, correctly spelled, white corner pieces and a thin white border; a white ribbon bookmark.
+
+In the foreground, one more #D68661 Risale book lies open on the desk toward the viewer, as if I am reading it, with a black fountain pen beside it; its pages are softly out of focus so no letters can be read.
+
+Light: warm evening lamplight and firelight, soft shadows, gentle glow on the leather and gilt edges, natural vignetting, fine grain.
+
+Do not include: people, hands, any quote or caption text, logos, watermark, any readable text other than the spine titles and the Qur'an's calligraphy.
+```
+
+Şömine yerine örnekteki gibi tablet istersen "on the left, in the soft-focus background, the warm glow of a real fireplace"
+yerine: "on the left, a tablet leaning against the wall shows a cozy crackling fireplace". 2. sürümdeki düzeltme cümleleri
+bu istem için de geçerlidir.
