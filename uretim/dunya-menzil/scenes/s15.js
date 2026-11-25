@@ -327,7 +327,7 @@
       const c = camAt(lt);
       octx.save();
       octx.setTransform(camXf(c));
-      const out = 1 - E.ep(lt, shot.dur - 0.02, shot.dur + 0.42, 'inOutSine');
+      const out = 1 - E.ep(lt, shot.dur - 0.16, shot.dur - 0.01, 'inOutSine');   // gone before s16 shows (never over the man)
       for (let i = 0; i < LINES.length; i++) drawLine(octx, i, lt, tm, out);
       octx.restore();
     },

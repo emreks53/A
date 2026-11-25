@@ -385,8 +385,13 @@
       E.resetCamera(L);
       E.motes(L.light, { x: 0, y: 200, w: 1080, h: 1000, n: 22, t: lt + 3, seed: 77, size: 2.6, a: 0.45, rise: 18, color: '#FFF1CF' });
       E.restore(L);
-      E.man.shadow(L, MAN.x + 8, MAN.y, MAN.h);
-      E.man.draw(L, { x: MAN.x, y: MAN.y, h: MAN.h, view: 'side', facing: 1, pose });
+      // the s10 -> s11 bleed reaches his whole figure only at mix ≈ 0.67 (bleed front vs his box seen from the bleed
+      // centre (540, 300)); until then he is not drawn, then he fades in as ONE figure — never in pieces
+      const manA = E.ep(lt, 0.68, 1.0, 'inOutSine');
+      if (manA > 0.001) {
+        E.man.shadow(L, MAN.x + 8, MAN.y, MAN.h, 0.35 * manA);
+        E.man.draw(L, { x: MAN.x, y: MAN.y, h: MAN.h, view: 'side', facing: 1, pose, alpha: manA });
+      }
 
       // pencil annotations
       const lp = E.ep(lt, tLabel, tLabel + 0.55, 'linear');

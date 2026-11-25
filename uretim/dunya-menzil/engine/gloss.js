@@ -28,9 +28,10 @@
       const next = groups[i + 1];
       gr.fade = FADE_OUT;
       if (next && next.t0 <= end + FADE_OUT) {
-        // replaced: the old meaning leaves exactly as the new one starts to appear
-        end = Math.min(end, next.t0);
-        gr.fade = 0.2;
+        // replaced: the old meaning is completely gone by the moment the new one starts to write on (a short
+        // 0.12 s fade that ENDS at next.t0), so the two texts never stack on top of each other
+        gr.fade = 0.12;
+        end = Math.min(end, next.t0 - gr.fade);
       }
       gr.t1 = end;
     });
