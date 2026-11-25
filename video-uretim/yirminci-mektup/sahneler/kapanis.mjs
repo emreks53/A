@@ -2,7 +2,7 @@
 // İki kare aynı kameradan: biri Kur'an'a, biri önde yatan Mektubat'a odaklı. Gerçek kamera gibi: çok yavaş itme,
 // hafif el salınımı, odak kaydırma (arka → ön), ışık huzmesinde süzülen toz zerreleri, film greni, köşe kararması.
 // Kaynak yazısı: Risale-i Nur / Mektubat / Yirminci Mektup / 243. Sayfa.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { loadImage, W, H, KOK, clamp, lerp, ease, an, rng, gurultu2, tuval, TAU } from '../motor/temel.mjs';
 
@@ -13,6 +13,13 @@ const yukle = async (ad) => {
 };
 const KURAN = await yukle('kuran-odak.png');
 const MEKTUBAT = await yukle('mektubat-odak.png');
+// Kullanıcının Shutterstock yapay zekâsıyla ürettiği ultra gerçekçi kapanış fotoğrafı (varsa bu kullanılır).
+// kapanis/kareler/ai.(jpg|png|webp); isteğe bağlı ai.json: { "yazi": "alt" | "ust", "odak": [0..1, 0..1] }
+const AI_AD = ['ai.jpg', 'ai.jpeg', 'ai.png', 'ai.webp'].find((a) => existsSync(path.join(DIZIN, a)));
+const AI = AI_AD ? await yukle(AI_AD) : null;
+const AI_AYAR = (() => {
+  try { return JSON.parse(readFileSync(path.join(DIZIN, 'ai.json'), 'utf8')); } catch { return {}; }
+})();
 
 const T0 = 110.3; // sahne başı
 const ODAK0 = 111.15, ODAK1 = 113.3; // odak kaydırma
@@ -42,10 +49,10 @@ function yaziCiz(ctx, metin, x, y, { font, renk, harfAra = 0, alfa = 1, golge = 
 }
 
 export default {
-  gecis: { tip: 'beyaz' },
+  // kapanışa sade bir çapraz geçişle girilir (beyaz 'nur' parlaması yok)
   filmYok: true,
   sesler: [
-    { t: 110.45, tur: 'nur', guc: 0.4, sure: 2.4 },
+    { t: 110.45, tur: 'whoosh', guc: 0.12, sure: 1.2 },
     { t: YAZI0, tur: 'firca', guc: 0.25 },
   ],
   hazirla() {
@@ -78,7 +85,17 @@ export default {
     ctx.save();
     ctx.fillStyle = '#120C09';
     ctx.fillRect(0, 0, W, H);
-    if (KURAN || MEKTUBAT) {
+    if (AI) {
+      // tek fotoğraf: kareyi dolduracak biçimde (kırparak) yerleşir; gerçek kamera gibi çok yavaş itme ve hafif el salınımı
+      const [ox, oy] = AI_AYAR.odak || [0.5, 0.5];
+      const taban = Math.max(W / AI.width, H / AI.height);
+      const s = taban * lerp(1.005, 1.055, ease.inOutSine(u));
+      ctx.translate(W * ox + sx * 0.6, H * oy + sy * 0.6);
+      ctx.rotate(sr * 0.6);
+      ctx.scale(s, s);
+      ctx.translate(-AI.width * ox, -AI.height * oy);
+      ctx.drawImage(AI, 0, 0);
+    } else if (KURAN || MEKTUBAT) {
       const img = MEKTUBAT || KURAN;
       const taban = W / img.width;
       const s = taban * itme * nefes;
@@ -99,8 +116,9 @@ export default {
     }
     ctx.restore();
 
-    // ışık huzmesinde toz zerreleri (soldan gelen pencere ışığı)
+    // ışık huzmesinde toz zerreleri (soldan gelen pencere ışığı) — yalnız Blender karesinde
     ctx.save();
+    if (AI) toz.length = 0;
     ctx.globalCompositeOperation = 'screen';
     for (const p of toz) {
       const x = (p.x + 0.012 * Math.sin(t * 0.3 * p.h + p.f) + (t - T0) * 0.004 * p.h) * W;
@@ -115,22 +133,25 @@ export default {
       ctx.fillRect(x - r * 2.4, y - r * 2.4, r * 4.8, r * 4.8);
     }
     // sol üstten gelen ışığın hafif sızması
-    const sz = ctx.createRadialGradient(-W * 0.1, H * 0.12, 0, -W * 0.1, H * 0.12, H * 0.7);
-    sz.addColorStop(0, 'rgba(255,226,180,0.10)');
-    sz.addColorStop(1, 'rgba(255,226,180,0)');
-    ctx.fillStyle = sz;
-    ctx.fillRect(0, 0, W, H);
+    if (!AI) {
+      const sz = ctx.createRadialGradient(-W * 0.1, H * 0.12, 0, -W * 0.1, H * 0.12, H * 0.7);
+      sz.addColorStop(0, 'rgba(255,226,180,0.10)');
+      sz.addColorStop(1, 'rgba(255,226,180,0)');
+      ctx.fillStyle = sz;
+      ctx.fillRect(0, 0, W, H);
+    }
     ctx.restore();
 
     // köşe kararması (objektif)
     ctx.save();
     const v = ctx.createRadialGradient(W / 2, H * 0.46, H * 0.32, W / 2, H * 0.5, H * 0.75);
     v.addColorStop(0, 'rgba(0,0,0,0)');
-    v.addColorStop(1, 'rgba(10,6,4,0.55)');
+    v.addColorStop(1, `rgba(10,6,4,${AI ? 0.3 : 0.55})`);
     ctx.fillStyle = v;
     ctx.fillRect(0, 0, W, H);
-    // alt yazı için tabanda yumuşak koyulaşma
-    const alt = ctx.createLinearGradient(0, H * 0.66, 0, H);
+    // yazı için yumuşak koyulaşma (altta ya da üstte)
+    const ust = AI && AI_AYAR.yazi === 'ust';
+    const alt = ust ? ctx.createLinearGradient(0, H * 0.36, 0, 0) : ctx.createLinearGradient(0, H * 0.66, 0, H);
     alt.addColorStop(0, 'rgba(14,8,5,0)');
     alt.addColorStop(1, `rgba(14,8,5,${0.42 * an(t, YAZI0 - 0.6, 1.2)})`);
     ctx.fillStyle = alt;
@@ -140,7 +161,7 @@ export default {
     // kaynak
     const giris = (k) => an(t, YAZI0 + k * 0.32, 0.9, ease.outCubic);
     const dy = (k) => (1 - giris(k)) * 18;
-    const y0 = 1500;
+    const y0 = AI && AI_AYAR.yazi === 'ust' ? 250 : 1500;
     yaziCiz(ctx, 'Risale-i Nur', W / 2, y0 + dy(0), { font: '600 60px "Cormorant Garamond"', renk: '#EFE4D2', harfAra: 2.5, alfa: giris(0) });
     // ince yaldız ayraç
     const ay = giris(1);
