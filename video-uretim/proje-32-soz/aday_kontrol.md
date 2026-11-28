@@ -15,7 +15,7 @@ Open every clip in the collection. A clip is NOT included if its page shows a Pr
 
 ## Step 2: refill shots that lost all their candidates
 
-Each shot below lists its candidate clip IDs in order of preference. After step 1, find the shots for which NONE of the listed IDs is still in the collection. Only for those shots, search Shutterstock video for 2 replacements that ARE included in the subscription, check them against the rules below by watching the preview, and add them to the same collection.
+Each shot below lists its candidate clip IDs in order of preference. After step 1, find the shots for which NONE of the listed IDs is still in the collection. Only for those shots, search Shutterstock video for 1 replacement (2 if you are unsure) that IS included in the subscription (open its page to confirm before adding), check it against the rules below by watching the whole preview, and add it to the same collection.
 
 Rules for every clip:
 - No people at all and no human body parts: no faces, eyes, hands, fingers, arms, silhouettes or shadows of people, even small or blurred. Absolutely no women or girls.
