@@ -9,20 +9,16 @@ Collection: https://www.shutterstock.com/video/collections/329224097-ac3e6e9a (n
 - Do not click Download, License, Add to cart, Buy or anything that licenses, downloads or pays. The owner licenses the clips later, by hand.
 - Do not change account or subscription settings.
 
-## Step 1: one pick per shot (fast)
+## Step 1: check every clip now in the collection
 
-Go through the shots in the table below, top to bottom. For each shot, look at its candidate IDs in the listed order:
+Check every clip that is in the collection at this moment, not only the ones listed below (clips may have been added since this file was written).
 - If the collection page itself shows a Premium label or a price on the thumbnails, decide from there without opening the clip pages.
-- Otherwise open the clip page and read the page text for a Premium label or a separate price (for example $69, $199, "Add to cart"). That means NOT included.
-- The first candidate that IS included is the pick for that shot. Keep it, and remove the shot's remaining candidates from the collection without opening them.
-- Remove every candidate you found NOT included.
-- Some IDs are candidates for two shots (A01/J04 and B03/J03 share all of theirs; 3917205823, 3645590193 and 4189372919 appear under two shots). Do not remove such an ID until both of its shots are decided, and keep it if it is the pick for either shot.
+- Otherwise open the clip page and read the page text (no need for screenshots) for a Premium label or a separate price (for example $69, $199, "Add to cart"). That means NOT included.
+- Remove every clip that is NOT included. Keep every clip that is included, even if a shot then has several; the video session picks one per shot.
 
-When you finish, the collection should hold exactly one clip per shot, except for shots whose candidates were all not included.
+## Step 2: refill shots that have no included clip left
 
-## Step 2: refill shots with no included candidate
-
-Only for shots whose candidates were all not included: search Shutterstock video for that shot's "What to show" and add 2 clips that ARE included in the subscription (confirm on the clip page or with a filter that hides premium content). Choose from the thumbnails and titles and skip anything that obviously shows people; you do not need to watch the whole preview. The video session checks every frame of what you add.
+Use the table below to see which shot each clip belongs to. A shot needs a refill only if none of its clips is left in the collection after step 1 (a clip you added in an earlier check counts for the shot you added it for). For each such shot, search Shutterstock video for its "What to show" and add 1 clip (2 if you are unsure) that IS included in the subscription: confirm on the clip page, or use a search filter that hides premium content if there is one. Choose from thumbnails and titles and skip anything that shows people; you do not need to watch whole previews, because the video session checks every frame of what you add.
 
 Rules for every clip:
 - No people at all and no human body parts: no faces, eyes, hands, fingers, arms, silhouettes or shadows of people, even small or blurred. Absolutely no women or girls.
@@ -33,7 +29,7 @@ Rules for every clip:
 
 ## Step 3: report
 
-Tell the owner, briefly: the pick for each shot (shot code and ID), and for each refilled shot the IDs you added.
+Tell the owner, briefly: the IDs you removed, and for each refilled shot the shot code and the IDs you added.
 
 ## Shots
 
