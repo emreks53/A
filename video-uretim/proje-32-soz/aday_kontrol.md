@@ -16,9 +16,16 @@ Check every clip that is in the collection at this moment, not only the ones lis
 - Otherwise open the clip page and read the page text (no need for screenshots) for a Premium label or a separate price (for example $69, $199, "Add to cart"). That means NOT included.
 - Remove every clip that is NOT included. Keep every clip that is included, even if a shot then has several; the video session picks one per shot.
 
-## Step 2: refill shots that have no included clip left
+## Step 2: replace with the single best match
 
-Use the table below to see which shot each clip belongs to. A shot needs a refill only if none of its clips is left in the collection after step 1 (a clip you added in an earlier check counts for the shot you added it for). For each such shot, search Shutterstock video for its "What to show" and add 1 clip (2 if you are unsure) that IS included in the subscription: confirm on the clip page, or use a search filter that hides premium content if there is one. Choose from thumbnails and titles and skip anything that shows people; you do not need to watch whole previews, because the video session checks every frame of what you add.
+Use the table below to see which shot each clip belongs to. A shot needs a replacement only if none of its clips is left in the collection after step 1 (a clip added in an earlier check counts for the shot it was added for). For each such shot add exactly ONE clip, the best one you can find. No backups.
+
+How to choose it (take the time this needs; quality matters more than speed here):
+- Aim for the clip that looks most like the removed clip(s) of that shot: same subject, same kind of light and colour, similar motion and composition. It must also fit the shot's meaning and "What to show".
+- Search with several precise English keywords. If the search has a filter that hides premium content, use it so you only compare included clips.
+- Compare several good results (about 5-10) before you decide.
+- For your final choice: open its page and confirm it IS included in the subscription, then watch the whole preview and check it against every rule below (no people or body parts at any moment, no text or logos, real footage, works as a vertical 9:16 crop, long enough).
+- Add only that one clip to the collection.
 
 Rules for every clip:
 - No people at all and no human body parts: no faces, eyes, hands, fingers, arms, silhouettes or shadows of people, even small or blurred. Absolutely no women or girls.
